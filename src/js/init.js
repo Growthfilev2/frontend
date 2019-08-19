@@ -772,7 +772,7 @@ function openMap() {
     if (!data) return showNoOfficeFound();
     getCheckInSubs().then(function (checkInSubs) {
 
-      console.log(checkInSubs);
+
       if (!Object.keys(checkInSubs).length) {
         manageLocation().then(function (location) {
           document.getElementById('start-load').classList.add('hidden');

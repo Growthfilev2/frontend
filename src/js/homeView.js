@@ -164,75 +164,78 @@ function homeHeaderStartContent(name) {
 
 
 function homeView(suggestedTemplates) {
-
-  progressBar.close();
-  history.pushState(['homeView'], null, null);
-  let clearIcon = '';
-  if (ApplicationState.nearByLocations.length) {
-    clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
-  }
-
-  const header = getHeader('app-header', homeHeaderStartContent('Unkown Location'), clearIcon);
-  console.log(header)
-  if (ApplicationState.venue.location) {
-    header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
-  } else {
-    geocodeLatLng(ApplicationState.location).then(function (result) {
-      if (result) {
-        header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
-      }
-    }).catch(console.error)
-  }
-
-  header.listen('MDCTopAppBar:nav', handleNav);
-  header.root_.classList.remove('hidden')
+  try {
 
 
-  const panel = document.getElementById('app-current-panel')
-
-  panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
-
-  const suggestionLength = suggestedTemplates.length;
-  panel.innerHTML = homePanel(suggestionLength);
-
-  if (document.getElementById('change-location')) {
-    document.getElementById('change-location').addEventListener('click', function (evt) {
-      progressBar.open()
-      if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-        mapView(ApplicationState.location)
-        return
-      };
-      manageLocation().then(function (newLocation) {
-        mapView(newLocation);
-      }).catch(showNoLocationFound)
-    })
-  };
-  const commonTaskList = new mdc.list.MDCList(document.getElementById('common-task-list'));
-  commonTaskList.listen('MDCList:action', function (commonListEvent) {
-    console.log(commonListEvent)
-    if (commonListEvent.detail.index == 0) {
-      const tx = db.transaction('root', 'readwrite');
-      const store = tx.objectStore('root')
-      store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-        const rootRecord = event.target.result;
-        rootRecord.totalCount = 0;
-        store.put(rootRecord)
-      }
-      tx.oncomplete = function () {
-        history.pushState(['chatView'], null, null);
-        chatView()
-      }
-      return;
-    };
-
-    history.pushState(['snapView'], null, null)
-    const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
-    if (offices.length == 1) {
-      photoOffice = offices[0]
-      snapView()
-      return
+    progressBar.close();
+    history.pushState(['homeView'], null, null);
+    let clearIcon = '';
+    if (ApplicationState.nearByLocations.length) {
+      clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
-    const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
+
+    const header = getHeader('app-header', homeHeaderStartContent('Unkown Location'), clearIcon);
+    console.log(header)
+    if (ApplicationState.venue.location) {
+      header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
+    } else {
+      geocodeLatLng(ApplicationState.location).then(function (result) {
+        if (result) {
+          header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
+        }
+      }).catch(console.error)
+    }
+
+    header.listen('MDCTopAppBar:nav', handleNav);
+    header.root_.classList.remove('hidden')
+
+
+    const panel = document.getElementById('app-current-panel')
+
+    panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
+
+    const suggestionLength = suggestedTemplates.length;
+    panel.innerHTML = homePanel(suggestionLength);
+
+    if (document.getElementById('change-location')) {
+      document.getElementById('change-location').addEventListener('click', function (evt) {
+        progressBar.open()
+        if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
+          mapView(ApplicationState.location)
+          return
+        };
+        manageLocation().then(function (newLocation) {
+          mapView(newLocation);
+        }).catch(showNoLocationFound)
+      })
+    };
+    const commonListEl = document.getElementById('common-task-list');
+    if (commonListEl) {
+      const commonTaskList = new mdc.list.MDCList(commonListEl);
+      commonTaskList.listen('MDCList:action', function (commonListEvent) {
+        console.log(commonListEvent)
+        if (commonListEvent.detail.index == 0) {
+          history.pushState(['chatView'], null, null);
+          chatView();
+          const tx = db.transaction('root', 'readwrite');
+          const store = tx.objectStore('root')
+          store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+            const rootRecord = event.target.result;
+            rootRecord.totalCount = 0;
+            store.put(rootRecord)
+          }
+          return;
+        };
+
+
+        const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
+        if (offices.length == 1) {
+          photoOffice = offices[0];
+          history.pushState(['snapView'], null, null)
+          snapView()
+          return
+        }
+        const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
     ${offices.map(function(office){
       return `<li class='mdc-list-item'>
       ${office}
@@ -243,47 +246,52 @@ function homeView(suggestedTemplates) {
     }).join("")}
     </ul>`
 
-    const dialog = new Dialog('Choose Office', officeList, 'choose-office-subscription').create('simple');
-    const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
-    bottomDialog(dialog, ul)
-    ul.listen('MDCList:action', function (e) {
-      photoOffice = offices[e.detail.index]
-      snapView()
-      dialog.close();
-    })
-  })
-
-  db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-    const rootRecord = event.target.result;
-    if (!rootRecord) return;
-
-    if (rootRecord.totalCount) {
-      const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
-      el.classList.remove('material-icons');
-      el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
+        const dialog = new Dialog('Choose Office', officeList, 'choose-office-subscription').create('simple');
+        const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
+        bottomDialog(dialog, ul)
+        ul.listen('MDCList:action', function (e) {
+          photoOffice = offices[e.detail.index]
+          history.pushState(['snapView'], null, null)
+          snapView()
+          dialog.close();
+        })
+      })
     }
+    db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+      const rootRecord = event.target.result;
+      if (!rootRecord) return;
+
+      if (rootRecord.totalCount) {
+        const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
+        el.classList.remove('material-icons');
+        el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
+      }
+    }
+    const auth = firebase.auth().currentUser
+    document.getElementById('reports').addEventListener('click', function () {
+      if (auth.email && auth.emailVerified) {
+        history.pushState(['reportView'], null, null)
+        reportView();
+        return
+      };
+
+      history.pushState(['emailUpdation'], null, null)
+      emailUpdation()
+
+    })
+
+    if (!suggestedTemplates.length) return;
+    console.log(suggestedTemplates)
+    document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
+
+    const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+    handleTemplateListClick(suggestedInit);
+  } catch (e) {
+    handleError({
+      message: e.message,
+      body: JSON.stringify(e.stack)
+    })
   }
-  const auth = firebase.auth().currentUser
-  document.getElementById('reports').addEventListener('click', function () {
-    if (auth.email && auth.emailVerified) {
-      history.pushState(['reportView'], null, null)
-      reportView();
-      return
-    };
-
-    history.pushState(['emailUpdation'], null, null)
-    emailUpdation()
-
-  })
-
-  if (!suggestedTemplates.length) return;
-  console.log(suggestedTemplates)
-  document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
-
-  const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-  handleTemplateListClick(suggestedInit);
-
-
 }
 
 function handleTemplateListClick(listInit) {
@@ -551,7 +559,7 @@ function emailUpdation(updateOnly) {
         reportView();
       })
     }
-  });
+  })
 }
 
 function emailVerificationWait(updateOnly) {

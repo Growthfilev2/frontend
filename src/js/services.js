@@ -12,6 +12,7 @@ function handleError(error) {
   if (errorInStorage.hasOwnProperty(error.message)) return;
   error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
+
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }
@@ -69,6 +70,7 @@ function getLocation() {
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+
         handleGeoLocationApi().then(function (cellLocation) {
           if (htmlLocation.accuracy < cellLocation.accuracy) {
             return resolve(htmlLocation);
@@ -110,25 +112,53 @@ function getLocation() {
   })
 }
 
-function handleGeoLocationApi() {
+function handleCellularInformation(retry) {
   return new Promise(function (resolve, reject) {
-    let body;
+
     try {
       body = getCellularInformation();
+      if (!Object.keys(body).length) {
+        reject("empty object from getCellularInformation");
+      }
+      if (body.considerIp) {
+
+        var interval = setInterval(function () {
+          body = getCellularInformation();
+          if (!body.considerIp || retry == 0) {
+            clearInterval(interval);
+
+            resolve(body)
+            return;
+          }
+          retry--
+        }, 1000)
+        return;
+      }
+      return resolve(body)
     } catch (e) {
-      reject(e.message);
+      reject(e)
     }
-    if (!Object.keys(body).length) {
-      reject("empty object from getCellularInformation");
-    };
-    requestCreator('geolocationApi', body).then(function (result) {
-    
-      return resolve(result.response);
-    }).catch(function (error) {
-      reject(error)
-    })
   })
 }
+
+function handleGeoLocationApi() {
+  return new Promise(function (resolve, reject) {
+    var retry = 2;
+    handleCellularInformation(retry).then(function (body) {
+      if (body.considerIp) {
+        handleError({
+          message: 'considerIp is true after retry',
+          body: JSON.stringify(body)
+        })
+      }
+      console.log(body);
+      requestCreator('geolocationApi', body).then(function (result) {
+        return resolve(result.response);
+      }).catch(reject)
+    }).catch(reject)
+  })
+}
+
 
 function iosLocationError(iosError) {
   html5Geolocation().then(function (geopoint) {
@@ -228,8 +258,6 @@ function requestCreator(requestType, requestBody) {
     'geolocationApi': true
   }
   var auth = firebase.auth().currentUser;
-
-
   let apiHandler = new Worker('js/apiHandler.js');
 
   var requestGenerator = {
@@ -244,7 +272,8 @@ function requestCreator(requestType, requestBody) {
         phoneNumber: auth.phoneNumber,
       },
       key: appKey.getMapKey(),
-      apiUrl: appKey.getBaseUrl()
+      apiUrl: appKey.getBaseUrl(),
+     
     }
   };
 
