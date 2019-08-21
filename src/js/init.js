@@ -36,7 +36,7 @@ let native = function () {
           deviceInfo[key] = val
         }
       })
-     
+
       localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
@@ -49,7 +49,7 @@ let native = function () {
         if (!localStorage.getItem('deviceInfo')) {
           localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
         }
-        
+
         return localStorage.getItem('deviceInfo');
       }
       return this.getIosInfo();
@@ -66,7 +66,7 @@ function getAndroidDeviceInformation() {
     'baseOs': AndroidInterface.getBaseOs(),
     'radioVersion': AndroidInterface.getRadioVersion(),
     'appVersion': Number(AndroidInterface.getAppVersion()),
-  
+
   })
 }
 
@@ -91,13 +91,13 @@ function initializeApp() {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  
+
   if (!window.Worker && !window.indexedDB) {
     const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
     incompatibleDialog.open();
     return;
   }
-  
+
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
       document.getElementById("app-current-panel").classList.add('hidden')
@@ -115,7 +115,7 @@ function initializeApp() {
       document.getElementById('app-header').classList.remove('hidden')
       return
     }
-   
+
     localStorage.setItem('error', JSON.stringify({}));
     startApp()
   });
@@ -174,8 +174,7 @@ function startApp() {
     };
     if (!evt.oldVersion) {
       createObjectStores(db, dbName)
-    }
-    else {
+    } else {
       console.log('version upgrade')
     }
   }
@@ -219,7 +218,7 @@ function startApp() {
       from: '',
       registerToken: native.getFCMToken()
     }).then(function (res) {
-    
+
       if (res.response.updateClient) {
         updateApp()
         return
@@ -256,7 +255,7 @@ function startApp() {
     })
   }
   req.onerror = function () {
-    
+
     handleError({
       message: `${req.error.name}`,
       body: JSON.stringify(req.error.message)
@@ -486,7 +485,7 @@ function profileCheck() {
 }
 
 function areObjectStoreValid(names) {
-  const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum','reports']
+  const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum', 'reports']
 
   for (let index = 0; index < stores.length; index++) {
     const el = stores[index];
@@ -577,7 +576,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-  calendar.createIndex('onLeave', ['template', 'status', 'office']);
+    calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
     autoIncrement: true,
@@ -771,7 +770,6 @@ function openMap() {
 
     if (!data) return showNoOfficeFound();
     getCheckInSubs().then(function (checkInSubs) {
-
 
       if (!Object.keys(checkInSubs).length) {
         manageLocation().then(function (location) {
