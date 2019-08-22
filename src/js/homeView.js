@@ -281,7 +281,9 @@ function homeView(suggestedTemplates) {
       if (!el) return;
       el.innerHTML = `<ul class='mdc-list subscription-list'>
         ${result.map(function(activity) {
-            return `<li class='mdc-list-item'>${activity.activityName}
+            return `<li class='mdc-list-item'>
+            <span class='mdc-list-item__text'>${activity.activityName}</span>
+          
             <span class="mdc-list-item__meta material-icons mdc-theme--primary">
               keyboard_arrow_right
           </span>

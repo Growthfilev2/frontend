@@ -557,6 +557,11 @@ html {
   overflow-y: auto;
 }
 
+#assignee-container .tasks-heading .mdc-chip__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /** status-change **/
 
 .status-select {
