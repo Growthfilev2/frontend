@@ -313,11 +313,6 @@ function homeView(suggestedTemplates) {
 
     })
 
-    //   ${suggestionLength ? ``:
-    //   `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
-    // }
-    // <h3 class="mdc-list-group__subheader mt-0 mb-0">${suggestionLength ? 'Suggestions' :''}</h3>
-
     if (!suggestionLength) return;
     console.log(suggestedTemplates)
     document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
