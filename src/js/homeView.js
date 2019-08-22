@@ -143,7 +143,9 @@ function homePanel(suggestionLength) {
       }
       <h3 class="mdc-list-group__subheader mt-0 mb-0">${suggestionLength ? 'Suggestions' :''}</h3>
       <div id='pending-location-tasks'></div>
-      <div id='suggestions-container'></div>
+      <div id='work-suggestions-container'></div>
+
+      <div id='create-suggestions-container'></div>
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
       </div>
 
@@ -282,10 +284,32 @@ function homeView(suggestedTemplates) {
 
     })
 
-    if (!suggestedTemplates.length) return;
-    console.log(suggestedTemplates)
-    document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
+    getYesterdayAttendance().then(function (yesterdayStatusObject) {
+      if (!yesterdayStatusObject) return;
+      if (yesterdayStatusObject.statusForDay == 1) return;
+      let reminderHeading = 'You Missed Your Attendance Yesterday. '
 
+      Promise.all([getSubscription(yesterdayStatusObject.office, 'leave'), getSubscription(yesterdayStatusObject.office, 'attendance regularization')]).then(function (attendanceSubs) {
+        if (!attendanceSubs.length) return;
+        const unique = {};
+        attendanceSubs.forEach(function (sub) {
+          unique[sub.template] = sub;
+        })
+        const keys = Object.keys(unique);
+
+        document.getElementById('work-suggestions-container').innerHTML = `<p class='mdc-typography--headline6'>${reminderHeading}</p>
+        <ul class='mdc-list subscription-list'>
+           <li class='mdc-list-item'>
+              ${getYesterdayMissedSuggestionText(keys)}
+           </li>
+        </ul>`
+      })
+
+    })
+
+    console.log(suggestedTemplates)
+    if (!suggestedTemplates.length) return;
+    document.getElementById('create-suggestions-container').innerHTML = templateList(suggestedTemplates)
     const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
     handleTemplateListClick(suggestedInit);
   } catch (e) {
@@ -295,6 +319,38 @@ function homeView(suggestedTemplates) {
       body: JSON.stringify(e.stack)
     })
   }
+}
+
+function getYesterdayMissedSuggestionText(keys) {
+
+  if (keys.indexOf('leave') >= 0 && keys.indexOf('attendance regularization') >= 0) {
+    return 'Go To My Reports'
+  }
+  if (keys.indexOf('leave') >= 0) {
+    return 'Apply For Leave'
+  }
+  return 'Apply FOR AR';
+
+}
+
+function getYesterdayAttendance() {
+  return new Promise(function (resolve, reject) {
+    const tx = db.transaction('reports');
+    let result;
+    const yesterday = Number(`${new Date().getMonth() -1}${new Date().getDate()}${new Date().getFullYear()}`)
+    tx.objectStore('reports').get(yesterday).onsuccess = function (event) {
+      result = event.target.result;
+    }
+    tx.oncomplete = function () {
+      resolve(result);
+    }
+    tx.onerror = function () {
+      reject({
+        message: tx.error,
+        body: ''
+      })
+    }
+  })
 }
 
 function handleTemplateListClick(listInit) {
