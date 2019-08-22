@@ -94,9 +94,7 @@ function getLocation() {
           return resolve(htmlLocation);
         })
       }).catch(function (htmlError) {
-        handleGeoLocationApi().then(function (location) {
-          return resolve(location);
-        }).catch(function (error) {
+        handleGeoLocationApi().then(resolve).catch(function (error) {
           return reject({
             message: 'Both HTML and Geolocation failed to fetch location',
             body: {
@@ -157,27 +155,18 @@ function handleCellularInformation(retry) {
 
 function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
-    var retry = 2;
-    handleCellularInformation(retry).then(function (body) {
-      if (body.considerIp) {
+   
+    requestCreator('geolocationApi', body).then(function (result) {
+      if(result.response.accuracy >= 35000) {
         handleError({
-          message: 'considerIp is true after retry',
-          body: JSON.stringify(body)
+          message: 'geolocation response >= 35000',
+          body: {
+            geolocationBody:body,
+            geolocationResponse:result.response
+          }
         })
       }
-      console.log(body);
-      requestCreator('geolocationApi', body).then(function (result) {
-        if (result.response.accuracy >= 35000) {
-          handleError({
-            message: 'geolocation response >= 35000',
-            body: {
-              geolocationBody: body,
-              geolocationResponse: result.response
-            }
-          })
-        }
-        return resolve(result.response);
-      }).catch(reject)
+      return resolve(result.response);
     }).catch(reject)
   })
 }
