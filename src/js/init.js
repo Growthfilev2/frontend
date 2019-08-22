@@ -788,7 +788,7 @@ function openMap() {
         manageLocation().then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
-        }).catch(showNoLocationFound)
+        }).catch(handleLocationError)
         return
       }
 
@@ -796,7 +796,7 @@ function openMap() {
         manageLocation().then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
-        }).catch(showNoLocationFound)
+        }).catch(handleLocationError)
         return;
       }
 
@@ -815,7 +815,7 @@ function openMap() {
           return getSuggestions()
         }
         mapView(location)
-      }).catch(showNoLocationFound)
+      }).catch(handleLocationError)
     })
   })
 }

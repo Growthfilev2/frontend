@@ -155,14 +155,18 @@ function handleCellularInformation(retry) {
 
 function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
-   
+    const body = getCellularInformation();
+    if (!Object.keys(body).length) {
+      reject("empty object from getCellularInformation");
+      return;
+    }
     requestCreator('geolocationApi', body).then(function (result) {
-      if(result.response.accuracy >= 35000) {
+      if (result.response.accuracy >= 35000) {
         handleError({
           message: 'geolocation response >= 35000',
           body: {
-            geolocationBody:body,
-            geolocationResponse:result.response
+            geolocationBody: body,
+            geolocationResponse: result.response
           }
         })
       }
@@ -281,26 +285,19 @@ function requestCreator(requestType, requestBody) {
 
     } else {
       getRootRecord().then(function (rootRecord) {
-        const time = fetchCurrentTime(rootRecord.serverTime);
-        requestBody['timestamp'] = time
-        if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-          manageLocation().then(function (geopoint) {
-            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-              mapView(geopoint);
-              return;
-            };
-            ApplicationState.location = geopoint;
-            requestBody['geopoint'] = geopoint;
-            requestGenerator.body = requestBody;
-            apiHandler.postMessage(requestGenerator);
 
-          }).catch(locationErrorDialog)
-          return;
-        }
-        requestBody['geopoint'] = ApplicationState.location;
-        requestGenerator.body = requestBody;
-        apiHandler.postMessage(requestGenerator);
+        manageLocation().then(function (geopoint) {
 
+          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+            mapView(geopoint);
+            return;
+          };
+          ApplicationState.location = geopoint;
+          requestBody['geopoint'] = geopoint;
+          requestGenerator.body = requestBody;
+          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+          apiHandler.postMessage(requestGenerator);
+        }).catch(handleLocationError)
       });
     }
   });
@@ -434,7 +431,7 @@ function backgroundTransition() {
     if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
     mapView(geopoint);
-  })
+  }).catch(handleLocationError)
 }
 
 

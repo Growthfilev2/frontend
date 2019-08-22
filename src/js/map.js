@@ -39,14 +39,18 @@ function locationFailure(error) {
 }
 
 function handleLocationError(error) {
+  let alertDialog;
+  if(progressBar) {
+    progressBar.close()
+  }
   switch (error.message) {
     case 'BROKEN INTERNET CONNECTION':
-      const alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
+      alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
 
     case 'TURN ON YOUR WIFI':
-      const alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
+      alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
       break;
     default:
