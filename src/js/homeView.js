@@ -142,7 +142,7 @@ function homePanel(suggestionLength) {
         `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
       }
       <h3 class="mdc-list-group__subheader mt-0 mb-0">${suggestionLength ? 'Suggestions' :''}</h3>
-      <div id='pending-location-tasks'></div>
+      <div id='duty-container'></div>
       <div id='suggestions-container'></div>
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
       </div>
@@ -188,11 +188,8 @@ function homeView(suggestedTemplates) {
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.remove('hidden')
 
-
     const panel = document.getElementById('app-current-panel')
-
     panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
-
     const suggestionLength = suggestedTemplates.length;
     panel.innerHTML = homePanel(suggestionLength);
 
@@ -208,6 +205,7 @@ function homeView(suggestedTemplates) {
         }).catch(showNoLocationFound)
       })
     };
+
     const commonListEl = document.getElementById('common-task-list');
 
     if (commonListEl) {
@@ -269,6 +267,7 @@ function homeView(suggestedTemplates) {
         }
       }
     }
+
     const auth = firebase.auth().currentUser
     document.getElementById('reports').addEventListener('click', function () {
       if (auth.email && auth.emailVerified) {
@@ -282,10 +281,27 @@ function homeView(suggestedTemplates) {
 
     })
 
-    if (!suggestedTemplates.length) return;
+    checkForDuty().then(function (result) {
+      const el = document.getElementById("duty-container");
+      if (!el) return;
+      el.innerHTML = `<ul class='mdc-list subscription-list'>
+        ${result.map(function(activity) {
+            return `<li class='mdc-list-item'>${activity.activityName}</li>`
+        }).join("")}
+      </ul>`
+
+      const dutyList = new mdc.list.MDCList(el.querySelector('ul'))
+      dutyList.listen('MDCList:action', function (event) {
+        console.log(result[event.detail.index])
+        const activity = result[event.detail.index]
+        const heading = createActivityHeading(activity)
+        showViewDialog(heading, activity, 'view-form')
+      })
+    })
+
+    if (!suggestionLength) return;
     console.log(suggestedTemplates)
     document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
-
     const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
     handleTemplateListClick(suggestedInit);
   } catch (e) {
@@ -295,6 +311,46 @@ function homeView(suggestedTemplates) {
       body: JSON.stringify(e.stack)
     })
   }
+}
+
+function checkForDuty() {
+  return new Promise(function (resolve, reject) {
+
+
+    const currentTimestamp = moment().valueOf()
+    const maxTimestamp = moment().add(24, 'h').valueOf();
+    console.log(maxTimestamp);
+    const tx = db.transaction('activity');
+    const result = []
+    tx.objectStore('activity').index('template').openCursor(IDBKeyRange.only(['duty'])).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
+      }
+      const schedule = cursor.value.schedule;
+      if (!schedule.length) {
+        cursor.continue();
+        return;
+      };
+
+      if (schedule.endTime < currentTimestamp) {
+        cursor.continue();
+        return;
+      }
+
+      if (schedule.startTime <= maxTimestamp || schedule.endTime <= maxTimestamp) {
+        result.push(cursor.value)
+
+      };
+
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      return resolve(result);
+    }
+  })
 }
 
 function handleTemplateListClick(listInit) {

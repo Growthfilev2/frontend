@@ -1,5 +1,6 @@
 function attendenceView(sectionContent) {
   const subs = {}
+
   const tx = db.transaction('subscriptions');
   tx.objectStore('subscriptions')
     .index('report')
@@ -21,25 +22,31 @@ function attendenceView(sectionContent) {
         subs[cursor.value.template].push(cursor.value)
       }
       cursor.continue();
-    }
+    };
   tx.oncomplete = function () {
-    console.log(subs)
+
     sectionContent.innerHTML = attendanceDom(subs['leave'] || []);
     createTodayStat();
 
     const leaveSub = subs['leave'];
-    const arSubs = subs['attendance regularization']
+    const arSubs = subs['attendance regularization'] || []
     if (leaveSub) {
       const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
       handleTemplateListClick(listInit)
     };
 
-    if (!arSubs) return;
+    // if (!arSubs) return;
     const officeAR = {}
     arSubs.forEach(function (sub) {
       officeAR[sub.office] = sub
     })
     createMonthlyStat(officeAR);
+  }
+  tx.onerror = function () {
+    handleError({
+      message: `${tx.error} from attendanceView`,
+      body: ''
+    })
   }
 }
 
@@ -64,9 +71,9 @@ function attendanceDom(leaveSub) {
 
 function createTodayStat() {
   const startOfTodayTimestamp = moment().startOf('day').valueOf()
-  console.log(startOfTodayTimestamp)
+
   const currentTimestamp = moment().valueOf();
-  console.log(currentTimestamp)
+
   const myNumber = firebase.auth().currentUser.phoneNumber;
   let todayCardString = '';
   const result = []
@@ -85,7 +92,6 @@ function createTodayStat() {
       cursor.continue();
     }
   activityTx.oncomplete = function () {
-    console.log(result);
     const addendumTx = db.transaction('addendum');
 
     result.forEach(function (activity) {
@@ -136,7 +142,7 @@ function todayStatCard(addendum, activity) {
     `
 }
 
-function renderArCard(statusObject) {
+function renderArCard(statusObject, arSub) {
 
   if (statusObject.statusForDay == 1) {
     return `<p class='present sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
@@ -146,9 +152,11 @@ function renderArCard(statusObject) {
   }
 
   if (statusObject.statusForDay < 1) {
-    return `<button class='mdc-button mdc-theme--primary-bg ar-button' data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
-      <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
-      </button>
+    return `
+    ${arSub[statusObject.office] ? ` <button class='mdc-button mdc-theme--primary-bg ar-button' data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+    <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
+    </button>`:''}
+   
       <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
   }
 
@@ -165,7 +173,7 @@ function monthlyStatCard(value, arSub) {
        
       </div>
       <div class='btn-container'>
-        ${renderArCard(value)}
+        ${renderArCard(value,arSub)}
       </div>
   </div>
     `
@@ -185,16 +193,11 @@ function createMonthlyStat(arSub) {
       const cursor = event.target.result;
       if (!cursor) return;
       const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month +1}-${cursor.value.year}`, 'DD-MM-YYYY').valueOf()
-      console.log(recordTimestamp);
 
       if (recordTimestamp > moment().valueOf()) {
         cursor.continue();
         return;
       }
-      if (!arSub[cursor.value.office]) {
-        cursor.continue();
-        return;
-      };
 
       if (!cursor.value.hasOwnProperty('statusForDay')) {
         cursor.continue();
@@ -204,7 +207,6 @@ function createMonthlyStat(arSub) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = cursor.value.month;
-      console.log(cursor.value);
       monthlyString += monthlyStatCard(cursor.value, arSub);
       cursor.continue();
     }

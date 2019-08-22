@@ -540,14 +540,17 @@ function messageBoxDom(comment, position, time) {
     return div;
 }
 
+function createActivityHeading(activity) {
+    return  `${activity.activityName}
+    <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
+    <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
+}
 function createActivityActionMenu(addendumId, activityId, geopoint) {
 
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const activity = event.target.result;
         if (!activity) return;
-        const heading = `${activity.activityName}
-        <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
-        <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
+        const heading = createActivityHeading(activity)
         let items = [{
             name: 'View',
             icon: 'info'
@@ -849,7 +852,7 @@ function share(activity) {
             }
             searchInit.trailingIcon_.root_.onclick = function () {
                 searchInitCancel(searchInit)
-            }
+            };
         })
     });
 

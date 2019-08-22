@@ -576,8 +576,8 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-    calendar.createIndex('onLeave', ['template', 'status', 'office']);
-
+  calendar.createIndex('onLeave', ['template', 'status', 'office']);
+  
   const map = db.createObjectStore('map', {
     autoIncrement: true,
   })
