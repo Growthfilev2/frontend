@@ -781,7 +781,41 @@ function openMap() {
       };
 
       ApplicationState.officeWithCheckInSubs = checkInSubs
+      
+      const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
 
+      if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          mapView(location)
+        }).catch(showNoLocationFound)
+        return
+      }
+
+      if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          mapView(location)
+        }).catch(showNoLocationFound)
+        return;
+      }
+
+      if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
+        document.getElementById('start-load').classList.add('hidden');
+        ApplicationState = oldApplicationState
+        console.log(ApplicationState)
+        getSuggestions()
+        return;
+      };
+
+      manageLocation().then(function (location) {
+        document.getElementById('start-load').classList.add('hidden');
+        if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))) {
+          ApplicationState = oldApplicationState
+          return getSuggestions()
+        }
+        mapView(location)
+      }).catch(showNoLocationFound)
     })
   })
 }

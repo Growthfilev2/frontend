@@ -68,60 +68,15 @@ function manageLocation() {
 
 
     const storedApplicationState = localStorage.getItem('ApplicationState');
-    if(storedApplicationState) {
+    if (storedApplicationState) {
       const oldApplicationState = JSON.parse(storedApplicationState);
-      if(!isLastLocationOlderThanThreshold(oldApplicationState.location.lastLocationTime,60)) {
+      if (!isLastLocationOlderThanThreshold(oldApplicationState.location.lastLocationTime, 60)) {
         return resolve(oldApplicationState.location);
-      } 
+      }
       return getLocation().then(resolve).catch(reject);
     }
     getLocation().then(resolve).catch(reject);
     
-    // if (!storedApplicationState) return getLocation().then(function (location) {
-    //   return resolve({
-    //     location: location,
-    //     isNewLocation: true,
-    //     oldApplicationState:null
-    //   })
-    // }).catch(reject);
-
-    // const oldApplicationState = JSON.parse(storedApplicationState);
-
-    // if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
-    //   getLocation().then(function (location) {
-    //     return resolve({
-    //       location: location,
-    //       isNewLocation: true,
-    //       oldApplicationState:oldApplicationState
-    //     })
-    //   }).catch(reject);
-    // }
-
-
-    // if (isLastLocationOlderThanThreshold(oldApplicationState.location.lastLocationTime, 60)) {
-
-    //   getLocation().then(function (location) {
-    //     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))) {
-    //       ApplicationState = oldApplicationState
-    //       return resolve({
-    //         location: location,
-    //         isNewLocation: false,
-    //         oldApplicationState:oldApplicationState
-    //       })
-    //     }
-
-    //     return resolve({
-    //       location: location,
-    //       isNewLocation: true,
-    //       oldApplicationState:oldApplicationState
-    //     })
-    //   }).catch(reject);
-    // }
-    // return resolve({
-    //   location: oldApplicationState.location,
-    //   isNewLocation: false,
-    //   oldApplicationState:oldApplicationState
-    // })
   });
 }
 
