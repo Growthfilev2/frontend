@@ -889,14 +889,14 @@ function activityDomCustomer(activityRecord) {
     <div id='attachment-container'>
         ${viewAttachment(activityRecord)}
         
-    </div>
+    </div>  
      
-      
         <div id='assignee-container'>
-            <div class="assignees tasks-heading center">
-                <i class="material-icons">share</i>
-                ${viewAssignee(activityRecord)}
-            </div>
+            ${activityRecord.assignees.length ?`<div class="assignees tasks-heading center">
+            <i class="material-icons">share</i>
+            ${viewAssignee(activityRecord)}
+        </div>` :'' }
+          
         </div>
     
     </div>
@@ -980,6 +980,10 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
           </div>
         </li>
       </ul>`
+    }
+  
+    if(attachmentName === 'Include')  {
+        return ''
     }
     return `<h1 class="mdc-typography--subtitle1 mt-0">
         ${attachmentName} : ${activityRecord.attachment[attachmentName].value}

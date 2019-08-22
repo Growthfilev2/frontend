@@ -124,7 +124,7 @@ function handleNav(evt) {
   return history.back();
 }
 
-function homePanel(suggestionLength) {
+function homePanel() {
   return ` <div class="container home-container">
   <div class='meta-work'>
     <ul class='mdc-list subscription-list' id='common-task-list'>
@@ -138,10 +138,9 @@ function homePanel(suggestionLength) {
     </ul>
   </div>
   <div class='work-tasks'>
-      ${suggestionLength ? ``:
-        `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
-      }
-      <h3 class="mdc-list-group__subheader mt-0 mb-0">${suggestionLength ? 'Suggestions' :''}</h3>
+      <div id='text'>
+     
+      </div>
       <div id='duty-container'></div>
       <div id='suggestions-container'></div>
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
@@ -190,8 +189,9 @@ function homeView(suggestedTemplates) {
 
     const panel = document.getElementById('app-current-panel')
     panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
-    const suggestionLength = suggestedTemplates.length;
-    panel.innerHTML = homePanel(suggestionLength);
+    let suggestionLength = suggestedTemplates.length;
+
+    panel.innerHTML = homePanel();
 
     if (document.getElementById('change-location')) {
       document.getElementById('change-location').addEventListener('click', function (evt) {
@@ -268,6 +268,38 @@ function homeView(suggestedTemplates) {
       }
     }
 
+    checkForDuty().then(function (result) {
+      console.log(result)
+      if(!result.length && !suggestedTemplates.length) {
+        document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
+        return;
+      }
+      if (!result.length) return;
+    
+      document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
+      const el = document.getElementById("duty-container");
+      if (!el) return;
+      el.innerHTML = `<ul class='mdc-list subscription-list'>
+        ${result.map(function(activity) {
+            return `<li class='mdc-list-item'>${activity.activityName}
+            <span class="mdc-list-item__meta material-icons mdc-theme--primary">
+              keyboard_arrow_right
+          </span>
+            </li>`
+        }).join("")}
+        <li class='mdc-list-divider'></li>
+      </ul>`
+
+      const dutyList = new mdc.list.MDCList(el.querySelector('ul'))
+      dutyList.singleSelection = true;
+      dutyList.selectedIndex = 0;
+      dutyList.listen('MDCList:action', function (event) {
+        console.log(result[event.detail.index])
+        const activity = result[event.detail.index]
+        const heading = createActivityHeading(activity)
+        showViewDialog(heading, activity, 'view-form');
+      })
+    })
     const auth = firebase.auth().currentUser
     document.getElementById('reports').addEventListener('click', function () {
       if (auth.email && auth.emailVerified) {
@@ -281,26 +313,15 @@ function homeView(suggestedTemplates) {
 
     })
 
-    checkForDuty().then(function (result) {
-      const el = document.getElementById("duty-container");
-      if (!el) return;
-      el.innerHTML = `<ul class='mdc-list subscription-list'>
-        ${result.map(function(activity) {
-            return `<li class='mdc-list-item'>${activity.activityName}</li>`
-        }).join("")}
-      </ul>`
-
-      const dutyList = new mdc.list.MDCList(el.querySelector('ul'))
-      dutyList.listen('MDCList:action', function (event) {
-        console.log(result[event.detail.index])
-        const activity = result[event.detail.index]
-        const heading = createActivityHeading(activity)
-        showViewDialog(heading, activity, 'view-form')
-      })
-    })
+    //   ${suggestionLength ? ``:
+    //   `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
+    // }
+    // <h3 class="mdc-list-group__subheader mt-0 mb-0">${suggestionLength ? 'Suggestions' :''}</h3>
 
     if (!suggestionLength) return;
     console.log(suggestedTemplates)
+    document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
+
     document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
     const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
     handleTemplateListClick(suggestedInit);
@@ -322,7 +343,7 @@ function checkForDuty() {
     console.log(maxTimestamp);
     const tx = db.transaction('activity');
     const result = []
-    tx.objectStore('activity').index('template').openCursor(IDBKeyRange.only(['duty'])).onsuccess = function (event) {
+    tx.objectStore('activity').index('template').openCursor(IDBKeyRange.only('duty')).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
       if (cursor.value.status === 'CANCELLED') {
@@ -335,12 +356,13 @@ function checkForDuty() {
         return;
       };
 
-      if (schedule.endTime < currentTimestamp) {
+
+      if (schedule[0].endTime < currentTimestamp) {
         cursor.continue();
         return;
       }
 
-      if (schedule.startTime <= maxTimestamp || schedule.endTime <= maxTimestamp) {
+      if (schedule[0].startTime <= maxTimestamp || schedule.endTime <= maxTimestamp) {
         result.push(cursor.value)
 
       };
