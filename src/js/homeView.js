@@ -205,7 +205,7 @@ function homeView(suggestedTemplates) {
         };
         manageLocation().then(function (newLocation) {
           mapView(newLocation);
-        }).catch(showNoLocationFound)
+        }).catch(handleLocationError)
       })
     };
     const commonListEl = document.getElementById('common-task-list');

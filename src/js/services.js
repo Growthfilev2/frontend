@@ -57,12 +57,72 @@ function fetchCurrentTime(serverTime) {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-    getLocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error);
+
+    if (!navigator.onLine) return reject({
+      message: 'BROKEN INTERNET CONNECTION'
     })
-  })
+
+    if (!isWifiOn()) return reject({
+      message: 'TURN ON YOUR WIFI'
+    })
+
+
+    const storedApplicationState = localStorage.getItem('ApplicationState');
+    if(storedApplicationState) {
+      const oldApplicationState = JSON.parse(storedApplicationState);
+      if(!isLastLocationOlderThanThreshold(oldApplicationState.location.lastLocationTime,60)) {
+        return resolve(oldApplicationState.location);
+      } 
+      return getLocation().then(resolve).catch(reject);
+    }
+    getLocation().then(resolve).catch(reject);
+    
+    // if (!storedApplicationState) return getLocation().then(function (location) {
+    //   return resolve({
+    //     location: location,
+    //     isNewLocation: true,
+    //     oldApplicationState:null
+    //   })
+    // }).catch(reject);
+
+    // const oldApplicationState = JSON.parse(storedApplicationState);
+
+    // if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
+    //   getLocation().then(function (location) {
+    //     return resolve({
+    //       location: location,
+    //       isNewLocation: true,
+    //       oldApplicationState:oldApplicationState
+    //     })
+    //   }).catch(reject);
+    // }
+
+
+    // if (isLastLocationOlderThanThreshold(oldApplicationState.location.lastLocationTime, 60)) {
+
+    //   getLocation().then(function (location) {
+    //     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))) {
+    //       ApplicationState = oldApplicationState
+    //       return resolve({
+    //         location: location,
+    //         isNewLocation: false,
+    //         oldApplicationState:oldApplicationState
+    //       })
+    //     }
+
+    //     return resolve({
+    //       location: location,
+    //       isNewLocation: true,
+    //       oldApplicationState:oldApplicationState
+    //     })
+    //   }).catch(reject);
+    // }
+    // return resolve({
+    //   location: oldApplicationState.location,
+    //   isNewLocation: false,
+    //   oldApplicationState:oldApplicationState
+    // })
+  });
 }
 
 function getLocation() {
@@ -153,12 +213,12 @@ function handleGeoLocationApi() {
       }
       console.log(body);
       requestCreator('geolocationApi', body).then(function (result) {
-        if(result.response.accuracy >= 35000) {
+        if (result.response.accuracy >= 35000) {
           handleError({
             message: 'geolocation response >= 35000',
             body: {
-              geolocationBody:body,
-              geolocationResponse:result.response
+              geolocationBody: body,
+              geolocationResponse: result.response
             }
           })
         }
@@ -226,30 +286,21 @@ function isLocationMoreThanThreshold(distance) {
 }
 
 
-function isLocationStatusWorking() {
+
+
+
+function isWifiOn() {
+  if (native.getName() !== 'Android') return true
   const requiredWifi = {
     'samsung': true,
     'OnePlus': true
   }
-
-  if (!navigator.onLine) {
-    const connectionDialog = new Dialog('BROKEN INTERNET CONNECTION', 'Make Sure You have a working Internet Connection').create()
-    connectionDialog.open();
-    return;
-  }
-  if (native.getName() !== 'Android') return true;
-
-  if (!AndroidInterface.isLocationPermissionGranted()) {
-    const alertDialog = new Dialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.').create()
-    alertDialog.open();
-    return
-  }
   const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
   if (requiredWifi[brand]) {
     if (!AndroidInterface.isWifiOn()) {
-      const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
-      alertDialog.open();
-      return;
+      // const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
+      // alertDialog.open();
+      return false;
     }
     return true;
   }
@@ -282,7 +333,7 @@ function requestCreator(requestType, requestBody) {
       },
       key: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl(),
-     
+
     }
   };
 

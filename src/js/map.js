@@ -14,7 +14,8 @@ var markersObject = {
   infowindow: []
 }
 
-function showNoLocationFound(error) {
+function locationFailure(error) {
+
   document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.add('hidden')
   handleError({
@@ -35,6 +36,23 @@ function showNoLocationFound(error) {
     document.querySelector('.center-abs.location-not-found').classList.add('hidden')
     openMap()
   })
+}
+
+function handleLocationError(error) {
+  switch (error.message) {
+    case 'BROKEN INTERNET CONNECTION':
+      const alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
+      alertDialog.open();
+      break;
+
+    case 'TURN ON YOUR WIFI':
+      const alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
+      alertDialog.open();
+      break;
+    default:
+      locationFailure(error);
+      break;
+  }
 }
 
 
@@ -149,7 +167,7 @@ function loadCardData(venues, map) {
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${renderVenue(venues)}
 </ul>`
- document.querySelector('#selection-box').classList.remove('hidden')
+  document.querySelector('#selection-box').classList.remove('hidden')
   document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
   document.querySelector('#selection-box .content-body').innerHTML = venuesList;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
