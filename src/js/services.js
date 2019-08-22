@@ -66,7 +66,6 @@ function manageLocation() {
       message: 'TURN ON YOUR WIFI'
     })
 
-
     const storedApplicationState = localStorage.getItem('ApplicationState');
     if (storedApplicationState) {
       const oldApplicationState = JSON.parse(storedApplicationState);
@@ -76,7 +75,7 @@ function manageLocation() {
       return getLocation().then(resolve).catch(reject);
     }
     getLocation().then(resolve).catch(reject);
-    
+
   });
 }
 
@@ -251,15 +250,8 @@ function isWifiOn() {
     'OnePlus': true
   }
   const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
-  if (requiredWifi[brand]) {
-    if (!AndroidInterface.isWifiOn()) {
-      // const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
-      // alertDialog.open();
-      return false;
-    }
-    return true;
-  }
-  return true
+  if (!requiredWifi[brand]) return true;
+  return AndroidInterface.isWifiOn();
 }
 
 function requestCreator(requestType, requestBody) {
