@@ -247,9 +247,7 @@ function geolocationApi(body, meta) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + meta.key, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-
     xhr.onreadystatechange = function () {
-
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           return reject({
@@ -282,9 +280,7 @@ function geolocationApi(body, meta) {
       })
     }
     xhr.send(JSON.stringify(body));
-
-  });
-
+  }); 
 }
 
 function dm(body, meta) {

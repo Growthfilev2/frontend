@@ -131,7 +131,7 @@ function homePanel(suggestionLength) {
       <li class='mdc-list-item'>Chat
       <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
       </li>
-      ${Object.keys(ApplicationState.officeWithCheckInSubs).length ? ` <li class='mdc-list-item'>Photo Check-In
+      ${ApplicationState.officeWithCheckInSubs && Object.keys(ApplicationState.officeWithCheckInSubs).length ? ` <li class='mdc-list-item'>Photo Check-In
       <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
       </li>`:''}
       <li class='mdc-list-divider'></li>
@@ -167,7 +167,6 @@ function homeHeaderStartContent(name) {
 
 function homeView(suggestedTemplates) {
   try {
-
 
     progressBar.close();
     history.pushState(['homeView'], null, null);
@@ -212,6 +211,7 @@ function homeView(suggestedTemplates) {
       })
     };
     const commonListEl = document.getElementById('common-task-list');
+
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
       commonTaskList.listen('MDCList:action', function (commonListEvent) {
@@ -229,6 +229,7 @@ function homeView(suggestedTemplates) {
           return;
         };
 
+        if (!ApplicationState.officeWithCheckInSubs) return;
 
         const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
         if (offices.length == 1) {
@@ -258,15 +259,16 @@ function homeView(suggestedTemplates) {
           dialog.close();
         })
       })
-    }
-    db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-      const rootRecord = event.target.result;
-      if (!rootRecord) return;
+      db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
 
-      if (rootRecord.totalCount) {
-        const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
-        el.classList.remove('material-icons');
-        el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
+        const rootRecord = event.target.result;
+        if (!rootRecord) return;
+
+        if (rootRecord.totalCount) {
+          const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
+          el.classList.remove('material-icons');
+          el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
+        }
       }
     }
     const auth = firebase.auth().currentUser
@@ -311,6 +313,7 @@ function homeView(suggestedTemplates) {
     const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
     handleTemplateListClick(suggestedInit);
   } catch (e) {
+    console.log(e)
     handleError({
       message: e.message,
       body: JSON.stringify(e.stack)
@@ -510,7 +513,7 @@ function updateName() {
     }
     progressBar.open();
     auth.updateProfile({
-      displayName: formatTextToTitleCase(nameField.value)
+      displayName: nameField.value.trim()
     }).then(function () {
       progressBar.close();
       history.back();

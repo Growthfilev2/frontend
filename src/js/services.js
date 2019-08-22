@@ -119,6 +119,7 @@ function handleCellularInformation(retry) {
       body = getCellularInformation();
       if (!Object.keys(body).length) {
         reject("empty object from getCellularInformation");
+        return;
       }
       if (body.considerIp) {
 
@@ -126,7 +127,6 @@ function handleCellularInformation(retry) {
           body = getCellularInformation();
           if (!body.considerIp || retry == 0) {
             clearInterval(interval);
-
             resolve(body)
             return;
           }
@@ -153,6 +153,15 @@ function handleGeoLocationApi() {
       }
       console.log(body);
       requestCreator('geolocationApi', body).then(function (result) {
+        if(result.response.accuracy >= 35000) {
+          handleError({
+            message: 'geolocation response >= 35000',
+            body: {
+              geolocationBody:body,
+              geolocationResponse:result.response
+            }
+          })
+        }
         return resolve(result.response);
       }).catch(reject)
     }).catch(reject)
