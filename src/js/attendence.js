@@ -35,7 +35,7 @@ function attendenceView(sectionContent) {
       handleTemplateListClick(listInit)
     };
 
-    // if (!arSubs) return;
+
     const officeAR = {}
     arSubs.forEach(function (sub) {
       officeAR[sub.office] = sub
