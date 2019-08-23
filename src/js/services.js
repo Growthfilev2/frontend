@@ -112,59 +112,23 @@ function getLocation() {
   })
 }
 
-function handleCellularInformation(retry) {
-  return new Promise(function (resolve, reject) {
-
-    try {
-      body = getCellularInformation();
-      if (!Object.keys(body).length) {
-        reject("empty object from getCellularInformation");
-        return;
-      }
-      if (body.considerIp) {
-
-        var interval = setInterval(function () {
-          body = getCellularInformation();
-          if (!body.considerIp || retry == 0) {
-            clearInterval(interval);
-            resolve(body)
-            return;
-          }
-          retry--
-        }, 1000)
-        return;
-      }
-      return resolve(body)
-    } catch (e) {
-      reject(e)
-    }
-  })
-}
 
 function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
-    var retry = 2;
-    handleCellularInformation(retry).then(function (body) {
-      if (body.considerIp) {
-        handleError({
-          message: 'considerIp is true after retry',
-          body: JSON.stringify(body)
-        })
-      }
-      console.log(body);
-      requestCreator('geolocationApi', body).then(function (result) {
-        if(result.response.accuracy >= 35000) {
-          handleError({
-            message: 'geolocation response >= 35000',
-            body: {
-              geolocationBody:body,
-              geolocationResponse:result.response
-            }
-          })
-        }
-        return resolve(result.response);
-      }).catch(reject)
-    }).catch(reject)
+    let body;
+    try {
+      body = getCellularInformation();
+    } catch (e) {
+      reject(e.message);
+    }
+    if (!Object.keys(body).length) {
+      reject("empty object from getCellularInformation");
+    }
+    requestCreator('geolocationApi', body).then(function (result) {
+      return resolve(result.response);
+    }).catch(function (error) {
+      reject(error)
+    })
   })
 }
 
