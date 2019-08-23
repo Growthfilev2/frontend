@@ -1,6 +1,7 @@
 function attendenceView(sectionContent) {
   const subs = {}
-
+  sectionContent.innerHTML = attendanceDom();
+  const result = []
   const tx = db.transaction('subscriptions');
   tx.objectStore('subscriptions')
     .index('report')
@@ -12,35 +13,25 @@ function attendenceView(sectionContent) {
         cursor.continue();
         return;
       }
-      if (cursor.value.hidden) {
+
+      if (cursor.value.template === 'attendance regularization') {
         cursor.continue();
         return;
       }
-      if (!subs[cursor.value.template]) {
-        subs[cursor.value.template] = [cursor.value]
-      } else {
-        subs[cursor.value.template].push(cursor.value)
-      }
+      result.push(cursor.value);
+
       cursor.continue();
     };
   tx.oncomplete = function () {
-
-    sectionContent.innerHTML = attendanceDom(subs['leave'] || []);
+    const suggestionListEl = document.getElementById('suggested-list');
+    if (suggestionListEl) {
+      suggestionListEl.innerHTML = templateList(result)
+      const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
+      handleTemplateListClick(suggestionListInit)
+    }
     createTodayStat();
+    createMonthlyStat()
 
-    const leaveSub = subs['leave'];
-    const arSubs = subs['attendance regularization'] || []
-    if (leaveSub) {
-      const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-      handleTemplateListClick(listInit)
-    };
-
-
-    const officeAR = {}
-    arSubs.forEach(function (sub) {
-      officeAR[sub.office] = sub;
-    })
-    createMonthlyStat(officeAR);
   }
   tx.onerror = function () {
     handleError({
@@ -50,13 +41,13 @@ function attendenceView(sectionContent) {
   }
 }
 
-function attendanceDom(leaveSub) {
+function attendanceDom() {
   return `<div class='attendance-section'>
   
   
   <div class='mdc-layout-grid__inner'>
   <div class='list-container mdc-layout-grid__cell--span-12'>
-    ${templateList(leaveSub)}
+    <ul class='mdc-list subscription-list' id='suggested-list'></ul>
   </div>
   </div>
   <div class='today-stat mdc-layout-grid__inner'>
@@ -142,27 +133,32 @@ function todayStatCard(addendum, activity) {
     `
 }
 
-function renderArCard(statusObject, arSub) {
+function renderArCard(statusObject) {
 
   if (statusObject.statusForDay == 1) {
     return `<p class='present sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
   }
-  if (statusObject.onAr) {
-    return `<p class='sfd mt-0 mb-0 mdc-theme--primary'>Applied for AR</p>`
-  }
-
-  if (statusObject.statusForDay < 1) {
+  if (statusObject.statusForDay == 0) {
     return `
-    ${arSub[statusObject.office] ? ` <button class='mdc-button mdc-theme--primary-bg ar-button' data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
-    <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
-    </button>`:''}
-   
+    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+      Apply AR
+    </button>
+    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="leave" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+      Apply Leave
+    </button>
+      <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
+
+  }
+  if (statusObject.statusForDay > 0 || statusObject.statusForDay < 1) {
+    return `
+    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+      Apply AR
+    </button>
       <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
   }
-
 }
 
-function monthlyStatCard(value, arSub) {
+function monthlyStatCard(value) {
 
   const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
   return `
@@ -173,16 +169,15 @@ function monthlyStatCard(value, arSub) {
        
       </div>
       <div class='btn-container'>
-        ${renderArCard(value,arSub)}
+        ${renderArCard(value)}
       </div>
   </div>
     `
 }
 
-function createMonthlyStat(arSub) {
+function createMonthlyStat() {
   const tx = db.transaction('reports');
 
-  const today = Number(`${new Date().getMonth()}${new Date().getDate()}${new Date().getFullYear()}`)
   let monthlyString = ''
   let month;
 
@@ -207,18 +202,61 @@ function createMonthlyStat(arSub) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = cursor.value.month;
-      monthlyString += monthlyStatCard(cursor.value, arSub);
+      monthlyString += monthlyStatCard(cursor.value);
       cursor.continue();
     }
   tx.oncomplete = function () {
     document.querySelector('.monthly-stat').innerHTML = monthlyString;
-    [].map.call(document.querySelectorAll('.ar-button'), function (el) {
-      const ripple = new mdc.ripple.MDCRipple(el);
-      el.addEventListener('click', function () {
-        history.pushState(['addView'], null, null);
-        arSub[el.dataset.office].date = el.dataset.date
-        addView(arSub[el.dataset.office])
-      })
+
+    [].map.call(document.querySelectorAll('.status-button'), function (el) {
+
+      el.addEventListener('click', checkStatusSubscription)
+    });
+
+  }
+}
+
+function checkStatusSubscription(event) {
+
+  console.log(event)
+  const el = event.target;
+  const dataset = el.dataset;
+  console.log(dataset)
+  const tx = db.transaction('subscriptions');
+  const fetch = tx
+    .objectStore('subscriptions')
+    .index('officeTemplate')
+    .openCursor(IDBKeyRange.only([dataset.office, dataset.template]));
+  let subscription;
+  fetch.onsuccess = function (event) {
+    const cursor = event.target.result;
+    if (!cursor) return;
+    if (cursor.value.status === 'CANCELLED') {
+      cursor.continue();
+      return;
+    }
+    subscription = cursor.value;
+    cursor.continue();
+  }
+  fetch.onerror = function () {
+    handleError({
+      message: fetch.error,
+      body: ''
+    })
+  }
+  tx.oncomplete = function () {
+    if (!subscription) {
+      snacks(`You Don't Have ${formatTextToTitleCase(dataset.template)} Subscription`);
+      return
+    }
+    history.pushState(['addView'], null, null);
+    subscription.date = dataset.date;
+    addView(subscription)
+  }
+  tx.onerror = function () {
+    handleError({
+      message: tx.error,
+      body: ''
     })
   }
 }
