@@ -516,8 +516,12 @@ html {
 
 }
 
+#view-form .mdc-dialog__title {
+  padding-left: 10px;
+  padding-right: 10px;
+}
 #view-form .mdc-card .view-card {
-  padding: 20px 24px;
+  padding: 20px 10px;
   /* max-height: 300px; */
   padding-top: 0px;
   padding-bottom: 0px;
@@ -526,10 +530,27 @@ html {
 
 #view-form .mdc-card .view-card .mdc-list {
   padding: 0px;
+  
 }
 
 #view-form .mdc-card .view-card .mdc-list li {
   padding-left: 0px;
+  padding-right: 0px;
+
+}
+
+/* #view-form #schedule-container .mdc-list-item__secondary-text {
+  font-size: 13px;
+} */
+@media (max-width:320px) {
+  #view-form #schedule-container .mdc-list-item__graphic {
+    margin-right: 20px;
+  }
+}
+@media (max-width:370px) {
+  #view-form #schedule-container .mdc-list-item__secondary-text {
+    font-size: 13px;
+  }
 }
 
 #view-form .mdc-card .view-card .mdc-list li .list-text {
