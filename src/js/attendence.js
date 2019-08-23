@@ -38,7 +38,7 @@ function attendenceView(sectionContent) {
 
     const officeAR = {}
     arSubs.forEach(function (sub) {
-      officeAR[sub.office] = sub
+      officeAR[sub.office] = sub;
     })
     createMonthlyStat(officeAR);
   }

@@ -556,7 +556,9 @@ html {
 
   overflow-y: auto;
 }
-
+#assignee-container .tasks-heading {
+  width: 100%;
+}
 #assignee-container .tasks-heading .mdc-chip__text {
   overflow: hidden;
   text-overflow: ellipsis;
