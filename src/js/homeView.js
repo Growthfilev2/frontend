@@ -301,7 +301,7 @@ function homeView(suggestedTemplates) {
         const heading = createActivityHeading(activity)
         showViewDialog(heading, activity, 'view-form');
       })
-    })
+    }).catch(handleError)
     const auth = firebase.auth().currentUser
     document.getElementById('reports').addEventListener('click', function () {
       if (auth.email && auth.emailVerified) {
@@ -368,6 +368,12 @@ function checkForDuty() {
     }
     tx.oncomplete = function () {
       return resolve(result);
+    }
+    tx.onerror = function(){
+      return reject({
+        message:tx.error,
+        body:''
+      })
     }
   })
 }
