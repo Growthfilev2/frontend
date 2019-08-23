@@ -25,14 +25,7 @@ function attendenceView(sectionContent) {
   tx.oncomplete = function () {
     const suggestionListEl = document.getElementById('suggested-list');
     if (suggestionListEl) {
-      suggestionListEl.innerHTML = `${result.map(function(value){
-        return `<li class='mdc-list-item'>
-        Create New ${formatTextToTitleCase(value.template)}
-        <span class="mdc-list-item__meta material-icons mdc-theme--primary">
-        keyboard_arrow_right
-        </span>
-        </li>`
-      }).join("")}`
+      suggestionListEl.innerHTML = templateList(result)
       const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
       handleTemplateListClick(suggestionListInit)
     }
@@ -145,14 +138,21 @@ function renderArCard(statusObject) {
   if (statusObject.statusForDay == 1) {
     return `<p class='present sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
   }
-
-  if (statusObject.statusForDay >= 0 || statusObject.statusForDay < 1) {
+  if (statusObject.statusForDay == 0) {
     return `
-    <button class='mdc-button mdc-theme--primary-bg status-button' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
-        <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
+    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+      Apply AR
     </button>
-    <button class='mdc-button mdc-theme--primary-bg status-button' data-template="leave" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
-        <span class="mdc-button__label mdc-theme--on-primary">Apply Leave</span>
+    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="leave" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+      Apply Leave
+    </button>
+      <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
+
+  }
+  if (statusObject.statusForDay > 0 || statusObject.statusForDay < 1) {
+    return `
+    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+      Apply AR
     </button>
       <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
   }
@@ -209,16 +209,19 @@ function createMonthlyStat() {
     document.querySelector('.monthly-stat').innerHTML = monthlyString;
 
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
-      el.addEventListener('click', function () {
-        if (el.dataset.template === 'attendance regularization') return openAr(el.dataset)
-        return openLeave(el.dataset);
-      })
+
+      el.addEventListener('click', checkStatusSubscription)
     });
 
   }
 }
 
-function openAr(dataset) {
+function checkStatusSubscription(event) {
+
+  console.log(event)
+  const el = event.target;
+  const dataset = el.dataset;
+  console.log(dataset)
   const tx = db.transaction('subscriptions');
   const fetch = tx
     .objectStore('subscriptions')
@@ -242,6 +245,10 @@ function openAr(dataset) {
     })
   }
   tx.oncomplete = function () {
+    if (!subscription) {
+      snacks(`You Don't Have ${formatTextToTitleCase(dataset.template)} Subscription`);
+      return
+    }
     history.pushState(['addView'], null, null);
     subscription.date = dataset.date;
     addView(subscription)
