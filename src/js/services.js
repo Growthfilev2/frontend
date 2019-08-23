@@ -69,20 +69,15 @@ function getLocation() {
   return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-
-        handleGeoLocationApi().then(function (cellLocation) {
-          if (htmlLocation.accuracy < cellLocation.accuracy) {
+        if (htmlLocation.isInvalid || htmlLocation.accuracy >= 350) {
+          handleGeoLocationApi().then(resolve).catch(function (error) {
             return resolve(htmlLocation);
-          }
-          return resolve(cellLocation)
-        }).catch(function (error) {
-          return resolve(htmlLocation);
-        })
+          })
+          return;
+        }
+        return resolve(htmlLocation)
       }).catch(function (htmlError) {
-        handleGeoLocationApi().then(function (location) {
-          return resolve(location);
-        }).catch(function (error) {
+        handleGeoLocationApi().then(resolve).catch(function (error) {
           return reject({
             message: 'Both HTML and Geolocation failed to fetch location',
             body: {
@@ -103,11 +98,7 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      html5Geolocation().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject(error)
-      })
+      html5Geolocation().then(resolve).catch(reject)
     }
   })
 }
@@ -146,12 +137,14 @@ function iosLocationError(iosError) {
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
     navigator.geolocation.getCurrentPosition(function (position) {
+
       return resolve({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
         provider: 'HTML5',
-        lastLocationTime: Date.now()
+        lastLocationTime: Date.now(),
+        isInvalid: isHtmlLocationInvalid(position)
       })
     }, function (error) {
       reject({
@@ -163,6 +156,22 @@ function html5Geolocation() {
       enableHighAccuracy: false
     })
   })
+}
+
+function isHtmlLocationInvalid(position) {
+
+  const oldState = localStorage.getItem('ApplicationState');
+  if (!oldState) return false;
+
+  const oldLocation = JSON.parse(oldState).location;
+  if (oldLocation.latitude && oldLocation.longitude) {
+    if (oldLocation.latitude === position.coords.latitude && oldLocation.longitude === position.coords.longitude) {
+      return true
+    }
+    return false
+  }
+  return false;
+
 }
 
 function toRad(value) {
@@ -246,7 +255,7 @@ function requestCreator(requestType, requestBody) {
       },
       key: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl(),
-     
+
     }
   };
 
