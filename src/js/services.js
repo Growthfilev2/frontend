@@ -72,6 +72,8 @@ function manageLocation() {
       if (!isLastLocationOlderThanThreshold(oldApplicationState.location.lastLocationTime, 60)) {
         return resolve(oldApplicationState.location);
       }
+
+      
       return getLocation().then(resolve).catch(reject);
     }
     getLocation().then(resolve).catch(reject);
@@ -535,3 +537,9 @@ function formatTextToTitleCase(string) {
   }
   return arr.join('')
 }
+
+function calculateSpeed(distance,time) {
+return distance/time
+}
+
+
