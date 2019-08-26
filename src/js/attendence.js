@@ -29,7 +29,7 @@ function attendenceView(sectionContent) {
       const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
       handleTemplateListClick(suggestionListInit)
     };
-    
+
     createTodayStat();
     createMonthlyStat()
 
@@ -213,16 +213,24 @@ function createMonthlyStat() {
     });
 
     if (!monthlyString) {
-      getCountOfStatusObject().then(function (result) {
-        console.log(result)
-        handleError({
-          message: 'status object log',
-          body: JSON.stringify({
-            count: result.count,
-            data: result.data
+      try {
+        getCountOfStatusObject().then(function (result) {
+         
+          handleError({
+            message: 'status object log',
+            body: JSON.stringify({
+              count: result.count,
+              data: result.data
+            })
           })
+        }).catch(handleError)
+      } catch (e) {
+        handleError({
+          message: e.message,
+          body: '',
+          stack: e.stack
         })
-      }).catch(handleError)
+      }
     }
   }
   tx.onerror = function () {
