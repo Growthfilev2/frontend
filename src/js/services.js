@@ -12,7 +12,7 @@ function handleError(error) {
   if (errorInStorage.hasOwnProperty(error.message)) return;
   error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
-
+  
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }

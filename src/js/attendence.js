@@ -177,7 +177,6 @@ function monthlyStatCard(value) {
 
 function createMonthlyStat() {
   const tx = db.transaction('reports');
-
   let monthlyString = ''
   let month;
 
@@ -206,14 +205,65 @@ function createMonthlyStat() {
       cursor.continue();
     }
   tx.oncomplete = function () {
+
     document.querySelector('.monthly-stat').innerHTML = monthlyString;
-
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
-
       el.addEventListener('click', checkStatusSubscription)
     });
 
+    if (!monthlyString) {
+      getCountOfStatusObject().then(function (result) {
+        console.log(result)
+        handleError({
+          message: 'status object log',
+          body: JSON.stringify({
+            count: result.count,
+            data: result.data
+          })
+        })
+      }).catch(handleError)
+    }
   }
+  tx.onerror = function () {
+    handleError({
+      message: tx.error,
+      body: ''
+    })
+  }
+}
+
+function getCountOfStatusObject() {
+  return new Promise(function (resolve, reject) {
+    const tx = db.transaction('reports');
+    const store = tx.objectStore("reports");
+    const body = {
+      count: '',
+      data: ''
+    }
+    const countReq = store.count()
+
+    countReq.onsuccess = function (event) {
+      body.count = event.target.result
+    }
+    store.getAll().onsuccess = function (event) {
+      body.data = event.target.result
+    }
+    tx.oncomplete = function () {
+      return resolve(body);
+    }
+    tx.onerror = function () {
+      return reject({
+        message: tx.error,
+        body: ''
+      })
+    }
+    countReq.onerror = function () {
+      return reject({
+        message: countReq.error,
+        body: ''
+      })
+    }
+  })
 }
 
 function checkStatusSubscription(event) {
