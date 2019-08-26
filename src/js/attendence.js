@@ -28,7 +28,8 @@ function attendenceView(sectionContent) {
       suggestionListEl.innerHTML = templateList(result)
       const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
       handleTemplateListClick(suggestionListInit)
-    }
+    };
+    
     createTodayStat();
     createMonthlyStat()
 
