@@ -723,7 +723,7 @@ function openMap() {
     getCheckInSubs().then(function (checkInSubs) {
 
       if (!Object.keys(checkInSubs).length) {
-        manageLocation().then(function (location) {
+        manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           ApplicationState.location = location;
           localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
@@ -736,7 +736,7 @@ function openMap() {
       const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
 
       if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
-        manageLocation().then(function (location) {
+        manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
         }).catch(showNoLocationFound)
@@ -744,7 +744,7 @@ function openMap() {
       }
 
       if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
-        manageLocation().then(function (location) {
+        manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
         }).catch(showNoLocationFound)
@@ -755,7 +755,7 @@ function openMap() {
         document.getElementById('start-load').classList.add('hidden');
         ApplicationState = oldApplicationState
         console.log(ApplicationState)
-        getSuggestions()
+        getSuggestions(3)
         return;
       };
 

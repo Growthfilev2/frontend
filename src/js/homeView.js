@@ -200,7 +200,7 @@ function homeView(suggestedTemplates) {
           mapView(ApplicationState.location)
           return
         };
-        manageLocation().then(function (newLocation) {
+        manageLocation(3).then(function (newLocation) {
           mapView(newLocation);
         }).catch(showNoLocationFound)
       })

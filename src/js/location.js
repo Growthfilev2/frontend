@@ -1,22 +1,26 @@
 function handleLocationValidation(newLocation) {
-    const storedLocation = getStoredLocation();
-    if (storedLocation) {
-        if (isLocationOld(newLocation, storedLocation)) {
-            TODO: // retry
-                return;
-        };
-        if (calculateSpeed(distanceDelta(storedLocation.location, newLocation), timeDelta(storedLocation.lastLocationTime, newLocation.lastLocationTime)) >= 100) {
-            TODO: //retry
-                return
-        }
-        return;
-    }
+    return new Promise(function (resolve, reject) {
+        const storedLocation = getStoredLocation();
 
-    if (newLocation.accuracy >= 35000) {
-        TODO: //retry
-            return
-    }
-    return newLocation;
+        if (storedLocation) {
+            if (isLocationOld(newLocation, storedLocation)) {
+                TODO: // retry
+                    return;
+            };
+
+            const dDelta = distanceDelta(storedLocation, newLocation);
+            const tDelta = timeDelta(storedLocation.lastLocationTime, newLocation.lastLocationTime);
+
+            if (calculateSpeed(dDelta, tDelta) >= 40) {
+                TODO: //retry
+                    return
+            }
+            return resolve(newLocation);
+        }
+
+        return resolve(newLocation);
+    })
+
 }
 
 function calculateSpeed(distance, time) {
@@ -28,7 +32,8 @@ function distanceDelta(oldLocation, newLocation) {
 }
 
 function timeDelta(previousLocationTime, newLocationTime) {
-    return newLocationTime - previousLocationTime;
+    const duration = moment.duration(moment(newLocationTime).diff(moment(previousLocationTime)));
+    return duration;
 }
 
 function getStoredLocation() {
@@ -41,7 +46,7 @@ function getStoredLocation() {
 function isLocationOld(newLocation, oldLocation) {
     if (!oldLocation) return false;
     return oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude
-  
+
 }
 
 function isLocationMoreThanThreshold(distance) {

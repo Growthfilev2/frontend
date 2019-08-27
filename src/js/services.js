@@ -52,22 +52,73 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
+var maxRetry = 3
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-    getLocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error);
-    })
-  })
+    getLocation().then(function(location){
+      if(location.accuracy >= 35000) {
+        if(maxRetry > 0) {  
+          setTimeout(function(){
+            resolve(manageLocation())
+          },1000)
+        }
+        else {
+          return resolve(handleLocationValidation(location))
+        }
+      }
+      else {
+        resolve(handleLocationValidation(location))
+      }
+    }).catch(reject)
+  });
+}
+
+function handleLocationOld(args) {
+  const storedLocation = getStoredLocation();
+
+  if (!storedLocation) return args.resolve(args.location)
+  if (isLocationOld(storedLocation)) {
+    if (args.maxRetry > 0) {
+      setTimeout(function () {
+        args.resolve(manageLocation(3));
+      }, 1000)
+    } else {
+      args.storedLocation = storedLocation
+      args.maxRetry = 3
+      return handleSpeedCheck(args)
+    }
+    return
+  };
+  args.storedLocation = storedLocation
+  args.maxRetry = 3
+  args.resolve(args.location)
+  return handleSpeedCheck(args)
+}
+
+function handleSpeedCheck(args) {
+  const dDelta = distanceDelta(args.storedLocation, args.location);
+  const tDelta = timeDelta(args.storedLocation.lastLocationTime, args.location.lastLocationTime).asHours()
+  console.log(calculateSpeed(dDelta, tDelta))
+  if (calculateSpeed(dDelta, tDelta) >= 40) {
+    if (args.maxRetry > 0) {
+      setTimeout(function () {
+        manageLocation(3);
+      }, 1000)
+    } else {
+      return args.resolve(args.location)
+    }
+  }
+  return args.resolve(args.location);
 }
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
+
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.isInvalid || htmlLocation.accuracy >= 350) {
+
+        if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
           handleGeoLocationApi().then(resolve).catch(function (error) {
             return resolve(htmlLocation);
           })
@@ -134,25 +185,36 @@ function iosLocationError(iosError) {
 
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
-    navigator.geolocation.getCurrentPosition(function (position) {
-     
-      return resolve({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        provider: 'HTML5',
-        lastLocationTime: Date.now(),
-        isInvalid: isLocationOld(position.coords,getStoredLocation())
-      })
-    }, function (error) {
-      reject({
-        message: error.message
-      })
-    }, {
-      maximumAge: 0,
-      timeout: 5000,
-      enableHighAccuracy: false
+    return resolve({
+      latitude: 28.123,
+      longitude: 77.1234,
+      provider: 'HTML5',
+      accuracy: 36000,
+      lastLocationTime: Date.now(),
+      isLocationOld: isLocationOld({
+        latitude: 28.123,
+        longitude: 77.1234
+      }, getStoredLocation())
     })
+    // navigator.geolocation.getCurrentPosition(function (position) {
+
+    //   return resolve({
+    //     latitude: position.coords.latitude,
+    //     longitude: position.coords.longitude,
+    //     accuracy: 360000 || position.coords.accuracy,
+    //     provider: 'HTML5',
+    //     isLocationOld:isLocationOld(position.coords,getStoredLocation()),
+    //     lastLocationTime: Date.now(),
+    //   })
+    // }, function (error) {
+    //   reject({
+    //     message: error.message
+    //   })
+    // }, {
+    //   maximumAge: 0,
+    //   timeout: 5000,
+    //   enableHighAccuracy: false
+    // })
   })
 }
 
