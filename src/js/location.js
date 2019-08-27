@@ -17,15 +17,13 @@ function isLocationNew(newLocation) {
     return false;
 }
 
-
 function isLocationMoreThanThreshold(distance) {
     var THRESHOLD = 1; //km
-    if (distance >= THRESHOLD) return true;
-    return false;
+    return distance >= THRESHOLD
 }
 
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
-    var currentTime = moment().valueOf();
+    var currentTime = moment(moment().valueOf());
     var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds()
     return duration > threshold
 }
@@ -129,7 +127,6 @@ function removeFalseCellIds(cellTowers) {
     const filtered = cellTowers.filter(function (tower) {
         return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
     });
-   
     return filtered
 }
 
