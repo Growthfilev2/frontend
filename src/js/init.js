@@ -726,6 +726,7 @@ function openMap() {
         manageLocation().then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           ApplicationState.location = location;
+          localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
           getSuggestions()
         }).catch(showNoLocationFound)
         return

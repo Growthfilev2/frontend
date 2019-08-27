@@ -1,22 +1,47 @@
+function handleLocationValidation(newLocation) {
+    const storedLocation = getStoredLocation();
+    if (storedLocation) {
+        if (isLocationOld(newLocation, storedLocation)) {
+            TODO: // retry
+                return;
+        };
+        if (calculateSpeed(distanceDelta(storedLocation.location, newLocation), timeDelta(storedLocation.lastLocationTime, newLocation.lastLocationTime)) >= 100) {
+            TODO: //retry
+                return
+        }
+        return;
+    }
 
+    if (newLocation.accuracy >= 35000) {
+        TODO: //retry
+            return
+    }
+    return newLocation;
+}
 
 function calculateSpeed(distance, time) {
     return distance / time;
 }
 
-function isLocationOld(newLocation) {
+function distanceDelta(oldLocation, newLocation) {
+    return calculateDistanceBetweenTwoPoints(oldLocation, newLocation);
+}
 
-    const oldState = localStorage.getItem('ApplicationState');
-    if (!oldState) return false;
+function timeDelta(previousLocationTime, newLocationTime) {
+    return newLocationTime - previousLocationTime;
+}
 
-    const oldLocation = JSON.parse(oldState).location;
-    if (oldLocation.latitude && oldLocation.longitude) {
-        if (oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude) {
-            return true
-        }
-        return false
-    }
-    return false;
+function getStoredLocation() {
+    const oldState = localStorage.getItem('ApplicationState')
+    if (!oldState) return;
+    return JSON.parse(oldState).location
+
+}
+
+function isLocationOld(newLocation, oldLocation) {
+    if (!oldLocation) return false;
+    return oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude
+  
 }
 
 function isLocationMoreThanThreshold(distance) {
@@ -81,8 +106,13 @@ function getCellularInformation() {
         cellTowerQueryString = AndroidInterface.getCellTowerInformation();
     } catch (e) {
         handleError({
-            message:e.message,
-            body: {mcc,mnc,radioType,carrier}
+            message: e.message,
+            body: {
+                mcc,
+                mnc,
+                radioType,
+                carrier
+            }
         })
     }
 
@@ -151,6 +181,6 @@ function queryPatramsToObject(url) {
         } else {
             result[key] = Number(value)
         }
-    })  
+    })
     return result;
 }

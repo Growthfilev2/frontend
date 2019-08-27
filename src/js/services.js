@@ -135,14 +135,14 @@ function iosLocationError(iosError) {
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
     navigator.geolocation.getCurrentPosition(function (position) {
-
+     
       return resolve({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
         provider: 'HTML5',
         lastLocationTime: Date.now(),
-        isInvalid: isLocationOld(position.coords)
+        isInvalid: isLocationOld(position.coords,getStoredLocation())
       })
     }, function (error) {
       reject({
