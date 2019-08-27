@@ -52,64 +52,67 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
-var maxRetry = 3
 
-function manageLocation() {
+function manageLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    getLocation().then(function(location){
-      if(location.accuracy >= 35000) {
-        if(maxRetry > 0) {  
-          setTimeout(function(){
-            resolve(manageLocation())
-          },1000)
+    getLocation().then(function (location) {
+      if (location.accuracy >= 35000) {
+        if (maxRetry > 0) {
+          setTimeout(function () {
+            manageLocation(maxRetry -1);
+          }, 1000)
+        } else {
+          return handleLocationOld(3, location).then(resolve).catch(reject)
         }
-        else {
-          return resolve(handleLocationValidation(location))
-        }
-      }
-      else {
-        resolve(handleLocationValidation(location))
+      } else {
+       return handleLocationOld(3, location).then(resolve).catch(reject)
       }
     }).catch(reject)
   });
 }
 
-function handleLocationOld(args) {
-  const storedLocation = getStoredLocation();
+function handleLocationOld(maxRetry, location) {
+  return new Promise(function (resolve, reject) {
+    const storedLocation = getStoredLocation();
+    if (!storedLocation) return resolve(location)
+    if (isLocationOld(storedLocation, location)) {
+      if (maxRetry > 0) {
+        setTimeout(function () {
+          getLocation().then(function (newLocation) {
+            handleLocationOld(maxRetry - 1, newLocation)
+          }).catch(reject)
 
-  if (!storedLocation) return args.resolve(args.location)
-  if (isLocationOld(storedLocation)) {
-    if (args.maxRetry > 0) {
-      setTimeout(function () {
-        args.resolve(manageLocation(3));
-      }, 1000)
-    } else {
-      args.storedLocation = storedLocation
-      args.maxRetry = 3
-      return handleSpeedCheck(args)
-    }
-    return
-  };
-  args.storedLocation = storedLocation
-  args.maxRetry = 3
-  args.resolve(args.location)
-  return handleSpeedCheck(args)
+        }, 1000)
+      } else {
+          return resolve(location)
+        // return handleSpeedCheck(3, location, storedLocation)
+      }
+      return
+    };
+    return resolve(location)
+    // return handleSpeedCheck(3, location, storedLocation);  
+  })
 }
 
-function handleSpeedCheck(args) {
-  const dDelta = distanceDelta(args.storedLocation, args.location);
-  const tDelta = timeDelta(args.storedLocation.lastLocationTime, args.location.lastLocationTime).asHours()
-  console.log(calculateSpeed(dDelta, tDelta))
-  if (calculateSpeed(dDelta, tDelta) >= 40) {
-    if (args.maxRetry > 0) {
-      setTimeout(function () {
-        manageLocation(3);
-      }, 1000)
-    } else {
-      return args.resolve(args.location)
+function handleSpeedCheck(maxRetry, location, storedLocation) {
+  return new Promise(function (resolve, reject) {
+
+    const dDelta = distanceDelta(storedLocation, location);
+    const tDelta = timeDelta(storedLocation.lastLocationTime, location.lastLocationTime).asHours()
+    console.log(calculateSpeed(dDelta, tDelta))
+    if (calculateSpeed(dDelta, tDelta) >= 40) {
+      if (maxRetry > 0) {
+        setTimeout(function () {
+          getLocation().then(function (newLocation) {
+            handleSpeedCheck(maxRetry - 1, newLocation, storedLocation)
+          }).catch(reject)
+        }, 1000)
+      } else {
+        return resolve(location)
+      }
     }
-  }
-  return args.resolve(args.location);
+    return resolve(location);
+  })
 }
 
 function getLocation() {

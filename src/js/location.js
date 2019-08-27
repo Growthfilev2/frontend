@@ -1,27 +1,4 @@
-function handleLocationValidation(newLocation) {
-    return new Promise(function (resolve, reject) {
-        const storedLocation = getStoredLocation();
 
-        if (storedLocation) {
-            if (isLocationOld(newLocation, storedLocation)) {
-                TODO: // retry
-                    return;
-            };
-
-            const dDelta = distanceDelta(storedLocation, newLocation);
-            const tDelta = timeDelta(storedLocation.lastLocationTime, newLocation.lastLocationTime);
-
-            if (calculateSpeed(dDelta, tDelta) >= 40) {
-                TODO: //retry
-                    return
-            }
-            return resolve(newLocation);
-        }
-
-        return resolve(newLocation);
-    })
-
-}
 
 function calculateSpeed(distance, time) {
     return distance / time;
