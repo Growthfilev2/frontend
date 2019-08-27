@@ -668,55 +668,6 @@ function getUniqueOfficeCount() {
   })
 }
 
-function checkMapStoreForNearByLocation(office, currentLocation) {
-  return new Promise(function (resolve, reject) {
-
-    const results = [];
-    const tx = db.transaction(['map'])
-    const store = tx.objectStore('map')
-    const index = store.index('byOffice')
-    const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
-    index.openCursor(range).onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-
-      if (!cursor.value.location) {
-        cursor.continue();
-        return;
-      }
-      if (!cursor.value.latitude || !cursor.value.longitude) {
-        cursor.continue();
-        return;
-      }
-      const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-      if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-        results.push(cursor.value);
-      }
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-      const filter = {};
-      results.forEach(function (value) {
-        filter[value.location] = value;
-      })
-      const array = [];
-      Object.keys(filter).forEach(function (locationName) {
-        array.push(filter[locationName])
-      })
-      const nearest = array.sort(function (a, b) {
-        return a.accuracy - b.accuracy
-      })
-      resolve(nearest)
-    }
-    tx.onerror = function () {
-      reject({
-        message: tx.error,
-        body: ''
-      })
-    }
-
-  })
-}
 
 function hasDataInDB() {
   return new Promise(function (resolve) {
