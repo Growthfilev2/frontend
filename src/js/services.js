@@ -30,7 +30,6 @@ function successDialog(text) {
     successMark.classList.add('hidden');
     viewContainer.style.opacity = '1';
     document.getElementById('app-header').style.opacity = '1'
-
   }, 2000);
 }
 
@@ -52,22 +51,6 @@ function snacks(message, text, callback) {
 function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
-
-
-function calculateSpeed(distance,time) {
-  return distance/time;
-}
-
-// function shouldRetry(location){
-
-//   const oldState = localStorage.getItem('ApplicationState')
-//   if(!oldState) {
-
-//     return
-//   }
-
-//   if(loction.latitude === oldState.lat)
-// }
 
 
 function manageLocation() {
@@ -159,7 +142,7 @@ function html5Geolocation() {
         accuracy: position.coords.accuracy,
         provider: 'HTML5',
         lastLocationTime: Date.now(),
-        isInvalid: isHtmlLocationInvalid(position)
+        isInvalid: isLocationOld(position.coords)
       })
     }, function (error) {
       reject({
@@ -412,8 +395,6 @@ function getRootRecord() {
     }
   })
 }
-
-
 
 
 function getSubscription(office, template) {

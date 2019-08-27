@@ -1,8 +1,10 @@
+
+
 function calculateSpeed(distance, time) {
     return distance / time;
 }
 
-function isLocationNew(newLocation) {
+function isLocationOld(newLocation) {
 
     const oldState = localStorage.getItem('ApplicationState');
     if (!oldState) return false;
