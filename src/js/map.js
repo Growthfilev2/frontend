@@ -464,26 +464,7 @@ function focusMarker(map, markersObject, index) {
   map.setZoom(18);
 }
 
-function GetOffsetBounds(latlng, offset) {
-  const radius = 6378
-  const d = (180 / Math.PI);
-  this.latLng = latlng
-  this.ratio = (offset / radius) * d;
-  this.radioLon = (this.ratio) / Math.cos(this.latLng.latitude * Math.PI / 180)
-}
 
-GetOffsetBounds.prototype.north = function () {
-  return this.latLng.latitude + this.ratio
-}
-GetOffsetBounds.prototype.south = function () {
-  return this.latLng.latitude - this.ratio
-}
-GetOffsetBounds.prototype.east = function () {
-  return this.latLng.longitude + this.radioLon
-}
-GetOffsetBounds.prototype.west = function () {
-  return this.latLng.longitude - this.radioLon
-}
 
 
 function loadNearByLocations(o, map, location) {

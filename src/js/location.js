@@ -17,6 +17,19 @@ function isLocationNew(newLocation) {
     return false;
 }
 
+
+function isLocationMoreThanThreshold(distance) {
+    var THRESHOLD = 1; //km
+    if (distance >= THRESHOLD) return true;
+    return false;
+}
+
+function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
+    var currentTime = moment().valueOf();
+    var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds()
+    return duration > threshold
+}
+
 function toRad(value) {
     return value * Math.PI / 180;
 }
@@ -35,48 +48,110 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 
 }
 
-function isLocationMoreThanThreshold(distance) {
-    var THRESHOLD = 1; //km
-    if (distance >= THRESHOLD) return true;
-    return false;
+function GetOffsetBounds(latlng, offset) {
+    const radius = 6378
+    const d = (180 / Math.PI);
+    this.latLng = latlng
+    this.ratio = (offset / radius) * d;
+    this.radioLon = (this.ratio) / Math.cos(this.latLng.latitude * Math.PI / 180)
 }
 
-function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
+GetOffsetBounds.prototype.north = function () {
+    return this.latLng.latitude + this.ratio
+}
+GetOffsetBounds.prototype.south = function () {
+    return this.latLng.latitude - this.ratio
+}
+GetOffsetBounds.prototype.east = function () {
+    return this.latLng.longitude + this.radioLon
+}
+GetOffsetBounds.prototype.west = function () {
+    return this.latLng.longitude - this.radioLon
+}
 
-    var currentTime = moment().valueOf();
-    var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds()
-    return duration > threshold
+function getCellularInformation() {
+
+    let cellTowerQueryString;
+    const mcc = AndroidInterface.getMobileCountryCode()
+    const mnc = AndroidInterface.getMobileNetworkCode()
+    const radioType = AndroidInterface.getRadioType()
+    const carrier = AndroidInterface.getCarrier()
+    const wifiQueryString = AndroidInterface.getWifiAccessPoints()
+    try {
+        cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+    } catch (e) {
+        handleError({
+            message:e.message,
+            body: {mcc,mnc,radioType,carrier}
+        })
+    }
+
+    let wifiAccessPointsArray = [];
+    let cellTowerArray = [];
+    if (wifiQueryString) {
+        wifiAccessPointsArray = parseQuery(wifiQueryString)
+    };
+    if (cellTowerQueryString) {
+        cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString))
+    }
+    const body = {}
+
+    if (mcc) {
+        body.homeMobileCountryCode = Number(mcc)
+    }
+    if (mnc) {
+        body.homeMobileNetworkCode = Number(mnc)
+    }
+    if (carrier) {
+        body.carrier = carrier
+    }
+    if (radioType) {
+        body.radioType = radioType
+    }
+
+    if (wifiAccessPointsArray.length) {
+        body.wifiAccessPoints = wifiAccessPointsArray
+    }
+    if (cellTowerArray.length) {
+        body.cellTowers = cellTowerArray;
+    }
+    if (wifiAccessPointsArray.length && cellTowerArray.length) {
+        body.considerIp = false
+    } else {
+        body.considerIp = true
+    }
+    return body;
 
 }
 
+function removeFalseCellIds(cellTowers) {
+    const max_value = 2147483647
+    const filtered = cellTowers.filter(function (tower) {
+        return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
+    });
+   
+    return filtered
+}
 
+function parseQuery(queryString) {
 
-function isLocationStatusWorking() {
-    const requiredWifi = {
-        'samsung': true,
-        'OnePlus': true
-    }
+    var array = [];
+    const splitBySeperator = queryString.split(",")
+    splitBySeperator.forEach(function (value) {
+        const url = new URLSearchParams(value);
+        array.push(queryPatramsToObject(url))
+    })
+    return array;
+}
 
-    if (!navigator.onLine) {
-        const connectionDialog = new Dialog('BROKEN INTERNET CONNECTION', 'Make Sure You have a working Internet Connection').create()
-        connectionDialog.open();
-        return;
-    }
-    if (native.getName() !== 'Android') return true;
-
-    if (!AndroidInterface.isLocationPermissionGranted()) {
-        const alertDialog = new Dialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.').create()
-        alertDialog.open();
-        return
-    }
-    const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
-    if (requiredWifi[brand]) {
-        if (!AndroidInterface.isWifiOn()) {
-            const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
-            alertDialog.open();
-            return;
+function queryPatramsToObject(url) {
+    let result = {};
+    url.forEach(function (value, key) {
+        if (key === 'macAddress' || key === 'ssid') {
+            result[key] = value
+        } else {
+            result[key] = Number(value)
         }
-        return true;
-    }
-    return true
+    })  
+    return result;
 }

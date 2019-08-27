@@ -58,16 +58,16 @@ function calculateSpeed(distance,time) {
   return distance/time;
 }
 
-function shouldRetry(location){
+// function shouldRetry(location){
 
-  const oldState = localStorage.getItem('ApplicationState')
-  if(!oldState) {
+//   const oldState = localStorage.getItem('ApplicationState')
+//   if(!oldState) {
 
-    return
-  }
+//     return
+//   }
 
-  if(loction.latitude === oldState.lat)
-}
+//   if(loction.latitude === oldState.lat)
+// }
 
 
 function manageLocation() {
