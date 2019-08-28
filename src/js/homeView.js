@@ -202,7 +202,7 @@ function homeView(suggestedTemplates) {
         };
         manageLocation(3).then(function (newLocation) {
           mapView(newLocation);
-        }).catch(showNoLocationFound)
+        }).catch(handleLocationError)
       })
     };
 

@@ -758,18 +758,19 @@ function openMap() {
           ApplicationState.location = location;
           localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
           getSuggestions()
-        }).catch(showNoLocationFound)
+        }).catch(handleLocationError)
         return
       };
 
       ApplicationState.officeWithCheckInSubs = checkInSubs
+      
       const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
 
       if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
         manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
-        }).catch(showNoLocationFound)
+        }).catch(handleLocationError)
         return
       }
 
@@ -777,7 +778,7 @@ function openMap() {
         manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
-        }).catch(showNoLocationFound)
+        }).catch(handleLocationError)
         return;
       }
 
@@ -796,7 +797,7 @@ function openMap() {
           return getSuggestions()
         }
         mapView(location)
-      }).catch(showNoLocationFound)
+      }).catch(handleLocationError)
     })
   })
 }

@@ -61,6 +61,7 @@ function wait(ms) {
 
 
 function manageLocation(maxRetry) {
+
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
       if (location.accuracy >= 35000) {
@@ -125,8 +126,16 @@ function handleSpeedCheck(maxRetry, location, storedLocation) {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
+    if (!navigator.onLine) return reject({
+      message: 'BROKEN INTERNET CONNECTION'
+    })
+
 
     if (native.getName() === 'Android') {
+      if (!isWifiOn()) return reject({
+        message: 'TURN ON YOUR WIFI'
+      })
+
       html5Geolocation().then(function (htmlLocation) {
 
         if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
@@ -259,25 +268,19 @@ function requestCreator(requestType, requestBody) {
       getRootRecord().then(function (rootRecord) {
         const time = fetchCurrentTime(rootRecord.serverTime);
         requestBody['timestamp'] = time
-        if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-          manageLocation(3).then(function (geopoint) {
-            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-              mapView(geopoint);
-              return;
-            };
-            ApplicationState.location = geopoint;
-            requestBody['geopoint'] = geopoint;
-            requestGenerator.body = requestBody;
-            localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
-            apiHandler.postMessage(requestGenerator);
 
-          }).catch(locationErrorDialog)
-          return;
-        }
-        requestBody['geopoint'] = ApplicationState.location;
-        requestGenerator.body = requestBody;
-        apiHandler.postMessage(requestGenerator);
-
+        manageLocation(3).then(function (geopoint) {
+          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+            mapView(geopoint);
+            return;
+          };
+          ApplicationState.location = geopoint;
+          requestBody['geopoint'] = geopoint;
+          requestGenerator.body = requestBody;
+          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
+          apiHandler.postMessage(requestGenerator);
+        }).catch(locationErrorDialog)
+        return;
       });
     }
   });
@@ -399,7 +402,7 @@ function backgroundTransition() {
     if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
     mapView(geopoint);
-  })
+  }).catch(handleLocationError)
 }
 
 
@@ -500,4 +503,8 @@ function formatTextToTitleCase(string) {
     }
   }
   return arr.join('')
+}
+
+function calculateSpeed(distance, time) {
+  return distance / time
 }
