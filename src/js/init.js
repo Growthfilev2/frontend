@@ -59,34 +59,6 @@ let native = function () {
   }
 }();
 
-// function retryOperation(operation,delay,times) {
-//   return new Promise(function(resolve,reject){
-//     return operation(times).then(function(s){
-//       if(s.accuracy >= 35000) {
-
-//         if(times -1 > 0) {  
-//           return wait(delay).then(retryOperation.bind(null,operation,delay,times -1))
-//           .then(function(v){
-//             resolve(v)
-//           }).catch(reject)
-//         }
-//         else {
-//           resolve(s)
-//         }
-//       }
-//       else {
-//         resolve(s)
-//       }
-//     }).catch(function(reason){
-        
-//       return reject(reason)
-//     })
-//   })
-// }
-
-// retryOperation(getLocation,1000,5).then(console.log).catch(console.log)
-
-
 function getAndroidDeviceInformation() {
   return JSON.stringify({
     'id': AndroidInterface.getId(),
