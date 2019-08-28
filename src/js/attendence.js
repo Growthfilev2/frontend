@@ -197,7 +197,7 @@ function createMonthlyStat() {
         cursor.continue();
         return;
       }
-
+      
       if (!cursor.value.hasOwnProperty('statusForDay')) {
         cursor.continue();
         return;
