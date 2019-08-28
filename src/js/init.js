@@ -759,7 +759,7 @@ function openMap() {
         return;
       };
 
-      manageLocation().then(function (location) {
+      manageLocation(3).then(function (location) {
         document.getElementById('start-load').classList.add('hidden');
         if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))) {
           ApplicationState = oldApplicationState

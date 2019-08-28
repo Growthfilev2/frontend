@@ -59,13 +59,18 @@ function manageLocation(maxRetry) {
       if (location.accuracy >= 35000) {
         if (maxRetry > 0) {
           setTimeout(function () {
-            manageLocation(maxRetry -1);
+            return manageLocation(maxRetry -1);
           }, 1000)
         } else {
-          return handleLocationOld(3, location).then(resolve).catch(reject)
+          return resolve(location)
+          // return handleLocationOld(3, location).then(function(res){
+          //   console.log(res)
+          //   return resolve(res)
+          // }).catch(reject)
         }
       } else {
-       return handleLocationOld(3, location).then(resolve).catch(reject)
+      //  return handleLocationOld(3, location).then(resolve).catch(reject)
+      return resolve(location)
       }
     }).catch(reject)
   });
@@ -74,22 +79,22 @@ function manageLocation(maxRetry) {
 function handleLocationOld(maxRetry, location) {
   return new Promise(function (resolve, reject) {
     const storedLocation = getStoredLocation();
-    if (!storedLocation) return resolve(location)
-    if (isLocationOld(storedLocation, location)) {
-      if (maxRetry > 0) {
-        setTimeout(function () {
-          getLocation().then(function (newLocation) {
-            handleLocationOld(maxRetry - 1, newLocation)
-          }).catch(reject)
+    if (storedLocation) return resolve(location)
+    // if (isLocationOld(storedLocation, location)) {
+    //   if (maxRetry > 0) {
+    //     setTimeout(function () {
+    //       getLocation().then(function (newLocation) {
+    //         handleLocationOld(maxRetry - 1, newLocation)
+    //       }).catch(reject)
 
-        }, 1000)
-      } else {
-          return resolve(location)
-        // return handleSpeedCheck(3, location, storedLocation)
-      }
-      return
-    };
-    return resolve(location)
+    //     }, 1000)
+    //   } else {
+    //       return resolve(location)
+    //     // return handleSpeedCheck(3, location, storedLocation)
+    //   }
+    //   return
+    // };
+    // return resolve(location)
     // return handleSpeedCheck(3, location, storedLocation);  
   })
 }
