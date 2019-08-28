@@ -187,9 +187,13 @@ function createMonthlyStat() {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month +1}-${cursor.value.year}`, 'DD-MM-YYYY').valueOf()
-
-      if (recordTimestamp > moment().valueOf()) {
+      if (!cursor.value.date || !cursor.value.month || !cursor.value.year) {
+        cursor.continue();
+        return;
+      }
+      const recordDate = `${cursor.value.year}-${cursor.value.month +1}-${cursor.value.date}`
+      const today = moment().format('YYYY-MM-DD')
+      if (moment(today, 'YYYY-MM-DD').isSameOrBefore(moment(recordDate, 'YYYY-MM-DD'))) {
         cursor.continue();
         return;
       }
@@ -215,7 +219,7 @@ function createMonthlyStat() {
     if (!monthlyString) {
       try {
         getCountOfStatusObject().then(function (result) {
-         
+
           handleError({
             message: 'status object log',
             body: JSON.stringify({

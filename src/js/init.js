@@ -90,7 +90,7 @@ window.onpopstate = function (event) {
 
 function initializeApp() {
   firebase.initializeApp(appKey.getKeys())
-  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
+  progressBar = new mdc.linearProgress.MDCLinearProgress(document.getElementById('main-progress-bar'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
@@ -578,8 +578,8 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-  calendar.createIndex('onLeave', ['template', 'status', 'office']);
-  
+    calendar.createIndex('onLeave', ['template', 'status', 'office']);
+
   const map = db.createObjectStore('map', {
     autoIncrement: true,
   })
@@ -728,14 +728,14 @@ function openMap() {
         manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           ApplicationState.location = location;
-          localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
+          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
           getSuggestions()
         }).catch(handleLocationError)
         return
       };
 
       ApplicationState.officeWithCheckInSubs = checkInSubs
-      
+
       const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
 
       if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
@@ -746,21 +746,17 @@ function openMap() {
         return
       }
 
-      if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
-        manageLocation(3).then(function (location) {
-          document.getElementById('start-load').classList.add('hidden');
-          mapView(location)
-        }).catch(handleLocationError)
-        return;
-      }
-      
+
       manageLocation(3).then(function (location) {
         document.getElementById('start-load').classList.add('hidden');
-        if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))) {
-          ApplicationState = oldApplicationState
-          return getSuggestions()
+        const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
+        const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))
+        if (isOlder || hasChangedLocation) {
+          return mapView(location)
         }
-        mapView(location)
+        
+        ApplicationState = oldApplicationState
+        return getSuggestions()
       }).catch(handleLocationError)
     })
   })

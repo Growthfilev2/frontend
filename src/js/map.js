@@ -43,6 +43,10 @@ function handleLocationError(error) {
   if(progressBar) {
     progressBar.close()
   }
+  if(document.getElementById('check-in-prog')) {
+    document.getElementById('check-in-prog').classList.add('mdc-linear-progress--closed')
+  }
+  
   switch (error.message) {
     case 'BROKEN INTERNET CONNECTION':
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
@@ -424,7 +428,6 @@ function setFilePath(base64) {
     })
   })
 }
-
 
 
 function mdcDefaultSelect(data, label, id, option) {
