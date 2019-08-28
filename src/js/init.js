@@ -11,6 +11,8 @@ function imgErr(source) {
   return true;
 }
 
+
+
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -56,6 +58,34 @@ let native = function () {
     }
   }
 }();
+
+// function retryOperation(operation,delay,times) {
+//   return new Promise(function(resolve,reject){
+//     return operation(times).then(function(s){
+//       if(s.accuracy >= 35000) {
+
+//         if(times -1 > 0) {  
+//           return wait(delay).then(retryOperation.bind(null,operation,delay,times -1))
+//           .then(function(v){
+//             resolve(v)
+//           }).catch(reject)
+//         }
+//         else {
+//           resolve(s)
+//         }
+//       }
+//       else {
+//         resolve(s)
+//       }
+//     }).catch(function(reason){
+        
+//       return reject(reason)
+//     })
+//   })
+// }
+
+// retryOperation(getLocation,1000,5).then(console.log).catch(console.log)
+
 
 function getAndroidDeviceInformation() {
   return JSON.stringify({
@@ -744,7 +774,7 @@ function openMap() {
       }
 
       if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
-        manageLocation(3).then(function (location) {
+        manageLocation(4).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
         }).catch(showNoLocationFound)

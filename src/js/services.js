@@ -52,6 +52,13 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
+function wait(ms) {
+  return new Promise(function (r) {
+    return setTimeout(r, ms)
+  })
+}
+
+
 
 function manageLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
@@ -59,18 +66,13 @@ function manageLocation(maxRetry) {
       if (location.accuracy >= 35000) {
         if (maxRetry > 0) {
           setTimeout(function () {
-            return manageLocation(maxRetry -1);
+            manageLocation(maxRetry - 1).then(resolve).catch(reject)
           }, 1000)
         } else {
-          return resolve(location)
-          // return handleLocationOld(3, location).then(function(res){
-          //   console.log(res)
-          //   return resolve(res)
-          // }).catch(reject)
+          return handleLocationOld(3, location).then(resolve).catch(reject)
         }
       } else {
-      //  return handleLocationOld(3, location).then(resolve).catch(reject)
-      return resolve(location)
+        return handleLocationOld(3, location).then(resolve).catch(reject)
       }
     }).catch(reject)
   });
@@ -79,23 +81,21 @@ function manageLocation(maxRetry) {
 function handleLocationOld(maxRetry, location) {
   return new Promise(function (resolve, reject) {
     const storedLocation = getStoredLocation();
-    if (storedLocation) return resolve(location)
-    // if (isLocationOld(storedLocation, location)) {
-    //   if (maxRetry > 0) {
-    //     setTimeout(function () {
-    //       getLocation().then(function (newLocation) {
-    //         handleLocationOld(maxRetry - 1, newLocation)
-    //       }).catch(reject)
 
-    //     }, 1000)
-    //   } else {
-    //       return resolve(location)
-    //     // return handleSpeedCheck(3, location, storedLocation)
-    //   }
-    //   return
-    // };
-    // return resolve(location)
-    // return handleSpeedCheck(3, location, storedLocation);  
+    if (!storedLocation) return resolve(location)
+    if (isLocationOld(storedLocation, location)) {
+      if (maxRetry > 0) {
+        setTimeout(function () {
+          getLocation().then(function (newLocation) {
+            handleLocationOld(maxRetry - 1, newLocation).then(resolve).catch(reject)
+          }).catch(reject)
+        }, 1000)
+      } else {
+        return handleSpeedCheck(3, location, storedLocation).then(resolve).catch(reject)
+      }
+    } else {
+      return handleSpeedCheck(3, location, storedLocation).then(resolve).catch(reject)
+    }
   })
 }
 
@@ -104,19 +104,22 @@ function handleSpeedCheck(maxRetry, location, storedLocation) {
 
     const dDelta = distanceDelta(storedLocation, location);
     const tDelta = timeDelta(storedLocation.lastLocationTime, location.lastLocationTime).asHours()
+
     console.log(calculateSpeed(dDelta, tDelta))
+
     if (calculateSpeed(dDelta, tDelta) >= 40) {
       if (maxRetry > 0) {
         setTimeout(function () {
           getLocation().then(function (newLocation) {
-            handleSpeedCheck(maxRetry - 1, newLocation, storedLocation)
+            handleSpeedCheck(maxRetry - 1, newLocation, storedLocation).then(resolve).catch(reject)
           }).catch(reject)
         }, 1000)
       } else {
         return resolve(location)
       }
+    } else {
+      return resolve(location);
     }
-    return resolve(location);
   })
 }
 
@@ -193,36 +196,25 @@ function iosLocationError(iosError) {
 
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude: 28.123,
-      longitude: 77.1234,
-      provider: 'HTML5',
-      accuracy: 36000,
-      lastLocationTime: Date.now(),
-      isLocationOld: isLocationOld({
-        latitude: 28.123,
-        longitude: 77.1234
-      }, getStoredLocation())
-    })
-    // navigator.geolocation.getCurrentPosition(function (position) {
+    navigator.geolocation.getCurrentPosition(function (position) {
 
-    //   return resolve({
-    //     latitude: position.coords.latitude,
-    //     longitude: position.coords.longitude,
-    //     accuracy: 360000 || position.coords.accuracy,
-    //     provider: 'HTML5',
-    //     isLocationOld:isLocationOld(position.coords,getStoredLocation()),
-    //     lastLocationTime: Date.now(),
-    //   })
-    // }, function (error) {
-    //   reject({
-    //     message: error.message
-    //   })
-    // }, {
-    //   maximumAge: 0,
-    //   timeout: 5000,
-    //   enableHighAccuracy: false
-    // })
+      return resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        provider: 'HTML5',
+        isLocationOld: isLocationOld(position.coords, getStoredLocation()),
+        lastLocationTime: Date.now(),
+      })
+    }, function (error) {
+      reject({
+        message: error.message
+      })
+    }, {
+      maximumAge: 0,
+      timeout: 5000,
+      enableHighAccuracy: false
+    })
   })
 }
 
@@ -268,7 +260,7 @@ function requestCreator(requestType, requestBody) {
         const time = fetchCurrentTime(rootRecord.serverTime);
         requestBody['timestamp'] = time
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-          manageLocation().then(function (geopoint) {
+          manageLocation(3).then(function (geopoint) {
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
               mapView(geopoint);
               return;
@@ -276,6 +268,7 @@ function requestCreator(requestType, requestBody) {
             ApplicationState.location = geopoint;
             requestBody['geopoint'] = geopoint;
             requestGenerator.body = requestBody;
+            localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
             apiHandler.postMessage(requestGenerator);
 
           }).catch(locationErrorDialog)
@@ -402,7 +395,7 @@ function backgroundTransition() {
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
 
-  manageLocation().then(function (geopoint) {
+  manageLocation(3).then(function (geopoint) {
     if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
     mapView(geopoint);
