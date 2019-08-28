@@ -774,7 +774,7 @@ function openMap() {
       }
 
       if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
-        manageLocation(4).then(function (location) {
+        manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
         }).catch(showNoLocationFound)
