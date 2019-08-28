@@ -59,8 +59,6 @@ function handleLocationError(error) {
   }
 }
 
-
-
 function mapView(location) {
 
   document.getElementById('app-header').classList.add('hidden');

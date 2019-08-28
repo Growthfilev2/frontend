@@ -196,10 +196,7 @@ function homeView(suggestedTemplates) {
     if (document.getElementById('change-location')) {
       document.getElementById('change-location').addEventListener('click', function (evt) {
         progressBar.open()
-        if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-          mapView(ApplicationState.location)
-          return
-        };
+      
         manageLocation(3).then(function (newLocation) {
           mapView(newLocation);
         }).catch(handleLocationError)

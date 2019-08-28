@@ -753,15 +753,7 @@ function openMap() {
         }).catch(handleLocationError)
         return;
       }
-
-      if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
-        document.getElementById('start-load').classList.add('hidden');
-        ApplicationState = oldApplicationState
-        console.log(ApplicationState)
-        getSuggestions(3)
-        return;
-      };
-
+      
       manageLocation(3).then(function (location) {
         document.getElementById('start-load').classList.add('hidden');
         if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))) {

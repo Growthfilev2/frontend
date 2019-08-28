@@ -130,8 +130,8 @@ function getLocation() {
       message: 'BROKEN INTERNET CONNECTION'
     })
 
-
     if (native.getName() === 'Android') {
+
       if (!isWifiOn()) return reject({
         message: 'TURN ON YOUR WIFI'
       })
@@ -279,7 +279,7 @@ function requestCreator(requestType, requestBody) {
           requestGenerator.body = requestBody;
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
           apiHandler.postMessage(requestGenerator);
-        }).catch(locationErrorDialog)
+        }).catch(handleLocationError)
         return;
       });
     }
