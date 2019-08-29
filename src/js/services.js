@@ -52,11 +52,6 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
-function wait(ms) {
-  return new Promise(function (r) {
-    return setTimeout(r, ms)
-  })
-}
 
 
 
