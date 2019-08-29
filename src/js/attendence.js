@@ -233,7 +233,7 @@ function createMonthlyStat() {
               })
             })
           }).catch(handleError)
-        })
+        }).catch(handleError)
       } catch (e) {
         handleError({
           message: e.message,

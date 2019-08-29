@@ -511,7 +511,8 @@ function getEmployeeDetails(range, indexName) {
     }
     getEmployee.onerror = function () {
       return reject({
-        message: getEmployee.error
+        message: getEmployee.error,
+        body:''
       })
     }
   })
