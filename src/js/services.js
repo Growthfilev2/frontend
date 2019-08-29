@@ -30,7 +30,6 @@ function successDialog(text) {
     successMark.classList.add('hidden');
     viewContainer.style.opacity = '1';
     document.getElementById('app-header').style.opacity = '1'
-
   }, 2000);
 }
 
@@ -53,23 +52,109 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
+function wait(ms) {
+  return new Promise(function (r) {
+    return setTimeout(r, ms)
+  })
+}
 
 
-function manageLocation() {
+
+function manageLocation(maxRetry) {
+
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error);
-    })
+      if (location.accuracy >= 35000) {
+        if (maxRetry > 0) {
+          setTimeout(function () {
+            console.log('retry because of high accuracy')
+            manageLocation(maxRetry - 1).then(resolve).catch(reject)
+          }, 1000)
+        } else {
+          console.log('retry end of high accuracy')
+
+          return handleLocationOld(3, location).then(resolve).catch(reject)
+        }
+      } else {
+        console.log('accuracy is less than 35000')
+        return handleLocationOld(3, location).then(resolve).catch(reject)
+      }
+    }).catch(reject)
+  });
+}
+
+function handleLocationOld(maxRetry, location) {
+  return new Promise(function (resolve, reject) {
+    const storedLocation = getStoredLocation();
+
+    if (!storedLocation) return resolve(location)
+    if (isLocationOld(storedLocation, location)) {
+      if (maxRetry > 0) {
+        setTimeout(function () {
+          getLocation().then(function (newLocation) {
+            console.log('retry because new location is same to old location')
+
+            handleLocationOld(maxRetry - 1, newLocation).then(resolve).catch(reject)
+          }).catch(reject)
+        }, 1000)
+      } else {
+        console.log('retry end because no change in location')
+
+        return handleSpeedCheck(3, location, storedLocation).then(resolve).catch(reject)
+      }
+    } else {
+      console.log('new location is different')
+
+      return handleSpeedCheck(3, location, storedLocation).then(resolve).catch(reject)
+    }
+  })
+}
+
+function handleSpeedCheck(maxRetry, location, storedLocation) {
+  return new Promise(function (resolve, reject) {
+
+    const dDelta = distanceDelta(storedLocation, location);
+    const tDelta = timeDelta(storedLocation.lastLocationTime, location.lastLocationTime).asHours()
+
+    console.log(calculateSpeed(dDelta, tDelta))
+
+    if (calculateSpeed(dDelta, tDelta) >= 40) {
+      if (maxRetry > 0) {
+        setTimeout(function () {
+          getLocation().then(function (newLocation) {
+            console.log('retry for speed')
+
+            handleSpeedCheck(maxRetry - 1, newLocation, storedLocation).then(resolve).catch(reject)
+          }).catch(reject)
+        }, 1000)
+      } else {
+        console.log('retry for speed end')
+
+        return resolve(location)
+      }
+    } else {
+      console.log('no need to retry for speed')
+
+      return resolve(location);
+    }
   })
 }
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
+    if (!navigator.onLine) return reject({
+      message: 'BROKEN INTERNET CONNECTION'
+    })
+
     if (native.getName() === 'Android') {
+
+      if (!isWifiOn()) return reject({
+        message: 'TURN ON YOUR WIFI'
+      })
+
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.isInvalid || htmlLocation.accuracy >= 350) {
+
+        if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
           handleGeoLocationApi().then(resolve).catch(function (error) {
             return resolve(htmlLocation);
           })
@@ -143,8 +228,8 @@ function html5Geolocation() {
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
         provider: 'HTML5',
+        isLocationOld: isLocationOld(position.coords, getStoredLocation()),
         lastLocationTime: Date.now(),
-        isInvalid: isHtmlLocationInvalid(position)
       })
     }, function (error) {
       reject({
@@ -158,76 +243,6 @@ function html5Geolocation() {
   })
 }
 
-function isHtmlLocationInvalid(position) {
-
-  const oldState = localStorage.getItem('ApplicationState');
-  if (!oldState) return false;
-
-  const oldLocation = JSON.parse(oldState).location;
-  if (oldLocation.latitude && oldLocation.longitude) {
-    if (oldLocation.latitude === position.coords.latitude && oldLocation.longitude === position.coords.longitude) {
-      return true
-    }
-    return false
-  }
-  return false;
-
-}
-
-function toRad(value) {
-  return value * Math.PI / 180;
-}
-
-function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
-
-  var R = 6371; // km
-  var dLat = toRad(newLocation.latitude - oldLocation.latitude);
-  var dLon = toRad(newLocation.longitude - oldLocation.longitude);
-  var lat1 = toRad(newLocation.latitude);
-  var lat2 = toRad(oldLocation.latitude);
-  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var distance = R * c;
-  return distance;
-
-}
-
-function isLocationMoreThanThreshold(distance) {
-  var THRESHOLD = 1; //km
-  if (distance >= THRESHOLD) return true;
-  return false;
-}
-
-
-function isLocationStatusWorking() {
-  const requiredWifi = {
-    'samsung': true,
-    'OnePlus': true
-  }
-
-  if (!navigator.onLine) {
-    const connectionDialog = new Dialog('BROKEN INTERNET CONNECTION', 'Make Sure You have a working Internet Connection').create()
-    connectionDialog.open();
-    return;
-  }
-  if (native.getName() !== 'Android') return true;
-
-  if (!AndroidInterface.isLocationPermissionGranted()) {
-    const alertDialog = new Dialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.').create()
-    alertDialog.open();
-    return
-  }
-  const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
-  if (requiredWifi[brand]) {
-    if (!AndroidInterface.isWifiOn()) {
-      const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
-      alertDialog.open();
-      return;
-    }
-    return true;
-  }
-  return true
-}
 
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
@@ -269,24 +284,19 @@ function requestCreator(requestType, requestBody) {
       getRootRecord().then(function (rootRecord) {
         const time = fetchCurrentTime(rootRecord.serverTime);
         requestBody['timestamp'] = time
-        if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-          manageLocation().then(function (geopoint) {
-            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-              mapView(geopoint);
-              return;
-            };
-            ApplicationState.location = geopoint;
-            requestBody['geopoint'] = geopoint;
-            requestGenerator.body = requestBody;
-            apiHandler.postMessage(requestGenerator);
 
-          }).catch(locationErrorDialog)
-          return;
-        }
-        requestBody['geopoint'] = ApplicationState.location;
-        requestGenerator.body = requestBody;
-        apiHandler.postMessage(requestGenerator);
-
+        manageLocation(3).then(function (geopoint) {
+          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+            mapView(geopoint);
+            return;
+          };
+          ApplicationState.location = geopoint;
+          requestBody['geopoint'] = geopoint;
+          requestGenerator.body = requestBody;
+          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
+          apiHandler.postMessage(requestGenerator);
+        }).catch(handleLocationError)
+        return;
       });
     }
   });
@@ -312,18 +322,6 @@ function locationErrorDialog(error) {
   dialog.listen('MDCDialog:closed', function (evt) {
     handleError(error);
   })
-}
-
-function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
-
-  var currentTime = moment(moment().valueOf());
-  console.log(currentTime)
-  var duration = moment.duration(currentTime.diff(lastLocationTime));
-  console.log(duration)
-  var difference = duration.asSeconds();
-  console.log(difference)
-  return difference > threshold
-
 }
 
 
@@ -398,13 +396,9 @@ function handleComponentUpdation(readResponse) {
       if (!tabEl) return;
 
       const tabBar = new mdc.tabBar.MDCTabBar(tabEl)
-
       if (tabBar.foundation_.adapter_.getFocusedTabIndex() == 0) {
-        const sectionContent = document.querySelector('.tabs-section .data-container');
-        if (sectionContent) {
-          attendenceView(sectionContent)
-        }
-      }
+        attendenceView()
+      };
       break;
   }
 }
@@ -416,11 +410,11 @@ function backgroundTransition() {
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
 
-  manageLocation().then(function (geopoint) {
+  manageLocation(3).then(function (geopoint) {
     if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
     mapView(geopoint);
-  })
+  }).catch(handleLocationError)
 }
 
 
@@ -481,8 +475,6 @@ function getRootRecord() {
 }
 
 
-
-
 function getSubscription(office, template) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['subscriptions']);
@@ -523,4 +515,8 @@ function formatTextToTitleCase(string) {
     }
   }
   return arr.join('')
+}
+
+function calculateSpeed(distance, time) {
+  return distance / time
 }

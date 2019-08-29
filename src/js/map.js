@@ -14,7 +14,8 @@ var markersObject = {
   infowindow: []
 }
 
-function showNoLocationFound(error) {
+function locationFailure(error) {
+
   document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.add('hidden')
   handleError({
@@ -37,7 +38,30 @@ function showNoLocationFound(error) {
   })
 }
 
+function handleLocationError(error) {
+  let alertDialog;
+  if(progressBar) {
+    progressBar.close()
+  }
+  if(document.getElementById('check-in-prog')) {
+    document.getElementById('check-in-prog').classList.add('mdc-linear-progress--closed')
+  }
+  
+  switch (error.message) {
+    case 'BROKEN INTERNET CONNECTION':
+      alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
+      alertDialog.open();
+      break;
 
+    case 'TURN ON YOUR WIFI':
+      alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
+      alertDialog.open();
+      break;
+    default:
+      locationFailure(error);
+      break;
+  }
+}
 
 function mapView(location) {
 
@@ -149,7 +173,7 @@ function loadCardData(venues, map) {
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${renderVenue(venues)}
 </ul>`
- document.querySelector('#selection-box').classList.remove('hidden')
+  document.querySelector('#selection-box').classList.remove('hidden')
   document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
   document.querySelector('#selection-box .content-body').innerHTML = venuesList;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
@@ -406,7 +430,6 @@ function setFilePath(base64) {
 }
 
 
-
 function mdcDefaultSelect(data, label, id, option) {
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
@@ -464,26 +487,7 @@ function focusMarker(map, markersObject, index) {
   map.setZoom(18);
 }
 
-function GetOffsetBounds(latlng, offset) {
-  const radius = 6378
-  const d = (180 / Math.PI);
-  this.latLng = latlng
-  this.ratio = (offset / radius) * d;
-  this.radioLon = (this.ratio) / Math.cos(this.latLng.latitude * Math.PI / 180)
-}
 
-GetOffsetBounds.prototype.north = function () {
-  return this.latLng.latitude + this.ratio
-}
-GetOffsetBounds.prototype.south = function () {
-  return this.latLng.latitude - this.ratio
-}
-GetOffsetBounds.prototype.east = function () {
-  return this.latLng.longitude + this.radioLon
-}
-GetOffsetBounds.prototype.west = function () {
-  return this.latLng.longitude - this.radioLon
-}
 
 
 function loadNearByLocations(o, map, location) {

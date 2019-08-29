@@ -1,7 +1,9 @@
-function attendenceView(sectionContent) {
-  const subs = {}
+function attendenceView() {
+  const sectionContent = document.querySelector('.tabs-section .data-container');
+
   sectionContent.innerHTML = attendanceDom();
-  const result = []
+  
+  const result = []  
   const tx = db.transaction('subscriptions');
   tx.objectStore('subscriptions')
     .index('report')
@@ -187,13 +189,17 @@ function createMonthlyStat() {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month +1}-${cursor.value.year}`, 'DD-MM-YYYY').valueOf()
-
-      if (recordTimestamp > moment().valueOf()) {
+      if (!cursor.value.date || !cursor.value.month || !cursor.value.year) {
         cursor.continue();
         return;
       }
-
+      const recordDate = `${cursor.value.year}-${cursor.value.month +1}-${cursor.value.date}`
+      const today = moment().format('YYYY-MM-DD')
+      if (moment(today, 'YYYY-MM-DD').isSameOrBefore(moment(recordDate, 'YYYY-MM-DD'))) {
+        cursor.continue();
+        return;
+      }
+      
       if (!cursor.value.hasOwnProperty('statusForDay')) {
         cursor.continue();
         return;

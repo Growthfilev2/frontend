@@ -1,5 +1,7 @@
-function expenseView(sectionContent) {
+function expenseView() {
     const subs = []
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+
     const tx = db.transaction('subscriptions');
     tx.objectStore('subscriptions')
         .index('report')
@@ -13,7 +15,6 @@ function expenseView(sectionContent) {
             }
             subs.push(cursor.value)
             cursor.continue();
-
         }
     tx.oncomplete = function () {
         console.log(subs)
