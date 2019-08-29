@@ -247,11 +247,21 @@ function startApp() {
         runRead({
           read: '1'
         })
+      }).catch(function(error){
+        handleError({
+          message:error.message,
+          body:JSON.stringify(error)
+        })
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {
         snacks(error.response.message, 'Retry')
+        return;
       }
+      handleError({
+        message:error.message,
+        body:JSON.stringify(error)
+      })
     })
   }
   req.onerror = function () {
