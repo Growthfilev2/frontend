@@ -79,7 +79,7 @@ function manageLocation(maxRetry) {
         console.log('accuracy is less than 35000')
         return handleLocationOld(3, location).then(resolve).catch(reject)
       }
-    }).catch(reject)
+    }).catch(reject);
   });
 }
 
@@ -146,45 +146,43 @@ function getLocation() {
       message: 'BROKEN INTERNET CONNECTION'
     })
 
-    if (native.getName() === 'Android') {
-
-      if (!isWifiOn()) return reject({
-        message: 'TURN ON YOUR WIFI'
-      })
-
-      html5Geolocation().then(function (htmlLocation) {
-
-        if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
-          handleGeoLocationApi().then(resolve).catch(function (error) {
-            return resolve(htmlLocation);
-          })
-          return;
-        }
-        return resolve(htmlLocation)
-      }).catch(function (htmlError) {
-        handleGeoLocationApi().then(resolve).catch(function (error) {
-          return reject({
-            message: 'Both HTML and Geolocation failed to fetch location',
-            body: {
-              html5: htmlError,
-              geolocation: error,
-            },
-            'locationError': true
-          })
-        })
-      })
+    if (native.getName() !== 'Android') {
+      try {
+        webkit.messageHandlers.locationService.postMessage('start');
+        window.addEventListener('iosLocation', function _iosLocation(e) {
+          resolve(e.detail)
+          window.removeEventListener('iosLocation', _iosLocation, true);
+        }, true)
+      } catch (e) {
+        html5Geolocation().then(resolve).catch(reject)
+      }
       return;
     }
 
-    try {
-      webkit.messageHandlers.locationService.postMessage('start');
-      window.addEventListener('iosLocation', function _iosLocation(e) {
-        resolve(e.detail)
-        window.removeEventListener('iosLocation', _iosLocation, true);
-      }, true)
-    } catch (e) {
-      html5Geolocation().then(resolve).catch(reject)
-    }
+    if (!isWifiOn()) return reject({
+      message: 'TURN ON YOUR WIFI'
+    })
+
+    html5Geolocation().then(function (htmlLocation) {
+      if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
+        handleGeoLocationApi().then(resolve).catch(function (error) {
+          return resolve(htmlLocation);
+        })
+        return;
+      };
+      return resolve(htmlLocation)
+    }).catch(function (htmlError) {
+      handleGeoLocationApi().then(resolve).catch(function (error) {
+        return reject({
+          message: 'Both HTML and Geolocation failed to fetch location',
+          body: {
+            html5: htmlError,
+            geolocation: error,
+          },
+          'locationError': true
+        })
+      })
+    })
   })
 }
 
