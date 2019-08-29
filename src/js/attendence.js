@@ -214,16 +214,26 @@ function createMonthlyStat() {
 
     if (!monthlyString) {
       try {
-        getCountOfStatusObject().then(function (result) {
-         
-          handleError({
-            message: 'status object log',
-            body: JSON.stringify({
-              count: result.count,
-              data: result.data
+        getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (employeeDetails) {
+
+          const employeeOffices = []
+          employeeDetails.forEach(function (record) {
+            if (record.status !== 'CANCELLED') {
+              return employeeOffices.push(record.office)
+            }
+          });
+          if (!employeeOffices.length) return;
+          getCountOfStatusObject().then(function (result) {
+            handleError({
+              message: 'status object log',
+              body: JSON.stringify({
+                count: result.count,
+                data: result.data,
+                employeeStatus: employeeOffices.join(' || ')
+              })
             })
-          })
-        }).catch(handleError)
+          }).catch(handleError)
+        })
       } catch (e) {
         handleError({
           message: e.message,

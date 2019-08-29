@@ -64,9 +64,12 @@ function incentiveView(sectionContent) {
     const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
     handleTemplateListClick(listInit)
   }
-
-
-
+  tx.onerror = function(){
+    handleError({
+      message:tx.error,
+      body:''
+    })
+  }
 }
 
 
