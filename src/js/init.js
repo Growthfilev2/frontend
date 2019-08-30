@@ -68,7 +68,6 @@ function getAndroidDeviceInformation() {
     'baseOs': AndroidInterface.getBaseOs(),
     'radioVersion': AndroidInterface.getRadioVersion(),
     'appVersion': Number(AndroidInterface.getAppVersion()),
-
   })
 }
 
@@ -198,7 +197,9 @@ function startApp() {
 
     if (!areObjectStoreValid(db.objectStoreNames)) {
       db.close();
-      console.log(auth)
+      console.log('removing idb')
+      const auth = firebase.auth().currentUser;
+      
       const deleteIDB = indexedDB.deleteDatabase(auth.uid);
       deleteIDB.onsuccess = function () {
         window.location.reload();
