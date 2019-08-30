@@ -14,19 +14,19 @@ var markersObject = {
   infowindow: []
 }
 
-function locationFailure(error) {
+function failureScreen(error, callback) {
 
   document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.add('hidden')
-  handleError({
-    message: error.message,
-    body: JSON.stringify(error.body)
-  })
+
   document.getElementById('app-current-panel').innerHTML = `
     <div class="center-abs location-not-found">
-    <i class='material-icons mdc-theme--secondary'>location_off</i>
+    <i class='material-icons mdc-theme--secondary'>${error.icon} || location_off</i>
     <p class='mdc-typography--headline5'>
-    Failed To Detect Your Location
+    ${error.title}
+    </p>
+    <p class='mdc-typography--body1'>
+    ${error.message}
     </p>
     <button class="mdc-button mdc-theme--primary-bg" id='try-again'>
     <span class="mdc-button__label mdc-theme--on-primary">RETRY</span>
@@ -34,31 +34,60 @@ function locationFailure(error) {
     </div>`
   document.getElementById('try-again').addEventListener('click', function (evt) {
     document.querySelector('.center-abs.location-not-found').classList.add('hidden')
-    openMap()
+    callback();
   })
 }
 
-function handleLocationError(error) {
+function handleLocationError(error, onAppOpen) {
   let alertDialog;
-  if(progressBar) {
+  if (progressBar) {
     progressBar.close()
   }
-  if(document.getElementById('check-in-prog')) {
+  if (document.getElementById('check-in-prog')) {
     document.getElementById('check-in-prog').classList.add('mdc-linear-progress--closed')
   }
-  
+
   switch (error.message) {
     case 'BROKEN INTERNET CONNECTION':
+      if (onAppOpen) {
+        failureScreen({
+          message: 'You Are Currently Offline. Please Check Your Internet Connection',
+          icon: 'wifi_off',
+          title: 'BROKEN INTERNET CONNECTION'
+        }, openMap);
+        return;
+      }
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
 
     case 'TURN ON YOUR WIFI':
+      if (onAppOpen) {
+        failureScreen({
+          message: 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location',
+          icon: 'wifi_off',
+          title: 'TURN ON YOUR WIFI'
+        }, openMap);
+        return;
+      }
       alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
       break;
     default:
-      locationFailure(error);
+      handleError({
+        message: error.message,
+        body: JSON.stringify(error.body)
+      })
+      if (onAppOpen) {
+        failureScreen({
+          message: 'There was a problem in detecting your location. Please try again later',
+          icon: 'wifi_off',
+          title: 'Filed To Detect Location'
+        }, openMap);
+        return;
+      }
+      const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
+      dialog.open();
       break;
   }
 }

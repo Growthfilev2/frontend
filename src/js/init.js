@@ -1,5 +1,3 @@
-
-
 const appKey = new AppKeys();
 let progressBar;
 var db;
@@ -122,15 +120,22 @@ function initializeApp() {
 
     localStorage.setItem('error', JSON.stringify({}));
 
-    if(!navigator.onLine) {
+    checkNetworkValidation()
 
-    }
-    
-    if(native.getName() === 'Android' && isWi)
-
-    startApp()
   });
 
+}
+
+function checkNetworkValidation() {
+  if (!navigator.onLine) {
+    failureScreen({
+      message: 'You Are Currently Offline. Please Check Your Internet Connection',
+      icon: 'wifi_off',
+      title: 'BROKEN INTERNET CONNECTION'
+    },checkNetworkValidation)
+    return;
+  }
+  startApp()
 }
 
 
@@ -260,10 +265,10 @@ function startApp() {
         runRead({
           read: '1'
         })
-      }).catch(function(error){
+      }).catch(function (error) {
         handleError({
-          message:error.message,
-          body:JSON.stringify(error)
+          message: error.message,
+          body: JSON.stringify(error)
         })
       })
     }).catch(function (error) {
@@ -272,8 +277,8 @@ function startApp() {
         return;
       }
       handleError({
-        message:error.message,
-        body:JSON.stringify(error)
+        message: error.message,
+        body: JSON.stringify(error)
       })
     })
   }
@@ -535,7 +540,7 @@ function getEmployeeDetails(range, indexName) {
     getEmployee.onerror = function () {
       return reject({
         message: getEmployee.error,
-        body:''
+        body: ''
       })
     }
   })
@@ -741,7 +746,7 @@ function getCheckInSubs() {
 
 function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
-  
+
   hasDataInDB().then(function (data) {
 
     if (!data) return showNoOfficeFound();
@@ -753,7 +758,9 @@ function openMap() {
           ApplicationState.location = location;
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
           getSuggestions()
-        }).catch(handleLocationError)
+        }).catch(function(error){
+          handleLocationError(error,true)
+        })
         return
       };
 
@@ -765,7 +772,9 @@ function openMap() {
         manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
           mapView(location)
-        }).catch(handleLocationError)
+        }).catch(function(error){
+          handleLocationError(error,true)
+        })
         return
       }
 
@@ -777,10 +786,12 @@ function openMap() {
         if (isOlder || hasChangedLocation) {
           return mapView(location)
         }
-        
+
         ApplicationState = oldApplicationState
         return getSuggestions()
-      }).catch(handleLocationError)
+      }).catch(function(error){
+        handleLocationError(error,true)
+      })
     })
   })
 }

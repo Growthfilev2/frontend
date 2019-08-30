@@ -1,6 +1,15 @@
-function isWifiRequired(){
-  if(native.getName() !== 'Android') return true;
-  const deviceType = native
+function isWifiRequired() {
+  if (native.getName() !== 'Android') return false;
+  if (AndroidInterface.isWifiOn()) return false;
+
+  const deviceInfo = JSON.parse(native.getInfo());
+  const requiredWifiDevices = {
+    'samsung': true,
+    'OnePlus': true
+  }
+
+  if (requiredWifiDevices[deviceInfo.deviceBrand]) return true;
+  return false;
 
 }
 
@@ -161,7 +170,7 @@ function getLocation() {
       return;
     }
 
-    if (!isWifiOn()) return reject({
+    if (isWifiRequired()) return reject({
       message: 'TURN ON YOUR WIFI'
     })
 
@@ -215,7 +224,7 @@ function iosLocationError(iosError) {
       "detail": geopoint
     });
     window.dispatchEvent(iosLocation)
-  }).catch(locationErrorDialog)
+  }).catch(handleLocationError)
   handleError(iosError)
 }
 
@@ -316,15 +325,6 @@ function requestCreator(requestType, requestBody) {
 
 
 
-function locationErrorDialog(error) {
-  const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
-  dialog.open();
-  dialog.listen('MDCDialog:closed', function (evt) {
-    handleError(error);
-  })
-}
-
-
 function updateApp() {
   if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
   const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
@@ -396,7 +396,7 @@ function handleComponentUpdation(readResponse) {
       if (sectionContent.dataset.view !== 'attendence') return;
       try {
         attendenceView(sectionContent)
-      }catch(e){
+      } catch (e) {
         console.log(e)
       }
       break;
