@@ -9,24 +9,25 @@ function reportView() {
   <div class='content'>
   <div class='data-container mdc-layout-grid'>
   </div>
-
   </div>
   </div>`
 
   const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-
+  
   tabList.listen('MDCTabBar:activated', function (evt) {
-
     const sectionContent = document.querySelector('.tabs-section .data-container');
-    if(!sectionContent) return;
+    if (!sectionContent) return;
 
-    if (!evt.detail.index) return attendenceView(sectionContent)
-
+    if (!evt.detail.index)  {
+      document.getElementById('start-load').classList.remove('hidden')
+      attendenceView(sectionContent);
+      return;
+    }
     if (evt.detail.index == 1) return expenseView(sectionContent)
     incentiveView(sectionContent)
   })
 
-  tabList.activateTab(0);
+  tabList.activateTab(0)
 }
 
 
@@ -52,7 +53,7 @@ function incentiveView(sectionContent) {
     console.log(subs);
     const merged = [].concat.apply([], subs)
     if (!merged.length) {
-      sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>'
+      sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Are Not Eligible For Incentives</h3>'
       return
     }
     sectionContent.innerHTML = templateList(merged);

@@ -1,14 +1,18 @@
 function attendenceView(sectionContent) {
-
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
+
   getAttendenceSubs().then(function (subs) {
+    document.getElementById('start-load').classList.add('hidden')
+
     const suggestionListEl = document.getElementById('suggested-list');
     if (!suggestionListEl) return
     suggestionListEl.innerHTML = templateList(subs)
     const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
     handleTemplateListClick(suggestionListInit)
   }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden')
+
     handleError({
       message: error.message,
       body: '',
@@ -17,6 +21,8 @@ function attendenceView(sectionContent) {
   });
 
   getTodayStatData().then(function (todayString) {
+    document.getElementById('start-load').classList.add('hidden')
+
     if (!todayString) return;
     const el = document.querySelector('.today-stat');
     if (!el) return;
@@ -25,6 +31,8 @@ function attendenceView(sectionContent) {
     ${todayString}
     `
   }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden')
+
     handleError({
       message: error.message,
       body: '',
@@ -32,7 +40,11 @@ function attendenceView(sectionContent) {
     })
   });
 
+
+
   getMonthlyData().then(function (monthlyData) {
+    document.getElementById('start-load').classList.add('hidden')
+
     let monthlyString = ''
     let month;
     monthlyData.forEach(function (record) {
@@ -49,12 +61,14 @@ function attendenceView(sectionContent) {
       el.addEventListener('click', checkStatusSubscription)
     });
   }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
       body: '',
       stack: error.stack || ''
     })
   })
+
 }
 
 function getAttendenceSubs() {
@@ -71,7 +85,7 @@ function getAttendenceSubs() {
           cursor.continue();
           return;
         }
-
+        
         if (cursor.value.template === 'attendance regularization') {
           cursor.continue();
           return;
@@ -93,7 +107,6 @@ function getAttendenceSubs() {
 
 function attendanceDom() {
   return `<div class='attendance-section'>
-  
   
   <div class='mdc-layout-grid__inner'>
   <div class='list-container mdc-layout-grid__cell--span-12'>
@@ -275,39 +288,6 @@ function getMonthlyData() {
   })
 }
 
-function getCountOfStatusObject() {
-  return new Promise(function (resolve, reject) {
-    const tx = db.transaction('reports');
-    const store = tx.objectStore("reports");
-    const body = {
-      count: '',
-      data: ''
-    }
-    const countReq = store.count()
-
-    countReq.onsuccess = function (event) {
-      body.count = event.target.result
-    }
-    store.getAll().onsuccess = function (event) {
-      body.data = event.target.result
-    }
-    tx.oncomplete = function () {
-      return resolve(body);
-    }
-    tx.onerror = function () {
-      return reject({
-        message: tx.error,
-        body: ''
-      })
-    }
-    countReq.onerror = function () {
-      return reject({
-        message: countReq.error,
-        body: ''
-      })
-    }
-  })
-}
 
 function checkStatusSubscription(event) {
 
