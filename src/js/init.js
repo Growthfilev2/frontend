@@ -1,19 +1,4 @@
-// window.onerror = function(message, source, lineno, colno, error){
-//   if(message === "Uncaught Error: You can't have a focus-trap without at least one focusable element") return;
 
-//   const body  = {
-//     message:message,
-//     body:{
-//       source:source,
-//       lineno:lineno,
-//       colno:colno,
-//       error:error.stack || ''
-//     }
-//   }
-//   this.console.log(body)
-
-//   handleError(body)
-// }
 
 const appKey = new AppKeys();
 let progressBar;
@@ -747,6 +732,7 @@ function getCheckInSubs() {
 
 function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
+  if()
   hasDataInDB().then(function (data) {
 
     if (!data) return showNoOfficeFound();

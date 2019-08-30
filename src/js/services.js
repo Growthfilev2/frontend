@@ -1,3 +1,9 @@
+function isWifiRequired(){
+  if(native.getName() !== 'Android') return;
+
+}
+
+
 var readStack = [];
 var readDebounce = debounce(function () {
   requestCreator('Null').then(handleComponentUpdation).catch(console.log)
