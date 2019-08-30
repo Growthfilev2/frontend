@@ -21,7 +21,7 @@ function failureScreen(error, callback) {
 
   document.getElementById('app-current-panel').innerHTML = `
     <div class="center-abs location-not-found">
-    <i class='material-icons mdc-theme--secondary'>${error.icon} || location_off</i>
+    <i class='material-icons mdc-theme--secondary'>${error.icon || 'location_off'}</i>
     <p class='mdc-typography--headline5'>
     ${error.title}
     </p>
@@ -86,8 +86,8 @@ function handleLocationError(error, onAppOpen) {
         }, openMap);
         return;
       }
-      const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
-      dialog.open();
+      alertDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
+      alertDialog.open();
       break;
   }
 }

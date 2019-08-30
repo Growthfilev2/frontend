@@ -90,7 +90,7 @@ window.onpopstate = function (event) {
 
 function initializeApp() {
   firebase.initializeApp(appKey.getKeys())
-  progressBar = new mdc.linearProgress.MDCLinearProgress(document.getElementById('main-progress-bar'))
+  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
@@ -119,9 +119,7 @@ function initializeApp() {
     }
 
     localStorage.setItem('error', JSON.stringify({}));
-
     checkNetworkValidation()
-
   });
 
 }
@@ -135,7 +133,7 @@ function checkNetworkValidation() {
     },checkNetworkValidation)
     return;
   }
-  startApp()
+  startApp();
 }
 
 
@@ -273,7 +271,7 @@ function startApp() {
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {
-        snacks(error.response.message, 'Retry')
+        snacks(error.response.message, 'Okay')
         return;
       }
       handleError({

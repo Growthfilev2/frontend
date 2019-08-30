@@ -170,10 +170,6 @@ function getLocation() {
       return;
     }
 
-    if (isWifiRequired()) return reject({
-      message: 'TURN ON YOUR WIFI'
-    })
-
     html5Geolocation().then(function (htmlLocation) {
       if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
         handleGeoLocationApi().then(resolve).catch(function (error) {
