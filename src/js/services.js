@@ -379,20 +379,22 @@ function handleComponentUpdation(readResponse) {
       if (!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
       break;
-    default:
     case 'chatView':
       if (!readResponse.response.addendum.length) return;
       readLatestChats(false);
       break;
     case 'reportView':
-      const tabEl = document.querySelector('.mdc-tab-bar')
-      if (!tabEl) return;
-
-      const tabBar = new mdc.tabBar.MDCTabBar(tabEl)
-      if (tabBar.foundation_.adapter_.getFocusedTabIndex() == 0) {
-        attendenceView()
-      };
+      const sectionContent = document.querySelector('.tabs-section .data-container');
+      if (!sectionContent) return;
+      if (sectionContent.dataset.view !== 'attendence') return;
+      try {
+        attendenceView(sectionContent)
+      }catch(e){
+        console.log(e)
+      }
       break;
+    default:
+      console.log("no refresh")
   }
 }
 

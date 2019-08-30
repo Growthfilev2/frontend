@@ -259,7 +259,9 @@ function homeView(suggestedTemplates) {
 
         if (rootRecord.totalCount) {
           const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
+          if (!el) return;
           el.classList.remove('material-icons');
+
           el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
         }
       }
@@ -267,13 +269,18 @@ function homeView(suggestedTemplates) {
 
     checkForDuty().then(function (result) {
       console.log(result)
-      if(!result.length && !suggestedTemplates.length) {
-        document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
+      const workTaskEl = document.querySelector('.work-tasks #text');
+
+      if (!result.length && !suggestedTemplates.length) {
+        if (workTaskEl) {
+          document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
+        }
         return;
       }
       if (!result.length) return;
-    
-      document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
+      if (workTaskEl) {
+        document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
+      }
       const el = document.getElementById("duty-container");
       if (!el) return;
       el.innerHTML = `<ul class='mdc-list subscription-list'>
@@ -309,16 +316,18 @@ function homeView(suggestedTemplates) {
 
       history.pushState(['emailUpdation'], null, null)
       emailUpdation()
-
     })
 
     if (!suggestionLength) return;
     console.log(suggestedTemplates)
-    document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
 
-    document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
-    const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-    handleTemplateListClick(suggestedInit);
+    if (document.querySelector('.work-tasks #text') && document.getElementById('suggestions-container')) {
+      document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
+      document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
+      const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+      handleTemplateListClick(suggestedInit);
+    }
+
   } catch (e) {
     console.log(e)
     handleError({
@@ -366,10 +375,10 @@ function checkForDuty() {
     tx.oncomplete = function () {
       return resolve(result);
     }
-    tx.onerror = function(){
+    tx.onerror = function () {
       return reject({
-        message:tx.error,
-        body:''
+        message: tx.error,
+        body: ''
       })
     }
   })

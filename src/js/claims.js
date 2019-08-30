@@ -3,6 +3,7 @@ function expenseView() {
     const sectionContent = document.querySelector('.tabs-section .data-container');
 
     const tx = db.transaction('subscriptions');
+    sectionContent.dataset.view = 'reimbursement'
     tx.objectStore('subscriptions')
         .index('report')
         .openCursor(IDBKeyRange.only('reimbursement'))

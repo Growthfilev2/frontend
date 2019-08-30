@@ -1,52 +1,112 @@
-function attendenceView() {
-  const sectionContent = document.querySelector('.tabs-section .data-container');
-
+function attendenceView(sectionContent) {
   sectionContent.innerHTML = attendanceDom();
-  
-  const result = []  
-  const tx = db.transaction('subscriptions');
-  tx.objectStore('subscriptions')
-    .index('report')
-    .openCursor(IDBKeyRange.only('attendance'))
-    .onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
+  sectionContent.dataset.view = 'attendence'
 
-      if (cursor.value.template === 'attendance regularization') {
-        cursor.continue();
-        return;
-      }
-      result.push(cursor.value);
+  getAttendenceSubs().then(function (subs) {
+    document.getElementById('start-load').classList.add('hidden')
 
-      cursor.continue();
-    };
-  tx.oncomplete = function () {
     const suggestionListEl = document.getElementById('suggested-list');
-    if (suggestionListEl) {
-      suggestionListEl.innerHTML = templateList(result)
-      const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
-      handleTemplateListClick(suggestionListInit)
-    };
+    if (!suggestionListEl) return
+    suggestionListEl.innerHTML = templateList(subs)
+    const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
+    handleTemplateListClick(suggestionListInit)
+  }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden')
 
-    createTodayStat();
-    createMonthlyStat()
-
-  }
-  tx.onerror = function () {
     handleError({
-      message: `${tx.error} from attendanceView`,
-      body: ''
+      message: error.message,
+      body: '',
+      stack: error.stack || ''
     })
-  }
+  });
+
+  getTodayStatData().then(function (todayString) {
+    document.getElementById('start-load').classList.add('hidden')
+
+    if (!todayString) return;
+    const el = document.querySelector('.today-stat');
+    if (!el) return;
+    el.innerHTML =
+      `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
+    ${todayString}
+    `
+  }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden')
+
+    handleError({
+      message: error.message,
+      body: '',
+      stack: error.stack || ''
+    })
+  });
+
+
+
+  getMonthlyData().then(function (monthlyData) {
+    document.getElementById('start-load').classList.add('hidden')
+
+    let monthlyString = ''
+    let month;
+    monthlyData.forEach(function (record) {
+      if (month !== record.month) {
+        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
+      }
+      month = record.month;
+      monthlyString += monthlyStatCard(record);
+    })
+    const el = document.querySelector('.monthly-stat');
+    if (!el) return;
+    el.innerHTML = monthlyString;
+    [].map.call(document.querySelectorAll('.status-button'), function (el) {
+      el.addEventListener('click', checkStatusSubscription)
+    });
+  }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden')
+    handleError({
+      message: error.message,
+      body: '',
+      stack: error.stack || ''
+    })
+  })
+
+}
+
+function getAttendenceSubs() {
+  return new Promise(function (resolve, reject) {
+    const result = []
+    const tx = db.transaction('subscriptions');
+    tx.objectStore('subscriptions')
+      .index('report')
+      .openCursor(IDBKeyRange.only('attendance'))
+      .onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.status === 'CANCELLED') {
+          cursor.continue();
+          return;
+        }
+        
+        if (cursor.value.template === 'attendance regularization') {
+          cursor.continue();
+          return;
+        }
+        result.push(cursor.value);
+
+        cursor.continue();
+      };
+    tx.oncomplete = function () {
+      return resolve(result)
+    }
+    tx.onerror = function () {
+      return reject({
+        message: tx.error,
+      })
+    }
+  })
 }
 
 function attendanceDom() {
   return `<div class='attendance-section'>
-  
   
   <div class='mdc-layout-grid__inner'>
   <div class='list-container mdc-layout-grid__cell--span-12'>
@@ -63,52 +123,61 @@ function attendanceDom() {
   </div>`
 }
 
-function createTodayStat() {
-  const startOfTodayTimestamp = moment().startOf('day').valueOf()
 
-  const currentTimestamp = moment().valueOf();
 
-  const myNumber = firebase.auth().currentUser.phoneNumber;
-  let todayCardString = '';
-  const result = []
+function getTodayStatData() {
+  return new Promise(function (resolve, reject) {
 
-  const activityTx = db.transaction('activity')
-  activityTx.objectStore('activity')
-    .index('timestamp')
-    .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.creator.phoneNumber !== myNumber) {
-        cursor.continue();
-        return;
-      }
-      result.push(cursor.value);
-      cursor.continue();
-    }
-  activityTx.oncomplete = function () {
-    const addendumTx = db.transaction('addendum');
 
-    result.forEach(function (activity) {
-      addendumTx
-        .objectStore('addendum')
-        .index('activityId')
-        .get(activity.activityId).onsuccess = function (event) {
-          const result = event.target.result;
-          todayCardString += todayStatCard(result, activity);
+    const startOfTodayTimestamp = moment().startOf('day').valueOf()
+
+    const myNumber = firebase.auth().currentUser.phoneNumber;
+    let todayCardString = '';
+    const result = [];
+
+
+    const activityTx = db.transaction('activity')
+    activityTx.objectStore('activity')
+      .index('timestamp')
+      .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.creator.phoneNumber !== myNumber) {
+          cursor.continue();
+          return;
         }
-    })
-    addendumTx.oncomplete = function () {
-      if (todayCardString) {
+        result.push(cursor.value);
+        cursor.continue();
+      }
+    activityTx.oncomplete = function () {
+      const addendumTx = db.transaction('addendum');
 
-        document.querySelector('.today-stat').innerHTML =
-          `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
-          ${todayCardString}
-          `
+      result.forEach(function (activity) {
+        addendumTx
+          .objectStore('addendum')
+          .index('activityId')
+          .get(activity.activityId).onsuccess = function (event) {
+            const result = event.target.result;
+            if (!result) return;
+            todayCardString += todayStatCard(result, activity);
+          }
+      })
+      addendumTx.oncomplete = function () {
+        return resolve(todayCardString);
+      }
+      addendumTx.onerror = function () {
+        return reject({
+          message: addendumTx.error
+        })
       }
     }
-  }
+    activityTx.onerror = function () {
+      return reject({
+        message: activityTx.error
+      })
+    }
+  })
 }
-
 
 function todayStatCard(addendum, activity) {
   return `
@@ -152,7 +221,7 @@ function renderArCard(statusObject) {
       <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
 
   }
-  if (statusObject.statusForDay > 0 || statusObject.statusForDay < 1) {
+  if (statusObject.statusForDay > 0 && statusObject.statusForDay < 1) {
     return `
     <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
       Apply AR
@@ -178,122 +247,50 @@ function monthlyStatCard(value) {
     `
 }
 
-function createMonthlyStat() {
-  const tx = db.transaction('reports');
-  let monthlyString = ''
-  let month;
-
-  tx.objectStore('reports')
-    .index('month')
-    .openCursor(null, 'prev')
-    .onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (!cursor.value.date || !cursor.value.month || !cursor.value.year) {
-        cursor.continue();
-        return;
-      }
-      const recordDate = `${cursor.value.year}-${cursor.value.month +1}-${cursor.value.date}`
-      const today = moment().format('YYYY-MM-DD')
-      if (moment(today, 'YYYY-MM-DD').isSameOrBefore(moment(recordDate, 'YYYY-MM-DD'))) {
-        cursor.continue();
-        return;
-      }
-      
-      if (!cursor.value.hasOwnProperty('statusForDay')) {
-        cursor.continue();
-        return;
-      }
-      if (month !== cursor.value.month) {
-        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
-      }
-      month = cursor.value.month;
-      monthlyString += monthlyStatCard(cursor.value);
-      cursor.continue();
-    }
-  tx.oncomplete = function () {
-
-    document.querySelector('.monthly-stat').innerHTML = monthlyString;
-    [].map.call(document.querySelectorAll('.status-button'), function (el) {
-      el.addEventListener('click', checkStatusSubscription)
-    });
-
-    if (!monthlyString) {
-      try {
-        getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (employeeDetails) {
-
-          const employeeOffices = []
-          employeeDetails.forEach(function (record) {
-            if (record.status !== 'CANCELLED') {
-              return employeeOffices.push(record.office)
-            }
-          });
-          if (!employeeOffices.length) return;
-          getCountOfStatusObject().then(function (result) {
-            handleError({
-              message: 'status object log',
-              body: JSON.stringify({
-                count: result.count,
-                data: result.data,
-                employeeStatus: employeeOffices.join(' || ')
-              })
-            })
-          }).catch(handleError)
-        }).catch(handleError)
-      } catch (e) {
-        handleError({
-          message: e.message,
-          body: '',
-          stack: e.stack
-        })
-      }
-    }
-  }
-  tx.onerror = function () {
-    handleError({
-      message: tx.error,
-      body: ''
-    })
-  }
-}
-
-function getCountOfStatusObject() {
+function getMonthlyData() {
   return new Promise(function (resolve, reject) {
-    const tx = db.transaction('reports');
-    const store = tx.objectStore("reports");
-    const body = {
-      count: '',
-      data: ''
-    }
-    const countReq = store.count()
 
-    countReq.onsuccess = function (event) {
-      body.count = event.target.result
-    }
-    store.getAll().onsuccess = function (event) {
-      body.data = event.target.result
-    }
+    const tx = db.transaction('reports');
+
+    const result = []
+    tx.objectStore('reports')
+      .index('month')
+      .openCursor(null, 'prev')
+      .onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+
+        if (!cursor.value.date || !cursor.value.month || !cursor.value.year) {
+          cursor.continue();
+          return;
+        }
+        const recordDate = `${cursor.value.year}-${cursor.value.month +1}-${cursor.value.date}`
+        const today = moment().format('YYYY-MM-DD')
+        if (moment(today, 'YYYY-MM-DD').isSameOrBefore(moment(recordDate, 'YYYY-MM-DD'))) {
+          cursor.continue();
+          return;
+        }
+        if (!cursor.value.statusForDay) {
+          cursor.continue();
+          return;
+        }
+        result.push(cursor.value)
+        cursor.continue();
+      }
     tx.oncomplete = function () {
-      return resolve(body);
+      return resolve(result);
     }
     tx.onerror = function () {
       return reject({
-        message: tx.error,
-        body: ''
-      })
-    }
-    countReq.onerror = function () {
-      return reject({
-        message: countReq.error,
-        body: ''
+        message: tx.error
       })
     }
   })
 }
 
+
 function checkStatusSubscription(event) {
 
-  console.log(event)
   const el = event.target;
   const dataset = el.dataset;
   console.log(dataset)
@@ -314,9 +311,8 @@ function checkStatusSubscription(event) {
     cursor.continue();
   }
   fetch.onerror = function () {
-    handleError({
-      message: fetch.error,
-      body: ''
+    return reject({
+      message: fetch.error
     })
   }
   tx.oncomplete = function () {
@@ -329,9 +325,8 @@ function checkStatusSubscription(event) {
     addView(subscription)
   }
   tx.onerror = function () {
-    handleError({
+    return reject({
       message: tx.error,
-      body: ''
     })
   }
 }
