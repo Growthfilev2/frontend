@@ -121,6 +121,13 @@ function initializeApp() {
     }
 
     localStorage.setItem('error', JSON.stringify({}));
+
+    if(!navigator.onLine) {
+
+    }
+    
+    if(native.getName() === 'Android' && isWi)
+
     startApp()
   });
 
@@ -216,6 +223,8 @@ function startApp() {
       startLoad.querySelector('p').textContent = texts[index]
       index++;
     }, index + 1 * 1000);
+
+
 
     requestCreator('now', {
       device: native.getInfo(),
@@ -732,7 +741,7 @@ function getCheckInSubs() {
 
 function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
-  if()
+  
   hasDataInDB().then(function (data) {
 
     if (!data) return showNoOfficeFound();

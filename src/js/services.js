@@ -1,5 +1,6 @@
 function isWifiRequired(){
-  if(native.getName() !== 'Android') return;
+  if(native.getName() !== 'Android') return true;
+  const deviceType = native
 
 }
 
