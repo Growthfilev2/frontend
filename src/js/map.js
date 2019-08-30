@@ -6,7 +6,7 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion: 12,
+  iframeVersion: 13,
   nearByLocations: []
 }
 var markersObject = {
