@@ -13,7 +13,6 @@ function attendenceView(sectionContent) {
       message: error.message,
       body: '',
       stack: error.stack || ''
-
     })
   });
 
@@ -29,7 +28,7 @@ function attendenceView(sectionContent) {
     handleError({
       message: error.message,
       body: '',
-      stack:error.stack || ''
+      stack: error.stack || ''
     })
   });
 
@@ -146,7 +145,7 @@ function getTodayStatData() {
           .index('activityId')
           .get(activity.activityId).onsuccess = function (event) {
             const result = event.target.result;
-            if(!result) return;
+            if (!result) return;
             todayCardString += todayStatCard(result, activity);
           }
       })
@@ -209,7 +208,7 @@ function renderArCard(statusObject) {
       <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
 
   }
-  if (statusObject.statusForDay > 0 || statusObject.statusForDay < 1) {
+  if (statusObject.statusForDay > 0 && statusObject.statusForDay < 1) {
     return `
     <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
       Apply AR
@@ -247,19 +246,22 @@ function getMonthlyData() {
       .onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month +1}-${cursor.value.year}`, 'DD-MM-YYYY').valueOf()
 
-        if (recordTimestamp > moment().valueOf()) {
+        if (!cursor.value.date || !cursor.value.month || !cursor.value.year) {
           cursor.continue();
           return;
         }
-
-        if (!cursor.value.hasOwnProperty('statusForDay')) {
+        const recordDate = `${cursor.value.year}-${cursor.value.month +1}-${cursor.value.date}`
+        const today = moment().format('YYYY-MM-DD')
+        if (moment(today, 'YYYY-MM-DD').isSameOrBefore(moment(recordDate, 'YYYY-MM-DD'))) {
+          cursor.continue();
+          return;
+        }
+        if (!cursor.value.statusForDay) {
           cursor.continue();
           return;
         }
         result.push(cursor.value)
-
         cursor.continue();
       }
     tx.oncomplete = function () {
@@ -309,7 +311,6 @@ function getCountOfStatusObject() {
 
 function checkStatusSubscription(event) {
 
-  console.log(event)
   const el = event.target;
   const dataset = el.dataset;
   console.log(dataset)
@@ -330,9 +331,8 @@ function checkStatusSubscription(event) {
     cursor.continue();
   }
   fetch.onerror = function () {
-    handleError({
-      message: fetch.error,
-      body: ''
+    return reject({
+      message: fetch.error
     })
   }
   tx.oncomplete = function () {
@@ -345,9 +345,8 @@ function checkStatusSubscription(event) {
     addView(subscription)
   }
   tx.onerror = function () {
-    handleError({
+    return reject({
       message: tx.error,
-      body: ''
     })
   }
 }

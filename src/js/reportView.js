@@ -25,6 +25,7 @@ function reportView() {
     if (evt.detail.index == 1) return expenseView(sectionContent)
     incentiveView(sectionContent)
   })
+  
   tabList.activateTab(0);
 }
 
