@@ -14,29 +14,23 @@ function reportView() {
   </div>`
 
   const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-  setTimeout(function () {
-    tabList.activateTab(0);
-  }, 0)
+
   tabList.listen('MDCTabBar:activated', function (evt) {
 
     const sectionContent = document.querySelector('.tabs-section .data-container');
-    if (!evt.detail.index) {
-      attendenceView(sectionContent)
-      return
-    }
+    if(!sectionContent) return;
 
-    if (evt.detail.index == 1) {
-      expenseView(sectionContent)
-      return;
-    };
+    if (!evt.detail.index) return attendenceView(sectionContent)
 
+    if (evt.detail.index == 1) return expenseView(sectionContent)
     incentiveView(sectionContent)
   })
-
+  tabList.activateTab(0);
 }
 
 
 function incentiveView(sectionContent) {
+  sectionContent.dataset.view === 'incentive'
   const subs = []
   const tx = db.transaction('subscriptions');
   tx.objectStore('subscriptions')
