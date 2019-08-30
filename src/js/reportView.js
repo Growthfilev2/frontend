@@ -25,13 +25,13 @@ function reportView() {
     if (evt.detail.index == 1) return expenseView(sectionContent)
     incentiveView(sectionContent)
   })
-  
+
   tabList.activateTab(0);
 }
 
 
 function incentiveView(sectionContent) {
-  sectionContent.dataset.view === 'incentive'
+  sectionContent.dataset.view = 'incentive'
   const subs = []
   const tx = db.transaction('subscriptions');
   tx.objectStore('subscriptions')

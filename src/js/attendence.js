@@ -1,7 +1,7 @@
 function attendenceView(sectionContent) {
 
   sectionContent.innerHTML = attendanceDom();
-  sectionContent.dataset.view === 'attendence'
+  sectionContent.dataset.view = 'attendence'
   getAttendenceSubs().then(function (subs) {
     const suggestionListEl = document.getElementById('suggested-list');
     if (!suggestionListEl) return

@@ -1,7 +1,7 @@
 function expenseView(sectionContent) {
     const subs = []
     const tx = db.transaction('subscriptions');
-    sectionContent.dataset.view === 'reimbursement'
+    sectionContent.dataset.view = 'reimbursement'
     tx.objectStore('subscriptions')
         .index('report')
         .openCursor(IDBKeyRange.only('reimbursement'))
