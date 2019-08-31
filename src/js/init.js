@@ -750,7 +750,7 @@ function openMap() {
 
     if (!data) return showNoOfficeFound();
     getCheckInSubs().then(function (checkInSubs) {
-
+      
       if (!Object.keys(checkInSubs).length) {
         manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');

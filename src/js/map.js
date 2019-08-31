@@ -81,7 +81,7 @@ function handleLocationError(error, onAppOpen) {
       if (onAppOpen) {
         failureScreen({
           message: 'There was a problem in detecting your location. Please try again later',
-          icon: 'wifi_off',
+          icon: 'location_off',
           title: 'Filed To Detect Location'
         }, openMap);
         return;
@@ -149,12 +149,12 @@ function mapView(location) {
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
-    loadNearByLocations(o, map, location).then(function (markers) {
-      ApplicationState.nearByLocations = markers
-      if (!markers.length) return createUnkownCheckIn()
+    loadNearByLocations(o, map, location).then(function (nearByLocations) {
+      ApplicationState.nearByLocations = nearByLocations
+      if (!nearByLocations.length) return createUnkownCheckIn()
+      if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0]);
       document.getElementById('map').style.display = 'block'
-
-      loadCardData(markers, map)
+      loadCardData(nearByLocations, map)
     })
   });
 }
@@ -200,7 +200,11 @@ function loadCardData(venues, map) {
   document.getElementById('start-load').classList.add('hidden');
   ApplicationState.knownLocation = true;
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
-  ${renderVenue(venues)}
+  ${venues.map(function(venue) {
+      return `${venueList(venue)}`
+  }).join("")}
+  <li class='mdc-list-divider'></li>
+  ${loadUnkwown()}
 </ul>`
   document.querySelector('#selection-box').classList.remove('hidden')
   document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
@@ -214,45 +218,35 @@ function loadCardData(venues, map) {
   ul.listen('MDCList:action', function (evt) {
     console.log(evt.detail.index)
     if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd);
-
-    const selectedVenue = venues[evt.detail.index];
-
     focusMarker(map, markersObject, evt.detail.index)
-
-
-    const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
-    copy.share = []
-    console.log(copy)
     cardProd.open();
-    requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
-      successDialog('Check-In Created')
-      cardProd.close();
-      ApplicationState.lastCheckInCreated = Date.now()
-      ApplicationState.venue = selectedVenue
-      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-      getSuggestions();
-    }).catch(function (error) {
-      snacks(error.response.message);
-      cardProd.close()
-    })
+    const selectedVenue = venues[evt.detail.index];
+    createKnownCheckIn(selectedVenue);
+
   })
 };
 
-function renderVenue(markers) {
+function createKnownCheckIn(selectedVenue, cardProd) {
 
+  const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
+  copy.share = []
+  if (cardProd) {
+    cardProd.open();
+  }
 
-  if (markers.length == 1) {
-    return venueList(markers[0]) + loadUnkwown();
-  };
-
-  if (markers.length > 1) {
-    let string = '';
-    markers.forEach(function (venue) {
-      string += venueList(venue);
-    })
-    string += loadUnkwown();
-    return string;
-  };
+  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
+    
+    successDialog('Check-In Created')
+    ApplicationState.lastCheckInCreated = Date.now()
+    ApplicationState.venue = selectedVenue
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    getSuggestions();
+  }).catch(function (error) {
+    snacks(error.response.message);
+    if (cardProd) {
+      cardProd.close()
+    }
+  })
 }
 
 function loadUnkwown() {
@@ -587,6 +581,7 @@ function loadNearByLocations(o, map, location) {
     }
     tx.oncomplete = function () {
       map.fitBounds(bounds);
+      // return resolve([result[0]])
       return resolve(result)
     }
   })

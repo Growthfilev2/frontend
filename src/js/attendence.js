@@ -82,6 +82,8 @@ function getAttendenceSubs() {
         const cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.status === 'CANCELLED') {
+          cursor.delete()
+
           cursor.continue();
           return;
         }
@@ -304,6 +306,7 @@ function checkStatusSubscription(event) {
     const cursor = event.target.result;
     if (!cursor) return;
     if (cursor.value.status === 'CANCELLED') {
+      cursor.delete()
       cursor.continue();
       return;
     }

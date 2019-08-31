@@ -18,6 +18,7 @@ function getKnownLocationSubs() {
       if (!cursor) return;
 
       if (cursor.value.status === 'CANCELLED') {
+        cursor.delete()
         cursor.continue();
         return;
       };
@@ -94,6 +95,7 @@ function getSubsWithVenue() {
         return;
       }
       if (cursor.value.status === 'CANCELLED') {
+        cursor.delete()
         cursor.continue();
         return;
       }
@@ -168,7 +170,7 @@ function homeView(suggestedTemplates) {
     progressBar.close();
     history.pushState(['homeView'], null, null);
     let clearIcon = '';
-    if (ApplicationState.nearByLocations.length) {
+    if (ApplicationState.nearByLocations.length > 1) {
       clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
 
@@ -196,7 +198,7 @@ function homeView(suggestedTemplates) {
     if (document.getElementById('change-location')) {
       document.getElementById('change-location').addEventListener('click', function (evt) {
         progressBar.open()
-      
+
         manageLocation(3).then(function (newLocation) {
           mapView(newLocation);
         }).catch(handleLocationError)
@@ -358,18 +360,13 @@ function checkForDuty() {
         cursor.continue();
         return;
       };
-
-
       if (schedule[0].endTime < currentTimestamp) {
         cursor.continue();
         return;
       }
-
-      if (schedule[0].startTime <= maxTimestamp || schedule.endTime <= maxTimestamp) {
+      if (schedule[0].startTime <= maxTimestamp || schedule[0].endTime <= maxTimestamp) {
         result.push(cursor.value)
-
       };
-
       cursor.continue();
     }
     tx.oncomplete = function () {
