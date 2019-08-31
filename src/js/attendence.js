@@ -12,11 +12,11 @@ function attendenceView(sectionContent) {
     handleTemplateListClick(suggestionListInit)
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden')
-
     handleError({
       message: error.message,
-      body: '',
-      stack: error.stack || ''
+      body: {
+        stack: error.stack || '',
+      }
     })
   });
 
@@ -35,8 +35,9 @@ function attendenceView(sectionContent) {
 
     handleError({
       message: error.message,
-      body: '',
-      stack: error.stack || ''
+      body: {
+        stack: error.stack || '',
+      }
     })
   });
 
@@ -64,8 +65,9 @@ function attendenceView(sectionContent) {
     document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
-      body: '',
-      stack: error.stack || ''
+      body: {
+        stack: error.stack || '',
+      }
     })
   })
 
@@ -99,6 +101,7 @@ function getAttendenceSubs() {
       return resolve(result)
     }
     tx.onerror = function () {
+     
       return reject({
         message: tx.error,
       })

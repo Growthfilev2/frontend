@@ -2,15 +2,15 @@ function expenseView() {
     const subs = []
     const sectionContent = document.querySelector('.tabs-section .data-container');
 
-    const tx = db.transaction('subscriptions','readwrite');
+    const tx = db.transaction('subscriptions', 'readwrite');
     sectionContent.dataset.view = 'reimbursement'
     tx.objectStore('subscriptions')
         .index('report')
         .openCursor(IDBKeyRange.only('reimbursement'))
         .onsuccess = function (event) {
             const cursor = event.target.result;
-            if(!cursor) return
-            if(cursor.value.status === 'CANCELLED') {
+            if (!cursor) return
+            if (cursor.value.status === 'CANCELLED') {
                 cursor.delete()
                 cursor.continue();
                 return;
