@@ -278,7 +278,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=25');
+  let apiHandler = new Worker('js/apiHandler.js');
 
   auth.getIdToken(false).then(function (token) {
     requestGenerator.meta.user.token = token
