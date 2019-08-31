@@ -35,6 +35,7 @@ function isLocationMoreThanThreshold(distance) {
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
     var currentTime = moment(moment().valueOf());
     var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds()
+
     return duration > threshold
 }
 
