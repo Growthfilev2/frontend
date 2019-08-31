@@ -150,7 +150,7 @@ function mapView(location) {
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
     loadNearByLocations(o, map, location).then(function (nearByLocations) {
-      ApplicationState.nearByLocations = nearByLocations
+      ApplicationState.nearByLocations = nearByLocations;
       if (!nearByLocations.length) return createUnkownCheckIn()
       if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0]);
       document.getElementById('map').style.display = 'block'
