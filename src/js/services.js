@@ -260,7 +260,7 @@ function requestCreator(requestType, requestBody) {
     'geolocationApi': true
   }
   var auth = firebase.auth().currentUser;
-  let apiHandler = new Worker('js/apiHandler.js');
+
 
   var requestGenerator = {
     type: requestType,
@@ -278,6 +278,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
+  let apiHandler = new Worker('js/apiHandler.js?version=25');
 
   auth.getIdToken(false).then(function (token) {
     requestGenerator.meta.user.token = token
@@ -515,6 +516,3 @@ function formatTextToTitleCase(string) {
   return arr.join('')
 }
 
-function calculateSpeed(distance, time) {
-  return distance / time
-}

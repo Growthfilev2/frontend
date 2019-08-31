@@ -74,7 +74,7 @@ function attendenceView(sectionContent) {
 function getAttendenceSubs() {
   return new Promise(function (resolve, reject) {
     const result = []
-    const tx = db.transaction('subscriptions');
+    const tx = db.transaction('subscriptions','readwrite');
     tx.objectStore('subscriptions')
       .index('report')
       .openCursor(IDBKeyRange.only('attendance'))
@@ -83,7 +83,6 @@ function getAttendenceSubs() {
         if (!cursor) return;
         if (cursor.value.status === 'CANCELLED') {
           cursor.delete()
-
           cursor.continue();
           return;
         }
@@ -296,7 +295,7 @@ function checkStatusSubscription(event) {
   const el = event.target;
   const dataset = el.dataset;
   console.log(dataset)
-  const tx = db.transaction('subscriptions');
+  const tx = db.transaction('subscriptions','readwrite');
   const fetch = tx
     .objectStore('subscriptions')
     .index('officeTemplate')

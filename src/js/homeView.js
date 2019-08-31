@@ -9,7 +9,7 @@ function getSuggestions() {
 
 function getKnownLocationSubs() {
   return new Promise(function (resolve, reject) {
-    const tx = db.transaction(['subscriptions']);
+    const tx = db.transaction('subscriptions','readwrite');
     const store = tx.objectStore('subscriptions');
     const result = [];
     const venue = ApplicationState.venue
@@ -83,7 +83,7 @@ function getPendingLocationActivities() {
 
 function getSubsWithVenue() {
   return new Promise(function (resolve, reject) {
-    const tx = db.transaction(['subscriptions']);
+    const tx = db.transaction('subscriptions','readwrite');
     const store = tx.objectStore('subscriptions');
 
     const result = []
@@ -322,14 +322,13 @@ function homeView(suggestedTemplates) {
 
     if (!suggestionLength) return;
     console.log(suggestedTemplates)
-
+    
     if (document.querySelector('.work-tasks #text') && document.getElementById('suggestions-container')) {
       document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
       document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
       const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
       handleTemplateListClick(suggestedInit);
     }
-
   } catch (e) {
     console.log(e)
     handleError({
@@ -341,8 +340,6 @@ function homeView(suggestedTemplates) {
 
 function checkForDuty() {
   return new Promise(function (resolve, reject) {
-
-
     const currentTimestamp = moment().valueOf()
     const maxTimestamp = moment().add(24, 'h').valueOf();
     console.log(maxTimestamp);
@@ -364,7 +361,7 @@ function checkForDuty() {
         cursor.continue();
         return;
       }
-      if (schedule[0].startTime <= maxTimestamp || schedule[0].endTime <= maxTimestamp) {
+      if (schedule[0].startTime <= maxTimestamp) {
         result.push(cursor.value)
       };
       cursor.continue();

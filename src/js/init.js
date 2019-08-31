@@ -194,24 +194,14 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
-
-    if (!areObjectStoreValid(db.objectStoreNames)) {
-      db.close();
-      console.log('removing idb')
-      const auth = firebase.auth().currentUser;
-      
-      const deleteIDB = indexedDB.deleteDatabase(auth.uid);
-      deleteIDB.onsuccess = function () {
-        window.location.reload();
-      }
-      deleteIDB.onblocked = function () {
-        snacks('Please Re-Install The App')
-      }
-      deleteIDB.onerror = function () {
-        snacks('Please Re-Install The App')
-      }
-      return;
+    const objectStoreCheck  = areObjectStoreValid(db.objectStoreNames);
+    if (!objectStoreCheck.isValid) {
+      handleError({
+        message:'Object Store not found',
+        body:objectStoreCheck["not-present"]
+      })
     };
+
     console.log("run app")
 
     const startLoad = document.querySelector('#start-load')
@@ -513,13 +503,19 @@ function profileCheck() {
 
 function areObjectStoreValid(names) {
   const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum', 'reports']
-
   for (let index = 0; index < stores.length; index++) {
     const el = stores[index];
-    if (!names.contains(el)) return false;
+    if (!names.contains(el))  {
+      return {
+        'not-present':el,
+        isValid:false
+      };
+    }
   }
-  return true;
-
+  return {
+    'not-present':'',
+    isValid:true
+  };
 }
 
 function getEmployeeDetails(range, indexName) {

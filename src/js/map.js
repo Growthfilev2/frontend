@@ -222,7 +222,6 @@ function loadCardData(venues, map) {
     cardProd.open();
     const selectedVenue = venues[evt.detail.index];
     createKnownCheckIn(selectedVenue);
-
   })
 };
 
@@ -235,7 +234,7 @@ function createKnownCheckIn(selectedVenue, cardProd) {
   }
 
   requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
-    
+
     successDialog('Check-In Created')
     ApplicationState.lastCheckInCreated = Date.now()
     ApplicationState.venue = selectedVenue
@@ -516,7 +515,6 @@ function loadNearByLocations(o, map, location) {
         cursor.continue();
         return;
       }
-
       result.push(cursor.value)
 
 
@@ -559,7 +557,6 @@ function loadNearByLocations(o, map, location) {
     }
     tx.oncomplete = function () {
       map.fitBounds(bounds);
-      // return resolve([result[0]])
       return resolve(result)
     }
   })

@@ -34,7 +34,7 @@ function reportView() {
 function incentiveView(sectionContent) {
   sectionContent.dataset.view = 'incentive'
   const subs = []
-  const tx = db.transaction('subscriptions');
+  const tx = db.transaction('subscriptions','readwrite');
   tx.objectStore('subscriptions')
     .index('report')
     .openCursor(IDBKeyRange.only('incentive'))

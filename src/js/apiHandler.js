@@ -1,5 +1,4 @@
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js');
-
 let deviceInfo;
 let currentDevice;
 let meta;
@@ -253,8 +252,8 @@ function geolocationApi(body, meta) {
           return reject({
             message: JSON.parse(xhr.response).error.message,
             body: {
-              geolocationResponse:JSON.parse(xhr.response),
-              geolocationBody:body
+              geolocationResponse: JSON.parse(xhr.response),
+              geolocationBody: body
             },
           });
         }
@@ -280,7 +279,7 @@ function geolocationApi(body, meta) {
       })
     }
     xhr.send(JSON.stringify(body));
-  }); 
+  });
 }
 
 function dm(body, meta) {
@@ -649,7 +648,7 @@ function successResponse(read, param, db, resolve, reject) {
 
 
   updateReports(read.statusObject, reports);
-  
+
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)
@@ -749,6 +748,8 @@ function successResponse(read, param, db, resolve, reject) {
 
   })
 
+
+
   read.templates.forEach(function (subscription) {
     if(subscription.status !== 'CANCELLED') {
       updateSubscription(subscription, updateTx)
@@ -809,7 +810,7 @@ function updateIDB(config) {
       http(req)
         .then(function (response) {
 
-          console.log(response.statusObject)
+          console.log(response.locations.length)
           return successResponse(response, config.meta, config.db, resolve, reject);
         }).catch(function (error) {
           return reject(error)
