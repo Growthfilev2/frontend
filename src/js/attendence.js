@@ -1,16 +1,15 @@
 function attendenceView(sectionContent) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
-
-  getAttendenceSubs().then(function (subs) {
+  
+  getReportSubs('attendance').then(function(subs) {
     document.getElementById('start-load').classList.add('hidden')
-
     const suggestionListEl = document.getElementById('suggested-list');
     if (!suggestionListEl) return
     suggestionListEl.innerHTML = templateList(subs)
     const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
     handleTemplateListClick(suggestionListInit)
-  }).catch(function (error) {
+  }).catch(function(error){
     document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
@@ -18,7 +17,8 @@ function attendenceView(sectionContent) {
         stack: error.stack || '',
       }
     })
-  });
+  })
+
 
   getTodayStatData().then(function (todayString) {
     document.getElementById('start-load').classList.add('hidden')
@@ -73,41 +73,6 @@ function attendenceView(sectionContent) {
 
 }
 
-function getAttendenceSubs() {
-  return new Promise(function (resolve, reject) {
-    const result = []
-    const tx = db.transaction('subscriptions','readwrite');
-    tx.objectStore('subscriptions')
-      .index('report')
-      .openCursor(IDBKeyRange.only('attendance'))
-      .onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.status === 'CANCELLED') {
-          cursor.delete()
-          cursor.continue();
-          return;
-        }
-        
-        if (cursor.value.template === 'attendance regularization') {
-          cursor.continue();
-          return;
-        }
-        result.push(cursor.value);
-
-        cursor.continue();
-      };
-    tx.oncomplete = function () {
-      return resolve(result)
-    }
-    tx.onerror = function () {
-     
-      return reject({
-        message: tx.error,
-      })
-    }
-  })
-}
 
 function attendanceDom() {
   return `<div class='attendance-section'>

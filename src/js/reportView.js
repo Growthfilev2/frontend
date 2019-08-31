@@ -11,14 +11,14 @@ function reportView() {
   </div>
   </div>
   </div>`
-  
+
   const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-  
+
   tabList.listen('MDCTabBar:activated', function (evt) {
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
 
-    if (!evt.detail.index)  {
+    if (!evt.detail.index) {
       document.getElementById('start-load').classList.remove('hidden')
       attendenceView(sectionContent);
       return;
@@ -33,40 +33,17 @@ function reportView() {
 
 function incentiveView(sectionContent) {
   sectionContent.dataset.view = 'incentive'
-  const subs = []
-  const tx = db.transaction('subscriptions','readwrite');
-  tx.objectStore('subscriptions')
-    .index('report')
-    .openCursor(IDBKeyRange.only('incentive'))
-    .onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.delete();
-        cursor.continue();
-        return;
-      }
-      subs.push(cursor.value)
-      cursor.continue();
-
-    }
-  tx.oncomplete = function () {
-    console.log(subs);
-    const merged = [].concat.apply([], subs)
-    if (!merged.length) {
+  getReportSubs('incentive').then(function (subs) {
+    if (!subs.length) {
       sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Are Not Eligible For Incentives</h3>'
-      return
+      return;
     }
-    sectionContent.innerHTML = templateList(merged);
-    const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+    sectionContent.innerHTML = templateList(subs);
+    const el = document.getElementById('suggested-list')
+    if(el) return;
+    const listInit = new mdc.list.MDCList(el)
     handleTemplateListClick(listInit)
-  }
-  tx.onerror = function(){
-    handleError({
-      message:tx.error,
-      body:''
-    })
-  }
+  })
 }
 
 
@@ -113,4 +90,33 @@ function showTabs() {
       </div>
     </div>
   </div>`
+}
+
+function getReportSubs(reportName) {
+  return new Promise(function (resolve, reject) {
+    const subs = [];
+    tx.objectStore('subscriptions')
+      .index('report')
+      .openCursor(IDBKeyRange.only(reportName)).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return
+        if (cursor.value.status === 'CANCELLED') {
+          cursor.delete()
+          cursor.continue();
+          return;
+        }
+        if (reportName === 'attendance' && cursor.value.template === 'attendance regularization') {
+          cursor.continue();
+          return;
+        }
+        subs.push(cursor.value)
+        cursor.continue();
+      }
+    tx.oncomplete = function () {
+      return resolve(subs)
+    }
+    tx.onerror = function () {
+      return reject(tx.error)
+    }
+  })
 }
