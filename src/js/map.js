@@ -251,7 +251,7 @@ function createKnownCheckIn(selectedVenue, cardProd) {
 function loadUnkwown() {
   return ` <li class='mdc-list-item venue-list-item  pl-0 pr-0'>
   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">location_on</span>
-    Unkwown location
+    Unknown location
     <span class="mdc-list-item__meta material-icons" aria-hidden="true">keyboard_arrow_right</span>
   </li>`
 }
@@ -515,6 +515,7 @@ function loadNearByLocations(o, map, location) {
         cursor.continue();
         return;
       }
+
       result.push(cursor.value)
 
 
