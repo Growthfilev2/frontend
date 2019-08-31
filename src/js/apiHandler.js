@@ -809,8 +809,6 @@ function updateIDB(config) {
 
       http(req)
         .then(function (response) {
-
-          console.log(response.locations.length)
           return successResponse(response, config.meta, config.db, resolve, reject);
         }).catch(function (error) {
           return reject(error)

@@ -194,13 +194,17 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
-    const objectStoreCheck  = areObjectStoreValid(db.objectStoreNames);
-    if (!objectStoreCheck.isValid) {
-      handleError({
-        message:'Object Store not found',
-        body:objectStoreCheck["not-present"]
-      })
-    };
+    try {
+      const objectStoreCheck  = areObjectStoreValid(db.objectStoreNames);
+      if (!objectStoreCheck.isValid) {
+        handleError({
+          message:'Object Store not found',
+          body:objectStoreCheck["not-present"]
+        })
+      };
+    }catch(e) {
+      console.log(e)
+    }
 
     console.log("run app")
 
