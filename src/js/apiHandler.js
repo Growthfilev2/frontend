@@ -413,10 +413,8 @@ function removeByIndex(index, range) {
   index.openCursor(range).onsuccess = function (event) {
     const cursor = event.target.result;
     if (!cursor) return;
-    const deleteReq = cursor.delete();
-    deleteReq.onsuccess = function () {
-      cursor.continue();
-    }
+    cursor.delete();
+    cursor.continue();
   }
 }
 
@@ -480,10 +478,9 @@ function updateCalendar(activity, tx) {
     }
 
     let recordDeleteReq = cursor.delete()
+    cursor.continue()
     recordDeleteReq.onsuccess = function () {
       console.log("remove calendar")
-
-      cursor.continue()
     }
     recordDeleteReq.onerror = function () {
       instant({
@@ -568,9 +565,9 @@ function updateSubscription(subscription, tx) {
       return;
     }
     const deleteReq = cursor.delete();
+    cursor.continue();
     deleteReq.onsuccess = function () {
       console.log('deleted')
-      cursor.continue();
     }
   }
 }

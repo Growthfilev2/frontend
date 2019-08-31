@@ -675,7 +675,6 @@ function getUniqueOfficeCount() {
     childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return;
-
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
@@ -750,7 +749,7 @@ function openMap() {
 
     if (!data) return showNoOfficeFound();
     getCheckInSubs().then(function (checkInSubs) {
-      
+
       if (!Object.keys(checkInSubs).length) {
         manageLocation(3).then(function (location) {
           document.getElementById('start-load').classList.add('hidden');

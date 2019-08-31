@@ -284,29 +284,7 @@ function showNoOfficeFound() {
   dialog.open();
 }
 
-function getAllSubscriptions() {
-  return new Promise(function (resolve, reject) {
 
-    const tx = db.transaction("subscriptions");
-    const result = [];
-    tx.objectStore('subscriptions').openCursor().onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      result.push(cursor.value)
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-
-      return resolve(result)
-
-
-    }
-  })
-}
 
 function selectionBox() {
   return `<div class="selection-box-auto hidden" id='selection-box'>
