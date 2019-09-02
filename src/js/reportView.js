@@ -40,7 +40,7 @@ function incentiveView(sectionContent) {
     }
     sectionContent.innerHTML = templateList(subs);
     const el = document.getElementById('suggested-list')
-    if(el) return;
+    if (el) return;
     const listInit = new mdc.list.MDCList(el)
     handleTemplateListClick(listInit)
   })
@@ -95,23 +95,37 @@ function showTabs() {
 function getReportSubs(reportName) {
   return new Promise(function (resolve, reject) {
     const subs = [];
-    tx.objectStore('subscriptions')
-      .index('report')
-      .openCursor(IDBKeyRange.only(reportName)).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return
-        if (cursor.value.status === 'CANCELLED') {
-          cursor.delete()
-          cursor.continue();
-          return;
-        }
-        if (reportName === 'attendance' && cursor.value.template === 'attendance regularization') {
-          cursor.continue();
-          return;
-        }
-        subs.push(cursor.value)
+    const tx = db.transaction('subscriptions', 'readwrite');
+    const store = tx.objectStore('subscriptions')
+    var request = ''
+    if (store.indexNames.contains('report')) {
+      request = store.index('report')
+        .openCursor(IDBKeyRange.only(reportName))
+    } else {
+      request = store.openCursor();
+    }
+
+    request.onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return
+      if (cursor.value.status === 'CANCELLED') {
+        cursor.delete()
         cursor.continue();
+        return;
       }
+
+      if (cursor.value.report !== reportName) {
+        cursor.continue();
+        return;
+      }
+      if(cursor.value.template === 'attendance regularization') {
+        cursor.continue();
+        return
+      }
+      
+      subs.push(cursor.value)
+      cursor.continue();
+    }
     tx.oncomplete = function () {
       return resolve(subs)
     }

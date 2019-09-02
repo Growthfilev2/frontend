@@ -82,7 +82,7 @@ function handleLocationError(error, onAppOpen) {
         failureScreen({
           message: 'There was a problem in detecting your location. Please try again later',
           icon: 'location_off',
-          title: 'Filed To Detect Location'
+          title: 'Failed To Detect Location'
         }, openMap);
         return;
       }

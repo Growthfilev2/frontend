@@ -1,15 +1,16 @@
 function attendenceView(sectionContent) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
-  
-  getReportSubs('attendance').then(function(subs) {
+
+  getReportSubs('attendance').then(function (subs) {
+    console.log(subs)
     document.getElementById('start-load').classList.add('hidden')
     const suggestionListEl = document.getElementById('suggested-list');
     if (!suggestionListEl) return
     suggestionListEl.innerHTML = templateList(subs)
     const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
     handleTemplateListClick(suggestionListInit)
-  }).catch(function(error){
+  }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
@@ -40,8 +41,6 @@ function attendenceView(sectionContent) {
       }
     })
   });
-
-
 
   getMonthlyData().then(function (monthlyData) {
     document.getElementById('start-load').classList.add('hidden')
@@ -234,12 +233,12 @@ function getMonthlyData() {
           return;
         }
         const recordDate = `${cursor.value.year}-${cursor.value.month +1}-${cursor.value.date}`
-        const today = moment().format('YYYY-MM-DD')
+
         if (moment(today, 'YYYY-MM-DD').isSameOrBefore(moment(recordDate, 'YYYY-MM-DD'))) {
           cursor.continue();
           return;
         }
-        if (!cursor.value.statusForDay) {
+        if (!cursor.value.hasOwnProperty('statusForDay')) {
           cursor.continue();
           return;
         }
@@ -263,7 +262,7 @@ function checkStatusSubscription(event) {
   const el = event.target;
   const dataset = el.dataset;
   console.log(dataset)
-  const tx = db.transaction('subscriptions','readwrite');
+  const tx = db.transaction('subscriptions', 'readwrite');
   const fetch = tx
     .objectStore('subscriptions')
     .index('officeTemplate')
