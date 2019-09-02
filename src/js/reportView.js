@@ -40,7 +40,7 @@ function incentiveView(sectionContent) {
     }
     sectionContent.innerHTML = templateList(subs);
     const el = document.getElementById('suggested-list')
-    if (el) return;
+    if (!el) return;
     const listInit = new mdc.list.MDCList(el)
     handleTemplateListClick(listInit)
   })

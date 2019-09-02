@@ -593,7 +593,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
-  // subscriptions.createIndex('report', 'report');
+  subscriptions.createIndex('report', 'report');
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
