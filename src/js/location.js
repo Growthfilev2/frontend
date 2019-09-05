@@ -1,6 +1,3 @@
-
-
-
 function calculateSpeed(distance, time) {
     return distance / time;
 }
@@ -103,7 +100,7 @@ function getCellularInformation() {
     let wifiAccessPointsArray = [];
     let cellTowerArray = [];
     if (wifiQueryString) {
-        wifiAccessPointsArray = parseQuery(wifiQueryString)
+        wifiAccessPointsArray = parseWifiQuery(wifiQueryString)
     };
     if (cellTowerQueryString) {
         cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString))
@@ -146,6 +143,31 @@ function removeFalseCellIds(cellTowers) {
     return filtered
 }
 
+/** to be removed when ssid will be removed from apk itself */
+
+function parseWifiQuery(queryString) {
+    var array = [];
+    const result = {}
+    const splitBySeperator = queryString.split(",")
+    splitBySeperator.forEach(function (value) {
+        const url = new URLSearchParams(value);
+        if (url.has('ssid')) {
+            url.delete('ssid')
+        }
+        if (!url.has('macAddress')) return;
+        url.forEach(function (value, key) {
+            console.log(value, key)
+            if (key === 'macAddress') {
+                result[key] = value
+            } else {
+                result[key] = Number(value)
+            }
+        });
+        array.push(result)
+    })
+    return array;
+}
+
 function parseQuery(queryString) {
 
     var array = [];
@@ -160,11 +182,9 @@ function parseQuery(queryString) {
 function queryPatramsToObject(url) {
     let result = {};
     url.forEach(function (value, key) {
-        if (key === 'macAddress' || key === 'ssid') {
-            result[key] = value
-        } else {
-            result[key] = Number(value)
-        }
+
+        result[key] = Number(value)
+
     })
     return result;
 }
