@@ -97,8 +97,8 @@ function getCellularInformation() {
         })
     }
 
-    let wifiAccessPointsArray = [];
-    let cellTowerArray = [];
+    var wifiAccessPointsArray = [];
+    var cellTowerArray = [];
     if (wifiQueryString) {
         wifiAccessPointsArray = parseWifiQuery(wifiQueryString)
     };
