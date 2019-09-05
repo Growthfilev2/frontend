@@ -124,10 +124,7 @@ function createViewProfile() {
     })
     document.getElementById('tab-scroller').innerHTML = officeDom;
     const tabInit = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
-    //minor hack
-    setTimeout(function () {
-      tabInit.activateTab(0);
-    }, 0)
+   
     tabInit.listen('MDCTabBar:activated', function (evt) {
 
       const me = myCreds[evt.detail.index];
@@ -153,7 +150,7 @@ function createViewProfile() {
         
         if (leaves.length) {
           document.getElementById('leaves').innerHTML = `<h1 class="mdc-typography--headline6 mb-0">
-                          Remaining Leaves
+                          Annual  Leave Limit
                           ${leaves.map(function(leave,idx){
                              return `<h1 class="mdc-typography--headline6 mt-0 ${leaves.length - idx == 1 ? '' :'mb-0'}">${leave.attachment.Name.value} : ${leave.attachment['Annual Limit'].value}</h1>`
                           }).join("")}
@@ -202,6 +199,7 @@ function createViewProfile() {
 
       })
     })
+    tabInit.activateTab(0);
   })
 }
 

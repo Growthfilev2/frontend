@@ -217,23 +217,16 @@ function homeView(suggestedTemplates) {
           if (!el) return;
           el.classList.remove('material-icons');
   
-          el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
+          el.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
         }
       }
-      
+
       const commonTaskList = new mdc.list.MDCList(commonListEl);
       commonTaskList.listen('MDCList:action', function (commonListEvent) {
         console.log(commonListEvent)
         if (commonListEvent.detail.index == 0) {
           history.pushState(['chatView'], null, null);
           chatView();
-          // const tx = db.transaction('root', 'readwrite');
-          // const store = tx.objectStore('root')
-          // store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-          //   const rootRecord = event.target.result;
-          //   rootRecord.totalCount = 0;
-          //   store.put(rootRecord)
-          // }
           return;
         };
 

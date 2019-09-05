@@ -329,8 +329,10 @@ function userLi(value) {
     </span>
     </span>
     <span class="mdc-list-item__meta" aria-hidden="true">
-    ${value.count ? `<div class='chat-count'>${value.count}</div>` :''}
-    ${value.timestamp ? formatCreatedTime(value.timestamp) : ''}</span>
+    ${value.count ? `<div class='chat-count mdc-typography--subtitle2'>${value.count}</div>` :''}
+    <span class='chat-time mdc-typography--subtitle2'>
+        ${value.timestamp ? formatCreatedTime(value.timestamp) : ''}</span>
+    </span>
     </li>`
 }
 

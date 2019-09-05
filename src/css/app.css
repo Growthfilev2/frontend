@@ -428,7 +428,7 @@ body {
 /** override **/
 
 .mdc-list-item__secondary-text {
-  font-size: 0.95rem;
+  /* font-size: 0.95rem; */
 }
 
 .mdc-list-item__graphic.without-icon {

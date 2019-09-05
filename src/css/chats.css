@@ -18,12 +18,12 @@ html {
 }
 
 .user-chats li .mdc-list-item__primary-text {
-  font-size: 18px;
+  /* font-size: 18px; */
 
 }
 
 .user-chats li .mdc-list-item__meta {
-  font-size: 1rem;
+  /* font-size: 1rem; */
 }
 
 .page {
@@ -473,16 +473,17 @@ html {
 
 
 .chat-count {
-  font-size: 16px;
-
+  /* font-size: 16px; */
+  margin-left: 3px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
   width: 25px;
   height: 25px;
   border-radius: 50%;
   background-color: var(--mdc-theme-primary);
-
   text-align: center;
-  display: table-cell;
-  overflow: hidden;
   vertical-align: middle;
   color: white;
 }
