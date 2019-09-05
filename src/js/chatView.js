@@ -26,7 +26,7 @@ function chatView() {
     document.getElementById('app-current-panel').innerHTML = chatDom()
 
     readLatestChats(true);
-    getOtherContacts(true);
+    getOtherContacts();
 }
 
 function chatDom() {
@@ -186,7 +186,7 @@ function formatNumber(numberString) {
     return number.replace(/ +/g, "");
 }
 
-function getOtherContacts(initList) {
+function getOtherContacts() {
     currentContactsArray = [];
     const tx = db.transaction('users', 'readwrite');
     const index = tx.objectStore('users').index('timestamp');
@@ -206,30 +206,27 @@ function getOtherContacts(initList) {
     }
     tx.oncomplete = function () {
         const contactsEl = document.getElementById('all-contacts')
+        document.querySelector('.contacts-container').classList.remove("hidden")
+        if (!contactsEl) return;
+        if (!currentContacts) {
+            contactsEl.innerHTML = 'No Contacts Found'
+            return
+        };
+        contactsEl.innerHTML = currentContacts;
+        contactsUl = new mdc.list.MDCList(contactsEl);
+        initializeContactList(contactsUl)
 
-        if (contactsEl) {
-            document.querySelector('.contacts-container').classList.remove("hidden")
-            if (!currentContacts) {
-                currentContacts = 'No Contacts Found'
-            };
-            contactsEl.innerHTML = currentContacts;
-            if (!initList) return;
-            contactsUl = new mdc.list.MDCList(contactsEl);
-            initializeContactList(contactsUl)
-        }
     }
 }
 
 function readLatestChats(initList) {
-    var v1 = performance.now();
     currentChatsArray = [];
     const tx = db.transaction('users', 'readwrite');
     const index = tx.objectStore('users').index('timestamp');
     const myNumber = firebase.auth().currentUser.phoneNumber
     let currentChats = '';
-    const range = IDBKeyRange.bound(0, 1909889900000)
 
-    index.openCursor(range, 'prev').onsuccess = function (event) {
+    index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.mobile === myNumber) {
@@ -252,24 +249,18 @@ function readLatestChats(initList) {
     }
     tx.oncomplete = function () {
         const chatsEl = document.getElementById('chats')
-
-        if (chatsEl) {
-            document.querySelector('.chats-container').classList.remove("hidden")
-            if (!currentChatsArray.length) {
-                chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
+        document.querySelector('.chats-container').classList.remove("hidden")
+        if (!chatsEl) return
+        if (!currentChatsArray.length) {
+            chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
                 <p class='text-center'>Choose From Below or Search</p>
                 `
-            } else {
-                chatsEl.innerHTML = currentChats
-            }
-            if (!initList) return;
-            chatsUl = new mdc.list.MDCList(chatsEl);
-            initializeChatList(chatsUl);
-            var v2 = performance.now();
-            console.log('performance', v2 - v1)
+            return;
         }
-
-
+        chatsEl.innerHTML = currentChats
+        if (!initList) return;
+        chatsUl = new mdc.list.MDCList(chatsEl);
+        initializeChatList(chatsUl);
     }
 }
 
@@ -541,10 +532,11 @@ function messageBoxDom(comment, position, time) {
 }
 
 function createActivityHeading(activity) {
-    return  `${activity.activityName}
+    return `${activity.activityName}
     <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
     <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
 }
+
 function createActivityActionMenu(addendumId, activityId, geopoint) {
 
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
@@ -653,7 +645,7 @@ function showViewDialog(heading, activity, id) {
     if (activity.canEdit) {
         type = ''
     }
-    if(activity.template === 'check-in' && activity.attachment['Photo'].value) {
+    if (activity.template === 'check-in' && activity.attachment['Photo'].value) {
         type = ''
     }
     const dialog = new Dialog(heading, activityDomCustomer(activity), id).create(type);
@@ -674,7 +666,7 @@ function showViewDialog(heading, activity, id) {
 
 
 
-function createDynamicChips(text, id,leadingIcon) {
+function createDynamicChips(text, id, leadingIcon) {
     const chip = createElement('button', {
         className: 'mdc-chip mdc-chip--selected',
         id: id
@@ -690,7 +682,7 @@ function createDynamicChips(text, id,leadingIcon) {
     })
     trailingIcon.setAttribute('tabindex', '0');
     trailingIcon.setAttribute('role', 'button');
-    leadingIcon ? chip.appendChild(leadingIcon) :''
+    leadingIcon ? chip.appendChild(leadingIcon) : ''
     chip.appendChild(chipText)
     chip.appendChild(trailingIcon)
     return chip
@@ -785,7 +777,7 @@ function share(activity) {
                     className: 'mdc-chip__icon mdc-chip__icon--leading',
                     src: clickedUser.photoURL || './img/empty-user.jpg'
                 })
-                const newChip = createDynamicChips(clickedUser.displayName || clickedUser.mobile,index,image);
+                const newChip = createDynamicChips(clickedUser.displayName || clickedUser.mobile, index, image);
                 chipSetEl.appendChild(newChip)
                 chipInit.addChip(newChip)
                 newChip.scrollIntoView({
@@ -981,8 +973,8 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
         </li>
       </ul>`
     }
-  
-    if(attachmentName === 'Include')  {
+
+    if (attachmentName === 'Include') {
         return ''
     }
     return `<h1 class="mdc-typography--subtitle1 mt-0">

@@ -606,6 +606,7 @@ function successResponse(read, param, db, resolve, reject) {
   let userTimestamp = {}
 
   read.addendum.forEach(function (addendum) {
+
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
         removeActivityFromDB(addendum.activityId, updateTx);
@@ -613,7 +614,6 @@ function successResponse(read, param, db, resolve, reject) {
         removeUserFromAssigneeInActivity(addendum, updateTx)
       }
     };
-
 
     if (addendum.isComment) {
       if (addendum.assignee === param.user.phoneNumber) {
@@ -634,6 +634,7 @@ function successResponse(read, param, db, resolve, reject) {
       }
     }
   })
+
 
   if (read.locations.length) {
 
