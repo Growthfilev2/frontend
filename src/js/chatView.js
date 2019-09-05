@@ -221,10 +221,13 @@ function getOtherContacts() {
 
 function readLatestChats(initList) {
     currentChatsArray = [];
-    const tx = db.transaction('users', 'readwrite');
+    const tx = db.transaction(['users','root'], 'readwrite');
     const index = tx.objectStore('users').index('timestamp');
-    const myNumber = firebase.auth().currentUser.phoneNumber
+    const auth = firebase.auth().currentUser;
+
+    const myNumber = auth.phoneNumber
     let currentChats = '';
+   
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -237,8 +240,22 @@ function readLatestChats(initList) {
             cursor.continue();
             return;
         };
+
         console.log(cursor.value);
-        if (ApplicationState.currentChatSlected === cursor.value.mobile) {
+    
+        if (ApplicationState.currentChatSlected === cursor.value.mobile && cursor.value.count) {
+            var currentUserCount = cursor.value.count;
+
+            const rootStore = tx.objectStore('root')
+            rootStore.get(auth.uid).onsuccess = function(event){
+                const record = event.target.result;
+                if(record) {
+                    console.log(currentUserCount)
+                    record.totalCount = record.totalCount - currentUserCount;
+                    rootStore.put(record)
+                }
+            }
+
             cursor.value.count = 0;
             const update = cursor.update(cursor.value);
             update.onsuccess = function () {
@@ -253,6 +270,7 @@ function readLatestChats(initList) {
         cursor.continue();
     }
     tx.oncomplete = function () {
+        ApplicationState.currentChatSlected = null;
         const chatsEl = document.getElementById('chats')
         document.querySelector('.chats-container').classList.remove("hidden")
         if (!chatsEl) return

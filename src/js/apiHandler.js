@@ -779,7 +779,7 @@ function updateRoot(read, tx, uid, counter) {
     if (record.totalCount) {
       record.totalCount += totalCount;
     } else {
-      record.totalCount = totalCount
+      record.totalCount = totalCount;
     }
     console.log('start adding upto')
     store.put(record);

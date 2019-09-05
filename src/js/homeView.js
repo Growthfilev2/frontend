@@ -9,7 +9,7 @@ function getSuggestions() {
 
 function getKnownLocationSubs() {
   return new Promise(function (resolve, reject) {
-    const tx = db.transaction('subscriptions','readwrite');
+    const tx = db.transaction('subscriptions', 'readwrite');
     const store = tx.objectStore('subscriptions');
     const result = [];
     const venue = ApplicationState.venue
@@ -83,7 +83,7 @@ function getPendingLocationActivities() {
 
 function getSubsWithVenue() {
   return new Promise(function (resolve, reject) {
-    const tx = db.transaction('subscriptions','readwrite');
+    const tx = db.transaction('subscriptions', 'readwrite');
     const store = tx.objectStore('subscriptions');
 
     const result = []
@@ -206,21 +206,34 @@ function homeView(suggestedTemplates) {
     };
 
     const commonListEl = document.getElementById('common-task-list');
-
     if (commonListEl) {
+      db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+
+        const rootRecord = event.target.result;
+        if (!rootRecord) return;
+  
+        if (rootRecord.totalCount) {
+          const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
+          if (!el) return;
+          el.classList.remove('material-icons');
+  
+          el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
+        }
+      }
+      
       const commonTaskList = new mdc.list.MDCList(commonListEl);
       commonTaskList.listen('MDCList:action', function (commonListEvent) {
         console.log(commonListEvent)
         if (commonListEvent.detail.index == 0) {
           history.pushState(['chatView'], null, null);
           chatView();
-          const tx = db.transaction('root', 'readwrite');
-          const store = tx.objectStore('root')
-          store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-            const rootRecord = event.target.result;
-            rootRecord.totalCount = 0;
-            store.put(rootRecord)
-          }
+          // const tx = db.transaction('root', 'readwrite');
+          // const store = tx.objectStore('root')
+          // store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+          //   const rootRecord = event.target.result;
+          //   rootRecord.totalCount = 0;
+          //   store.put(rootRecord)
+          // }
           return;
         };
 
@@ -254,19 +267,7 @@ function homeView(suggestedTemplates) {
           dialog.close();
         })
       })
-      db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-
-        const rootRecord = event.target.result;
-        if (!rootRecord) return;
-
-        if (rootRecord.totalCount) {
-          const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
-          if (!el) return;
-          el.classList.remove('material-icons');
-
-          el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
-        }
-      }
+    
     }
 
     checkForDuty().then(function (result) {
@@ -322,7 +323,7 @@ function homeView(suggestedTemplates) {
 
     if (!suggestionLength) return;
     console.log(suggestedTemplates)
-    
+
     if (document.querySelector('.work-tasks #text') && document.getElementById('suggestions-container')) {
       document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
       document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
