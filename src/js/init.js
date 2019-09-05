@@ -129,7 +129,7 @@ function checkNetworkValidation() {
       message: 'You Are Currently Offline. Please Check Your Internet Connection',
       icon: 'wifi_off',
       title: 'BROKEN INTERNET CONNECTION'
-    },checkNetworkValidation)
+    }, checkNetworkValidation)
     return;
   }
   startApp();
@@ -195,14 +195,14 @@ function startApp() {
     console.log("request success")
     db = req.result;
     try {
-      const objectStoreCheck  = areObjectStoreValid(db.objectStoreNames);
+      const objectStoreCheck = areObjectStoreValid(db.objectStoreNames);
       if (!objectStoreCheck.isValid) {
         handleError({
-          message:'Object Store not found',
-          body:objectStoreCheck["not-present"]
+          message: 'Object Store not found',
+          body: objectStoreCheck["not-present"]
         })
       };
-    }catch(e) {
+    } catch (e) {
       console.log(e)
     }
 
@@ -509,16 +509,16 @@ function areObjectStoreValid(names) {
   const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum', 'reports']
   for (let index = 0; index < stores.length; index++) {
     const el = stores[index];
-    if (!names.contains(el))  {
+    if (!names.contains(el)) {
       return {
-        'not-present':el,
-        isValid:false
+        'not-present': el,
+        isValid: false
       };
     }
   }
   return {
-    'not-present':'',
-    isValid:true
+    'not-present': '',
+    isValid: true
   };
 }
 
@@ -748,6 +748,7 @@ function openMap() {
   hasDataInDB().then(function (data) {
 
     if (!data) return showNoOfficeFound();
+
     getCheckInSubs().then(function (checkInSubs) {
 
       if (!Object.keys(checkInSubs).length) {
@@ -756,39 +757,27 @@ function openMap() {
           ApplicationState.location = location;
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
           getSuggestions()
-        }).catch(function(error){
-          handleLocationError(error,true)
+        }).catch(function (error) {
+          handleLocationError(error, true)
         })
         return
       };
-
-      ApplicationState.officeWithCheckInSubs = checkInSubs
-
-      const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-
-      if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
-        manageLocation(3).then(function (location) {
-          document.getElementById('start-load').classList.add('hidden');
-          mapView(location)
-        }).catch(function(error){
-          handleLocationError(error,true)
-        })
-        return
-      }
-
-
-      manageLocation(3).then(function (location) {
+      ApplicationState.officeWithCheckInSubs = checkInSubs;
+      
+      const oldState = localStorage.getItem('ApplicationState')
+      manageLocation(3).then(function (geopoint) {
         document.getElementById('start-load').classList.add('hidden');
-        const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
-        const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))
-        if (isOlder || hasChangedLocation) {
-          return mapView(location)
-        }
+        if (!oldState) return mapView(geopoint);
+        const oldApplicationState = JSON.parse(oldState);
+        if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
 
+        const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
+        const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
+        if (isOlder || hasChangedLocation) return mapView(geopoint);
         ApplicationState = oldApplicationState
         return getSuggestions()
-      }).catch(function(error){
-        handleLocationError(error,true)
+      }).catch(function (error) {
+        handleLocationError(error, true)
       })
     })
   })
