@@ -225,14 +225,19 @@ function readLatestChats(initList) {
     const index = tx.objectStore('users').index('timestamp');
     const myNumber = firebase.auth().currentUser.phoneNumber
     let currentChats = '';
-
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
+        if(!cursor.value.timestamp) {
+            cursor.continue();
+            return;
+        }
+
         if (cursor.value.mobile === myNumber) {
             cursor.continue();
             return;
         };
+        console.log(cursor.value);
         if (ApplicationState.currentChatSlected === cursor.value.mobile) {
             cursor.value.count = 0;
             const update = cursor.update(cursor.value);
