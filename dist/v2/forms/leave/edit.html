@@ -93,6 +93,7 @@
                 const scheduleDescriptor = copy.schedule[0];
                 copy.attachment['Leave Type'].value = select.value;
                 copy.attachment.Reason.value = reason.value;
+                copy.share = []
                 const newSchedule = getNewSchedule(subscriptionTemplate)
                 if (!newSchedule) return;
                 copy.schedule = newSchedule
