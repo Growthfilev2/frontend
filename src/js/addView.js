@@ -27,7 +27,6 @@ function sendFormToParent(formData) {
         formData.forEach(function(form){
          prom.push(requestCreator('create',form))
         })
-      
        
         Promise.all(prom).then(function(response){
             progressBar.close();

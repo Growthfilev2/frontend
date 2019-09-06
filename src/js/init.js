@@ -206,8 +206,9 @@ function startApp() {
       console.log(e)
     }
 
-    console.log("run app")
 
+
+    console.log("run app")
     const startLoad = document.querySelector('#start-load')
     startLoad.classList.remove('hidden');
 

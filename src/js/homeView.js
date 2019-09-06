@@ -216,7 +216,6 @@ function homeView(suggestedTemplates) {
           const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
           if (!el) return;
           el.classList.remove('material-icons');
-  
           el.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
         }
       }
@@ -705,7 +704,7 @@ ${reportString}
 </p>
 
 <div class="mdc-text-field mdc-text-field--outlined mt-10" id='email'>
-  <input class="mdc-text-field__input" required value='${email}' type='email'>
+  <input class="mdc-text-field__input" required value='${email || ''}' type='email'>
  <div class="mdc-notched-outline">
      <div class="mdc-notched-outline__leading"></div>
      <div class="mdc-notched-outline__notch">

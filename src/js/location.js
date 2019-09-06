@@ -104,6 +104,7 @@ function getCellularInformation() {
     };
     if (cellTowerQueryString) {
         cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString))
+
     }
     const body = {}
 
@@ -147,7 +148,7 @@ function removeFalseCellIds(cellTowers) {
 
 function parseWifiQuery(queryString) {
     var array = [];
-    const result = {}
+
     const splitBySeperator = queryString.split(",")
     splitBySeperator.forEach(function (value) {
         const url = new URLSearchParams(value);
@@ -155,8 +156,9 @@ function parseWifiQuery(queryString) {
             url.delete('ssid')
         }
         if (!url.has('macAddress')) return;
+        const result = {}
         url.forEach(function (value, key) {
-            console.log(value, key)
+
             if (key === 'macAddress') {
                 result[key] = value
             } else {

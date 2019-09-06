@@ -221,46 +221,41 @@ function getOtherContacts() {
 
 function readLatestChats(initList) {
     currentChatsArray = [];
-    const tx = db.transaction(['users','root'], 'readwrite');
+    const tx = db.transaction(['users', 'root'], 'readwrite');
     const index = tx.objectStore('users').index('timestamp');
     const auth = firebase.auth().currentUser;
 
     const myNumber = auth.phoneNumber
     let currentChats = '';
-   
-    index.openCursor(null, 'prev').onsuccess = function (event) {
+    const range = IDBKeyRange.bound(1,2713890600000);
+    index.openCursor(range, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        if(!cursor.value.timestamp) {
-            cursor.continue();
-            return;
-        }
+        console.log(cursor.value)
+      
 
         if (cursor.value.mobile === myNumber) {
             cursor.continue();
             return;
         };
 
-        console.log(cursor.value);
-    
+        
+
         if (ApplicationState.currentChatSlected === cursor.value.mobile && cursor.value.count) {
             var currentUserCount = cursor.value.count;
-
-            const rootStore = tx.objectStore('root')
-            rootStore.get(auth.uid).onsuccess = function(event){
-                const record = event.target.result;
-                if(record) {
-                    console.log(currentUserCount)
-                    record.totalCount = record.totalCount - currentUserCount;
-                    rootStore.put(record)
-                }
-            }
-
             cursor.value.count = 0;
             const update = cursor.update(cursor.value);
             update.onsuccess = function () {
-                ApplicationState.currentChatSlected = null;
                 console.log("count reset")
+                const rootStore = tx.objectStore('root')
+                rootStore.get(auth.uid).onsuccess = function (event) {
+                    const record = event.target.result;
+                    if (record) {
+                        console.log(currentUserCount)
+                        record.totalCount = record.totalCount - currentUserCount;
+                        rootStore.put(record)
+                    }
+                }
             }
         }
 
@@ -876,8 +871,9 @@ function share(activity) {
 }
 
 function closeSearchBar() {
-
-    document.getElementById('search-users').classList.add('hidden')
+    if( document.getElementById('search-users')) {
+        document.getElementById('search-users').classList.add('hidden')
+    }
     document.getElementById('app-header').classList.remove("hidden")
 }
 
@@ -1197,7 +1193,7 @@ function getUserChats(userRecord) {
         setBottomScroll();
 
         const form = document.querySelector('.conversation-compose');
-        if(!form) return;
+        if (!form) return;
         form.querySelector('input').addEventListener('focus', function (evt) {
             setTimeout(function () {
                 setBottomScroll();

@@ -202,7 +202,6 @@ function instant(error, meta) {
   }).catch(console.log)
 }
 
-
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
@@ -647,7 +646,6 @@ function successResponse(read, param, db, resolve, reject) {
 
 
   updateReports(read.statusObject, reports);
-
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)
@@ -657,6 +655,7 @@ function successResponse(read, param, db, resolve, reject) {
 
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
+
         let selfRecord = event.target.result;
         if (!selfRecord) {
           selfRecord = {
@@ -678,11 +677,10 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
 
-  console.log(counter);
-  console.log(userTimestamp);
-
   Object.keys(userTimestamp).forEach(function (number) {
-    const currentAddendum = userTimestamp[number]  
+
+    const currentAddendum = userTimestamp[number]
+
     if (currentAddendum.isComment) return updateUserStore(userStore, number, currentAddendum);
 
     // if is system generated
@@ -695,13 +693,12 @@ function successResponse(read, param, db, resolve, reject) {
         currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
         addendumObjectStore.put(currentAddendum);
         if (number === param.user.phoneNumber) {
+
           updateUserStore(userStore, user.phoneNumber, currentAddendum)
           return;
         }
-        if (number === user.phoneNumber) {
-          updateUserStore(userStore, number, currentAddendum)
-          return;
-        }
+
+        updateUserStore(userStore, number, currentAddendum)
       })
     }
   })
