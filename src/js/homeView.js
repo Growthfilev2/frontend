@@ -207,20 +207,26 @@ function homeView(suggestedTemplates) {
 
     const commonListEl = document.getElementById('common-task-list');
     if (commonListEl) {
-      db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+      const commonTaskList = new mdc.list.MDCList(commonListEl);
+      
+      const rootTx =  db.transaction('root','readwrite')
+      const rootStore = rootTx.objectStore('root')
+      rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
 
         const rootRecord = event.target.result;
         if (!rootRecord) return;
-  
         if (rootRecord.totalCount && rootRecord.totalCount > 0) {
           const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
           if (!el) return;
           el.classList.remove('material-icons');
           el.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
         }
+        if(rootRecord.totalCount < 0) {
+          rootRecord.totalCount = 0;
+          rootStore.put(rootRecord);
+        }
       }
 
-      const commonTaskList = new mdc.list.MDCList(commonListEl);
       commonTaskList.listen('MDCList:action', function (commonListEvent) {
         console.log(commonListEvent)
         if (commonListEvent.detail.index == 0) {

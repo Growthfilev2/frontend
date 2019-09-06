@@ -344,7 +344,6 @@ function mapDom() {
 }
 
 function snapView() {
-  history.pushState(['snapView'], null, null)
   if (native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return
