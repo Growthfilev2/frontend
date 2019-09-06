@@ -252,8 +252,10 @@ function readLatestChats(initList) {
                     const record = event.target.result;
                     if (record) {
                         console.log(currentUserCount)
-                        record.totalCount = record.totalCount - currentUserCount;
-                        rootStore.put(record)
+                        if(record.totalCount) {
+                            record.totalCount = record.totalCount - currentUserCount;
+                            rootStore.put(record)
+                        }
                     }
                 }
             }

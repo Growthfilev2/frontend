@@ -212,7 +212,7 @@ function homeView(suggestedTemplates) {
         const rootRecord = event.target.result;
         if (!rootRecord) return;
   
-        if (rootRecord.totalCount) {
+        if (rootRecord.totalCount && rootRecord.totalCount > 0) {
           const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
           if (!el) return;
           el.classList.remove('material-icons');
