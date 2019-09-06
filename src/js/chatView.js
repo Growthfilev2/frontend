@@ -1197,6 +1197,7 @@ function getUserChats(userRecord) {
         setBottomScroll();
 
         const form = document.querySelector('.conversation-compose');
+        if(!form) return;
         form.querySelector('input').addEventListener('focus', function (evt) {
             setTimeout(function () {
                 setBottomScroll();

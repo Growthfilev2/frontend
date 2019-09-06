@@ -620,8 +620,7 @@ function successResponse(read, param, db, resolve, reject) {
         addendum.key = param.user.phoneNumber + addendum.user
         userTimestamp[addendum.user] = addendum;
 
-        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
-
+        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
         userTimestamp[addendum.assignee] = addendum;
@@ -634,7 +633,6 @@ function successResponse(read, param, db, resolve, reject) {
       }
     }
   })
-
 
   if (read.locations.length) {
 
@@ -658,7 +656,6 @@ function successResponse(read, param, db, resolve, reject) {
     putAttachment(activity, updateTx, param);
 
     activity.assignees.forEach(function (user) {
-
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         let selfRecord = event.target.result;
         if (!selfRecord) {
@@ -681,78 +678,55 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
 
+  console.log(counter);
+  console.log(userTimestamp);
+
   Object.keys(userTimestamp).forEach(function (number) {
-    const currentAddendum = userTimestamp[number]
+    const currentAddendum = userTimestamp[number]  
+    if (currentAddendum.isComment) return updateUserStore(userStore, number, currentAddendum);
+
+    // if is system generated
     const activityId = currentAddendum.activityId
-    console.log(counter);
+    activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
+      const record = activityEvent.target.result;
+      if (!record) return;
 
-    if (activityId) {
-      // if is system generated
-      activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
-        const record = activityEvent.target.result;
-        if (!record) return;
-        record.assignees.forEach(function (user) {
-          currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
-          addendumObjectStore.put(currentAddendum);
-
-          if (number === param.user.phoneNumber) {
-            userStore.get(user.phoneNumber).onsuccess = function (event) {
-              const selfRecord = event.target.result;
-              if (!selfRecord) return;
-              selfRecord.comment = currentAddendum.comment
-              selfRecord.timestamp = currentAddendum.timestamp
-              if (selfRecord.count) {
-                selfRecord.count += counter[number];
-              } else {
-                selfRecord.count = counter[number];
-              }
-              userStore.put(selfRecord)
-            }
-            return;
-          }
-          if (number === user.phoneNumber) {
-            userStore.get(number).onsuccess = function (event) {
-              const userRecord = event.target.result;
-              if (!userRecord) return;
-              userRecord.comment = currentAddendum.comment
-              userRecord.timestamp = currentAddendum.timestamp
-              if (userRecord.count) {
-                userRecord.count += counter[number];
-              } else {
-                userRecord.count = counter[number];
-              }
-              userStore.put(userRecord)
-            }
-            return;
-          }
-        })
-      }
-      return;
-    }
-
-
-    userStore.get(number).onsuccess = function (event) {
-      const userRecord = event.target.result;
-      if (userRecord) {
-        userRecord.comment = currentAddendum.comment
-        userRecord.timestamp = currentAddendum.timestamp
-        if (!counter[number]) return userStore.put(userRecord);
-
-        if (userRecord.count) {
-          userRecord.count += counter[number];
-        } else {
-          userRecord.count = counter[number];
+      record.assignees.forEach(function (user) {
+        currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
+        addendumObjectStore.put(currentAddendum);
+        if (number === param.user.phoneNumber) {
+          updateUserStore(userStore, user.phoneNumber, currentAddendum)
+          return;
         }
-        userStore.put(userRecord)
-      }
+        if (number === user.phoneNumber) {
+          updateUserStore(userStore, number, currentAddendum)
+          return;
+        }
+      })
     }
-
   })
 
+  function updateUserStore(userStore, phoneNumber, currentAddendum) {
+    userStore.get(phoneNumber).onsuccess = function (event) {
+      const userRecord = event.target.result;
+      if (!userRecord) return;
+      userRecord.comment = currentAddendum.comment
+      userRecord.timestamp = currentAddendum.timestamp
+      if (currentAddendum.isComment) {
+        if (!counter[phoneNumber]) return userStore.put(userRecord);
+      }
+      if (userRecord.count) {
+        userRecord.count += counter[phoneNumber];
+      } else {
+        userRecord.count = counter[phoneNumber];
+      }
+      userStore.put(userRecord)
+    }
+  }
 
 
   read.templates.forEach(function (subscription) {
-    if(subscription.status !== 'CANCELLED') {
+    if (subscription.status !== 'CANCELLED') {
       updateSubscription(subscription, updateTx)
     }
   })
