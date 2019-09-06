@@ -658,7 +658,6 @@ function successResponse(read, param, db, resolve, reject) {
         
         let selfRecord = event.target.result;
         if (!selfRecord) {
-          
           selfRecord = {
             count: 0
           }
@@ -672,9 +671,7 @@ function successResponse(read, param, db, resolve, reject) {
         if (!selfRecord.timestamp) {
           selfRecord.timestamp = ''
         }
-        if(user.phoneNumber === '+919999288921') {
-          console.log("added "+user.phoneNumber)
-        }
+        
         userStore.put(selfRecord)
       }
     })
@@ -682,8 +679,7 @@ function successResponse(read, param, db, resolve, reject) {
 
 
   Object.keys(userTimestamp).forEach(function (number) {
-    console.log(counter)
-    console.log(userTimestamp);
+   
     const currentAddendum = userTimestamp[number]
 
     if (currentAddendum.isComment) return updateUserStore(userStore, number, currentAddendum);
@@ -711,7 +707,6 @@ function successResponse(read, param, db, resolve, reject) {
     userStore.get(phoneNumber).onsuccess = function (event) {
       let userRecord = event.target.result
       if(!userRecord) {
-        console.log("not presetn " +phoneNumber,currentAddendum)
         userRecord = {
           count : 0,
           displayName:'',
