@@ -15,56 +15,41 @@
 
         <div class="form-list">
             <div class="form-component schedules">
-                <p class="mdc-typography--body1 mdc-theme--primary mb-0 mt-0">Expense Date</p>
+                <p class="mdc-typography--body1 mdc-theme--primary mb-0 mt-0">Date</p>
 
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
-                    <input class=" mdc-text-field__input" type="date" data-name='Expense Date start date'>
+                    <input class=" mdc-text-field__input" type="date" data-name='Date start date'>
                     <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
-                    <input class=" mdc-text-field__input" type="date" data-name='Expense Date end date'>
+                    <input class=" mdc-text-field__input" type="date" data-name='Date end date'>
                     <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
             <hr>
-            <div class="form-component expense-type-select-container hidden">
+            <div class="form-component claim-type-select-container hidden">
                 <div class="mdc-select">
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Choose Expense-Type</label>
+                    <label class="mdc-floating-label">Choose Claim-Type</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
 
-
             <div class="form-component">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='vendor-name'>
-                    <input class=" mdc-text-field__input" type="text">
-                    <label for="input" class="mdc-floating-label">Vendor Name</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
-            <div class="form-component">
-                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id="total-amount">
-                    <input class=" mdc-text-field__input" type="number">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id="total-amount">
+                    <input class=" mdc-text-field__input" type="number" min="1" step="any" id='amount-number'>
                     <label for="input" class="mdc-floating-label">Amount</label>
-                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">payment</i>
                     <div class="mdc-line-ripple"></div>
                 </div>
+                
             </div>
 
-            <div class="form-component">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='ref-number'>
-                    <input class=" mdc-text-field__input" type="text">
-                    <label for="input" class="mdc-floating-label">Reference Number </label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
+
 
             <div class="form-component">
                 <div style="
@@ -95,7 +80,7 @@
                     <div class="mdc-notched-outline">
                         <div class="mdc-notched-outline__leading"></div>
                         <div class="mdc-notched-outline__notch">
-                            <label for="textarea" class="mdc-floating-label">Reason</label>
+                            <label for="textarea" class="mdc-floating-label">Details</label>
                         </div>
                         <div class="mdc-notched-outline__trailing"></div>
                     </div>
@@ -126,13 +111,23 @@
         }
 
 
+
         function init(subscriptionTemplate) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-            const vendorName = new parent.mdc.textField.MDCTextField(document.getElementById('vendor-name'))
             const totalAmount = new parent.mdc.textField.MDCTextField(document.getElementById('total-amount'));
             const details = new parent.mdc.textField.MDCTextField(document.getElementById('description'));
-            const ref = new parent.mdc.textField.MDCTextField(document.getElementById('ref-number'));
-                     
+            console.log(totalAmount)
+
+            totalAmount.input_.onkeydown = function (evt) {
+                if(evt.keyCode == 190) return true;
+                if (!((evt.keyCode > 95 && evt.keyCode < 106) ||
+                        (evt.keyCode > 47 && evt.keyCode < 58) ||
+                        evt.keyCode == 8)) {
+                    console.log("false")
+                    return false;
+                }
+            }
+
             initializeDates(subscriptionTemplate, createDate(new Date()))
 
             document.getElementById('add-photo').addEventListener('click', function () {
@@ -144,10 +139,10 @@
                 webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
             })
 
-            getDropDownContent(subscriptionTemplate.office, 'expense-type', 'officeTemplate').then(function (result) {
+            getDropDownContent(subscriptionTemplate.office, 'claim-type', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
                 select.nativeControl_.innerHTML += result.string;
-                document.querySelector('.expense-type-select-container').classList.remove('hidden');
+                document.querySelector('.claim-type-select-container').classList.remove('hidden');
 
             })
 
@@ -159,11 +154,9 @@
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
 
                 copy.attachment.Amount.value = totalAmount.value;
-                copy.attachment['Expense Type'].value = select.value;
-                copy.attachment.Reason.value = details.value;
-                copy.attachment['Vendor Name'].value = vendorName.value;
-                copy.attachment['Photo'].value = photo;
-                copy.attachment['Reference Number'].value = ref.value
+                copy.attachment['Claim Type'].value = select.value;
+                copy.attachment.Details.value = details.value;
+                copy.attachment['Photo URL'].value = photo;
                 copy.share = []
                 const newSchedule = getNewSchedule(subscriptionTemplate);
                 if (!newSchedule) return
