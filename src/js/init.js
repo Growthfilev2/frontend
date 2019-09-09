@@ -248,8 +248,12 @@ function startApp() {
             profileCheck();
           }).catch(function (error) {
             if (error.response.apiRejection) {
-              snacks(error.response.message, 'Okay')
+              snacks(error.response.message, 'Okay')   
             }
+            handleError({
+              message:error.message,
+              body:error,
+            })
           })
           return;
         }
@@ -635,11 +639,11 @@ function createObjectStores(db, uid) {
   children.createIndex('team', 'team')
   children.createIndex('teamOffice', ['team', 'office'])
 
-  const reports = db.createObjectStore('reports', {
-    keyPath: 'joinedDate'
-  });
+  // const reports = db.createObjectStore('reports', {
+  //   keyPath: 'joinedDate'
+  // });
 
-  reports.createIndex('month', 'month')
+  // reports.createIndex('month', 'month')
 
   const root = db.createObjectStore('root', {
     keyPath: 'uid'

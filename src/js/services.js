@@ -248,6 +248,7 @@ function html5Geolocation() {
   })
 }
 
+let apiHandler = new Worker('js/apiHandler.js?version=27');
 
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
@@ -278,7 +279,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=27');
+  // let apiHandler = new Worker('js/apiHandler.js?version=27');
 
   auth.getIdToken(false).then(function (token) {
     requestGenerator.meta.user.token = token
@@ -308,12 +309,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       return reject(event.data)
     };
   })

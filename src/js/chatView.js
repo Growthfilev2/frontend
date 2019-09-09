@@ -903,7 +903,6 @@ function activityDomCustomer(activityRecord) {
     </div>
     <div id='attachment-container'>
         ${viewAttachment(activityRecord)}
-        
     </div>  
      
         <div id='assignee-container'>
