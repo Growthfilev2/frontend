@@ -596,11 +596,11 @@ function createListStore(activity, tx) {
 
 function successResponse(read, param, db, resolve, reject) {
 
-  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users','reports'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
   const userStore = updateTx.objectStore('users');
-  // const reports = updateTx.objectStore('reports')
+  const reports = updateTx.objectStore('reports')
   let counter = {};
   let userTimestamp = {}
 
@@ -645,7 +645,7 @@ function successResponse(read, param, db, resolve, reject) {
   }
 
 
-  // updateReports(read.statusObject, reports);
+  updateReports(read.statusObject, reports);
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)

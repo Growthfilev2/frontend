@@ -389,11 +389,17 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
     case 'reportView':
-      const sectionContent = document.querySelector('.tabs-section .data-container');
-      if (!sectionContent) return;
-      if (sectionContent.dataset.view !== 'attendence') return;
       try {
-        attendenceView(sectionContent)
+        const sectionContent = document.querySelector('.tabs-section .data-container');
+        if (!sectionContent) return;
+        if (sectionContent.dataset.view === 'attendence') {
+          attendenceView(sectionContent)
+          return
+        };
+        if (sectionContent.dataset.view === 'reimbursements') {
+          expenseView(sectionContent)
+          return
+        }
       } catch (e) {
         console.log(e)
       }
@@ -516,4 +522,3 @@ function formatTextToTitleCase(string) {
   }
   return arr.join('')
 }
-

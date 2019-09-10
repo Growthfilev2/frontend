@@ -260,6 +260,7 @@ function startApp() {
         document.getElementById('start-load').classList.add('hidden')
         history.pushState(['profileCheck'], null, null)
         profileCheck();
+
         runRead({
           read: '1'
         })
@@ -639,11 +640,11 @@ function createObjectStores(db, uid) {
   children.createIndex('team', 'team')
   children.createIndex('teamOffice', ['team', 'office'])
 
-  // const reports = db.createObjectStore('reports', {
-  //   keyPath: 'joinedDate'
-  // });
+  const reports = db.createObjectStore('reports', {
+    keyPath: 'joinedDate'
+  });
 
-  // reports.createIndex('month', 'month')
+  reports.createIndex('month', 'month')
 
   const root = db.createObjectStore('root', {
     keyPath: 'uid'

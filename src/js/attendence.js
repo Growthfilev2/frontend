@@ -30,7 +30,17 @@ function attendenceView(sectionContent) {
     el.innerHTML =
       `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
     ${todayString}
-    `
+    `;
+    [...document.querySelectorAll("[data-today-id]")].forEach(function (el) {
+      el.onclick = function () {
+        db.transaction('activity').objectStore('activity').get(el.dataset.todayId).onsuccess = function (event) {
+          const activityRecord = event.target.result
+          if (!activityRecord) return;
+          const heading = createActivityHeading(activityRecord)
+          showViewDialog(heading, activityRecord, 'view-form')
+        }
+      }
+    })
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden')
 
@@ -149,7 +159,7 @@ function getTodayStatData() {
 
 function todayStatCard(addendum, activity) {
   return `
-    <div class='mdc-card mdc-layout-grid__cell report-cards'>
+    <div class='mdc-card mdc-layout-grid__cell report-cards' data-today-id='${activity.activityId}'>
       <div class="mdc-card__primary-action">
         <div class="demo-card__primary">
         <div class='card-heading-container'>
@@ -203,11 +213,11 @@ function monthlyStatCard(value) {
   const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
   return `
     <div class="month-container mdc-elevation--z2">
-      <div class="month-date-cont">
-        <span class='day'>${day}</span>
-        <p class='date'>${value.date}</p>
-       
-      </div>
+        <div class="month-date-cont">
+          <span class='day'>${day}</span>
+          <p class='date'>${value.date}</p>
+        
+        </div>
       <div class='btn-container'>
         ${renderArCard(value)}
       </div>

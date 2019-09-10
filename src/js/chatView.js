@@ -227,19 +227,19 @@ function readLatestChats(initList) {
 
     const myNumber = auth.phoneNumber
     let currentChats = '';
-    const range = IDBKeyRange.bound(1,2713890600000);
+    const range = IDBKeyRange.bound(1, 2713890600000);
     index.openCursor(range, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
         console.log(cursor.value)
-      
+
 
         if (cursor.value.mobile === myNumber) {
             cursor.continue();
             return;
         };
 
-        
+
 
         if (ApplicationState.currentChatSlected === cursor.value.mobile && cursor.value.count) {
             var currentUserCount = cursor.value.count;
@@ -252,7 +252,7 @@ function readLatestChats(initList) {
                     const record = event.target.result;
                     if (record) {
                         console.log(currentUserCount)
-                        if(record.totalCount) {
+                        if (record.totalCount) {
                             record.totalCount = record.totalCount - currentUserCount;
                             rootStore.put(record)
                         }
@@ -663,19 +663,14 @@ function reply(activity) {
 }
 
 function showViewDialog(heading, activity, id) {
-    let type = 'simple';
-    if (activity.canEdit) {
-        type = ''
-    }
-    if (activity.template === 'check-in' && activity.attachment['Photo'].value) {
-        type = ''
-    }
-    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create(type);
+
+    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create();
     dialog.open();
     dialog.autoStackButtons = false;
-    if (!type) {
-        dialog.buttons_[1].classList.add("hidden");
-    }
+
+    dialog.buttons_[1].classList.add("hidden");
+    new mdc.ripple.MDCRipple(dialog.buttons_[0])
+
 
     dialog.listen("MDCDialog:opened", function (evt) {
         const scheduleEl = document.getElementById('schedule-container');
@@ -873,7 +868,7 @@ function share(activity) {
 }
 
 function closeSearchBar() {
-    if( document.getElementById('search-users')) {
+    if (document.getElementById('search-users')) {
         document.getElementById('search-users').classList.add('hidden')
     }
     document.getElementById('app-header').classList.remove("hidden")
@@ -949,22 +944,6 @@ function setActivityStatus(record, status) {
     })
 }
 
-function viewFormActions() {
-    return `
-    <div class="mdc-card__actions">
-    <div class="mdc-card__action-buttons">
-    <button class="mdc-button mdc-card__action mdc-card__action--button">
-    <span class="mdc-button__label">Close</span>
-    </button>
-    </div>
-    </div>
-    
-`
-}
-
-function markCancelled(record) {
-    console.log(record)
-}
 
 function iconByType(type, name) {
     if (type === 'string') {
@@ -1005,6 +984,8 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
 }
 
 function viewAttachment(activityRecord) {
+    
+
     return `${Object.keys(activityRecord.attachment).map(function(attachmentName){
         return `${activityRecord.attachment[attachmentName].value ? viewFormAttachmentEl(attachmentName,activityRecord) :''}`
     }).join("")}`

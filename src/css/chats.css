@@ -512,8 +512,9 @@ html {
 }
 
 #view-form .mdc-dialog__content {
-  padding-left: 0px;
-  padding-right: 0px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 0px;
 
 }
 
@@ -521,13 +522,7 @@ html {
   padding-left: 10px;
   padding-right: 10px;
 }
-#view-form .mdc-card .view-card {
-  padding: 20px 10px;
-  /* max-height: 300px; */
-  padding-top: 0px;
-  padding-bottom: 0px;
 
-}
 
 #view-form .mdc-card .view-card .mdc-list {
   padding: 0px;
@@ -568,10 +563,7 @@ html {
 }
 
 #attachment-container h1 {
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+word-wrap: break-word;
 }
 
 #assignee-container #share {
