@@ -896,6 +896,11 @@ function activityDomCustomer(activityRecord) {
             ${viewSchedule(activityRecord)}
         </ul>
     </div>
+    <div id='schedule-container'>
+        <ul class='mdc-list mdc-list--two-line'>
+            ${viewVenue(activityRecord)}
+        </ul>
+    </div>
     <div id='attachment-container'>
         ${viewAttachment(activityRecord)}
     </div>  

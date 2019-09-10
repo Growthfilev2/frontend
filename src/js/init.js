@@ -194,20 +194,7 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
-    try {
-      const objectStoreCheck = areObjectStoreValid(db.objectStoreNames);
-      if (!objectStoreCheck.isValid) {
-        handleError({
-          message: 'Object Store not found',
-          body: objectStoreCheck["not-present"]
-        })
-      };
-    } catch (e) {
-      console.log(e)
-    }
-
-
-
+  
     console.log("run app")
     const startLoad = document.querySelector('#start-load')
     startLoad.classList.remove('hidden');
