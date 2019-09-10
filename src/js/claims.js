@@ -2,7 +2,6 @@ function expenseView(sectionContent) {
     sectionContent.innerHTML = reimDom();
     sectionContent.dataset.view = 'reimbursements'
     Promise.all([getReportSubs('reimbursement'), getReimMonthlyData()]).then(function (result) {
-        console.log(result);
         const subs = result[0]
         const reimData = result[1]
         if (!subs.length && !reimData.length) {
@@ -103,8 +102,11 @@ function reimCardRows(data){
     })
 
     if(data.status === 'CANCELLED') {
-        statusTd.style.color = 'red'
+        statusTd.classList.add('mdc-theme--error')
         amountTd.textContent = convertNumberToINR(0)
+    }
+    if(data.status === 'CONFIRMED') {
+        statusTd.classList.add('mdc-theme--success')
     }
 
     tr.appendChild(nameTd)
@@ -133,7 +135,7 @@ const dropDown = createElement('i',{
 
 
 const heading = createElement('span',{className:'demo-card__title mdc-typography',textContent:`REIMBURSEMENTS : ${totalAmount}`})
-const subHeading = createElement('h3',{className:'demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0',textContent:`by ${firebase.auth().currentUser.displayName ||firebase.auth().currentUser.phoneNumber}`})
+const subHeading = createElement('h3',{className:'demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0',textContent:`${dayRecord.office}`})
 const dataTabel = createElement('div',{className:'data-table hidden'})
 const tabel = createElement('table',{className:'data-table__table'})
 const head = createElement('thead')

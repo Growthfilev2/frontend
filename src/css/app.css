@@ -638,3 +638,10 @@ iframe {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.mdc-theme--success {
+  color: green !important;
+}
+.mdc-theme--warning {
+  color: yellow !important;
+}
