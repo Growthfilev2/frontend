@@ -152,7 +152,7 @@ function createViewProfile() {
           document.getElementById('leaves').innerHTML = `<h1 class="mdc-typography--headline6 mb-0">
                           Annual  Leave Limit
                           ${leaves.map(function(leave,idx){
-                             return `<h1 class="mdc-typography--headline6 mt-0 ${leaves.length - idx == 1 ? '' :'mb-0'}">${leave.attachment.Name.value} : ${leave.attachment['Annual Limit'].value}</h1>`
+                             return `<h1 class="mdc-typography--headline6 mt-0 ${leaves.length - idx == 1 ? '' :'mb-0'}">${leave.attachment['Annual Limit'].value ? `${leave.attachment.Name.value} : ${leave.attachment['Annual Limit'].value}`:''} </h1>`
                           }).join("")}
                       </h1>`
         }
