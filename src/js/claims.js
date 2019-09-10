@@ -66,7 +66,7 @@ function reimCardRows(data){
     })
     const nameTd = createElement('td',{
         className:'data-table__cell',
-        textContent: data.template === 'claim' ? data['claimType'] : `${data.name} (${data.template})`
+        textContent: data.activityId ? data['claimType'] : `${data.name}`
     })
     tr.onclick = function(){
         if(data.activityId) {
@@ -79,22 +79,19 @@ function reimCardRows(data){
             return
         }
         // km or daily
-        const metaHeading  = `${data.claimType}
+        const metaHeading  = `${data.name}
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>(${data.template})</p>`
         const metaContent = `<div class='mdc-card reim-auto-card'>
         <h1 class='mdc-typography--subtitle1 mt-0'>${data.distanceTravelled ?`Distance Travelled : ${data.distanceTravelled}` :'' }</h1>
         <h1 class='mdc-typography--subtitle1 mt-0 '>${data.amount ?`Amount : ${convertNumberToINR(Number(data.amount))}` :'' }</h1>
         <h1 class='mdc-typography--subtitle1 mt-0'>${data.location ? `Location : ${data.location}` :''} </h1>
         </div>`
-        const dialog = new Dialog(metaHeading,metaContent,'view-form').create()
-       
+        const dialog = new Dialog(metaHeading,metaContent,'view-form').create();
         dialog.open();
         dialog.autoStackButtons = false;
-
         dialog.buttons_[1].classList.add("hidden");
     }
     
-   
     const amountTd = createElement('td',{
         className:'data-table__cell data-table__cell--numeric',
         textContent:convertNumberToINR(Number(data.amount))
