@@ -194,11 +194,13 @@ function queryPatramsToObject(url, homeMobileCountryCode, homeMobileNetworkCode)
     url.forEach(function (value, key) {
 
         if (key === 'mobileCountryCode' && Number(value) == 0) {
-            result[key] = Number(homeMobileCountryCode)
+            result[key] = Number(homeMobileCountryCode);
+            return;
         }
         if (key === 'mobileNetworkCode' && Number(value) == 0) {
-            result[key] = Number(homeMobileNetworkCode)
-        }
+            result[key] = Number(homeMobileNetworkCode);
+            return;
+        };
         result[key] = Number(value)
     })
     return result;

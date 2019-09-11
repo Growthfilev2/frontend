@@ -356,7 +356,10 @@ function createUpdatesuggestion(result) {
     const activity = result[event.detail.index]
     const heading = createActivityHeading(activity)
     const statusButtonFrag = createElement('div')
-    statusButtonFrag.style.width = '100%';
+    statusButtonFrag.style.float = 'right';
+
+    const dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create()
+    dialog.open();
 
     getStatusArray(activity).forEach(function (buttonDetails) {
       const button = createElement("button", {
@@ -375,13 +378,12 @@ function createUpdatesuggestion(result) {
       button.appendChild(span)
       button.addEventListener('click', function () {
         setActivityStatus(activity, buttonDetails.status)
+        dialog.close()
       })
       statusButtonFrag.appendChild(button)
     })
 
 
-    const dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create()
-    dialog.open();
     dialog.listen('MDCDialog:opened', function () {
       dialog.root_.querySelector('#status-change-container').appendChild(statusButtonFrag);
     })

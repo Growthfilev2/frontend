@@ -907,10 +907,8 @@ function searchInitCancel(searchInit) {
 function activityDomCustomer(activityRecord) {
    
     return ` <div class='mdc-card'>
+    <div id='status-change-container'></div>
     <div class='view-card'>
-    <div id='status-change-container'>
-  
-    </div>
     <div id='schedule-container'>
         <ul class='mdc-list mdc-list--two-line'>
             ${viewSchedule(activityRecord)}
