@@ -5,7 +5,9 @@ function expenseView(sectionContent) {
         const subs = result[0]
         const reimData = result[1]
         if (!subs.length && !reimData.length) {
-            document.getElementById('text-container-reim').innerHTML = `<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Claim</h3>`
+            if(document.getElementById('text-container-reim')) {
+                document.getElementById('text-container-reim').innerHTML = `<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Claim</h3>`
+            }
             return
         }
 
