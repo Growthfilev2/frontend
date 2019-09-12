@@ -76,7 +76,10 @@ function handleLocationError(error, onAppOpen) {
     default:
       handleError({
         message: error.message,
-        body: JSON.stringify(error.body)
+        body:{
+          reason : error.body || error,
+          stack : error.stack || ''
+        }
       })
       if (onAppOpen) {
         failureScreen({

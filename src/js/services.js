@@ -24,11 +24,11 @@ window.addEventListener('callRead', readDebounce);
 
 
 function handleError(error) {
+  console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return;
   error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
-
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }
