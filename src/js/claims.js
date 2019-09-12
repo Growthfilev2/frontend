@@ -83,7 +83,7 @@ function reimCardRows(data){
         const metaHeading  = `${data.name}
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>(${data.template})</p>`
         const metaContent = `<div class='mdc-card reim-auto-card'>
-        <h1 class='mdc-typography--subtitle1 mt-0'>${data.distanceTravelled ?`Distance Travelled : ${data.distanceTravelled}` :'' }</h1>
+        <h1 class='mdc-typography--subtitle1 mt-0'>${data.distanceTravelled ?`Distance Travelled : ${data.distanceTravelled} km` :'' }</h1>
         <h1 class='mdc-typography--subtitle1 mt-0 '>${data.amount ?`Amount : ${convertNumberToINR(Number(data.amount))}` :'' }</h1>
         <h1 class='mdc-typography--subtitle1 mt-0'>${data.location ? `Location : ${data.location}` :''} </h1>
         </div>`
