@@ -80,6 +80,7 @@ function getCellularInformation() {
     let cellTowerQueryString;
     const mcc = AndroidInterface.getMobileCountryCode()
     const mnc = AndroidInterface.getMobileNetworkCode()
+
     const radioType = AndroidInterface.getRadioType()
     const carrier = AndroidInterface.getCarrier()
     const wifiQueryString = AndroidInterface.getWifiAccessPoints()
@@ -103,8 +104,7 @@ function getCellularInformation() {
         wifiAccessPointsArray = parseWifiQuery(wifiQueryString)
     };
     if (cellTowerQueryString) {
-        cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString))
-
+        cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString, mcc, mnc))
     }
     const body = {}
 
@@ -124,6 +124,7 @@ function getCellularInformation() {
     if (wifiAccessPointsArray.length) {
         body.wifiAccessPoints = wifiAccessPointsArray
     }
+
     if (cellTowerArray.length) {
         body.cellTowers = cellTowerArray;
     }
@@ -170,23 +171,28 @@ function parseWifiQuery(queryString) {
     return array;
 }
 
-function parseQuery(queryString) {
+function parseQuery(queryString, homeMobileCountryCode, homeMobileNetworkCode) {
 
     var array = [];
     const splitBySeperator = queryString.split(",")
     splitBySeperator.forEach(function (value) {
         const url = new URLSearchParams(value);
-        array.push(queryPatramsToObject(url))
+        array.push(queryPatramsToObject(url, homeMobileCountryCode, homeMobileNetworkCode))
     })
     return array;
 }
 
-function queryPatramsToObject(url) {
+function queryPatramsToObject(url, homeMobileCountryCode, homeMobileNetworkCode) {
     let result = {};
     url.forEach(function (value, key) {
 
+        if (key === 'mobileCountryCode' && Number(value) == 0) {
+            result[key] = Number(homeMobileCountryCode)
+        }
+        if (key === 'mobileNetworkCode' && Number(value) == 0) {
+            result[key] = Number(homeMobileNetworkCode)
+        }
         result[key] = Number(value)
-
     })
     return result;
 }
