@@ -194,7 +194,7 @@ ${data.timestamp ? `<span class='mdc-typography--headline6'>Create On : ${moment
 function reimDom() {
     return `<div class='reim-section'>
         <div class='mdc-layout-grid__inner'>
-            <div id='text-container-reim'></div>
+            <div id='text-container-reim' class='mdc-layout-grid__cell--span-12'></div>
             <div class='list-container mdc-layout-grid__cell--span-12'>
                 <ul class='mdc-list subscription-list' id='suggested-list-reim'></ul>
             </div>
