@@ -208,8 +208,8 @@ function homeView(suggestedTemplates) {
     const commonListEl = document.getElementById('common-task-list');
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
-      
-      const rootTx =  db.transaction('root','readwrite')
+
+      const rootTx = db.transaction('root', 'readwrite')
       const rootStore = rootTx.objectStore('root')
       rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
 
@@ -221,7 +221,7 @@ function homeView(suggestedTemplates) {
           el.classList.remove('material-icons');
           el.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
         }
-        if(rootRecord.totalCount < 0) {
+        if (rootRecord.totalCount < 0) {
           rootRecord.totalCount = 0;
           rootStore.put(rootRecord);
         }
@@ -265,11 +265,12 @@ function homeView(suggestedTemplates) {
           dialog.close();
         })
       })
-    
+
     }
 
-    checkForDuty().then(function (result) {
-      console.log(result)
+    checkForUpdates().then(function (result) {
+      console.log(result);
+
       const workTaskEl = document.querySelector('.work-tasks #text');
 
       if (!result.length && !suggestedTemplates.length) {
@@ -284,11 +285,12 @@ function homeView(suggestedTemplates) {
       }
       const el = document.getElementById("duty-container");
       if (!el) return;
+
       el.innerHTML = `<ul class='mdc-list subscription-list'>
         ${result.map(function(activity) {
             return `<li class='mdc-list-item'>
             <span class='mdc-list-item__text'>${activity.activityName}</span>
-          
+
             <span class="mdc-list-item__meta material-icons mdc-theme--primary">
               keyboard_arrow_right
           </span>
@@ -301,12 +303,25 @@ function homeView(suggestedTemplates) {
       dutyList.singleSelection = true;
       dutyList.selectedIndex = 0;
       dutyList.listen('MDCList:action', function (event) {
-        console.log(result[event.detail.index])
+      
         const activity = result[event.detail.index]
+     
         const heading = createActivityHeading(activity)
-        showViewDialog(heading, activity, 'view-form');
+        const dialog = showViewDialog(heading, activity, 'view-form');
+        
+        // console.log(dialog)
+        
+        getStatusArray(activity).forEach(function(statusObject){
+
+          dialog.root_.querySelector('footer').appendChild(createButton(statusObject.name,statusObject.icon))
+        })
+        dialog.layout()
+      
       })
     }).catch(handleError)
+    
+    
+    
     const auth = firebase.auth().currentUser
     document.getElementById('reports').addEventListener('click', function () {
       if (auth.email && auth.emailVerified) {
@@ -337,38 +352,75 @@ function homeView(suggestedTemplates) {
   }
 }
 
-function checkForDuty() {
+
+function checkForUpdates() {
   return new Promise(function (resolve, reject) {
     const currentTimestamp = moment().valueOf()
     const maxTimestamp = moment().add(24, 'h').valueOf();
     console.log(maxTimestamp);
-    const tx = db.transaction('activity');
-    const result = []
-    tx.objectStore('activity').index('template').openCursor(IDBKeyRange.only('duty')).onsuccess = function (event) {
+    const calendarTx = db.transaction('calendar');
+    const results = []
+    const range = IDBKeyRange.lowerBound(currentTimestamp);
+
+    calendarTx.objectStore('calendar').index('end').openCursor(range).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
+      };
+      if(cursor.value.hidden == 1) {
+        cursor.continue();
+        return;
       }
-      const schedule = cursor.value.schedule;
-      if (!schedule.length) {
+      if(!cursor.value.start || !cursor.value.end) {
         cursor.continue();
         return;
       };
-      if (schedule[0].endTime < currentTimestamp) {
-        cursor.continue();
-        return;
-      }
-      if (schedule[0].startTime <= maxTimestamp) {
-        result.push(cursor.value)
+
+      if (cursor.value.start <= maxTimestamp) {
+        results.push(cursor.value)
       };
       cursor.continue();
+    };
+
+    calendarTx.oncomplete = function () {
+      console.log(results);
+
+      const activityTx = db.transaction('activity');
+
+      const activityRecords = [];
+      results.forEach(function (result) {
+        activityTx.objectStore('activity').get(result.activityId).onsuccess = function (event) {
+          const record = event.target.result;
+          if (!record.attachment.Location) return;
+          if (!record.attachment.Location.value) return;
+          console.log(record);
+          activityRecords.push(record);
+        }
+      });
+      activityTx.oncomplete = function () {
+    
+        const mapTx = db.transaction('map')
+        const updateRecords = []
+        activityRecords.forEach(function (record) {
+          mapTx.objectStore('map').index('location').get(record.attachment.Location.value).onsuccess = function (event) {
+            const mapRecord = event.target.result;
+            if (!mapRecord.latitude || !mapRecord.longitude) return;
+            if (calculateDistanceBetweenTwoPoints({
+                latitude: mapRecord.latitude,
+                longitude: mapRecord.longitude
+              }, ApplicationState.location) > 1) return;
+            updateRecords.push(record);
+          }
+        })
+        mapTx.oncomplete = function () {
+          return resolve(updateRecords);
+        }
+      }
+
     }
-    tx.oncomplete = function () {
-      return resolve(result);
-    }
-    tx.onerror = function () {
+    calendarTx.onerror = function () {
       return reject({
         message: tx.error,
         body: ''

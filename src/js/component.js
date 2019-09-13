@@ -1,5 +1,3 @@
-
-
 function createElement(tagName, attrs) {
     const el = document.createElement(tagName)
     if (attrs) {
@@ -10,10 +8,31 @@ function createElement(tagName, attrs) {
     return el;
 }
 
+function createButton(name, icon) {
+    const button = createElement('button', {
+        className: 'mdc-button'
+    })
+    const span = createElement('span', {
+        className: 'mdc-button__label',
+        textContent: name
+    })
+
+    if (icon) {
+        const i = createElement('i', {
+            className: 'material-icons mdc-button__icon',
+            textContent: icon
+        })
+        button.appendChild(i)
+    }
+    button.appendChild(span)
+    return button
+}
+
 function Dialog(title, content, id) {
     this.title = title;
     this.content = content;
     this.id = id;
+
 
 }
 
@@ -36,7 +55,7 @@ Dialog.prototype.create = function (type) {
         className: 'mdc-dialog__title',
     })
     h2.innerHTML = this.title
-    const footer = createElement('footer', {
+    this.footer = createElement('footer', {
         className: 'mdc-dialog__actions'
     })
     const contentContainer = createElement('div', {
@@ -68,11 +87,11 @@ Dialog.prototype.create = function (type) {
             textContent: 'Okay'
         });
 
+        
         okButton.setAttribute('data-mdc-dialog-action', 'accept')
-        footer.appendChild(cancelButton)
-        footer.appendChild(okButton);
-
-        surface.appendChild(footer)
+        this.footer.appendChild(cancelButton)
+        this.footer.appendChild(okButton);
+        surface.appendChild(this.footer)
     }
 
     container.appendChild(surface)
@@ -80,11 +99,14 @@ Dialog.prototype.create = function (type) {
     parent.appendChild(createElement('div', {
         className: 'mdc-dialog__scrim'
     }))
+
     const dialogParent = document.getElementById('dialog-container')
     dialogParent.innerHTML = ''
     dialogParent.appendChild(parent)
     return new mdc.dialog.MDCDialog(parent);
 }
+
+
 
 
 function getHeader(parentSelector, sectionStart, sectionEnd) {

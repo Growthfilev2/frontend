@@ -559,6 +559,42 @@ function createActivityHeading(activity) {
     <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
 }
 
+function getStatusArray(activity) {
+    const items = [];
+    if (activity.status === 'CANCELLED') {
+        items.push({
+            name: 'Confirm',
+            icon: 'check'
+        })
+        items.push({
+            name: 'Undo',
+            icon: 'undo'
+        })
+    }
+    if (activity.status === 'PENDING') {
+        items.push({
+            name: 'Confirm',
+            icon: 'check'
+        })
+        items.push({
+            name: 'Delete',
+            icon: 'delete'
+        })
+
+    }
+    if (activity.status === 'CONFIRMED') {
+        items.push({
+            name: 'Undo',
+            icon: 'undo'
+        })
+        items.push({
+            name: 'Delete',
+            icon: 'delete'
+        })
+    }
+    return items;
+}
+
 function createActivityActionMenu(addendumId, activityId, geopoint) {
 
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
@@ -577,37 +613,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                 name: 'Share',
                 icon: 'share'
             })
-            if (activity.status === 'CANCELLED') {
-                items.push({
-                    name: 'Confirm',
-                    icon: 'check'
-                })
-                items.push({
-                    name: 'Undo',
-                    icon: 'undo'
-                })
-            }
-            if (activity.status === 'PENDING') {
-                items.push({
-                    name: 'Confirm',
-                    icon: 'check'
-                })
-                items.push({
-                    name: 'Delete',
-                    icon: 'delete'
-                })
-
-            }
-            if (activity.status === 'CONFIRMED') {
-                items.push({
-                    name: 'Undo',
-                    icon: 'undo'
-                })
-                items.push({
-                    name: 'Delete',
-                    icon: 'delete'
-                })
-            }
+            items.concat(getStatusArray(activity))
         };
 
         const joinedId = addendumId + activityId
@@ -664,14 +670,14 @@ function reply(activity) {
 
 function showViewDialog(heading, activity, id) {
 
-    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create();
+    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create()
+
     dialog.open();
+
     dialog.autoStackButtons = false;
 
     dialog.buttons_[1].classList.add("hidden");
     new mdc.ripple.MDCRipple(dialog.buttons_[0])
-
-
     dialog.listen("MDCDialog:opened", function (evt) {
         const scheduleEl = document.getElementById('schedule-container');
         if (scheduleEl) {
@@ -679,6 +685,7 @@ function showViewDialog(heading, activity, id) {
             scheduleList.layout()
         }
     })
+    return dialog;
 }
 
 
@@ -911,9 +918,8 @@ function activityDomCustomer(activityRecord) {
             ${viewAssignee(activityRecord)}
         </div>` :'' }
           
-        </div>
-    
     </div>
+
 </div>`
 }
 
@@ -989,7 +995,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
 }
 
 function viewAttachment(activityRecord) {
-    
+
 
     return `${Object.keys(activityRecord.attachment).map(function(attachmentName){
         return `${activityRecord.attachment[attachmentName].value ? viewFormAttachmentEl(attachmentName,activityRecord) :''}`
