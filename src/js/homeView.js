@@ -370,14 +370,16 @@ function createUpdatesuggestion(result) {
 
     const dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create()
     dialog.open();
-
+    dialog.autoStackButtons = false;
+    dialog.buttons_[1].classList.add('hidden')
     if (!activity.canEdit) return;
 
     getStatusArray(activity).forEach(function (buttonDetails) {
 
       const button = createElement("button", {
-        className: 'mdc-button'
+        className: 'mdc-button material-icons'
       })
+
       button.style.color = buttonDetails.color
       const span = createElement("span", {
         className: 'mdc-button__label',
@@ -389,6 +391,7 @@ function createUpdatesuggestion(result) {
       })
       button.appendChild(icon)
       button.appendChild(span)
+      
       button.addEventListener('click', function () {
         setActivityStatus(activity, buttonDetails.status)
         dialog.close()

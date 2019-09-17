@@ -571,7 +571,7 @@ function getStatusArray(activity) {
         name: 'Undo',
         icon: 'undo',
         status:activity.status,
-        color:'yellow'
+        color:'black'
     }
     const cancel = {
         name: 'Delete',
