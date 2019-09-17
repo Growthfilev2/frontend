@@ -122,9 +122,8 @@ function handleSpeedCheck(maxRetry, location, storedLocation) {
   return new Promise(function (resolve, reject) {
 
     const dDelta = distanceDelta(storedLocation, location);
-    const tDelta = timeDelta(storedLocation.lastLocationTime, location.lastLocationTime).asHours()
+    const tDelta = timeDelta(storedLocation.lastLocationTime, location.lastLocationTime)
 
-    console.log(calculateSpeed(dDelta, tDelta))
 
     if (calculateSpeed(dDelta, tDelta) >= 40) {
       if (maxRetry > 0) {

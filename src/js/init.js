@@ -88,6 +88,8 @@ window.onpopstate = function (event) {
 
 
 function initializeApp() {
+
+
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
@@ -194,7 +196,7 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
-  
+
     console.log("run app")
     const startLoad = document.querySelector('#start-load')
     startLoad.classList.remove('hidden');
@@ -235,11 +237,11 @@ function startApp() {
             profileCheck();
           }).catch(function (error) {
             if (error.response.apiRejection) {
-              snacks(error.response.message, 'Okay')   
+              snacks(error.response.message, 'Okay')
             }
             handleError({
-              message:error.message,
-              body:error,
+              message: error.message,
+              body: error,
             })
           })
           return;
@@ -756,7 +758,7 @@ function openMap() {
         return
       };
       ApplicationState.officeWithCheckInSubs = checkInSubs;
-      
+
       const oldState = localStorage.getItem('ApplicationState')
       manageLocation(3).then(function (geopoint) {
         document.getElementById('start-load').classList.add('hidden');
