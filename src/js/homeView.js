@@ -274,19 +274,19 @@ function homeView(suggestedTemplates) {
       console.log(results);
       const duteis = results[0]
       const ars = results[1]
-      if (!duteis.length && !ars && !suggestedTemplates.length) {
+      if (!duteis.length && !hasValidAr(ars) && !suggestedTemplates.length) {
         if (workTaskEl) {
           document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
         }
         return;
       }
-      if(workTaskEl) {
-        workTaskEl.innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>` 
+      if (workTaskEl) {
+        workTaskEl.innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
       }
       createArSuggestion(ars)
       createDutySuggestion(duteis)
     }).catch(handleError);
-    
+
 
     const auth = firebase.auth().currentUser
     document.getElementById('reports').addEventListener('click', function () {
@@ -318,6 +318,13 @@ function homeView(suggestedTemplates) {
   }
 }
 
+function hasValidAr(arRecord) {
+  if (!arRecord) return;
+  if (!arRecord.hasOwnProperty('statusForDay')) return;
+  if (arRecord.statusForDay == 1) return;
+  return true
+}
+
 function createDutySuggestion(result) {
   const el = document.getElementById("duty-container");
   if (!result.length) return;
@@ -339,7 +346,7 @@ function createDutySuggestion(result) {
   dutyList.singleSelection = true;
   dutyList.selectedIndex = 0;
   dutyList.listen('MDCList:action', function (event) {
-   
+
     const activity = result[event.detail.index]
     const heading = createActivityHeading(activity)
     showViewDialog(heading, activity, 'view-form');
@@ -356,12 +363,11 @@ function getYesterdayArDate() {
 
 function createArSuggestion(result) {
   const el = document.getElementById('ar-container');
- 
-  if (!result) return;
-  if (!result.hasOwnProperty('statusForDay')) return;
-  if (result.statusForDay == 1) return;
+
+  if (!hasValidAr(result)) return;
+
   const ul = createElement('ul', {
-    className: 'mdc-list subscription-list mdc-list--two-line' 
+    className: 'mdc-list subscription-list mdc-list--two-line'
   })
   const li = createElement('li', {
     className: 'mdc-list-item'
@@ -370,9 +376,16 @@ function createArSuggestion(result) {
     className: 'mdc-list-item__meta material-icons mdc-theme--primary',
     textContent: 'keyboard_arrow_right'
   })
-  const textCont= createElement('span',{className:'mdc-list-item__text'})
-  const primaryText = createElement('span',{className:'mdc-list-item__primary-text'})
-  const secondartText = createElement('span',{className:'mdc-list-item__secondary-text mdc-theme--error',textContent:'Status For Day Yesterday : '+result.statusForDay})
+  const textCont = createElement('span', {
+    className: 'mdc-list-item__text'
+  })
+  const primaryText = createElement('span', {
+    className: 'mdc-list-item__primary-text'
+  })
+  const secondartText = createElement('span', {
+    className: 'mdc-list-item__secondary-text mdc-theme--error',
+    textContent: 'Status For Day Yesterday : ' + result.statusForDay
+  })
   secondartText.style.marginTop = '5px';
   secondartText.style.fontSize = '1rem';
 
