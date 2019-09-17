@@ -564,32 +564,32 @@ function getStatusArray(activity) {
     const confirm = {
         name: 'Confirm',
         icon: 'check',
-        status:activity.status,
-        color:'green'
+        status: activity.status,
+        color: 'green'
     }
     const undo = {
         name: 'Undo',
         icon: 'undo',
-        status:activity.status,
-        color:'black'
+        status: activity.status,
+        color: 'black'
     }
     const cancel = {
         name: 'Delete',
         icon: 'delete',
-        status:activity.status,
-        color:'red'
+        status: activity.status,
+        color: 'red'
 
     }
 
     if (activity.status === 'CANCELLED') {
-        items.push(confirm,undo)
+        items.push(confirm, undo)
     }
     if (activity.status === 'PENDING') {
-        items.push(confirm,cancel)
+        items.push(confirm, cancel)
 
     }
     if (activity.status === 'CONFIRMED') {
-        items.push(undo,cancel);
+        items.push(undo, cancel);
     };
     return items;
 }
@@ -612,9 +612,10 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                 name: 'Share',
                 icon: 'share'
             })
-            items.concat(getStatusArray(activity))
+            items = items.concat(getStatusArray(activity))
+            console.log(items)
         };
-
+        
         const joinedId = addendumId + activityId
         document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
         document.getElementById(joinedId).appendChild(menuItemMap({
@@ -893,7 +894,7 @@ function searchInitCancel(searchInit) {
 }
 
 function activityDomCustomer(activityRecord) {
-   
+
     return ` <div class='mdc-card'>
     <div id='status-change-container'></div>
     <div class='view-card'>

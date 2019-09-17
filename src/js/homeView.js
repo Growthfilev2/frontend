@@ -4,7 +4,6 @@ function getSuggestions() {
     return;
   }
   return getSubsWithVenue().then(homeView)
-
 }
 
 function getKnownLocationSubs() {
@@ -114,8 +113,6 @@ function getSubsWithVenue() {
   })
 }
 
-
-
 function handleNav(evt) {
   console.log(evt)
   if (history.state[0] === 'homeView') {
@@ -183,16 +180,7 @@ function homeView(suggestedTemplates) {
 
     panel.innerHTML = homePanel(commonTasks);
 
-    if (document.getElementById('change-location')) {
-      document.getElementById('change-location').addEventListener('click', function (evt) {
-        progressBar.open()
-
-        manageLocation(3).then(function (newLocation) {
-          mapView(newLocation);
-        }).catch(handleLocationError)
-      })
-    };
-
+ 
     const commonListEl = document.getElementById('common-task-list');
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
@@ -222,9 +210,7 @@ function homeView(suggestedTemplates) {
         const selectedType = commonTasks[commonListEvent.detail.index];
         if (selectedType.name === 'Change Location') {
           progressBar.open();
-          manageLocation(3).then(function (newLocation) {
-            mapView(newLocation);
-          }).catch(handleLocationError)
+          manageLocation(3).then(mapView).catch(handleLocationError)
           return;
         }
 
@@ -327,7 +313,7 @@ function getCommonTasks() {
     if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
       tasks.push({
         name: 'Photo Check-In',
-        id: 'photo-chek-in'
+        id: 'photo-check-in'
       })
     }
   }

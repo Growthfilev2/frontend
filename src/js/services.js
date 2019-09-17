@@ -278,7 +278,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=30');
+  let apiHandler = new Worker('js/apiHandler.js?version=31');
   auth.getIdToken(false).then(function (token) {
     requestGenerator.meta.user.token = token
     if (nonLocationRequest[requestType]) {

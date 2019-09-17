@@ -121,30 +121,9 @@ function getHeader(parentSelector, sectionStart, sectionEnd) {
 
 }
 
-function createSimpleRadio(id, label) {
-    return `<div class='mdc-radio'>
-    <input class="mdc-radio__native-control" type="radio" name="demo-radio-set" id=${id}>
-    <div class="mdc-radio__background">
-    <div class="mdc-radio__outer-circle">
-    </div>
-    <div class="mdc-radio__inner-circle">
-    </div>
-    </div>
-    </div>
-    <label for=${id}>${label}</label>
-    `
-}
 
-function createSimpleToggle(id) {
-    return `<div class="mdc-switch mdc-list-item__meta" id=${id}>
-    <div class="mdc-switch__track"></div>
-    <div class="mdc-switch__thumb-underlay">
-      <div class="mdc-switch__thumb">
-          <input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
-      </div>
-    </div>
-  </div>`
-}
+
+
 
 function createSimpleMenu(items, id) {
     return `
