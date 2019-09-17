@@ -143,6 +143,7 @@ function homePanel() {
       <div id='text'>
      
       </div>
+      <div id ='ar-container'></div>
       <div id='duty-container'></div>
       <div id='suggestions-container'></div>
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
@@ -208,8 +209,8 @@ function homeView(suggestedTemplates) {
     const commonListEl = document.getElementById('common-task-list');
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
-      
-      const rootTx =  db.transaction('root','readwrite')
+
+      const rootTx = db.transaction('root', 'readwrite')
       const rootStore = rootTx.objectStore('root')
       rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
 
@@ -221,7 +222,7 @@ function homeView(suggestedTemplates) {
           el.classList.remove('material-icons');
           el.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
         }
-        if(rootRecord.totalCount < 0) {
+        if (rootRecord.totalCount < 0) {
           rootRecord.totalCount = 0;
           rootStore.put(rootRecord);
         }
@@ -265,48 +266,28 @@ function homeView(suggestedTemplates) {
           dialog.close();
         })
       })
-    
+
     }
 
-    checkForDuty().then(function (result) {
-      console.log(result)
-      const workTaskEl = document.querySelector('.work-tasks #text');
-
-      if (!result.length && !suggestedTemplates.length) {
+    const workTaskEl = document.querySelector('.work-tasks #text');
+    Promise.all([checkForDuty(), getYesterdayAtt()]).then(function (results) {
+      console.log(results);
+      const duteis = results[0]
+      const ars = results[1]
+      if (!duteis.length && !ars && !suggestedTemplates.length) {
         if (workTaskEl) {
           document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
         }
         return;
       }
-      if (!result.length) return;
-      if (workTaskEl) {
-        document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
+      if(workTaskEl) {
+        workTaskEl.innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>` 
       }
-      const el = document.getElementById("duty-container");
-      if (!el) return;
-      el.innerHTML = `<ul class='mdc-list subscription-list'>
-        ${result.map(function(activity) {
-            return `<li class='mdc-list-item'>
-            <span class='mdc-list-item__text'>${activity.activityName}</span>
-          
-            <span class="mdc-list-item__meta material-icons mdc-theme--primary">
-              keyboard_arrow_right
-          </span>
-            </li>`
-        }).join("")}
-        <li class='mdc-list-divider'></li>
-      </ul>`
+      createArSuggestion(ars)
+      createDutySuggestion(duteis)
+    }).catch(handleError);
+    
 
-      const dutyList = new mdc.list.MDCList(el.querySelector('ul'))
-      dutyList.singleSelection = true;
-      dutyList.selectedIndex = 0;
-      dutyList.listen('MDCList:action', function (event) {
-        console.log(result[event.detail.index])
-        const activity = result[event.detail.index]
-        const heading = createActivityHeading(activity)
-        showViewDialog(heading, activity, 'view-form');
-      })
-    }).catch(handleError)
     const auth = firebase.auth().currentUser
     document.getElementById('reports').addEventListener('click', function () {
       if (auth.email && auth.emailVerified) {
@@ -335,6 +316,95 @@ function homeView(suggestedTemplates) {
       body: JSON.stringify(e.stack)
     })
   }
+}
+
+function createDutySuggestion(result) {
+  const el = document.getElementById("duty-container");
+  if (!result.length) return;
+  if (!el) return;
+  el.innerHTML = `<ul class='mdc-list subscription-list'>
+    ${result.map(function(activity) {
+        return `<li class='mdc-list-item'>
+        <span class='mdc-list-item__text'>${activity.activityName}</span>
+      
+        <span class="mdc-list-item__meta material-icons mdc-theme--primary">
+          keyboard_arrow_right
+      </span>
+        </li>`
+    }).join("")}
+    <li class='mdc-list-divider'></li>
+  </ul>`
+
+  const dutyList = new mdc.list.MDCList(el.querySelector('ul'))
+  dutyList.singleSelection = true;
+  dutyList.selectedIndex = 0;
+  dutyList.listen('MDCList:action', function (event) {
+    console.log(result[event.detail.index])
+    const activity = result[event.detail.index]
+    const heading = createActivityHeading(activity)
+    showViewDialog(heading, activity, 'view-form');
+  })
+}
+
+function getYesterdayArDate() {
+  const date = new Date();
+  const ts = date.setDate(date.getDate() - 1);
+  const convertedDate = new Date(ts)
+  return Number(`${convertedDate.getMonth()}${convertedDate.getDate()}${convertedDate.getFullYear()}`)
+}
+
+
+function createArSuggestion(result) {
+  const el = document.getElementById('ar-container');
+  console.log(result)
+  if (!result) return;
+  if (!result.hasOwnProperty('statusForDay')) return;
+  if (result.statusForDay == 1) return;
+  const ul = createElement('ul', {
+    className: 'mdc-list subscription-list'
+  })
+  const li = createElement('li', {
+    className: 'mdc-list-item'
+  })
+  const icon = createElement('span', {
+    className: 'mdc-list-item__meta material-icons mdc-theme--primary',
+    textContent: 'keyboard_arrow_right'
+  })
+  if (result.statusForDay == 0) {
+    li.textContent = 'Apply AR/Leave'
+  }
+  if (result.statusForDay > 0 && result.statusForDay < 1) {
+    li.textContent = 'Apply AR'
+  }
+  li.addEventListener('click', function () {
+    history.pushState(['reportView'], null, null)
+    reportView();
+  })
+  ul.appendChild(li)
+  li.appendChild(icon)
+  if (!el) return;
+  el.appendChild(ul)
+  const list = new mdc.list.MDCList(ul);
+  list.selectedIndex = 0;
+  list.singleSelection = true;
+}
+
+
+function getYesterdayAtt() {
+  return new Promise(function (resolve, reject) {
+    const tx = db.transaction('reports');
+    const store = tx.objectStore('reports');
+    let record;
+    store.get(getYesterdayArDate()).onsuccess = function (event) {
+      record = event.target.result;
+    }
+    tx.oncomplete = function () {
+      return resolve(record)
+    }
+    tx.onerror = function () {
+      return reject(tx.error)
+    }
+  })
 }
 
 function checkForDuty() {
