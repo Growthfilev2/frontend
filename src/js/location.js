@@ -9,6 +9,7 @@ function distanceDelta(oldLocation, newLocation) {
 function timeDelta(previousLocationTime, newLocationTime) {
     const duration = moment.duration(moment(newLocationTime).diff(moment(previousLocationTime)));
     return duration;
+
 }
 
 function getStoredLocation() {

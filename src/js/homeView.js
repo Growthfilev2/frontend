@@ -361,7 +361,7 @@ function createArSuggestion(result) {
   if (!result.hasOwnProperty('statusForDay')) return;
   if (result.statusForDay == 1) return;
   const ul = createElement('ul', {
-    className: 'mdc-list subscription-list'
+    className: 'mdc-list subscription-list mdc-list--two-line' 
   })
   const li = createElement('li', {
     className: 'mdc-list-item'
@@ -370,12 +370,22 @@ function createArSuggestion(result) {
     className: 'mdc-list-item__meta material-icons mdc-theme--primary',
     textContent: 'keyboard_arrow_right'
   })
+  const textCont= createElement('span',{className:'mdc-list-item__text'})
+  const primaryText = createElement('span',{className:'mdc-list-item__primary-text'})
+  const secondartText = createElement('span',{className:'mdc-list-item__secondary-text mdc-theme--error',textContent:'Status For Day Yesterday : '+result.statusForDay})
+  secondartText.style.marginTop = '5px';
+  secondartText.style.fontSize = '1rem';
+
   if (result.statusForDay == 0) {
-    li.textContent = 'Apply AR/Leave'
+    primaryText.textContent = 'Apply AR/Leave'
   }
   if (result.statusForDay > 0 && result.statusForDay < 1) {
-    li.textContent = 'Apply AR'
+    primaryText.textContent = 'Apply AR'
   }
+  textCont.appendChild(primaryText)
+  textCont.appendChild(secondartText);
+  li.appendChild(textCont);
+
   li.addEventListener('click', function () {
     history.pushState(['reportView'], null, null)
     reportView();

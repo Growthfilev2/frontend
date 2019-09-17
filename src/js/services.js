@@ -69,10 +69,7 @@ function fetchCurrentTime(serverTime) {
 }
 
 
-
-
 function manageLocation(maxRetry) {
-
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
       if (location.accuracy >= 35000) {
