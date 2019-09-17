@@ -166,6 +166,7 @@ function homeHeaderStartContent(name) {
 
 
 function homeView(suggestedTemplates) {
+  document.getElementById('start-load').classList.add('hidden')
   try {
 
     progressBar.close();
@@ -289,7 +290,7 @@ function homeView(suggestedTemplates) {
         workTaskEl.innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
       }
       createArSuggestion(ars)
-      createUpdatesuggestion(duteis)
+      createUpdatesuggestion(updates)
     }).catch(handleError);
 
 
@@ -330,7 +331,7 @@ function hasValidAr(arRecord) {
   return true
 }
 
-function createUpdatesSuggestion(result) {
+function createUpdatesuggestion(result) {
   const el = document.getElementById("duty-container");
   if (!result.length) return;
   if (!el) return;
@@ -354,17 +355,24 @@ function createUpdatesSuggestion(result) {
 
     const activity = result[event.detail.index]
     const heading = createActivityHeading(activity)
-    const statusButtonFrag = document.createDocumentFragment()
+    const statusButtonFrag = createElement('div')
+    statusButtonFrag.style.width = '100%';
+
     getStatusArray(activity).forEach(function (buttonDetails) {
       const button = createElement("button", {
-        className: 'mdc-button mdc-button--extended',
-        textContent: buttonDetails.name
+        className: 'mdc-button'
       })
-      const icon = createElement('button', {
-        className: 'material-icons',
+      
+      const span = createElement("span",{
+        className:'mdc-button__label',
+        textContent:buttonDetails.name
+      })
+      const icon = createElement('i', {
+        className: 'material-icons mdc-button__icon',
         textContent: buttonDetails.icon
       })
       button.appendChild(icon)
+      button.appendChild(span)
       button.addEventListener('click', function () {
         setActivityStatus(activity, buttonDetails.status)
       })
@@ -372,10 +380,10 @@ function createUpdatesSuggestion(result) {
     })
 
 
-    const dialog = new Dialog(heading, activityDomCustomer(activity), 'update-form').create()
+    const dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create()
     dialog.open();
     dialog.listen('MDCDialog:opened', function () {
-      dialog.root_.querySelector('status-change-container').appendChild(statusButtonFrag);
+      dialog.root_.querySelector('#status-change-container').appendChild(statusButtonFrag);
     })
   })
 }

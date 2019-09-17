@@ -120,6 +120,11 @@ function getTodayStatData() {
       .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
+        if(!cursor.value.creator) {
+          cursor.continue();
+          return;
+        }
+        
         if (cursor.value.creator.phoneNumber !== myNumber) {
           cursor.continue();
           return;
