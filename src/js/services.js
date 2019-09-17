@@ -247,7 +247,7 @@ function html5Geolocation() {
   })
 }
 
-let apiHandler = new Worker('js/apiHandler.js?version=29');
+
 
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {

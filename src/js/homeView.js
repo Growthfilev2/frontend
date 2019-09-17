@@ -549,8 +549,8 @@ function checkForUpdates() {
           return resolve(updateRecords);
         }
       }
-
     }
+    
     calendarTx.onerror = function () {
       return reject({
         message: tx.error,
