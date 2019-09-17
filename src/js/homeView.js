@@ -339,7 +339,7 @@ function createDutySuggestion(result) {
   dutyList.singleSelection = true;
   dutyList.selectedIndex = 0;
   dutyList.listen('MDCList:action', function (event) {
-    console.log(result[event.detail.index])
+   
     const activity = result[event.detail.index]
     const heading = createActivityHeading(activity)
     showViewDialog(heading, activity, 'view-form');
@@ -356,7 +356,7 @@ function getYesterdayArDate() {
 
 function createArSuggestion(result) {
   const el = document.getElementById('ar-container');
-  console.log(result)
+ 
   if (!result) return;
   if (!result.hasOwnProperty('statusForDay')) return;
   if (result.statusForDay == 1) return;
