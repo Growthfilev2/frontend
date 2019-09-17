@@ -180,10 +180,9 @@ function homeView(suggestedTemplates) {
     if (ApplicationState.venue.location) {
       header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
     } else {
-      if(geocodeVenue) {
+      if (geocodeVenue) {
         header.root_.querySelector(".mdc-top-app-bar__title").textContent = geocodeVenue
-      }
-      else {
+      } else {
         geocodeLatLng(ApplicationState.location).then(function (result) {
           if (result) {
             geocodeVenue = result;
@@ -276,11 +275,11 @@ function homeView(suggestedTemplates) {
     }
 
     const workTaskEl = document.querySelector('.work-tasks #text');
-    Promise.all([checkForDuty(), getYesterdayAtt()]).then(function (results) {
-    
-      const duteis = results[0]
+    Promise.all([checkForUpdates(), getYesterdayAtt()]).then(function (results) {
+
+      const updates = results[0]
       const ars = results[1]
-      if (!duteis.length && !hasValidAr(ars) && !suggestedTemplates.length) {
+      if (!updates.length && !hasValidAr(ars) && !suggestedTemplates.length) {
         if (workTaskEl) {
           document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
         }
@@ -290,7 +289,7 @@ function homeView(suggestedTemplates) {
         workTaskEl.innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
       }
       createArSuggestion(ars)
-      createDutySuggestion(duteis)
+      createUpdatesuggestion(duteis)
     }).catch(handleError);
 
 
@@ -331,7 +330,7 @@ function hasValidAr(arRecord) {
   return true
 }
 
-function createDutySuggestion(result) {
+function createUpdatesSuggestion(result) {
   const el = document.getElementById("duty-container");
   if (!result.length) return;
   if (!el) return;
@@ -355,7 +354,29 @@ function createDutySuggestion(result) {
 
     const activity = result[event.detail.index]
     const heading = createActivityHeading(activity)
-    showViewDialog(heading, activity, 'view-form');
+    const statusButtonFrag = document.createDocumentFragment()
+    getStatusArray(activity).forEach(function (buttonDetails) {
+      const button = createElement("button", {
+        className: 'mdc-button mdc-button--extended',
+        textContent: buttonDetails.name
+      })
+      const icon = createElement('button', {
+        className: 'material-icons',
+        textContent: buttonDetails.icon
+      })
+      button.appendChild(icon)
+      button.addEventListener('click', function () {
+        setActivityStatus(activity, buttonDetails.status)
+      })
+      statusButtonFrag.appendChild(button)
+    })
+
+
+    const dialog = new Dialog(heading, activityDomCustomer(activity), 'update-form').create()
+    dialog.open();
+    dialog.listen('MDCDialog:opened', function () {
+      dialog.root_.querySelector('status-change-container').appendChild(statusButtonFrag);
+    })
   })
 }
 
@@ -436,38 +457,75 @@ function getYesterdayAtt() {
   })
 }
 
-function checkForDuty() {
+function checkForUpdates() {
+
   return new Promise(function (resolve, reject) {
     const currentTimestamp = moment().valueOf()
     const maxTimestamp = moment().add(24, 'h').valueOf();
     console.log(maxTimestamp);
-    const tx = db.transaction('activity');
-    const result = []
-    tx.objectStore('activity').index('template').openCursor(IDBKeyRange.only('duty')).onsuccess = function (event) {
+    const calendarTx = db.transaction('calendar');
+    const results = []
+    const range = IDBKeyRange.lowerBound(currentTimestamp);
+
+    calendarTx.objectStore('calendar').index('end').openCursor(range).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
+      };
+      if (cursor.value.hidden == 1) {
+        cursor.continue();
+        return;
       }
-      const schedule = cursor.value.schedule;
-      if (!schedule.length) {
+      if (!cursor.value.start || !cursor.value.end) {
         cursor.continue();
         return;
       };
-      if (schedule[0].endTime < currentTimestamp) {
-        cursor.continue();
-        return;
-      }
-      if (schedule[0].startTime <= maxTimestamp) {
-        result.push(cursor.value)
+
+      if (cursor.value.start <= maxTimestamp) {
+        results.push(cursor.value)
       };
       cursor.continue();
+    };
+
+    calendarTx.oncomplete = function () {
+      console.log(results);
+
+      const activityTx = db.transaction('activity');
+
+      const activityRecords = [];
+      results.forEach(function (result) {
+        activityTx.objectStore('activity').get(result.activityId).onsuccess = function (event) {
+          const record = event.target.result;
+          if (!record.attachment.Location) return;
+          if (!record.attachment.Location.value) return;
+          console.log(record);
+          activityRecords.push(record);
+        }
+      });
+      activityTx.oncomplete = function () {
+
+        const mapTx = db.transaction('map')
+        const updateRecords = []
+        activityRecords.forEach(function (record) {
+          mapTx.objectStore('map').index('location').get(record.attachment.Location.value).onsuccess = function (event) {
+            const mapRecord = event.target.result;
+            if (!mapRecord.latitude || !mapRecord.longitude) return;
+            if (calculateDistanceBetweenTwoPoints({
+                latitude: mapRecord.latitude,
+                longitude: mapRecord.longitude
+              }, ApplicationState.location) > 1) return;
+            updateRecords.push(record);
+          }
+        })
+        mapTx.oncomplete = function () {
+          return resolve(updateRecords);
+        }
+      }
+
     }
-    tx.oncomplete = function () {
-      return resolve(result);
-    }
-    tx.onerror = function () {
+    calendarTx.onerror = function () {
       return reject({
         message: tx.error,
         body: ''
