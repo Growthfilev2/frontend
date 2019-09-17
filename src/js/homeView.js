@@ -277,7 +277,7 @@ function homeView(suggestedTemplates) {
 
     const workTaskEl = document.querySelector('.work-tasks #text');
     Promise.all([checkForDuty(), getYesterdayAtt()]).then(function (results) {
-      console.log(results);
+    
       const duteis = results[0]
       const ars = results[1]
       if (!duteis.length && !hasValidAr(ars) && !suggestedTemplates.length) {
