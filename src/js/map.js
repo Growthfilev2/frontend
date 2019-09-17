@@ -13,7 +13,7 @@ var markersObject = {
   markers: [],
   infowindow: []
 }
-
+var geocodeVenue = '';
 function failureScreen(error, callback) {
 
   document.getElementById('start-load').classList.add('hidden');

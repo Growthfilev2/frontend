@@ -180,11 +180,17 @@ function homeView(suggestedTemplates) {
     if (ApplicationState.venue.location) {
       header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
     } else {
-      geocodeLatLng(ApplicationState.location).then(function (result) {
-        if (result) {
-          header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
-        }
-      }).catch(console.error)
+      if(geocodeVenue) {
+        header.root_.querySelector(".mdc-top-app-bar__title").textContent = geocodeVenue
+      }
+      else {
+        geocodeLatLng(ApplicationState.location).then(function (result) {
+          if (result) {
+            geocodeVenue = result;
+            header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
+          }
+        }).catch(console.error)
+      }
     }
 
     header.listen('MDCTopAppBar:nav', handleNav);
