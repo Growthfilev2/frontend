@@ -178,6 +178,7 @@ function homeView(suggestedTemplates) {
     }
     if(document.getElementById('change-location')) {
       document.getElementById('change-location').addEventListener('click',function(){
+        progressBar.open();
         manageLocation(3).then(mapView).catch(handleLocationError);
       })
     }
@@ -185,9 +186,6 @@ function homeView(suggestedTemplates) {
 
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.remove('hidden')
-
-
-
 
     const panel = document.getElementById('app-current-panel')
     panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
@@ -200,7 +198,6 @@ function homeView(suggestedTemplates) {
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
       commonTaskList.singleSelection = true;
-      commonTaskList.selectedIndex = 0;
       const rootTx = db.transaction('root', 'readwrite')
       const rootStore = rootTx.objectStore('root')
       rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
