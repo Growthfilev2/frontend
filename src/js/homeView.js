@@ -279,7 +279,6 @@ function homeView(suggestedTemplates) {
       createUpdatesuggestion(updates)
     }).catch(handleError);
 
-
     const auth = firebase.auth().currentUser
     document.getElementById('reports').addEventListener('click', function () {
       if (auth.email && auth.emailVerified) {
