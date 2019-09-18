@@ -185,7 +185,6 @@ function createUnkownCheckIn(cardProd) {
     document.getElementById('start-load').classList.add('hidden');
 
     successDialog('Check-In Created')
-    ApplicationState.lastCheckInCreated = Date.now()
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions()
@@ -238,8 +237,7 @@ function createKnownCheckIn(selectedVenue, cardProd) {
 
   requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
 
-    successDialog('Check-In Created')
-    ApplicationState.lastCheckInCreated = Date.now()
+    successDialog('Check-In Created')    
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions();

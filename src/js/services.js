@@ -298,6 +298,9 @@ function requestCreator(requestType, requestBody) {
           ApplicationState.location = geopoint;
           requestBody['geopoint'] = geopoint;
           requestGenerator.body = requestBody;
+          if(requestBody.template === 'check-in') {
+            ApplicationState.lastCheckInCreated = time
+          }
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
           apiHandler.postMessage(requestGenerator);
         }).catch(handleLocationError)
