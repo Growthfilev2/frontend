@@ -316,18 +316,18 @@ function generateCheckInVenueName(header){
   const myNumber = firebase.auth().currentUser.phoneNumber;
   const tx = db.transaction('addendum');
   const addendumStore = tx.objectStore('addendum')
-  let addendum;
+  let addendums = [];
   
   if(addendumStore.indexNames.contains('KeyTimestamp')) {
     const key = myNumber+myNumber
     const range = IDBKeyRange.only([lastCheckInCreatedTimestamp,key])
-    addendumStore.index('KeyTimestamp').get(range).onsuccess = function(event){
-      if(!event.target.result) return;
-      if(event.target.result.user !== myNumber) return;
-      addendum = event.target.result;
+    addendumStore.index('KeyTimestamp').getAll(range).onsuccess = function(event){
+      if(!event.target.result.length) return;
+      addendums = event.target.result;
     }
   }
   else {
+
     addendumStore.index('user').openCursor(myNumber).onsuccess = function(event){
       const cursor  = event.target.result;
       if(!cursor) return;
@@ -335,28 +335,30 @@ function generateCheckInVenueName(header){
         cursor.continue();
         return;
       }
-      addendum = cursor.value;
+      addendums.push(cursor.value)
       cursor.continue();
     }
   }
 
   tx.oncomplete = function(){
-    console.log(addendum);
-    if(!addendum) return;
-    const activityStore = db.transaction('activity').objectStore('activity');
-    activityStore.get(addendum.activityId).onsuccess = function(activityEvent) {
-      const activity = activityEvent.target.result;
-      if(!activity) return;
-      if(activity.template !== 'check-in') return;
-      const commentArray = addendum.comment.split(" ");
-      const index = commentArray.indexOf("from");
-      const nameOfLocation = commentArray.slice(index+1,commentArray.length).join(" ");
-      console.log(header)
-      console.log(nameOfLocation)
-      if(header.root_.querySelector('.mdc-top-app-bar__title')) {
-        header.root_.querySelector('.mdc-top-app-bar__title').textContent = nameOfLocation;
+    console.log(addendums);
+    if(!addendums.length) return;
+    addendums.forEach(function(addendum){
+      const activityStore = db.transaction('activity').objectStore('activity');
+      activityStore.get(addendum.activityId).onsuccess = function(activityEvent) {
+        const activity = activityEvent.target.result;
+        if(!activity) return;
+        if(activity.template !== 'check-in') return;
+        const commentArray = addendum.comment.split(" ");
+        const index = commentArray.indexOf("from");
+        const nameOfLocation = commentArray.slice(index+1,commentArray.length).join(" ");
+        console.log(header)
+        console.log(nameOfLocation)
+        if(header.root_.querySelector('.mdc-top-app-bar__title')) {
+          header.root_.querySelector('.mdc-top-app-bar__title').textContent = nameOfLocation;
+        }
       }
-    }
+    })
   }
 }
 
