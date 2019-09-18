@@ -366,12 +366,14 @@ function getCommonTasks() {
     name: 'Chat',
     id: 'open-chat-list'
   }];
+
   // if (ApplicationState.nearByLocations.length) {
   //   tasks.unshift({
   //     name: 'Change Location',
   //     id: 'change-location-list'
   //   })
-  // }
+  // };
+
   if (ApplicationState.officeWithCheckInSubs) {
     if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
       tasks.push({
@@ -586,6 +588,7 @@ function checkForUpdates() {
         activityRecords.forEach(function (record) {
           mapTx.objectStore('map').index('location').get(record.attachment.Location.value).onsuccess = function (event) {
             const mapRecord = event.target.result;
+            if(!mapRecord) return;
             if (!mapRecord.latitude || !mapRecord.longitude) return;
             if (calculateDistanceBetweenTwoPoints({
                 latitude: mapRecord.latitude,

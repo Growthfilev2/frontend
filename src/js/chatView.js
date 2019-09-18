@@ -564,21 +564,20 @@ function getStatusArray(activity) {
     const confirm = {
         name: 'Confirm',
         icon: 'check',
-        status: activity.status,
+        status: 'CONFIRMED',
         color: 'green'
     }
     const undo = {
         name: 'Undo',
         icon: 'undo',
-        status: activity.status,
+        status: 'PENDING',
         color: 'black'
     }
     const cancel = {
         name: 'Delete',
         icon: 'delete',
-        status: activity.status,
+        status: 'CANCELLED',
         color: 'red'
-
     }
 
     if (activity.status === 'CANCELLED') {
