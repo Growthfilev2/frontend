@@ -126,16 +126,16 @@ function handleNav(evt) {
   return history.back();
 }
 
-function homePanel() {
+function homePanel(commonTasks) {
   return ` <div class="container home-container">
   <div class='meta-work'>
     <ul class='mdc-list subscription-list' id='common-task-list'>
-      <li class='mdc-list-item'>Chat
-      <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
-      </li>
-      ${ApplicationState.officeWithCheckInSubs && Object.keys(ApplicationState.officeWithCheckInSubs).length ? ` <li class='mdc-list-item'>Photo Check-In
-      <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
-      </li>`:''}
+      ${commonTasks.map(function(task){
+          return `<li class='mdc-list-item' id="${task.id}">${task.name}
+          <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
+        </li>`
+      }).join("")}
+
       <li class='mdc-list-divider'></li>
     </ul>
   </div>
@@ -168,30 +168,11 @@ function homeHeaderStartContent(name) {
 function homeView(suggestedTemplates) {
   document.getElementById('start-load').classList.add('hidden')
   try {
-
+    const commonTasks = getCommonTasks();
     progressBar.close();
     history.pushState(['homeView'], null, null);
-    let clearIcon = '';
-    if (ApplicationState.nearByLocations.length > 1) {
-      clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
-    }
 
-    const header = getHeader('app-header', homeHeaderStartContent('Unkown Location'), clearIcon);
-    console.log(header)
-    if (ApplicationState.venue.location) {
-      header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
-    } else {
-      if (geocodeVenue) {
-        header.root_.querySelector(".mdc-top-app-bar__title").textContent = geocodeVenue
-      } else {
-        geocodeLatLng(ApplicationState.location).then(function (result) {
-          if (result) {
-            geocodeVenue = result;
-            header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
-          }
-        }).catch(console.error)
-      }
-    }
+    const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location), '');
 
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.remove('hidden')
@@ -200,7 +181,7 @@ function homeView(suggestedTemplates) {
     panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
     let suggestionLength = suggestedTemplates.length;
 
-    panel.innerHTML = homePanel();
+    panel.innerHTML = homePanel(commonTasks);
 
     if (document.getElementById('change-location')) {
       document.getElementById('change-location').addEventListener('click', function (evt) {
@@ -215,7 +196,8 @@ function homeView(suggestedTemplates) {
     const commonListEl = document.getElementById('common-task-list');
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
-
+      commonTaskList.singleSelection = true;
+      commonTaskList.selectedIndex = 0;
       const rootTx = db.transaction('root', 'readwrite')
       const rootStore = rootTx.objectStore('root')
       rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
@@ -223,27 +205,34 @@ function homeView(suggestedTemplates) {
         const rootRecord = event.target.result;
         if (!rootRecord) return;
         if (rootRecord.totalCount && rootRecord.totalCount > 0) {
-          const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
+          const el = document.getElementById('open-chat-list');
           if (!el) return;
-          el.classList.remove('material-icons');
-          el.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
+          const metaIcon = el.querySelector('.mdc-list-item__meta')
+          metaIcon.classList.remove('material-icons');
+          metaIcon.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
         }
+
         if (rootRecord.totalCount < 0) {
           rootRecord.totalCount = 0;
           rootStore.put(rootRecord);
         }
-      }
+      };
 
       commonTaskList.listen('MDCList:action', function (commonListEvent) {
-        console.log(commonListEvent)
-        if (commonListEvent.detail.index == 0) {
+        const selectedType = commonTasks[commonListEvent.detail.index];
+        if (selectedType.name === 'Change Location') {
+          progressBar.open();
+          manageLocation(3).then(function (newLocation) {
+            mapView(newLocation);
+          }).catch(handleLocationError)
+          return;
+        }
+
+        if (selectedType.name === 'Chat') {
           history.pushState(['chatView'], null, null);
           chatView();
           return;
-        };
-
-        if (!ApplicationState.officeWithCheckInSubs) return;
-
+        }
         const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
         if (offices.length == 1) {
           photoOffice = offices[0];
@@ -252,15 +241,15 @@ function homeView(suggestedTemplates) {
           return
         }
         const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
-    ${offices.map(function(office){
-      return `<li class='mdc-list-item'>
-      ${office}
-      <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
-        keyboard_arrow_right
-      </span>
-      </li>`
-    }).join("")}
-    </ul>`
+         ${offices.map(function(office){
+           return `<li class='mdc-list-item'>
+           ${office}
+           <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+             keyboard_arrow_right
+           </span>
+           </li>`
+         }).join("")}
+         </ul>`
 
         const dialog = new Dialog('Choose Office', officeList, 'choose-office-subscription').create('simple');
         const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
@@ -272,7 +261,6 @@ function homeView(suggestedTemplates) {
           dialog.close();
         })
       })
-
     }
 
     const workTaskEl = document.querySelector('.work-tasks #text');
@@ -324,6 +312,28 @@ function homeView(suggestedTemplates) {
   }
 }
 
+function getCommonTasks() {
+  const tasks = [{
+    name: 'Chat',
+    id: 'open-chat-list'
+  }];
+  if (ApplicationState.nearByLocations.length) {
+    tasks.unshift({
+      name: 'Change Location',
+      id: 'change-location-list'
+    })
+  }
+  if (ApplicationState.officeWithCheckInSubs) {
+    if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
+      tasks.push({
+        name: 'Photo Check-In',
+        id: 'photo-chek-in'
+      })
+    }
+  }
+  return tasks
+}
+
 function hasValidAr(arRecord) {
   if (!arRecord) return;
   if (!arRecord.hasOwnProperty('statusForDay')) return;
@@ -361,14 +371,17 @@ function createUpdatesuggestion(result) {
     const dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create()
     dialog.open();
 
+    if (!activity.canEdit) return;
+
     getStatusArray(activity).forEach(function (buttonDetails) {
+
       const button = createElement("button", {
         className: 'mdc-button'
       })
-      
-      const span = createElement("span",{
-        className:'mdc-button__label',
-        textContent:buttonDetails.name
+      button.style.color = buttonDetails.color
+      const span = createElement("span", {
+        className: 'mdc-button__label',
+        textContent: buttonDetails.name
       })
       const icon = createElement('i', {
         className: 'material-icons mdc-button__icon',
@@ -515,7 +528,7 @@ function checkForUpdates() {
         }
       });
       activityTx.oncomplete = function () {
-
+        console.log(activityRecords)
         const mapTx = db.transaction('map')
         const updateRecords = []
         activityRecords.forEach(function (record) {

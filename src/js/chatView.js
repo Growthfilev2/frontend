@@ -561,48 +561,36 @@ function createActivityHeading(activity) {
 
 function getStatusArray(activity) {
     const items = [];
-    if (activity.status === 'CANCELLED') {
-        items.push({
-            name: 'Confirm',
-            icon: 'check',
-            status:activity.status
-        })
-        items.push({
-            name: 'Undo',
-            icon: 'undo',
-            status:activity.status
+    const confirm = {
+        name: 'Confirm',
+        icon: 'check',
+        status:activity.status,
+        color:'green'
+    }
+    const undo = {
+        name: 'Undo',
+        icon: 'undo',
+        status:activity.status,
+        color:'yellow'
+    }
+    const cancel = {
+        name: 'Delete',
+        icon: 'delete',
+        status:activity.status,
+        color:'red'
 
-        })
+    }
+
+    if (activity.status === 'CANCELLED') {
+        items.push(confirm,undo)
     }
     if (activity.status === 'PENDING') {
-        items.push({
-            name: 'Confirm',
-            icon: 'check',
-            status:activity.status
-
-        })
-        items.push({
-            name: 'Delete',
-            icon: 'delete',
-            status:activity.status
-
-        })
+        items.push(confirm,cancel)
 
     }
     if (activity.status === 'CONFIRMED') {
-        items.push({
-            name: 'Undo',
-            icon: 'undo',
-            status:activity.status
-
-        })
-        items.push({
-            name: 'Delete',
-            icon: 'delete',
-            status:activity.status
-
-        })
-    }
+        items.push(undo,cancel);
+    };
     return items;
 }
 
