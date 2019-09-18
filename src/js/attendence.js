@@ -1,7 +1,7 @@
 function attendenceView(sectionContent) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
-
+  
   getReportSubs('attendance').then(function (subs) {
     console.log(subs)
     document.getElementById('start-load').classList.add('hidden')
