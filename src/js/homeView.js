@@ -168,14 +168,26 @@ function homeView(suggestedTemplates) {
     const commonTasks = getCommonTasks();
     progressBar.close();
     history.pushState(['homeView'], null, null);
-
-    const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), '');
+    let clearIcon = ''
+    if (ApplicationState.nearByLocations.length > 1) {
+      clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
+    }
+    const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
     if(!ApplicationState.venue) {
       generateCheckInVenueName(header);
     }
+    if(document.getElementById('change-location')) {
+      document.getElementById('change-location').addEventListener('click',function(){
+        manageLocation(3).then(mapView).catch(handleLocationError);
+      })
+    }
+    
 
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.remove('hidden')
+
+
+
 
     const panel = document.getElementById('app-current-panel')
     panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
