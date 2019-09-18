@@ -617,16 +617,19 @@ function successResponse(read, param, db, resolve, reject) {
     if (addendum.isComment) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
-        userTimestamp[addendum.user] = addendum;
-
+        userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user]  = [addendum]
         counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
-        userTimestamp[addendum.assignee] = addendum;
+        userTimestamp[addendum.assignee] ? userTimestamp[addendum.assignee].push(addendum) : userTimestamp[addendum.assignee] = [addendum];
       }
       addendumObjectStore.add(addendum)
     } else {
-      userTimestamp[addendum.user] = addendum;
+
+      addendum.key = param.user.phoneNumber + addendum.user;
+      userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
+      // addendumObjectStore.add(addendum)
+      
       if (addendum.user !== param.user.phoneNumber) {
         counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
       }
@@ -677,30 +680,34 @@ function successResponse(read, param, db, resolve, reject) {
     })
   })
 
-
+  console.log(userTimestamp)
   Object.keys(userTimestamp).forEach(function (number) {
    
-    const currentAddendum = userTimestamp[number]
-
-    if (currentAddendum.isComment) return updateUserStore(userStore, number, currentAddendum);
+    const currentAddendums = userTimestamp[number]
+    currentAddendums.forEach(function(addendum){
+      if (addendum.isComment) return updateUserStore(userStore, number, addendum);
+      const activityId = addendum.activityId
+      activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
+        const record = activityEvent.target.result;
+        if (!record) return;
+        console.log(record);
+  
+        record.assignees.forEach(function (user) {
+          addendum.key = param.user.phoneNumber + user.phoneNumber;
+          console.log(addendum);
+          addendumObjectStore.put(addendum);
+          if (number === param.user.phoneNumber) {
+            updateUserStore(userStore, user.phoneNumber, addendum)
+          }
+          if (number === user.phoneNumber) {
+              updateUserStore(userStore, number, addendum)
+          }
+        })
+      }
+    })
 
     // if is system generated
-    const activityId = currentAddendum.activityId
-    activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
-      const record = activityEvent.target.result;
-      if (!record) return;
-
-      record.assignees.forEach(function (user) {
-        currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
-        addendumObjectStore.put(currentAddendum);
-        if (number === param.user.phoneNumber) {
-          updateUserStore(userStore, user.phoneNumber, currentAddendum)
-        }
-        if (number === user.phoneNumber) {
-            updateUserStore(userStore, number, currentAddendum)
-        }
-      })
-    }
+    
   })
 
   function updateUserStore(userStore, phoneNumber, currentAddendum) {
