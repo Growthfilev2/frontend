@@ -379,7 +379,8 @@ function handleComponentUpdation(readResponse) {
 
   switch (history.state[0]) {
     case 'homeView':
-      getSuggestions()
+
+     getSuggestions()
       break;
     case 'enterChat':
       if (!readResponse.response.addendum.length) return;

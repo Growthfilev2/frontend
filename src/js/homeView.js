@@ -169,7 +169,10 @@ function homeView(suggestedTemplates) {
     progressBar.close();
     history.pushState(['homeView'], null, null);
 
-    const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location), '');
+    const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), '');
+    if(!ApplicationState.venue) {
+      generateCheckInVenueName(header);
+    }
 
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.remove('hidden')
@@ -298,17 +301,68 @@ function homeView(suggestedTemplates) {
   }
 }
 
+function generateCheckInVenueName(header){
+  const lastCheckInCreatedTimestamp = ApplicationState.lastCheckInCreated;
+  if(!lastCheckInCreatedTimestamp) return;
+  if(!header) return;
+  const myNumber = firebase.auth().currentUser.phoneNumber;
+  const tx = db.transaction('addendum');
+  const addendumStore = tx.objectStore('addendum')
+  let addendum;
+  
+  if(addendumStore.indexNames.contains('KeyTimestamp')) {
+    const key = myNumber+myNumber
+    const range = IDBKeyRange.only([lastCheckInCreatedTimestamp,key])
+    addendumStore.index('KeyTimestamp').get(range).onsuccess = function(event){
+      if(!event.target.result) return;
+      if(event.target.result.user !== myNumber) return;
+      addendum = event.target.result;
+    }
+  }
+  else {
+    addendumStore.index('user').openCursor(myNumber).onsuccess = function(event){
+      const cursor  = event.target.result;
+      if(!cursor) return;
+      if(cursor.value.timestamp !== lastCheckInCreatedTimestamp) {
+        cursor.continue();
+        return;
+      }
+      addendum = cursor.value;
+      cursor.continue();
+    }
+  }
+
+  tx.oncomplete = function(){
+    console.log(addendum);
+    if(!addendum) return;
+    const activityStore = db.transaction('activity').objectStore('activity');
+    activityStore.get(addendum.activityId).onsuccess = function(activityEvent) {
+      const activity = activityEvent.target.result;
+      if(!activity) return;
+      if(activity.template !== 'check-in') return;
+      const commentArray = addendum.comment.split(" ");
+      const index = commentArray.indexOf("from");
+      const nameOfLocation = commentArray.slice(index+1,commentArray.length).join(" ");
+      console.log(header)
+      console.log(nameOfLocation)
+      if(header.root_.querySelector('.mdc-top-app-bar__title')) {
+        header.root_.querySelector('.mdc-top-app-bar__title').textContent = nameOfLocation;
+      }
+    }
+  }
+}
+
 function getCommonTasks() {
   const tasks = [{
     name: 'Chat',
     id: 'open-chat-list'
   }];
-  if (ApplicationState.nearByLocations.length) {
-    tasks.unshift({
-      name: 'Change Location',
-      id: 'change-location-list'
-    })
-  }
+  // if (ApplicationState.nearByLocations.length) {
+  //   tasks.unshift({
+  //     name: 'Change Location',
+  //     id: 'change-location-list'
+  //   })
+  // }
   if (ApplicationState.officeWithCheckInSubs) {
     if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
       tasks.push({
