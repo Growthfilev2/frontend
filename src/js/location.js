@@ -80,7 +80,8 @@ GetOffsetBounds.prototype.east = function () {
 }
 GetOffsetBounds.prototype.west = function () {
     return this.latLng.longitude - this.radioLon
-}
+};
+
 
 function getCellularInformation() {
 

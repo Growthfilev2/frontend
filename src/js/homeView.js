@@ -324,7 +324,7 @@ function generateCheckInVenueName(header){
     addendumStore.index('KeyTimestamp').getAll(range).onsuccess = function(event){
       if(!event.target.result.length) return;
       addendums = event.target.result;
-    }
+    };
   }
   else {
 
