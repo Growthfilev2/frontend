@@ -93,9 +93,56 @@ function createBaseDetails() {
   <li class='mdc-list-item'>
   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
   ${auth.phoneNumber}
+  <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['changePhoneNumber'],null,null);changePhoneNumber()">edit</span>
+
   </li>
   </ul>
 </div>`
+}
+
+function changePhoneNumber() {
+  const auth = firebase.auth().currentUser;
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Change Phone Number</span>
+  `
+  const header = getHeader('app-header', backIcon, '');
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number'>
+  <div class="mdc-text-field mdc-text-field--outlined mt-10 mdc-text-field--disabled" id='old-number'>
+  <input class="mdc-text-field__input" value='${auth.phoneNumber}' type='tel' disabled>
+ <div class="mdc-notched-outline">
+     <div class="mdc-notched-outline__leading"></div>
+     <div class="mdc-notched-outline__notch">
+           <label for='email' class="mdc-floating-label mdc-floating-label--float-above ">Current Phone Number</label>
+     </div>
+     <div class="mdc-notched-outline__trailing"></div>
+ </div>
+</div>
+
+<div class="mdc-text-field mdc-text-field--outlined mt-10" id='new-number'>
+  <input class="mdc-text-field__input" required value='' type='tel'>
+ <div class="mdc-notched-outline">
+     <div class="mdc-notched-outline__leading"></div>
+     <div class="mdc-notched-outline__notch">
+           <label for='email' class="mdc-floating-label">New Phone Number</label>
+     </div>
+     <div class="mdc-notched-outline__trailing"></div>
+ </div>
+</div>
+<div  class='mb-10 mt-10'>
+  <button class='mdc-button mdc-theme--primary-bg full-width' id='change-number-btn'>
+  <span class='mdc-button__label mdc-theme--on-primary'>Change<span>
+</button>
+  </div>`
+
+  const oldNumber = new mdc.textField.MDCTextField(document.getElementById("old-number"))
+  const newNumber = new mdc.textField.MDCTextField(document.getElementById("new-number"));
+  newNumber.focus();
+  const submitBtn = document.getElementById('change-number-btn');
+
+  submitBtn.addEventListener("click",function(){
+    showReLoginDialog();
+  })
+
 }
 
 function createUserDetails() {

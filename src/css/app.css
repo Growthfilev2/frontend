@@ -565,8 +565,8 @@ iframe {
   border: 0px;
 }
 
-#view-iframe {
-  /* min-height: 50vh; */
+.full-width {
+  width: 100%;
 }
 
 #form-iframe {

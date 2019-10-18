@@ -738,7 +738,7 @@ function updateName() {
   <span class="mdc-top-app-bar__title">Update Name</span>
   `
   const header = getHeader('app-header', backIcon, '');
-  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-name'>
 
 <div class="mdc-text-field mdc-text-field--outlined mt-10" id='name'>
   <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName}' type='text' >
@@ -756,8 +756,8 @@ function updateName() {
 </div>
 
 <div  class='mb-10 mt-10'>
-<button class='mdc-button mdc-theme--primary-bg' id='name-btn'>
-<span class='mdc-button__label mdc-theme--on-primary'>Update<span>
+  <button class='mdc-button mdc-theme--primary-bg' id='name-btn'>
+  <span class='mdc-button__label mdc-theme--on-primary'>Update<span>
 </button>
 </div>
   </div>`

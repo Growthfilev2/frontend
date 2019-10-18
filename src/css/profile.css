@@ -140,3 +140,9 @@
     border-bottom-style: solid;
     border-bottom-color: #e0e0e0;
 }
+.change-phone-number,.change-name {
+    max-width: 640px;
+}
+.change-phone-number .mdc-text-field {
+    width: 100%;
+}
