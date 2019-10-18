@@ -158,3 +158,18 @@ function menuItemMap(item, geopoint) {
     ${spanTag}`
     return li
 }
+
+function textFieldTelephone(attr) {
+return `
+<div class="${attr.customClass ? attr.customClass :''} mdc-text-field mdc-text-field--outlined mt-10 ${attr.disabled ? 'mdc-text-field--disabled' :''} ${attr.label ? '' :'mdc-text-field--no-label'}" id='${attr.id}'>
+<input class="mdc-text-field__input" value='${attr.value}' type='tel' ${attr.disabled ? 'disabled':''}>
+<div class="mdc-notched-outline">
+<div class="mdc-notched-outline__leading"></div>
+${attr.label ?`<div class="mdc-notched-outline__notch">
+<label for='email' class="mdc-floating-label mdc-floating-label--float-above ">${attr.label}</label>
+</div>`  :''}
+<div class="mdc-notched-outline__trailing"></div>
+</div>
+</div>
+`
+}

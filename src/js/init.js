@@ -170,7 +170,7 @@ function firebaseUiConfig() {
 
 
 function userSignedOut() {
-
+  progressBar.close();
   var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
@@ -449,11 +449,10 @@ function showReLoginDialog(heading, contentText) {
   const content = `<h3 class="mdc-typography--headline6 mdc-theme--primary">${contentText}</h3>`
   const dialog = new Dialog(heading, content).create();
   dialog.open();
-  dialog.buttons_[1].textContent = 'RE-LOGIN'
-  dialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept') return;
-    revokeSession();
-  })
+  dialog.buttons_[1].textContent = 'RE-LOGIN';
+  return dialog;
+
+
 }
 
 

@@ -17,6 +17,7 @@ const requestFunctionCaller = {
   backblaze: backblaze,
   updateAuth: updateAuth,
   comment: comment,
+  changePhoneNumber:changePhoneNumber
 
 }
 
@@ -232,6 +233,17 @@ function comment(body, meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}activities/comment`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
+  return http(req)
+}
+
+function changePhoneNumber(body,meta) {
+  console.log('change number')
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}changePhoneNumber`,
     body: JSON.stringify(body),
     token: meta.user.token
   }

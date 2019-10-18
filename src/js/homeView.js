@@ -914,7 +914,11 @@ function emailVerificationWait(updateOnly) {
 function handleEmailError(error) {
   progressBar.close()
   if (error.code === 'auth/requires-recent-login') {
-    showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
+    const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
+    dialog.listen('MDCDialog:closed', function (evt) {
+      if (evt.detail.action !== 'accept') return;
+      revokeSession();
+    })
     return;
   }
   snacks(error.message);

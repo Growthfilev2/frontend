@@ -107,41 +107,97 @@ function changePhoneNumber() {
   `
   const header = getHeader('app-header', backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number'>
-  <div class="mdc-text-field mdc-text-field--outlined mt-10 mdc-text-field--disabled" id='old-number'>
-  <input class="mdc-text-field__input" value='${auth.phoneNumber}' type='tel' disabled>
- <div class="mdc-notched-outline">
-     <div class="mdc-notched-outline__leading"></div>
-     <div class="mdc-notched-outline__notch">
-           <label for='email' class="mdc-floating-label mdc-floating-label--float-above ">Current Phone Number</label>
-     </div>
-     <div class="mdc-notched-outline__trailing"></div>
- </div>
-</div>
+  
+  <div class='change-number-form full-width'>
+    <div class='old-phone-number-container'>
+      ${textFieldTelephone({
+        disabled:true,
+        value:auth.phoneNumber,
+        label:'Current phone number',
+        id:'old-phone-number',
+        customClass:'full-width'
+      })}
+    </div>
+    <h3 class='mdc-typography--body1'>Enter your new phone number with country code</h3>
+    <div class='new-phone-number-container full-width'>
+    <span class="mdc-typography--headline5 plus-synbol">+</span>
+      ${textFieldTelephone({
+        disable:false,
+        value:'91',
+        id:'new-phone-number-country-code',
+        customClass:'country-code'
+      })}
+     
+      ${textFieldTelephone({
+        disable:false,
+        value:'',
+        label:'New phone number',
+        id:'new-phone-number',
+        customClass:'new-number-field full-width'
+      })}
+     
+    </div>
+  
+    <div class="mdc-theme--error mt-10"	id='change-number-helper'></div>
+   
+    <div  class='mb-10 mt-10'>
+      <button class='mdc-button mdc-theme--primary-bg full-width' id='change-number-btn'>
+      <span class='mdc-button__label mdc-theme--on-primary'>Change<span>
+    </button>
+  </div>
 
-<div class="mdc-text-field mdc-text-field--outlined mt-10" id='new-number'>
-  <input class="mdc-text-field__input" required value='' type='tel'>
- <div class="mdc-notched-outline">
-     <div class="mdc-notched-outline__leading"></div>
-     <div class="mdc-notched-outline__notch">
-           <label for='email' class="mdc-floating-label">New Phone Number</label>
-     </div>
-     <div class="mdc-notched-outline__trailing"></div>
- </div>
-</div>
-<div  class='mb-10 mt-10'>
-  <button class='mdc-button mdc-theme--primary-bg full-width' id='change-number-btn'>
-  <span class='mdc-button__label mdc-theme--on-primary'>Change<span>
-</button>
   </div>`
 
-  const oldNumber = new mdc.textField.MDCTextField(document.getElementById("old-number"))
-  const newNumber = new mdc.textField.MDCTextField(document.getElementById("new-number"));
+  const oldNumber = new mdc.textField.MDCTextField(document.getElementById("old-phone-number"))
+  const newNumber = new mdc.textField.MDCTextField(document.getElementById("new-phone-number"));
+  const countryCode = new mdc.textField.MDCTextField(document.getElementById('new-phone-number-country-code'))
   newNumber.focus();
   const submitBtn = document.getElementById('change-number-btn');
 
   submitBtn.addEventListener("click",function(){
-    showReLoginDialog();
+    document.getElementById("change-number-helper").textContent = ''
+    if(!countryCode.value) {
+      setHelperInvalid(countryCode)
+      document.getElementById("change-number-helper").textContent =  'Please Enter a country code';
+      return;
+    }
+    if(!newNumber.value) {
+      setHelperInvalid(newNumber)
+      document.getElementById("change-number-helper").textContent =  'Please Enter your new mobile number';
+      return;
+    }
+    const newNumberValue = '+'+countryCode.value+newNumber.value;
+
+    if(oldNumber.value === newNumberValue) {
+      setHelperInvalid(newNumber)
+      document.getElementById("change-number-helper").textContent =  'Current phone number cannot be same as new phone number';
+      return;
+    }
+
+    console.log(newNumberValue)
+    const dialog = showReLoginDialog('Change Phone Number',`On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value},to change your phone number`);
+    dialog.listen('MDCDialog:closed', function (evt) {
+      if (evt.detail.action !== 'accept') return;
+      progressBar.open();
+
+      requestCreator('changePhoneNumber',{
+        newPhoneNumber:newNumberValue
+      }).then(function(response){
+        console.log(response)
+      }).catch(function(error){
+        progressBar.close();
+        console.log(error.response)
+        snacks(error.response.message);
+      })
+    })
   })
+
+}
+
+function setHelperInvalid(field,text) {
+  field.focus();
+  field.foundation_.setValid(false);
+  field.foundation_.adapter_.shakeLabel(true);
 
 }
 
