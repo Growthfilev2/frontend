@@ -154,39 +154,45 @@ function changePhoneNumber() {
   newNumber.focus();
   const submitBtn = document.getElementById('change-number-btn');
 
-  submitBtn.addEventListener("click",function(){
+  submitBtn.addEventListener("click", function () {
     document.getElementById("change-number-helper").textContent = ''
-    if(!countryCode.value) {
+    if (!countryCode.value) {
       setHelperInvalid(countryCode)
-      document.getElementById("change-number-helper").textContent =  'Please Enter a country code';
+      document.getElementById("change-number-helper").textContent = 'Please Enter a country code';
       return;
     }
-    if(!newNumber.value) {
+    if (!newNumber.value) {
       setHelperInvalid(newNumber)
-      document.getElementById("change-number-helper").textContent =  'Please Enter your new mobile number';
+      document.getElementById("change-number-helper").textContent = 'Please Enter your new mobile number';
       return;
     }
-    const newNumberValue = '+'+countryCode.value+newNumber.value;
+    const newNumberValue = '+' + countryCode.value + newNumber.value;
 
-    if(oldNumber.value === newNumberValue) {
+    if (oldNumber.value === newNumberValue) {
       setHelperInvalid(newNumber)
-      document.getElementById("change-number-helper").textContent =  'Current phone number cannot be same as new phone number';
+      document.getElementById("change-number-helper").textContent = 'Current phone number cannot be same as new phone number';
       return;
     }
 
     console.log(newNumberValue)
-    const dialog = showReLoginDialog('Change Phone Number',`On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value},to change your phone number`);
+    const dialog = showReLoginDialog('Change Phone Number', `On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value},to change your phone number`);
     dialog.listen('MDCDialog:closed', function (evt) {
       if (evt.detail.action !== 'accept') return;
       progressBar.open();
+      const submitDialog = new Dialog('Please Wait', `<h3 class='mdc-typography--body1 mdc-theme--primary'>Do not close the app while transition is taking place.</h3>`).create('simple');
+      submitDialog.open();
+      console.log(submitDialog)
+      submitDialog.scrimClickAction = '';
 
-      requestCreator('changePhoneNumber',{
-        newPhoneNumber:newNumberValue
-      }).then(function(response){
+      requestCreator('changePhoneNumber', {
+        newPhoneNumber: newNumberValue
+      }).then(function (response) {
         console.log(response)
-      }).catch(function(error){
+      }).catch(function (error) {
         progressBar.close();
-        console.log(error.response)
+        submitDialog.close();
+        document.getElementById('app-current-panel').classList.remove('freeze')
+        console.log(error)
         snacks(error.response.message);
       })
     })
@@ -194,7 +200,7 @@ function changePhoneNumber() {
 
 }
 
-function setHelperInvalid(field,text) {
+function setHelperInvalid(field, text) {
   field.focus();
   field.foundation_.setValid(false);
   field.foundation_.adapter_.shakeLabel(true);
@@ -227,7 +233,7 @@ function createViewProfile() {
     })
     document.getElementById('tab-scroller').innerHTML = officeDom;
     const tabInit = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
-   
+
     tabInit.listen('MDCTabBar:activated', function (evt) {
 
       const me = myCreds[evt.detail.index];
@@ -250,7 +256,7 @@ function createViewProfile() {
                           }).join("")}
                           </h1>`
         }
-        
+
         if (leaves.length) {
           document.getElementById('leaves').innerHTML = `<h1 class="mdc-typography--headline6 mb-0">
                           Annual  Leave Limit

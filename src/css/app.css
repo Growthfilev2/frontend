@@ -125,7 +125,10 @@ body {
 .text-center {
   text-align: center
 }
-
+.freeze {
+  pointer-events: none;
+    opacity: 0.5;
+}
 .resize-veritcal {
   resize: vertical;
 }
@@ -645,3 +648,5 @@ iframe {
 .mdc-theme--warning {
   color: yellow !important;
 }
+
+
