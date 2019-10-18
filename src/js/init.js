@@ -5,13 +5,12 @@ let snackBar;
 let DB_VERSION = 12;
 let initApp = true;
 
+
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
   return true;
 }
-
-
 
 let native = function () {
   return {
@@ -88,8 +87,7 @@ window.onpopstate = function (event) {
 
 
 function initializeApp() {
-
-
+  
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
