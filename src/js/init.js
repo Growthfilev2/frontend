@@ -93,7 +93,8 @@ function initializeApp() {
     progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-
+    const panel = this.document.getElementById('app-current-panel');
+    
     if (!window.Worker && !window.indexedDB) {
       const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
       incompatibleDialog.open();

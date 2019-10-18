@@ -175,7 +175,7 @@ function changePhoneNumber() {
     }
 
     console.log(newNumberValue)
-    const dialog = showReLoginDialog('Change Phone Number', `On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value},to change your phone number`);
+    const dialog = showReLoginDialog('Change Phone Number', `On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value} to change your phone number`);
     dialog.listen('MDCDialog:closed', function (evt) {
       if (evt.detail.action !== 'accept') return;
       progressBar.open();
