@@ -469,7 +469,8 @@ function updateAuth(body, meta) {
     method: 'POST',
     url: `https://growthfile.com/json?action=update-auth`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
   }
 
   return http(req)
@@ -481,7 +482,8 @@ function backblaze(body, meta) {
     method: 'POST',
     url: `${meta.apiUrl}services/images`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:30000
   }
 
   return http(req)
