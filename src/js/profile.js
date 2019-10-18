@@ -93,8 +93,6 @@ function createBaseDetails() {
   <li class='mdc-list-item'>
   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
   ${auth.phoneNumber}
-  <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['changePhoneNumber'],null,null);changePhoneNumber()">edit</span>
-
   </li>
   </ul>
 </div>`
