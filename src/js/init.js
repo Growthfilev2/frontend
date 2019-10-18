@@ -122,7 +122,6 @@ function initializeApp() {
       document.getElementById('app-header').classList.remove('hidden')
       return
     }
-
     localStorage.setItem('error', JSON.stringify({}));
     checkNetworkValidation()
   });
