@@ -97,58 +97,22 @@ function manageLocation(maxRetry) {
 function handleLocationOld(maxRetry, location) {
   return new Promise(function (resolve, reject) {
     const storedLocation = getStoredLocation();
-
+    
     if (!storedLocation) return resolve(location)
-    if (isLocationOld(storedLocation, location)) {
-      if (maxRetry > 0) {
-        setTimeout(function () {
-          getLocation().then(function (newLocation) {
-            console.log('retry because new location is same to old location')
-
-            handleLocationOld(maxRetry - 1, newLocation).then(resolve).catch(reject)
-          }).catch(reject)
-        }, 1000)
-      } else {
-        console.log('retry end because no change in location')
-
-        return handleSpeedCheck(3, location, storedLocation).then(resolve).catch(reject)
-      }
-    } else {
-      console.log('new location is different')
-
-      return handleSpeedCheck(3, location, storedLocation).then(resolve).catch(reject)
+    if (!isLocationOld(storedLocation, location)) return resolve(location);
+    if (maxRetry > 0) {
+      setTimeout(function () {
+        getLocation().then(function (newLocation) {
+          console.log('retry because new location is same to old location')
+          handleLocationOld(maxRetry - 1, newLocation).then(resolve).catch(reject)
+        }).catch(reject)
+      }, 1000)
+      return
     }
+    return resolve(location);
   })
 }
 
-function handleSpeedCheck(maxRetry, location, storedLocation) {
-  return new Promise(function (resolve, reject) {
-
-    const dDelta = distanceDelta(storedLocation, location);
-    const tDelta = timeDelta(storedLocation.lastLocationTime, location.lastLocationTime)
-
-
-    if (calculateSpeed(dDelta, tDelta) >= 40) {
-      if (maxRetry > 0) {
-        setTimeout(function () {
-          getLocation().then(function (newLocation) {
-            console.log('retry for speed')
-
-            handleSpeedCheck(maxRetry - 1, newLocation, storedLocation).then(resolve).catch(reject)
-          }).catch(reject)
-        }, 1000)
-      } else {
-        console.log('retry for speed end')
-
-        return resolve(location)
-      }
-    } else {
-      console.log('no need to retry for speed')
-
-      return resolve(location);
-    }
-  })
-}
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
@@ -298,7 +262,7 @@ function requestCreator(requestType, requestBody) {
           ApplicationState.location = geopoint;
           requestBody['geopoint'] = geopoint;
           requestGenerator.body = requestBody;
-          if(requestBody.template === 'check-in') {
+          if (requestBody.template === 'check-in') {
             ApplicationState.lastCheckInCreated = time
           }
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
@@ -380,7 +344,7 @@ function handleComponentUpdation(readResponse) {
   switch (history.state[0]) {
     case 'homeView':
 
-     getSuggestions()
+      getSuggestions()
       break;
     case 'enterChat':
       if (!readResponse.response.addendum.length) return;

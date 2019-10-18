@@ -5,13 +5,12 @@ let snackBar;
 let DB_VERSION = 12;
 let initApp = true;
 
+
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
   return true;
 }
-
-
 
 let native = function () {
   return {
