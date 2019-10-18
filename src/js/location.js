@@ -11,7 +11,7 @@ function timeDelta(previousLocationTime, newLocationTime) {
     try {
         const duration = moment.duration(moment(newLocationTime).diff(previousLocationTime));
         return duration.asHours();
-    }catch(e) {
+    } catch (e) {
         console.log(e)
         const res = newLocationTime - previousLocationTime;
         return res / 36e5;
@@ -136,13 +136,13 @@ function getCellularInformation() {
     if (cellTowerArray.length) {
         body.cellTowers = cellTowerArray;
     }
+
     if (wifiAccessPointsArray.length && cellTowerArray.length) {
         body.considerIp = false
     } else {
         body.considerIp = true
     }
     return body;
-
 }
 
 function removeFalseCellIds(cellTowers) {

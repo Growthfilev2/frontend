@@ -54,7 +54,7 @@ function sendErrorRequestToMainThread(error) {
 self.onmessage = function (event) {
   meta = event.data.meta;
   if (event.data.type === 'geolocationApi') {
-    geolocationApi(event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(function (error) {
+    geolocationApi(event.data.body, event.data.meta,3).then(sendSuccessRequestToMainThread).catch(function (error) {
       self.postMessage(error);
     });
     return
@@ -239,7 +239,7 @@ function comment(body, meta) {
 }
 
 
-function geolocationApi(body, meta) {
+function geolocationApi(body, meta,retry) {
 
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
@@ -248,22 +248,41 @@ function geolocationApi(body, meta) {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
-          return reject({
-            message: JSON.parse(xhr.response).error.message,
-            body: {
-              geolocationResponse: JSON.parse(xhr.response),
-              geolocationBody: body
-            },
-          });
+          if(retry > 0 ) {
+            setTimeout(function(){
+              retry = retry -1
+              geolocationApi(body,meta,retry).then(resolve).catch(reject)
+            },1000)
+          }
+          else {
+            return reject({
+              message: JSON.parse(xhr.response).error.message,
+              body: {
+                geolocationResponse: JSON.parse(xhr.response),
+                geolocationBody: body
+              },
+            });
+          }
+          return
         }
+
         const response = JSON.parse(xhr.response);
         if (!response) {
-          return reject({
-            message: 'Response From geolocation Api ' + response,
-            body: body
-          })
+          if(retry > 0 ) {
+            setTimeout(function(){
+              retry = retry -1
+              geolocationApi(body,meta,retry).then(resolve).catch(reject)
+            },1000)
+          }
+          else {
+            return reject({
+              message: 'Response From geolocation Api ' + response,
+              body: body
+            })
+          }
+          return
         }
-        resolve({
+        return resolve({
           latitude: response.location.lat,
           longitude: response.location.lng,
           accuracy: response.accuracy,
@@ -273,9 +292,17 @@ function geolocationApi(body, meta) {
       }
     };
     xhr.onerror = function () {
-      reject({
-        message: xhr
-      })
+      if(retry > 0 ) {
+        setTimeout(function(){
+          retry = retry -1
+          geolocationApi(body,meta,retry).then(resolve).catch(reject)
+        },1000)
+      }
+      else {
+        return reject({
+          message: xhr
+        })
+      }
     }
     xhr.send(JSON.stringify(body));
   });
