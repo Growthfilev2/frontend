@@ -17,6 +17,7 @@ const requestFunctionCaller = {
   backblaze: backblaze,
   updateAuth: updateAuth,
   comment: comment,
+  changePhoneNumber:changePhoneNumber
 
 }
 
@@ -121,12 +122,14 @@ function http(request) {
     xhr.setRequestHeader('Content-Type', 'application/json')
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
     if (request.method !== 'GET') {
-      xhr.timeout = 15000;
-      xhr.ontimeout = function () {
-        return reject({
-          code: 400,
-          message: 'Request Timed Out. Please Try Again Later',
-        });
+      if(request.timeout) {
+        xhr.timeout = request.timeout;
+        xhr.ontimeout = function () {
+          return reject({
+            code: 400,
+            message: 'Request Timed Out. Please Try Again Later',
+          });
+        }
       }
     }
     xhr.onreadystatechange = function () {
@@ -233,7 +236,20 @@ function comment(body, meta) {
     method: 'POST',
     url: `${meta.apiUrl}activities/comment`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
+  }
+  return http(req)
+}
+
+function changePhoneNumber(body) {
+  console.log('change number')
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}changePhoneNumber`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout:null
   }
   return http(req)
 }
@@ -314,7 +330,8 @@ function dm(body, meta) {
     method: 'POST',
     url: `${meta.apiUrl}dm`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
   }
   return http(req)
 }
@@ -325,7 +342,8 @@ function statusChange(body, meta) {
     method: 'PATCH',
     url: `${meta.apiUrl}activities/change-status`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
   }
   return http(req)
 
@@ -338,7 +356,8 @@ function share(body, meta) {
     method: 'PATCH',
     url: `${meta.apiUrl}activities/share`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
   }
   return http(req)
 
@@ -353,7 +372,8 @@ function update(body, meta) {
     method: 'PATCH',
     url: `${meta.apiUrl}activities/update`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
   }
   return http(req)
 }
@@ -364,7 +384,8 @@ function create(requestBody, meta) {
     method: 'POST',
     url: `${meta.apiUrl}activities/create`,
     body: JSON.stringify(requestBody),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
   }
   return http(req)
 
@@ -448,7 +469,8 @@ function updateAuth(body, meta) {
     method: 'POST',
     url: `https://growthfile.com/json?action=update-auth`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:15000
   }
 
   return http(req)
@@ -460,7 +482,8 @@ function backblaze(body, meta) {
     method: 'POST',
     url: `${meta.apiUrl}services/images`,
     body: JSON.stringify(body),
-    token: meta.user.token
+    token: meta.user.token,
+    timeout:30000
   }
 
   return http(req)

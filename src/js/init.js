@@ -112,7 +112,11 @@ function initializeApp() {
           return;
         }
       }
-      document.getElementById("app-current-panel").classList.remove('hidden')
+
+      panel.innerHTML = '';
+      panel.classList.remove('hidden');
+      panel.classList.remove('freeze');
+      
       if (!initApp) {
         document.getElementById('app-header').classList.remove('hidden')
         return
@@ -120,7 +124,7 @@ function initializeApp() {
 
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
-      
+
     });
   })
 }
@@ -170,7 +174,10 @@ function firebaseUiConfig() {
 
 
 function userSignedOut() {
-
+  progressBar.close();
+  document.getElementById("dialog-container").innerHTML = '';
+  document.getElementById("app-header").classList.add("hidden");
+  document.getElementById('app-current-panel').classList.remove('freeze');
   var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
@@ -449,11 +456,10 @@ function showReLoginDialog(heading, contentText) {
   const content = `<h3 class="mdc-typography--headline6 mdc-theme--primary">${contentText}</h3>`
   const dialog = new Dialog(heading, content).create();
   dialog.open();
-  dialog.buttons_[1].textContent = 'RE-LOGIN'
-  dialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept') return;
-    revokeSession();
-  })
+  dialog.buttons_[1].textContent = 'RE-LOGIN';
+  return dialog;
+
+
 }
 
 

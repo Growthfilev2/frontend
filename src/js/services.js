@@ -266,6 +266,7 @@ function requestCreator(requestType, requestBody) {
             ApplicationState.lastCheckInCreated = time
           }
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
+          console.log('sending')
           apiHandler.postMessage(requestGenerator);
         }).catch(handleLocationError)
         return;

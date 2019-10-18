@@ -125,7 +125,10 @@ body {
 .text-center {
   text-align: center
 }
-
+.freeze {
+  pointer-events: none;
+    opacity: 0.5;
+}
 .resize-veritcal {
   resize: vertical;
 }
@@ -565,8 +568,8 @@ iframe {
   border: 0px;
 }
 
-#view-iframe {
-  /* min-height: 50vh; */
+.full-width {
+  width: 100%;
 }
 
 #form-iframe {
@@ -645,3 +648,5 @@ iframe {
 .mdc-theme--warning {
   color: yellow !important;
 }
+
+

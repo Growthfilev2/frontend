@@ -93,9 +93,118 @@ function createBaseDetails() {
   <li class='mdc-list-item'>
   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
   ${auth.phoneNumber}
+  <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['changePhoneNumber'],null,null);changePhoneNumber()">edit</span>
+
   </li>
   </ul>
 </div>`
+}
+
+function changePhoneNumber() {
+  const auth = firebase.auth().currentUser;
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Change Phone Number</span>
+  `
+  const header = getHeader('app-header', backIcon, '');
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number'>
+  
+  <div class='change-number-form full-width'>
+    <div class='old-phone-number-container'>
+      ${textFieldTelephone({
+        disabled:true,
+        value:auth.phoneNumber,
+        label:'Current phone number',
+        id:'old-phone-number',
+        customClass:'full-width'
+      })}
+    </div>
+    <h3 class='mdc-typography--body1'>Enter your new phone number with country code</h3>
+    <div class='new-phone-number-container full-width'>
+    <span class="mdc-typography--headline5 plus-synbol">+</span>
+      ${textFieldTelephone({
+        disable:false,
+        value:'91',
+        id:'new-phone-number-country-code',
+        customClass:'country-code'
+      })}
+     
+      ${textFieldTelephone({
+        disable:false,
+        value:'',
+        label:'New phone number',
+        id:'new-phone-number',
+        customClass:'new-number-field full-width'
+      })}
+     
+    </div>
+  
+    <div class="mdc-theme--error mt-10"	id='change-number-helper'></div>
+   
+    <div  class='mb-10 mt-10'>
+      <button class='mdc-button mdc-theme--primary-bg full-width' id='change-number-btn'>
+      <span class='mdc-button__label mdc-theme--on-primary'>Change<span>
+    </button>
+  </div>
+
+  </div>`
+
+  const oldNumber = new mdc.textField.MDCTextField(document.getElementById("old-phone-number"))
+  const newNumber = new mdc.textField.MDCTextField(document.getElementById("new-phone-number"));
+  const countryCode = new mdc.textField.MDCTextField(document.getElementById('new-phone-number-country-code'))
+  newNumber.focus();
+  const submitBtn = document.getElementById('change-number-btn');
+
+  submitBtn.addEventListener("click", function () {
+    document.getElementById("change-number-helper").textContent = ''
+    if (!countryCode.value) {
+      setHelperInvalid(countryCode)
+      document.getElementById("change-number-helper").textContent = 'Please Enter a country code';
+      return;
+    }
+    if (!newNumber.value) {
+      setHelperInvalid(newNumber)
+      document.getElementById("change-number-helper").textContent = 'Please Enter your new mobile number';
+      return;
+    }
+    const newNumberValue = '+' + countryCode.value + newNumber.value;
+
+    if (oldNumber.value === newNumberValue) {
+      setHelperInvalid(newNumber)
+      document.getElementById("change-number-helper").textContent = 'Current phone number cannot be same as new phone number';
+      return;
+    }
+
+    console.log(newNumberValue)
+    const dialog = showReLoginDialog('Change Phone Number', `On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value},to change your phone number`);
+    dialog.listen('MDCDialog:closed', function (evt) {
+      if (evt.detail.action !== 'accept') return;
+      progressBar.open();
+      const submitDialog = new Dialog('Please Wait', `<h3 class='mdc-typography--body1 mdc-theme--primary'>Do not close the app while transition is taking place.</h3>`).create('simple');
+      submitDialog.open();
+      console.log(submitDialog)
+      submitDialog.scrimClickAction = '';
+
+      requestCreator('changePhoneNumber', {
+        newPhoneNumber: newNumberValue
+      }).then(function (response) {
+        console.log(response)
+      }).catch(function (error) {
+        progressBar.close();
+        submitDialog.close();
+        document.getElementById('app-current-panel').classList.remove('freeze')
+        console.log(error)
+        snacks(error.response.message);
+      })
+    })
+  })
+
+}
+
+function setHelperInvalid(field, text) {
+  field.focus();
+  field.foundation_.setValid(false);
+  field.foundation_.adapter_.shakeLabel(true);
+
 }
 
 function createUserDetails() {
@@ -124,7 +233,7 @@ function createViewProfile() {
     })
     document.getElementById('tab-scroller').innerHTML = officeDom;
     const tabInit = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
-   
+
     tabInit.listen('MDCTabBar:activated', function (evt) {
 
       const me = myCreds[evt.detail.index];
@@ -147,7 +256,7 @@ function createViewProfile() {
                           }).join("")}
                           </h1>`
         }
-        
+
         if (leaves.length) {
           document.getElementById('leaves').innerHTML = `<h1 class="mdc-typography--headline6 mb-0">
                           Annual  Leave Limit

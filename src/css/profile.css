@@ -140,3 +140,26 @@
     border-bottom-style: solid;
     border-bottom-color: #e0e0e0;
 }
+
+.change-phone-number,.change-name {
+    max-width: 640px;
+}
+
+.change-number-form .new-phone-number-container {
+    display: flex;
+    align-items: center;
+    
+}
+.change-number-form .plus-synbol {
+    color: gray;
+    margin-right: 10px;
+}
+.change-number-form .new-phone-number-container .country-code {
+    max-width: 100px;
+    margin-right: 10px;
+}
+
+#change-number-helper {
+    text-align: center;
+    
+}
