@@ -1,7 +1,7 @@
 function attendenceView(sectionContent) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
-  
+
   getReportSubs('attendance').then(function (subs) {
     console.log(subs)
     document.getElementById('start-load').classList.add('hidden')
@@ -23,11 +23,11 @@ function attendenceView(sectionContent) {
   getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (myCreds) {
     console.log(myCreds);
     const officeEmployee = {}
-    myCreds.forEach(function(cred) {
+    myCreds.forEach(function (cred) {
       officeEmployee[cred.office] = cred;
     })
     createAttendanceCard(officeEmployee)
-  }).catch(function(error){
+  }).catch(function (error) {
     createAttendanceCard();
   });
 
@@ -41,57 +41,56 @@ function createAttendanceCard(employeeRecord) {
 
     let monthlyString = ''
     let month;
-    [{   
+    [{
       date: 5,
       month: 9,
       year: 2019,
       office: "Puja Capital",
       officeId: "asdasd",
       onLeave: false,
-      onAr: true, 
-      onHoliday: false, 
-      weeklyOff: false, 
+      onAr: true,
+      onHoliday: false,
+      weeklyOff: false,
       attendance: 0,
-      addendum:[{
+      addendum: [{
           addendumId: "asdasd",
           latitude: "28.123",
           longitude: "77.123",
           timestamp: 1571660521701,
           comment: "asjdpoasjpodjasd"
-      },
-      {
-        addendumId: "asdasd",
-        latitude: "28.123",
-        longitude: "77.123",
-        timestamp: 1571660521701,
-        comment: "asjdpoasjpodjasd"
-    },
-    {
-      addendumId: "asdasd",
-      latitude: "28.123",
-      longitude: "77.123",
-      timestamp: Date.now(),
-      comment: "asjdpoasjpodjasd"
-  }
+        },
+        {
+          addendumId: "asdasd",
+          latitude: "28.123",
+          longitude: "77.123",
+          timestamp: 1571660521701,
+          comment: "asjdpoasjpodjasd"
+        },
+        {
+          addendumId: "asdasd",
+          latitude: "28.123",
+          longitude: "77.123",
+          timestamp: Date.now(),
+          comment: "asjdpoasjpodjasd"
+        }
 
-    ]
-  }].forEach(function (record) {
+      ]
+    }].forEach(function (record) {
       if (month !== record.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = record.month;
-      monthlyString += attendaceCard(record,employeeRecord);
+      monthlyString += attendaceCard(record, employeeRecord);
     });
-    
-    if(parent) {
-      parent.innerHTML = monthlyString;
-      toggleReportCard('.attendace-card');
-   
-      [].map.call(document.querySelectorAll('.status-button'), function (el) {
-        el.addEventListener('click', checkStatusSubscription)
-      });
-    }
-   
+
+    if (!parent) return;
+    parent.innerHTML = monthlyString;
+    toggleReportCard('.attendace-card');
+
+    [].map.call(document.querySelectorAll('.status-button'), function (el) {
+      el.addEventListener('click', checkStatusSubscription)
+    });
+
   }).catch(function (error) {
     console.log(error)
     document.getElementById('start-load').classList.add('hidden')
@@ -104,7 +103,7 @@ function createAttendanceCard(employeeRecord) {
   })
 }
 
-function attendaceCard(data,employeeRecord) {
+function attendaceCard(data, employeeRecord) {
   return `<div class='mdc-card mdc-card--outlined attendance-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet'>
       <div class='mdc-card__primary-action'>
         <div class="demo-card__primary">
@@ -161,24 +160,24 @@ function getAttendanceTime(addendum) {
 
 function calculateWorkedHours(addendums) {
   const length = addendums.length
-  if(!length || length == 1) return ''
-  const duration = moment.duration(moment(new Date(addendums[length -1].timestamp),'DD/MM/YYYY HH:mm').diff(moment(new Date(addendums[0].timestamp),'DD/MM/YYYY HH:mm'))).asHours()
+  if (!length || length == 1) return ''
+  const duration = moment.duration(moment(new Date(addendums[length - 1].timestamp), 'DD/MM/YYYY HH:mm').diff(moment(new Date(addendums[0].timestamp), 'DD/MM/YYYY HH:mm'))).asHours()
   console.log(duration)
   return Number(duration).toFixed(1)
 
 }
 
 function attendanceStatusType(data) {
-  if(data.onLeave) {
+  if (data.onLeave) {
     return 'Applied for leave'
   }
-  if(data.onAr) {
+  if (data.onAr) {
     return 'Applied for AR'
   }
-  if(data.onHoliday) {
+  if (data.onHoliday) {
     return 'Holiday'
   }
-  if(data.weeklyOff) {
+  if (data.weeklyOff) {
     return 'Weekly off'
   }
 }
@@ -206,7 +205,7 @@ function attendaceButtons(attendaceObject) {
     Apply AR
   </button>
     `
-    
+
   }
   if (attendaceObject.attendance > 0 && attendaceObject.attendance < 1) {
 
@@ -254,7 +253,7 @@ function getMonthlyData() {
         cursor.continue();
       }
     tx.oncomplete = function () {
-      
+
       return resolve(result);
     }
     tx.onerror = function () {

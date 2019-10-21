@@ -16,12 +16,11 @@ function paymentView(sectionContent) {
 
             month = payment.month;
             monthlyString += paymentCard(payment);
-
         })
-        if (parent) {
-            parent.innerHTML = monthlyString;
-            toggleReportCard('.payment-card')
-        }
+        if (!parent) return;
+        parent.innerHTML = monthlyString;
+        toggleReportCard('.payment-card')
+        
     }).catch(function (error) {
         console.log(error)
         handleError({

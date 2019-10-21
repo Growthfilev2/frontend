@@ -2,14 +2,14 @@ function expenseView(sectionContent) {
     sectionContent.innerHTML = reimDom();
     sectionContent.dataset.view = 'reimbursements'
 
-    getReportSubs('reimbursement').then(function(subs){
+    getReportSubs('reimbursement').then(function (subs) {
         const listEl = document.getElementById('suggested-list-reim')
         if (subs.length && listEl) {
             listEl.innerHTML = templateList(subs);
             const listInit = new mdc.list.MDCList(listEl)
             handleTemplateListClick(listInit)
         }
-    }).catch(function(error) {
+    }).catch(function (error) {
         console.log(error)
         handleError({
             message: error.message,
@@ -20,7 +20,7 @@ function expenseView(sectionContent) {
         })
     })
 
-    getReimMonthlyData().then(function(reimbursementData){
+    getReimMonthlyData().then(function (reimbursementData) {
         console.log(reimbursementData)
         let month = monthlyString = '';
         const parent = document.getElementById('reimbursements')
@@ -31,10 +31,17 @@ function expenseView(sectionContent) {
             month = record.month;
             monthlyString += reimbursementCard(record);
         })
-        if(parent)  {
-            parent.innerHTML = monthlyString;
-            toggleReportCard('.reim-card')
-        }
+        if (!parent) return
+        parent.innerHTML = monthlyString;
+        toggleReportCard('.reim-card');
+        [].map.call(document.querySelectorAll('.reim-amount'), function (el) {
+            const id = el.dataset.id;
+            db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
+                const activity = event.target.result;
+                const heading = createActivityHeading(activity)
+                showViewDialog(heading, activity, 'view-form');
+            }
+        })
     })
 }
 
@@ -77,7 +84,7 @@ function reimbursementCard(data) {
 
 
 
-function convertAmountToCurrency(amount,currency) {
+function convertAmountToCurrency(amount, currency) {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: currency || 'INR'
@@ -169,8 +176,8 @@ function commonCardHeading(value) {
     const headingContainer = createElement('div', {
         className: 'heading-container'
     })
-    const dropdownContainer = createElement("div",{
-        className:'dropdown-container dropdown'
+    const dropdownContainer = createElement("div", {
+        className: 'dropdown-container dropdown'
     })
     const dropDown = createElement('i', {
         className: 'material-icons',
@@ -191,7 +198,7 @@ function commonCardHeading(value) {
         className: 'demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0',
         textContent: `${value.office}`
     });
-    
+
     monthlyDateCont.appendChild(dayDiv)
     monthlyDateCont.appendChild(date)
 
