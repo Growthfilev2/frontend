@@ -501,13 +501,13 @@ function updateReports(statusObject, reportObjectStore) {
 
 function updateAttendance(attendanceData = [],store) {
   attendanceData.forEach(function(value) {
-    const sortKey = moment(`${value.date}-${value.month}-${value.year}`,'DD-MM-YYYY').valueOf()
+    const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
     value.key = sortKey
     store.put(value)
   })
 }
 
-function updateReimbursements(reimbursementData,store) {
+function updateReimbursements(reimbursementData = [],store) {
   [{
     date: 9,
     month: 9,
@@ -572,15 +572,49 @@ function updateReimbursements(reimbursementData,store) {
       claimId: "asdasd", 
   }
 }].forEach(function(value) {
-  const sortKey = moment(`${value.date}-${value.month}-${value.year}`,'DD-MM-YYYY').valueOf()
+  const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
   value.key = sortKey
     store.put(value)
   })
 }
 
-function updatePayments(paymentData,store) {
-  paymentData.forEach(function(value) {
-    const sortKey = moment(`${value.date}-${value.month}-${value.year}`,'DD-MM-YYYY').valueOf()
+function updatePayments(paymentData = [],store) {
+
+  [{
+    "date": 5,
+    "month": 9,
+    year: 2019,
+    id: "217093",
+    'currency': 'INR',
+    "lastUpdated": 1571401463191, 
+    "type": "deduction", 
+    "amount": "-500", 
+    "createdAt": 1571401463191, 
+    "cycleStartDate": 1569868200000, 
+    "cycleEndDate": 1572546599999, 
+    "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
+    "office": 'Puja Capital',
+    "officeId": 'gR0XF3YA03MA472QWkNp',
+    status:'Processing'
+},
+{
+  "date": 5,
+  "month": 11,
+  year: 2018,
+  id: "2",
+  'currency': 'INR',
+  "lastUpdated": 1571401463191, 
+  "type": "deduction", 
+  "amount": "-500", 
+  "createdAt": 1571401463191, 
+  "cycleStartDate": 1569868200000, 
+  "cycleEndDate": 1572546599999, 
+  "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
+  "office": 'Puja Capital',
+  "officeId": 'gR0XF3YA03MA472QWkNp',
+  status:'Processing'
+}].forEach(function(value) {
+    const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
     value.key = sortKey
     store.put(value)
   })
@@ -767,42 +801,9 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
-  // updateAttendance(read.attendace,attendace)
+  updateAttendance(read.attendace,attendaceStore)
   updateReimbursements(read.reimbursement,reimbursementStore)
-  updatePayments([{
-    "date": 5,
-    "month": 9,
-    year: 2019,
-    id: "217093",
-    'currency': 'INR',
-    "lastUpdated": 1571401463191, 
-    "type": "deduction", 
-    "amount": "-500", 
-    "createdAt": 1571401463191, 
-    "cycleStartDate": 1569868200000, 
-    "cycleEndDate": 1572546599999, 
-    "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
-    "office": 'Puja Capital',
-    "officeId": 'gR0XF3YA03MA472QWkNp',
-    status:'Processing'
-},
-{
-  "date": 5,
-  "month": 11,
-  year: 2018,
-  id: "2",
-  'currency': 'INR',
-  "lastUpdated": 1571401463191, 
-  "type": "deduction", 
-  "amount": "-500", 
-  "createdAt": 1571401463191, 
-  "cycleStartDate": 1569868200000, 
-  "cycleEndDate": 1572546599999, 
-  "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
-  "office": 'Puja Capital',
-  "officeId": 'gR0XF3YA03MA472QWkNp',
-  status:'Processing'
-}],paymentStore)
+  updatePayments(read.payment,paymentStore)
 
 
   read.activities.forEach(function (activity) {
