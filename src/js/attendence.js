@@ -49,15 +49,15 @@ function createAttendanceCard(employeeRecord) {
       office: "Puja Capital",
       officeId: "asdasd",
       onLeave: false,
-      onAr: false, 
-      onHoliday: true, 
+      onAr: true, 
+      onHoliday: false, 
       weeklyOff: false, 
       attendance: 0,
       addendum:[{
           addendumId: "asdasd",
           latitude: "28.123",
           longitude: "77.123",
-          timestamp: 1571660508914,
+          timestamp: 1571660521701,
           comment: "asjdpoasjpodjasd"
       },
       {
@@ -78,7 +78,7 @@ function createAttendanceCard(employeeRecord) {
     ]
   }].forEach(function (record) {
       if (month !== record.month) {
-        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
+        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = record.month;
       monthlyString += attendaceCard(record,employeeRecord);
@@ -121,21 +121,25 @@ function createAttendanceCard(employeeRecord) {
 }
 
 function attendaceCard(data,employeeRecord) {
-  return `<div class='mdc-card mdc-card--outlined attendance-card'>
+  return `<div class='mdc-card mdc-card--outlined attendance-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet'>
       <div class='mdc-card__primary-action'>
         <div class="demo-card__primary">
-          <div class="month-date-cont">
-            <div class="day">${cardDate(data)}</div>
-            <div class="date">${data.date}</div>
-          </div>
-          <div class="heading-container">
-            <span class="demo-card__title mdc-typography ${data.attendance < 1 ? 'mdc-theme--error' :'mdc-theme--success'}">Attendance : ${data.attendance}</span>
-            <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0 card-office-title">${data.office}</h3>
-          </div>
+        <div class='left'>
+            <div class="month-date-cont">
+              <div class="day">${cardDate(data)}</div>
+              <div class="date">${data.date}</div>
+            </div>
+            <div class="heading-container">
+              <span class="demo-card__title mdc-typography ${data.attendance < 1 ? 'mdc-theme--error' :'mdc-theme--success'}">Attendance : ${data.attendance}</span>
+              <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0 card-office-title">${data.office}</h3>
+            </div>
+        </div>
+        <div class='right'>
           <div class="dropdown-container dropdown">
             <i class="material-icons">keyboard_arrow_down</i>
             <div class='mdc-typography--subtitle2 mdc-theme--primary'>${attendanceStatusType(data)}</div>
           </div>
+        </div>
         </div>
         <div class='attendace-detail-container hidden'>
         <div class='text-container'>
@@ -148,7 +152,7 @@ function attendaceCard(data,employeeRecord) {
             ` :''}
           </div>
         </div>
-         <div class='time-container'>
+      <div class='time-container'>
           ${data.addendum.map(ad => {
               return `<a class='time addendum-value mdc-typography--headline6 mdc-theme--primary' href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'>
                   ${getAttendanceTime(ad)}
@@ -158,10 +162,10 @@ function attendaceCard(data,employeeRecord) {
          </div>         
         </div>
       </div>
-      ${data.attendance == 1 ? '' :`<div class="mdc-card__actions ${data.attendance > 0 && data.attendance < 1 ? 'mdc-card__actions--full-bleed' :''}">
-      ${attendaceButtons(data)}
-</div>`}
-      
+        ${data.attendance == 1 ? '' :`<div class="mdc-card__actions ${data.attendance > 0 && data.attendance < 1 ? 'mdc-card__actions--full-bleed' :''}">
+        ${attendaceButtons(data)}
+      </div>`
+    }
   </div>`
 }
 
@@ -174,17 +178,18 @@ function getAttendanceTime(addendum) {
 function calculateWorkedHours(addendums) {
   const length = addendums.length
   if(!length || length == 1) return ''
-  const duration = moment.duration(moment(addendums[length -1].timestamp).diff(addendums[0].timestamp)).asHours()
-  return Number(duration).toFixed(2)
+  const duration = moment.duration(moment(new Date(addendums[length -1].timestamp),'DD/MM/YYYY HH:mm').diff(moment(new Date(addendums[0].timestamp),'DD/MM/YYYY HH:mm'))).asHours()
+  console.log(duration)
+  return Number(duration).toFixed(1)
 
 }
 
 function attendanceStatusType(data) {
 if(data.onLeave) {
-  return 'You were on leave'
+  return 'Applied for leave'
 }
 if(data.onAr) {
-  return 'You applied for AR'
+  return 'Applied for AR'
 }
 if(data.onHoliday) {
   return 'Holiday'

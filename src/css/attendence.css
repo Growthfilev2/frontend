@@ -58,7 +58,12 @@
   color: green;
 }
 
-
+.attendance-card .demo-card__primary {
+  display: flex;
+}
+.attendance-card  .right {
+  margin-left: auto;
+}
 .month-container {
   display: table;
 
@@ -78,15 +83,19 @@
   margin-bottom: 10px;
 }
 
+
+
 .heading-container {
   float: left;
 }
 .dropdown {
   float: right;
   cursor: pointer;
+  display: grid;
 }
 .dropdown i {
   float: right;
+  text-align: right;
 }
 .card-office-title {
   margin-top: 7px;
@@ -98,7 +107,7 @@
   padding-top: 0px;
 }
 .attendance-card .time-container {
-  padding-top: 10px;
+  padding-top: 20px;
   width: 100%;
   text-align: center;
 }

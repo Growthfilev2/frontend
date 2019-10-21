@@ -714,6 +714,7 @@ function successResponse(read, param, db, resolve, reject) {
     "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
     "office": 'Puja Capital',
     "officeId": 'gR0XF3YA03MA472QWkNp',
+    status:'Processing'
 }],paymentStore)
 
 

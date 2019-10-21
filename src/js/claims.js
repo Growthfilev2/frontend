@@ -60,7 +60,7 @@ function expenseView(sectionContent) {
     })
 }
 
-function convertNumberToINR(amount,currency) {
+function convertAmountToCurrency(amount,currency) {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: currency || 'INR'
