@@ -208,7 +208,7 @@ function startApp() {
       attendance.createIndex('attendance','attendance');
     
       const payments = db.createObjectStore('payment',{
-        keyPath:'paymentId'
+        keyPath:'id'
       })
       payments.createIndex('date','date')
       payments.createIndex('month','month')
@@ -665,7 +665,7 @@ function createObjectStores(db, uid) {
   attendance.createIndex('attendance','attendance');
 
   const payments = db.createObjectStore('payment',{
-    keyPath:'paymentId'
+    keyPath:'id'
   })
   payments.createIndex('date','date')
   payments.createIndex('month','month')

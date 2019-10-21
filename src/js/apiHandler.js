@@ -499,16 +499,16 @@ function updateReports(statusObject, reportObjectStore) {
   })
 }
 
-function updateAttendance(attendanceData,store) {
-  attendanceData.forEach(function(value) {
-    store.put(value)
-  })
-}
-function updateReimbursements(reimbursementData,store) {
-  reimbursementData.forEach(function(value) {
-    store.put(value)
-  })
-}
+// function updateAttendance(attendanceData,store) {
+//   attendanceData.forEach(function(value) {
+//     store.put(value)
+//   })
+// }
+// function updateReimbursements(reimbursementData,store) {
+//   reimbursementData.forEach(function(value) {
+//     store.put(value)
+//   })
+// }
 
 function updatePayments(paymentData,store) {
   paymentData.forEach(function(value) {
@@ -643,13 +643,13 @@ function updateSubscription(subscription, tx) {
 
 function successResponse(read, param, db, resolve, reject) {
 
-  const updateTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity', 'addendum', 'root', 'users','attendace','reimbursement','payments'], 'readwrite');
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity', 'addendum', 'root', 'users','attendance','reimbursement','payment'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
   const userStore = updateTx.objectStore('users');
-  const attendace = updateTx.objectStore('attendance')
-  const reimbursement = updateTx.objectStore('reimbursement')
-  const payments = updateTx.objectStore('payments')
+  const attendaceStore = updateTx.objectStore('attendance')
+  const reimbursementStore = updateTx.objectStore('reimbursement')
+  const paymentStore = updateTx.objectStore('payment')
 
   let counter = {};
   let userTimestamp = {}
@@ -697,9 +697,24 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
-  updateAttendance(read.attendace,attendace)
-  updateReimbursements(read.attendace,reimbursement)
-  updatePayments(read.attendace,payments)
+  // updateAttendance(read.attendace,attendace)
+  // updateReimbursements(read.reimbursement,reimbursement)
+  updatePayments([{
+    "date": 5,
+    "month": 9,
+    year: 2019,
+    id: "217093",
+    'currency': 'INR',
+    "lastUpdated": 1571401463191, 
+    "type": "deduction", 
+    "amount": "-500", 
+    "createdAt": 1571401463191, 
+    "cycleStartDate": 1569868200000, 
+    "cycleEndDate": 1572546599999, 
+    "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
+    "office": 'Puja Capital',
+    "officeId": 'gR0XF3YA03MA472QWkNp',
+}],paymentStore)
 
 
   read.activities.forEach(function (activity) {
