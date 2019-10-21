@@ -24,11 +24,11 @@ function reportView() {
       return;
     }
     if (evt.detail.index == 1) return expenseView(sectionContent)
-    if(evt.detail.index ==2) return paymentView(sectionContent);
+    if (evt.detail.index == 2) return paymentView(sectionContent);
 
-   
+
   })
-  
+
   tabList.activateTab(0)
 }
 
@@ -107,11 +107,11 @@ function getReportSubs(reportName) {
         cursor.continue();
         return;
       }
-      if(cursor.value.template === 'attendance regularization') {
+      if (cursor.value.template === 'attendance regularization') {
         cursor.continue();
         return
       }
-      
+
       subs.push(cursor.value)
       cursor.continue();
     }

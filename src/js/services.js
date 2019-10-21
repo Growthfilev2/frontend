@@ -368,6 +368,10 @@ function handleComponentUpdation(readResponse) {
           expenseView(sectionContent)
           return
         }
+        if (sectionContent.dataset.view === 'payments') {
+          paymentView(sectionContent)
+          return
+        }
       } catch (e) {
         console.log(e)
       }

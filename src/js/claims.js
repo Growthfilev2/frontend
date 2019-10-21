@@ -60,10 +60,10 @@ function expenseView(sectionContent) {
     })
 }
 
-function convertNumberToINR(amount) {
+function convertNumberToINR(amount,currency) {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
-        currency: 'INR'
+        currency: currency || 'INR'
     }).format(amount)
 }
 
@@ -152,19 +152,30 @@ function commonCardHeading(value) {
     const headingContainer = createElement('div', {
         className: 'heading-container'
     })
+    const dropdownContainer = createElement("div",{
+        className:'dropdown-container dropdown'
+    })
     const dropDown = createElement('i', {
-        className: 'material-icons dropdown',
+        className: 'material-icons',
         textContent: 'keyboard_arrow_down'
     })
+    const dropdownMeta = createElement('h3', {
+        className: 'mdc-typography--subtitle2  capitalize',
+        textContent: `${value.template || value.type}`
+    })
+    dropdownContainer.appendChild(dropDown);
+    dropdownContainer.appendChild(dropdownMeta);
 
     const heading = createElement('span', {
         className: 'demo-card__title mdc-typography',
-        textContent: `${value.amount}`
+        textContent: `${convertNumberToINR(value.amount,value.currency)}`
     })
     const subHeading = createElement('h3', {
         className: 'demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0',
         textContent: `${value.office}`
     })
+
+   
 
     monthlyDateCont.appendChild(dayDiv)
     monthlyDateCont.appendChild(date)
@@ -172,9 +183,10 @@ function commonCardHeading(value) {
     demo.appendChild(monthlyDateCont)
     headingContainer.appendChild(heading)
     headingContainer.appendChild(subHeading)
-    demo.appendChild(headingContainer)
-    demo.appendChild(dropDown)
 
+
+    demo.appendChild(headingContainer)
+    demo.appendChild(dropdownContainer)
 
     const detailSection = createElement('div', {
         className: 'card-detail-section hidden'

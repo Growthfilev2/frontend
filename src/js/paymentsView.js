@@ -1,8 +1,8 @@
 function paymentView(sectionContent) {
-    sectionContent.innerHTML = reimDom();
-    sectionContent.dataset.view = 'reimbursements'
-    const tx = db.transaction('payments')
-    const index = tx.objectStore('payments').index('month')
+    sectionContent.innerHTML = paymentDom();
+    sectionContent.dataset.view = 'payments'
+    const tx = db.transaction('payment')
+    const index = tx.objectStore('payment').index('month')
     const frag = document.createDocumentFragment();
     let month = ''
     index.openCursor(null, 'prev').onsuccess = function (event) {
@@ -14,10 +14,10 @@ function paymentView(sectionContent) {
                 textContent: moment(`${cursor.value.month + 1}-${cursor.value.year}`, 'MM-YYYY').format('MMMM YYYY')
             }))
         };
-        
+
         month = cursor.value.month;
         const card = commonCardHeading(cursor.value);
-        // card.queryselector('.mdc-card__primary-action').appendChild()
+        card.querySelector('.card-detail-section').innerHTML= paymentDetails(cursor.value);
         frag.appendChild(card)
         cursor.continue();
     }
@@ -28,8 +28,15 @@ function paymentView(sectionContent) {
     }
 }
 
-function paymentDetails() {
-
+function paymentDetails(paymentData) {
+    return `<div class='payment-details'>
+        ${paymentData.createdAt ? ` <h3 class='mdc-typography--body1'>
+        Created  : ${moment(paymentData.createdAt).format('DD/MM/YYYY hh:mm A')}
+    </h3>` :''}
+        ${paymentData.cycleStartDate && paymentData.cycleEndDate ?`<h3 class='mdc-typography--body1 mb-0'>
+        Cycle  : ${moment(paymentData.cycleStartDate).format('DD/MM/YYYY')} - ${moment(paymentData.cycleEndDate).format('DD/MM/YYYY')}
+    </h3>` :'' }
+    </div>` 
 }
 
 function paymentDom() {
