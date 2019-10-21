@@ -52,14 +52,30 @@ function createAttendanceCard(employeeRecord) {
       onAr: false, 
       onHoliday: true, 
       weeklyOff: false, 
-      attendance: 1,
+      attendance: 0,
       addendum:[{
           addendumId: "asdasd",
           latitude: "28.123",
           longitude: "77.123",
-          timestamp: Date.now(),
+          timestamp: 1571660508914,
           comment: "asjdpoasjpodjasd"
-      }]
+      },
+      {
+        addendumId: "asdasd",
+        latitude: "28.123",
+        longitude: "77.123",
+        timestamp: 1571660521701,
+        comment: "asjdpoasjpodjasd"
+    },
+    {
+      addendumId: "asdasd",
+      latitude: "28.123",
+      longitude: "77.123",
+      timestamp: Date.now(),
+      comment: "asjdpoasjpodjasd"
+  }
+
+    ]
   }].forEach(function (record) {
       if (month !== record.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
@@ -71,6 +87,22 @@ function createAttendanceCard(employeeRecord) {
     const el = document.querySelector('.monthly-stat');
     if (!el) return;
     el.innerHTML = monthlyString;
+    [].map.call(document.querySelectorAll('.attendance-card'),function(el){
+      if(el) {
+        const icon = el.querySelector('.dropdown i')
+        icon.addEventListener('click',function(){
+          const detailContainer =  el.querySelector('.attendace-detail-container')
+          if(detailContainer.classList.contains('hidden')) {
+            icon.textContent = 'keyboard_arrow_up'
+            detailContainer.classList.remove('hidden')
+          }
+          else {
+            icon.textContent = 'keyboard_arrow_down'
+            detailContainer.classList.add('hidden')
+          }
+        })        
+      }
+    });
 
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
       el.addEventListener('click', checkStatusSubscription)
@@ -108,18 +140,19 @@ function attendaceCard(data,employeeRecord) {
         <div class='attendace-detail-container hidden'>
         <div class='text-container'>
           ${data.addendum.length ? `
-          <div class=''>
-            Activities Count : ${data.addendum.length} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Daily Activity Count'].value ? `/ ${employeeRecord[data.office]['Minimum Daily Activity Count'].value}` :''}
+          <div class='detail count'>
+            Count : ${data.addendum.length} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Daily Activity Count'].value ? `/ ${employeeRecord[data.office]['Minimum Daily Activity Count'].value}` :''}
           </div>
-          <div class=''>
+          <div class='detail working-hour'>
             ${calculateWorkedHours(data.addendum) ?`Working hours : ${calculateWorkedHours(data.addendum)} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Working Hours'].value ? `/ ${employeeRecord[data.office]['Minimum Working Hours'].value}` :''}` :''}
             ` :''}
           </div>
         </div>
          <div class='time-container'>
           ${data.addendum.map(ad => {
-              return `<a class='time addendum-value' href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'>
+              return `<a class='time addendum-value mdc-typography--headline6 mdc-theme--primary' href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'>
                   ${getAttendanceTime(ad)}
+                  <div class='mdc-typography--caption'>Check-in</div>
               </a>`
           }).join("")}
          </div>         
@@ -267,20 +300,21 @@ function attendaceButtons(attendaceObject) {
 
   if (attendaceObject.attendance == 0) {
     return `
-    <button class='mdc-button mdc-card__action mdc-card__action--button status-button mdc-button--raised' data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
-      Apply AR
-    </button>
     <button class='mdc-button mdc-card__action mdc-card__action--button status-button' data-template="leave" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
       Apply Leave
-    </button>`
+    </button>
+    <button class='mdc-button mdc-card__action mdc-card__action--button status-button mdc-button--raised' data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
+    Apply AR
+  </button>
+    `
     
   }
   if (attendaceObject.attendance > 0 && attendaceObject.attendance < 1) {
 
-    return `<a class="mdc-button mdc-card__action mdc-card__action--button">
+    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action">
     <span class="mdc-button__label">Apply AR</span>
     <i class="material-icons" aria-hidden="true">arrow_forward</i>
-  </a>`
+  </button>`
   }
 }
 

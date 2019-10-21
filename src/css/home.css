@@ -85,6 +85,7 @@
 
  .demo-card__primary {
     padding: 1rem;
+    padding-bottom: 10px;
 }
 
  .demo-card__title {

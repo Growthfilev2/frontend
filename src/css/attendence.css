@@ -77,16 +77,47 @@
   width: 100%;
   margin-bottom: 10px;
 }
-.attendance-card .demo-card__primary {
-  padding-bottom: 0px;
-}
 
 .heading-container {
   float: left;
 }
 .dropdown {
-  float: right
+  float: right;
+  cursor: pointer;
+}
+.dropdown i {
+  float: right;
 }
 .card-office-title {
   margin-top: 7px;
+}
+
+.attendace-detail-container {
+  padding: 1rem;
+  padding-bottom: 10px;
+  padding-top: 0px;
+}
+.attendance-card .time-container {
+  padding-top: 10px;
+  width: 100%;
+  text-align: center;
+}
+.attendance-card .time-container .time {
+ width: 33%;
+ float: left;
+}
+.attendance-card .text-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.attendance-card .text-container .count {
+  margin-right: 15px;
+}
+.attendace-detail-container .text-container .working-hour {
+  margin-left: auto;
+}
+
+.attendance-card .mdc-card__actions .mdc-card__action:nth-child(2):not(full-bleed--action) {
+  margin-left: auto;
 }
