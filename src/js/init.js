@@ -2,7 +2,7 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-let DB_VERSION = 12;
+let DB_VERSION = 20;
 let initApp = true;
 
 
@@ -198,6 +198,31 @@ function startApp() {
     if (!evt.oldVersion) {
       createObjectStores(db, dbName)
     } else {
+      const attendance = db.createObjectStore('attendance',{
+        keyPath:'id',
+      })
+      
+      attendance.createIndex('date','date')
+      attendance.createIndex('month','month')
+      attendance.createIndex('office','office')
+      attendance.createIndex('attendance','attendance');
+    
+      const payments = db.createObjectStore('payment',{
+        keyPath:'paymentId'
+      })
+      payments.createIndex('date','date')
+      payments.createIndex('month','month')
+      payments.createIndex('year','year')
+      payments.createIndex('status','status')
+      payments.createIndex('office','office')
+    
+      const reimbursements = db.createObjectStore('reimbursement',{
+        keyPath:'id'
+      })
+      reimbursements.createIndex('date','date')
+      reimbursements.createIndex('month','month')
+      reimbursements.createIndex('year','year')
+      reimbursements.createIndex('office','office')    
       console.log('version upgrade')
     }
   }
@@ -558,13 +583,7 @@ function createObjectStores(db, uid) {
   activity.createIndex('hidden', 'hidden')
   activity.createIndex('template', 'template');
   activity.createIndex('status', 'status')
-  const list = db.createObjectStore('list', {
-    keyPath: 'activityId'
-  })
-  list.createIndex('timestamp', 'timestamp');
-  list.createIndex('status', 'status');
-  list.createIndex('office', 'office');
-
+ 
   const users = db.createObjectStore('users', {
     keyPath: 'mobile'
   })
@@ -636,11 +655,31 @@ function createObjectStores(db, uid) {
   children.createIndex('team', 'team')
   children.createIndex('teamOffice', ['team', 'office'])
 
-  const reports = db.createObjectStore('reports', {
-    keyPath: 'joinedDate'
-  });
+  const attendance = db.createObjectStore('attendance',{
+    keyPath:'id',
+  })
 
-  reports.createIndex('month', 'month')
+  attendance.createIndex('date','date')
+  attendance.createIndex('month','month')
+  attendance.createIndex('office','office')
+  attendance.createIndex('attendance','attendance');
+
+  const payments = db.createObjectStore('payment',{
+    keyPath:'paymentId'
+  })
+  payments.createIndex('date','date')
+  payments.createIndex('month','month')
+  payments.createIndex('year','year')
+  payments.createIndex('status','status')
+  payments.createIndex('office','office')
+
+  const reimbursements = db.createObjectStore('reimbursement',{
+    keyPath:'id'
+  })
+  reimbursements.createIndex('date','date')
+  reimbursements.createIndex('month','month')
+  reimbursements.createIndex('year','year')
+  reimbursements.createIndex('office','office')
 
   const root = db.createObjectStore('root', {
     keyPath: 'uid'

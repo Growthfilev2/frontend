@@ -490,6 +490,7 @@ function backblaze(body, meta) {
 }
 
 
+
 function updateReports(statusObject, reportObjectStore) {
   console.log(reportObjectStore)
   statusObject.forEach(function (item) {
@@ -498,11 +499,28 @@ function updateReports(statusObject, reportObjectStore) {
   })
 }
 
-function updateCalendar(activity, tx) {
+function updateAttendance(attendanceData,store) {
+  attendanceData.forEach(function(value) {
+    store.put(value)
+  })
+}
+function updateReimbursements(reimbursementData,store) {
+  reimbursementData.forEach(function(value) {
+    store.put(value)
+  })
+}
 
+function updatePayments(paymentData,store) {
+  paymentData.forEach(function(value) {
+    store.put(value)
+  })
+}
+
+
+
+function updateCalendar(activity, tx) {
   const calendarObjectStore = tx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
-
   calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
@@ -646,11 +664,14 @@ function createListStore(activity, tx) {
 
 function successResponse(read, param, db, resolve, reject) {
 
-  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users','reports'], 'readwrite');
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users','attendace','reimbursement','payments'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
   const userStore = updateTx.objectStore('users');
-  const reports = updateTx.objectStore('reports')
+  const attendace = updateTx.objectStore('attendance')
+  const reimbursement = updateTx.objectStore('reimbursement')
+  const payments = updateTx.objectStore('payments')
+
   let counter = {};
   let userTimestamp = {}
 
@@ -697,8 +718,11 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
+  updateAttendance(read.attendace,attendace)
+  updateReimbursements(read.attendace,reimbursement)
+  updatePayments(read.attendace,payments)
 
-  updateReports(read.statusObject, reports);
+
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)
