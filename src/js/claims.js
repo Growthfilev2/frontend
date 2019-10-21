@@ -173,10 +173,8 @@ function commonCardHeading(value) {
     const subHeading = createElement('h3', {
         className: 'demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0',
         textContent: `${value.office}`
-    })
-
-   
-
+    });
+    
     monthlyDateCont.appendChild(dayDiv)
     monthlyDateCont.appendChild(date)
 

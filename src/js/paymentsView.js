@@ -28,6 +28,8 @@ function paymentView(sectionContent) {
     }
 }
 
+
+
 function paymentDetails(paymentData) {
     return `<div class='payment-details'>
         ${paymentData.createdAt ? ` <h3 class='mdc-typography--body1'>

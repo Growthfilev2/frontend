@@ -33,6 +33,7 @@
   text-align: center;
   padding-right: 25px;
   max-width: 54px;
+  float: left;
 }
 
 .month-date-cont .date {
@@ -75,4 +76,17 @@
 .month-container .btn-container button {
   width: 100%;
   margin-bottom: 10px;
+}
+.attendance-card .demo-card__primary {
+  padding-bottom: 0px;
+}
+
+.heading-container {
+  float: left;
+}
+.dropdown {
+  float: right
+}
+.card-office-title {
+  margin-top: 7px;
 }

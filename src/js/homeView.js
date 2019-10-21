@@ -520,8 +520,8 @@ function createArSuggestion(result) {
 
 function getYesterdayAtt() {
   return new Promise(function (resolve, reject) {
-    const tx = db.transaction('reports');
-    const store = tx.objectStore('reports');
+    const tx = db.transaction('attendance');
+    const store = tx.objectStore('attendance');
     let record;
     store.get(getYesterdayArDate()).onsuccess = function (event) {
       record = event.target.result;

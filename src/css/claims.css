@@ -15,12 +15,8 @@
 .reim-card .demo-card__title {
     font-weight: 500;
 }
-.reim-card .heading-container {
-    float: left;
-}
-.reim-card .dropdown {
-    float: right
-}
+
+
 .reim-auto-card p {
     word-wrap: break-word;
 }
