@@ -36,7 +36,7 @@ function getPaymentData() {
     return new Promise(function (resolve, reject) {
 
         const tx = db.transaction('payment')
-        const index = tx.objectStore('payment').index('month')
+        const index = tx.objectStore('payment').index('key')
         const result = []
         index.openCursor(null, 'prev').onsuccess = function (event) {
             const cursor = event.target.result;
@@ -74,7 +74,7 @@ function paymentCard(data) {
             </div>
           </div>
           </div>
-          <div class='attendace-detail-container hidden'>
+          <div class='detail-container hidden'>
           <div class='text-container'>
             ${data.createdAt ?`<h3 class='detail mdc-typography--body1'>
             Created : ${moment(data.createdAt).format('DD/MM/YYYY HH:mm')}

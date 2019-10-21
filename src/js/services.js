@@ -132,7 +132,11 @@ function getLocation() {
       }
       return;
     }
-
+    return resolve({
+      latitude:28.123,
+      longitude:77.213
+    })
+    
     html5Geolocation().then(function (htmlLocation) {
       if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
         handleGeoLocationApi().then(resolve).catch(function (error) {

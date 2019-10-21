@@ -499,11 +499,14 @@ function updateReports(statusObject, reportObjectStore) {
   })
 }
 
-// function updateAttendance(attendanceData,store) {
-//   attendanceData.forEach(function(value) {
-//     store.put(value)
-//   })
-// }
+function updateAttendance(attendanceData = [],store) {
+  attendanceData.forEach(function(value) {
+    const sortKey = moment(`${value.date}-${value.month}-${value.year}`,'DD-MM-YYYY').valueOf()
+    value.key = sortKey
+    store.put(value)
+  })
+}
+
 function updateReimbursements(reimbursementData,store) {
   [{
     date: 9,
@@ -547,14 +550,38 @@ function updateReimbursements(reimbursementData,store) {
       status: "CANCELLED", 
       claimId: "asdasd", 
   }
-}]
-  reimbursementData.forEach(function(value) {
+},{
+  date: 19,
+  month: 8,
+  year: 2019,
+  office: "Puja Capital",
+  officeId: "qweqwe",
+  amount: "15",
+  currency: 'INR', 
+  id: "3", 
+  reimbursementType: "daily allowance", 
+  reimbursementName: "shortest straw", 
+  details: {
+      rate: "5",
+      checkInTimestamp: Date.now(), // unix
+      startLocation: "", 
+      endLocation: "", 
+      "distanceTravelled": 2,
+      photoURL: "", 
+      status: "CONFIRMED", 
+      claimId: "asdasd", 
+  }
+}].forEach(function(value) {
+  const sortKey = moment(`${value.date}-${value.month}-${value.year}`,'DD-MM-YYYY').valueOf()
+  value.key = sortKey
     store.put(value)
   })
 }
 
 function updatePayments(paymentData,store) {
   paymentData.forEach(function(value) {
+    const sortKey = moment(`${value.date}-${value.month}-${value.year}`,'DD-MM-YYYY').valueOf()
+    value.key = sortKey
     store.put(value)
   })
 }
@@ -741,7 +768,7 @@ function successResponse(read, param, db, resolve, reject) {
   }
 
   // updateAttendance(read.attendace,attendace)
-  updateReimbursements(read.reimbursement,reimbursement)
+  updateReimbursements(read.reimbursement,reimbursementStore)
   updatePayments([{
     "date": 5,
     "month": 9,
@@ -758,6 +785,23 @@ function successResponse(read, param, db, resolve, reject) {
     "office": 'Puja Capital',
     "officeId": 'gR0XF3YA03MA472QWkNp',
     status:'Processing'
+},
+{
+  "date": 5,
+  "month": 11,
+  year: 2018,
+  id: "2",
+  'currency': 'INR',
+  "lastUpdated": 1571401463191, 
+  "type": "deduction", 
+  "amount": "-500", 
+  "createdAt": 1571401463191, 
+  "cycleStartDate": 1569868200000, 
+  "cycleEndDate": 1572546599999, 
+  "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
+  "office": 'Puja Capital',
+  "officeId": 'gR0XF3YA03MA472QWkNp',
+  status:'Processing'
 }],paymentStore)
 
 

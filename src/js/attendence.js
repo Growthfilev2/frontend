@@ -85,7 +85,7 @@ function createAttendanceCard(employeeRecord) {
 
     if (!parent) return;
     parent.innerHTML = monthlyString;
-    toggleReportCard('.attendace-card');
+    toggleReportCard('.attendance-card');
 
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
       el.addEventListener('click', checkStatusSubscription)
@@ -124,7 +124,7 @@ function attendaceCard(data, employeeRecord) {
           </div>
         </div>
         </div>
-        <div class='attendace-detail-container hidden'>
+        <div class='detail-container hidden'>
         <div class='text-container'>
           ${data.addendum.length ? `
           <div class='detail count'>
@@ -229,7 +229,7 @@ function getMonthlyData() {
 
     const result = []
     tx.objectStore('attendance')
-      .index('month')
+      .index('key')
       .openCursor(null, 'prev')
       .onsuccess = function (event) {
         const cursor = event.target.result;
