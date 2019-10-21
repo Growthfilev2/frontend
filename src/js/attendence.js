@@ -25,7 +25,7 @@ function attendenceView(sectionContent) {
     const officeEmployee = {}
     myCreds.forEach(function (cred) {
       officeEmployee[cred.office] = cred;
-    })
+    });
     createAttendanceCard(officeEmployee)
   }).catch(function (error) {
     createAttendanceCard();

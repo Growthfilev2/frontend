@@ -20,7 +20,7 @@ function paymentView(sectionContent) {
         if (!parent) return;
         parent.innerHTML = monthlyString;
         toggleReportCard('.payment-card')
-        
+
     }).catch(function (error) {
         console.log(error)
         handleError({
