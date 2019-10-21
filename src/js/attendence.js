@@ -174,7 +174,9 @@ function getAttendanceTime(addendum) {
 function calculateWorkedHours(addendums) {
   const length = addendums.length
   if(!length || length == 1) return ''
-  return new Date(addendums[length -1].timestamp).getHours() - new Date(addendums[0].timestamp).getHours();
+  const duration = moment.duration(moment(addendums[length -1].timestamp).diff(addendums[0].timestamp)).asHours()
+  return Number(duration).toFixed(2)
+
 }
 
 function attendanceStatusType(data) {
@@ -208,93 +210,6 @@ function attendanceDom() {
   </div>`
 }
 
-
-
-function getTodayStatData() {
-  return new Promise(function (resolve, reject) {
-
-
-    const startOfTodayTimestamp = moment().startOf('day').valueOf()
-
-    const myNumber = firebase.auth().currentUser.phoneNumber;
-    let todayCardString = '';
-    const result = [];
-
-
-    const activityTx = db.transaction('activity')
-    activityTx.objectStore('activity')
-      .index('timestamp')
-      .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if(!cursor.value.creator) {
-          cursor.continue();
-          return;
-        }
-        
-        if (cursor.value.creator.phoneNumber !== myNumber) {
-          cursor.continue();
-          return;
-        }
-        result.push(cursor.value);
-        cursor.continue();
-      }
-    activityTx.oncomplete = function () {
-      const addendumTx = db.transaction('addendum');
-
-      result.forEach(function (activity) {
-        addendumTx
-          .objectStore('addendum')
-          .index('activityId')
-          .get(activity.activityId).onsuccess = function (event) {
-            const result = event.target.result;
-            if (!result) return;
-            todayCardString += todayStatCard(result, activity);
-          }
-      })
-      addendumTx.oncomplete = function () {
-        return resolve(todayCardString);
-      }
-      addendumTx.onerror = function () {
-        return reject({
-          message: addendumTx.error
-        })
-      }
-    }
-    activityTx.onerror = function () {
-      return reject({
-        message: activityTx.error
-      })
-    }
-  })
-}
-
-function todayStatCard(addendum, activity) {
-  return `
-    <div class='mdc-card mdc-layout-grid__cell report-cards' data-today-id='${activity.activityId}'>
-      <div class="mdc-card__primary-action">
-        <div class="demo-card__primary">
-        <div class='card-heading-container'>
-        <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${activity.activityName}</h2>
-       ${addendum ?`   <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">${addendum.comment}</h3>` :'' }
-     
-        <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
-        </div>
-        <div class='activity-data'>
-        ${activity.venue.length ?`  <ul class='mdc-list mdc-list--two-line'>
-        ${viewVenue(activity,false)}
-        </ul>` :''}
-        ${activity.schedule.length ?`<ul class='mdc-list mdc-list--two-line'>
-        ${viewSchedule(activity)}
-        </ul>` :''}
-    
-        </div>
-      </div>
-    </div>  
-  </div>
-    `
-}
-
 function attendaceButtons(attendaceObject) {
   if (attendaceObject.attendance == 1) return ``;
 
@@ -322,21 +237,7 @@ function attendaceButtons(attendaceObject) {
 function cardDate(value) {
   return moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
 }
-function monthlyStatCard(value) {
 
-  const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
-  return `
-    <div class="month-container mdc-elevation--z2">
-        <div class="month-date-cont">
-          <span class='day'>${day}</span>
-          <p class='date'>${value.date}</p>
-        </div>
-      <div class='btn-container'>
-        ${renderArCard(value)}
-      </div>
-  </div>
-    `
-}
 
 function getMonthlyData() {
   return new Promise(function (resolve, reject) {
@@ -379,10 +280,6 @@ function getMonthlyData() {
     }
   })
 }
-
-
-
-
 
 function checkStatusSubscription(event) {
 
