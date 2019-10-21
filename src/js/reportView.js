@@ -123,3 +123,22 @@ function getReportSubs(reportName) {
     }
   })
 }
+
+
+function toggleReportCard(selector) {
+  [].map.call(document.querySelectorAll(selector),function(el){
+    if (el) {
+        const icon = el.querySelector('.dropdown i')
+        icon.addEventListener('click', function () {
+            const detailContainer = el.querySelector('.detail-container')
+            if (detailContainer.classList.contains('hidden')) {
+                icon.textContent = 'keyboard_arrow_up'
+                detailContainer.classList.remove('hidden')
+            } else {
+                icon.textContent = 'keyboard_arrow_down'
+                detailContainer.classList.add('hidden')
+            }
+        })
+    }
+})
+}

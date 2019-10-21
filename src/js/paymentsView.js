@@ -2,7 +2,6 @@ function paymentView(sectionContent) {
     sectionContent.innerHTML = paymentDom();
     sectionContent.dataset.view = 'payments'
     const parent = document.getElementById('payments');
-    const frag = document.createDocumentFragment();
     let month = ''
     let monthlyString = ''
     getPaymentData().then(function (paymentData) {
@@ -21,21 +20,7 @@ function paymentView(sectionContent) {
         })
         if (parent) {
             parent.innerHTML = monthlyString;
-            [].map.call(document.querySelectorAll('.payment-card'), function (el) {
-                if (el) {
-                    const icon = el.querySelector('.dropdown i')
-                    icon.addEventListener('click', function () {
-                        const detailContainer = el.querySelector('.attendace-detail-container')
-                        if (detailContainer.classList.contains('hidden')) {
-                            icon.textContent = 'keyboard_arrow_up'
-                            detailContainer.classList.remove('hidden')
-                        } else {
-                            icon.textContent = 'keyboard_arrow_down'
-                            detailContainer.classList.add('hidden')
-                        }
-                    })
-                }
-            });
+            toggleReportCard('.payment-card')
         }
     }).catch(function (error) {
         console.log(error)
@@ -68,7 +53,6 @@ function getPaymentData() {
 }
 
 
-
 function paymentCard(data) {
     return `<div class='mdc-card mdc-card--outlined payment-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet'>
         <div class='mdc-card__primary-action'>
@@ -93,12 +77,12 @@ function paymentCard(data) {
           </div>
           <div class='attendace-detail-container hidden'>
           <div class='text-container'>
-            ${data.createdAt ?`<h1 class='detail mdc-typography--body1'>
+            ${data.createdAt ?`<h3 class='detail mdc-typography--body1'>
             Created : ${moment(data.createdAt).format('DD/MM/YYYY HH:mm')}
-          </h1>` :'' }
+          </h3>` :'' }
             ${data.cycleStartDate && data.cycleEndDate ? `<h3  class='detail  mdc-typography--body1'>
                 Cycle : ${moment(data.cycleStartDate).format('DD/MM/YYYY')} - ${moment(data.cycleEndDate).format('DD/MM/YYYY')}
-            </h1>` :''}
+            </h3>` :''}
           </div>
           </div>
         </div>

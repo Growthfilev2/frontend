@@ -29,15 +29,14 @@ function attendenceView(sectionContent) {
     createAttendanceCard(officeEmployee)
   }).catch(function(error){
     createAttendanceCard();
-  })
+  });
 
-  
 }
 
 
 function createAttendanceCard(employeeRecord) {
   getMonthlyData().then(function (monthlyData) {
-   
+    const parent = document.getElementById('attendance');
     document.getElementById('start-load').classList.add('hidden')
 
     let monthlyString = ''
@@ -84,29 +83,14 @@ function createAttendanceCard(employeeRecord) {
       monthlyString += attendaceCard(record,employeeRecord);
     });
     
-    const el = document.querySelector('.monthly-stat');
-    if (!el) return;
-    el.innerHTML = monthlyString;
-    [].map.call(document.querySelectorAll('.attendance-card'),function(el){
-      if(el) {
-        const icon = el.querySelector('.dropdown i')
-        icon.addEventListener('click',function(){
-          const detailContainer =  el.querySelector('.attendace-detail-container')
-          if(detailContainer.classList.contains('hidden')) {
-            icon.textContent = 'keyboard_arrow_up'
-            detailContainer.classList.remove('hidden')
-          }
-          else {
-            icon.textContent = 'keyboard_arrow_down'
-            detailContainer.classList.add('hidden')
-          }
-        })        
-      }
-    });
-
-    [].map.call(document.querySelectorAll('.status-button'), function (el) {
-      el.addEventListener('click', checkStatusSubscription)
-    });
+    if(parent) {
+      parent.innerHTML = monthlyString;
+      toggleReportCard('.attendace-card');
+   
+      [].map.call(document.querySelectorAll('.status-button'), function (el) {
+        el.addEventListener('click', checkStatusSubscription)
+      });
+    }
    
   }).catch(function (error) {
     console.log(error)
@@ -185,33 +169,28 @@ function calculateWorkedHours(addendums) {
 }
 
 function attendanceStatusType(data) {
-if(data.onLeave) {
-  return 'Applied for leave'
-}
-if(data.onAr) {
-  return 'Applied for AR'
-}
-if(data.onHoliday) {
-  return 'Holiday'
-}
-if(data.weeklyOff) {
-  return 'Weekly off'
-}
+  if(data.onLeave) {
+    return 'Applied for leave'
+  }
+  if(data.onAr) {
+    return 'Applied for AR'
+  }
+  if(data.onHoliday) {
+    return 'Holiday'
+  }
+  if(data.weeklyOff) {
+    return 'Weekly off'
+  }
 }
 
 function attendanceDom() {
   return `<div class='attendance-section'>
-  
   <div class='mdc-layout-grid__inner'>
-  <div class='list-container mdc-layout-grid__cell--span-12'>
-    <ul class='mdc-list subscription-list' id='suggested-list'></ul>
+    <div class='list-container mdc-layout-grid__cell--span-12'>
+      <ul class='mdc-list subscription-list' id='suggested-list'></ul>
+    </div>
   </div>
-  </div>
-
-  <div class='monthly-stat'>
-  
-  </div>
-  
+  <div class='monthly-stat' id='attendance'></div>
   </div>`
 }
 
@@ -231,7 +210,7 @@ function attendaceButtons(attendaceObject) {
   }
   if (attendaceObject.attendance > 0 && attendaceObject.attendance < 1) {
 
-    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action">
+    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action status-button">
     <span class="mdc-button__label">Apply AR</span>
     <i class="material-icons" aria-hidden="true">arrow_forward</i>
   </button>`

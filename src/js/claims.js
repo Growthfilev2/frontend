@@ -1,54 +1,15 @@
 function expenseView(sectionContent) {
     sectionContent.innerHTML = reimDom();
     sectionContent.dataset.view = 'reimbursements'
-    Promise.all([getReportSubs('reimbursement'), getReimMonthlyData()]).then(function (result) {
-        const subs = result[0]
-        const reimData = result[1]
-        if (!subs.length && !reimData.length) {
-            if (document.getElementById('text-container-reim')) {
-                document.getElementById('text-container-reim').innerHTML = `<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Claim</h3>`
-            }
-            return
-        }
 
+    getReportSubs('reimbursement').then(function(subs){
         const listEl = document.getElementById('suggested-list-reim')
         if (subs.length && listEl) {
             listEl.innerHTML = templateList(subs);
-            const listInit = new mdc.list.MDCList(document.getElementById('suggested-list-reim'))
+            const listInit = new mdc.list.MDCList(listEl)
             handleTemplateListClick(listInit)
         }
-        let month = '';
-
-        const frag = document.createDocumentFragment()
-
-        reimData.forEach(function (dayRecord) {
-            if (month !== dayRecord.month) {
-                frag.appendChild(createElement('div', {
-                    className: 'hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12',
-                    textContent: moment(`${dayRecord.month + 1}-${dayRecord.year}`, 'MM-YYYY').format('MMMM YYYY')
-                }))
-            };
-            month = dayRecord.month;
-            let totalAmount = 0;
-            const body = createElement('tbody', {
-                className: 'data-table__content'
-            })
-            dayRecord.reimbursements.forEach(function (data) {
-                if (data.status !== 'CANCELLED') {
-                    totalAmount += Number(data.amount);
-                };
-                body.appendChild(reimCardRows(data))
-            })
-            const card = reimCards(dayRecord, body, convertNumberToINR(totalAmount));
-            frag.appendChild(card)
-            console.log(totalAmount)
-        })
-
-        const parent = document.querySelector('.reim-section .mdc-layout-grid__inner');
-        if (parent) {
-            parent.appendChild(frag)
-        }
-    }).catch(function (error) {
+    }).catch(function(error) {
         console.log(error)
         handleError({
             message: error.message,
@@ -58,7 +19,63 @@ function expenseView(sectionContent) {
             }
         })
     })
+
+    getReimMonthlyData().then(function(reimbursementData){
+        console.log(reimbursementData)
+        let month = monthlyString = '';
+        const parent = document.getElementById('reimbursements')
+        reimData.forEach(function (record) {
+            if (month !== record.month) {
+                monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`;
+            };
+            month = record.month;
+            monthlyString += reimbursementCard(record);
+        })
+        if(parent)  {
+            parent.innerHTML = monthlyString;
+            toggleReportCard('.reim-card')
+        }
+    })
 }
+
+
+function reimbursementCard(data) {
+    return `<div class='mdc-card mdc-card--outlined reim-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet'>
+    <div class='mdc-card__primary-action'>
+      <div class="demo-card__primary">
+      <div class='left'>
+          <div class="month-date-cont">
+            <div class="day">${cardDate(data)}</div>
+            <div class="date">${data.date}</div>
+          </div>
+          <div class="heading-container">
+            <span class="demo-card__title mdc-typography">${convertAmountToCurrency(data.amount,data.currency)}</span>
+            <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0 card-office-title">${data.office}</h3>
+          </div>
+      </div>
+      <div class='right'>
+        <div class="dropdown-container dropdown">
+          <i class="material-icons">keyboard_arrow_down</i>
+        </div>
+      </div>
+      </div>
+      <div class='detail-container hidden'>
+      <div class='text-container'>
+        ${data.reims.map(function(value){
+            return `<div class='amount-container'>
+                <div class='amount mdc-typography--headline6 mdc-theme--primary' data-claimId="${value.id}">
+                    ${convertAmountToCurrency(value.amount,value.currency)}
+                    <div class='mdc-typography--caption'>${value.type}</div>
+                </div>
+            </div>`
+        }).join("")}
+      </div>
+      </div>
+    </div>
+</div>`
+}
+
+
 
 function convertAmountToCurrency(amount,currency) {
     return new Intl.NumberFormat('en-IN', {
@@ -321,23 +338,19 @@ function reimDom() {
             <div class='list-container mdc-layout-grid__cell--span-12'>
                 <ul class='mdc-list subscription-list' id='suggested-list-reim'></ul>
             </div>
+            <div id='reimbursements'></div>
     </div>`
 }
 
 function getReimMonthlyData() {
     return new Promise(function (resolve, reject) {
 
-        const tx = db.transaction('reports')
-        const index = tx.objectStore('reports').index('month')
+        const tx = db.transaction('reimbursement')
+        const index = tx.objectStore('reimbursement').index('month')
         const result = [];
         index.openCursor(null, 'prev').onsuccess = function (event) {
             const cursor = event.target.result;
             if (!cursor) return;
-
-            if (!cursor.value.reimbursements) {
-                cursor.continue();
-                return;
-            };
             result.push(cursor.value);
             cursor.continue();
         }
