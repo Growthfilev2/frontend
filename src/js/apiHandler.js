@@ -394,7 +394,7 @@ function create(requestBody, meta) {
 function removeFromOffice(offices, meta, db) {
   return new Promise(function (resolve, reject) {
 
-    const deleteTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity'], 'readwrite');
+    const deleteTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity'], 'readwrite');
     deleteTx.oncomplete = function () {
 
       const rootTx = db.transaction(['root'], 'readwrite')
@@ -438,7 +438,7 @@ function removeFromOffice(offices, meta, db) {
 
 function removeActivity(offices, tx) {
   const activityIndex = tx.objectStore('activity').index('office');
-  const listIndex = tx.objectStore('list').index('office')
+
   const childrenIndex = tx.objectStore('children').index('office')
   const mapindex = tx.objectStore('map').index('office')
   const calendarIndex = tx.objectStore('calendar').index('office')
@@ -446,7 +446,7 @@ function removeActivity(offices, tx) {
 
   offices.forEach(function (office) {
     removeByIndex(activityIndex, office)
-    removeByIndex(listIndex, office)
+   
     removeByIndex(childrenIndex, office)
     removeByIndex(mapindex, office)
     removeByIndex(calendarIndex, office)
@@ -607,14 +607,14 @@ function removeActivityFromDB(id, updateTx) {
   if (!id) return;
 
   const activityObjectStore = updateTx.objectStore('activity');
-  const listStore = updateTx.objectStore('list');
+  
   const chidlrenObjectStore = updateTx.objectStore('children');
   const calendarObjectStore = updateTx.objectStore('calendar').index('activityId')
   const mapObjectStore = updateTx.objectStore('map').index('activityId')
   const addendumStore = updateTx.objectStore('addendum').index('activityId');
 
   activityObjectStore.delete(id);
-  listStore.delete(id);
+ 
   chidlrenObjectStore.delete(id);
   removeByIndex(calendarObjectStore, id)
   removeByIndex(mapObjectStore, id);
@@ -639,32 +639,11 @@ function updateSubscription(subscription, tx) {
 }
 
 
-function createListStore(activity, tx) {
 
-  const requiredData = {
-    'activityId': activity.activityId,
-
-    'timestamp': activity.timestamp,
-    'activityName': activity.activityName,
-    'status': activity.status
-  }
-  const listStore = tx.objectStore('list');
-  listStore.get(activity.activityId).onsuccess = function (listEvent) {
-
-    const record = listEvent.target.result;
-    if (!record) {
-      requiredData.createdTime = activity.timestamp;
-    } else {
-      requiredData.createdTime = record.createdTime
-    }
-    listStore.put(requiredData);
-  }
-
-}
 
 function successResponse(read, param, db, resolve, reject) {
 
-  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users','attendace','reimbursement','payments'], 'readwrite');
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity', 'addendum', 'root', 'users','attendace','reimbursement','payments'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
   const userStore = updateTx.objectStore('users');
