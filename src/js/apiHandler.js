@@ -504,11 +504,54 @@ function updateReports(statusObject, reportObjectStore) {
 //     store.put(value)
 //   })
 // }
-// function updateReimbursements(reimbursementData,store) {
-//   reimbursementData.forEach(function(value) {
-//     store.put(value)
-//   })
-// }
+function updateReimbursements(reimbursementData,store) {
+  [{
+    date: 9,
+    month: 9,
+    year: 2019,
+    office: "Puja Capital",
+    officeId: "qweqwe",
+    amount: "300",
+    currency: 'INR', 
+    id: "adasd", 
+    reimbursementType: "km allowance", 
+    reimbursementName: "Lunch", 
+    details: {
+        rate: "3",
+        checkInTimestamp: Date.now(), // unix
+        startLocation: "", 
+        endLocation: "", 
+        "distanceTravelled": "22",
+        photoURL: "", 
+        status: "PENDING", 
+        claimId: "asdasd", 
+    }
+},{
+  date: 9,
+  month: 9,
+  year: 2019,
+  office: "Puja Capital",
+  officeId: "qweqwe",
+  amount: "4000",
+  currency: 'INR', 
+  id: "adasd123", 
+  reimbursementType: "daily allowance", 
+  reimbursementName: "shortest straw", 
+  details: {
+      rate: "5",
+      checkInTimestamp: Date.now(), // unix
+      startLocation: "", 
+      endLocation: "", 
+      "distanceTravelled": 2,
+      photoURL: "", 
+      status: "CANCELLED", 
+      claimId: "asdasd", 
+  }
+}]
+  reimbursementData.forEach(function(value) {
+    store.put(value)
+  })
+}
 
 function updatePayments(paymentData,store) {
   paymentData.forEach(function(value) {
@@ -698,7 +741,7 @@ function successResponse(read, param, db, resolve, reject) {
   }
 
   // updateAttendance(read.attendace,attendace)
-  // updateReimbursements(read.reimbursement,reimbursement)
+  updateReimbursements(read.reimbursement,reimbursement)
   updatePayments([{
     "date": 5,
     "month": 9,
