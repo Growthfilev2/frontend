@@ -114,3 +114,6 @@
 .total-amount-container span:nth-child(2) {
     float: right;
 }
+.reim-card .amount-container {
+    padding-top: 0px;
+}

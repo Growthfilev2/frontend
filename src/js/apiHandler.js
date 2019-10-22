@@ -571,6 +571,27 @@ function updateReimbursements(reimbursementData = [],store) {
       status: "CONFIRMED", 
       claimId: "asdasd", 
   }
+},{
+  date: 21,
+  month: 9,
+  year: 2019,
+  office: "Puja Capital",
+  officeId: "qweqwe",
+  amount: "4000",
+  currency: 'INR', 
+  id: "zxcmm", 
+  reimbursementType: "daily allowance", 
+  reimbursementName: "shortest straw", 
+  details: {
+      rate: "5",
+      checkInTimestamp: Date.now(), // unix
+      startLocation: "", 
+      endLocation: "", 
+      "distanceTravelled": 2,
+      photoURL: "", 
+      status: "CANCELLED", 
+      claimId: "asdasd", 
+  }
 }].forEach(function(value) {
   const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
   value.key = sortKey

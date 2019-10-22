@@ -24,39 +24,50 @@ function expenseView(sectionContent) {
         console.log(reimbursementData)
         let month = monthlyString = '';
         const parent = document.getElementById('reimbursements')
-        reimData.forEach(function (record) {
-            if (month !== record.month) {
-                monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`;
+        const keys = Object.keys(reimbursementData);
+        keys.forEach(function (key) {
+            const timestamp = Number(key)
+            if (month !== new Date(timestamp).getMonth()) {
+                monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${new Date(timestamp).getMonth() + 1}-${new Date(timestamp).getFullYear()}`,'MM-YYYY').format('MMMM YYYY')}</div>`;
             };
-            month = record.month;
-            monthlyString += reimbursementCard(record);
+            month = new Date(timestamp).getMonth();
+
+            monthlyString += reimbursementCard(key,reimbursementData);
         })
         if (!parent) return
         parent.innerHTML = monthlyString;
         toggleReportCard('.reim-card');
-        [].map.call(document.querySelectorAll('.reim-amount'), function (el) {
-            const id = el.dataset.id;
-            db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
-                const activity = event.target.result;
-                const heading = createActivityHeading(activity)
-                showViewDialog(heading, activity, 'view-form');
-            }
+        [].map.call(document.querySelectorAll('.amount-container .amount'), function (el) {
+            el.addEventListener('click',function() {
+                const id = el.dataset.relevantId;
+                db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
+                    const activity = event.target.result;
+                    if(activity) {
+                        const heading = createActivityHeading(activity)
+                        showViewDialog(heading, activity, 'view-form');
+                    }
+                }
+            })
         })
     })
 }
 
 
-function reimbursementCard(data) {
+function reimbursementCard(key,data) {
     return `<div class='mdc-card mdc-card--outlined reim-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet'>
     <div class='mdc-card__primary-action'>
       <div class="demo-card__primary">
       <div class='left'>
           <div class="month-date-cont">
-            <div class="day">${cardDate(data)}</div>
-            <div class="date">${data.date}</div>
+            <div class="day">${cardDate({
+                date:new Date(Number(key)).getDate(),
+                month:new Date(Number(key)).getMonth(),
+                year:new Date(Number(key)).getFullYear()
+            })}</div>
+            <div class="date">${new Date(Number(key)).getDate()}</div>
           </div>
           <div class="heading-container">
-            <span class="demo-card__title mdc-typography">${convertAmountToCurrency(data.amount,data.currency)}</span>
+            <span class="demo-card__title mdc-typography">${totalReimAmount(data[key])}</span>
             <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0 card-office-title">${data.office}</h3>
           </div>
       </div>
@@ -67,19 +78,35 @@ function reimbursementCard(data) {
       </div>
       </div>
       <div class='detail-container hidden'>
-      <div class='text-container'>
-        ${data.reims.map(function(value){
-            return `<div class='amount-container'>
-                <div class='amount mdc-typography--headline6 mdc-theme--primary' data-claimId="${value.id}">
-                    ${convertAmountToCurrency(value.amount,value.currency)}
-                    <div class='mdc-typography--caption'>${value.type}</div>
+      <div class='text-container'></div>
+      <div class='amount-container'>
+        ${data[key].map(function(value){
+            return `
+                <div class='amount mdc-typography--headline6 ${value.details.status === 'CANCELLED' ? 'mdc-theme--error' : value.details.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}' data-relevant-id="${value.details.relevantActivityId}">
+                    <div class='mdc-typography--caption'>${value.reimbursementType}</div>
+                    ${value.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(value.amount,value.currency)}
+                    <div class='mdc-typography--caption'>${value.details.status}</div>
+                    <div class='mdc-typography--subtitle2'>${value.reimbursementName}</div>
                 </div>
-            </div>`
+            `
         }).join("")}
+        </div>
       </div>
       </div>
     </div>
 </div>`
+}
+
+function totalReimAmount(reimData){
+    let total = 0;
+    let currency = ''
+    reimData.forEach(function(data){
+        if(data.details.status !== 'CANCELLED') {
+            total += data.amount
+            currency = data.currency
+        }
+    })
+    return convertAmountToCurrency(total,currency)
 }
 
 
@@ -100,8 +127,9 @@ function reimDom() {
             <div class='list-container mdc-layout-grid__cell--span-12'>
                 <ul class='mdc-list subscription-list' id='suggested-list-reim'></ul>
             </div>
-            <div id='reimbursements'></div>
-    </div>`
+        </div>
+        <div id='reimbursements' class='mdc-layout-grid__inner'></div>
+    `
 }
 
 function getReimMonthlyData() {
@@ -110,14 +138,23 @@ function getReimMonthlyData() {
         const tx = db.transaction('reimbursement')
         const index = tx.objectStore('reimbursement').index('month')
         const result = [];
+        const dateObject = {}
         index.openCursor(null, 'prev').onsuccess = function (event) {
             const cursor = event.target.result;
             if (!cursor) return;
-            result.push(cursor.value);
+            if(!dateObject[cursor.value.key]) {
+                dateObject[cursor.value.key] = [cursor.value]
+            }
+            else {
+                dateObject[cursor.value.key].push(cursor.value)
+            }
             cursor.continue();
         }
         tx.oncomplete = function () {
-            return resolve(result)
+            // Object.key(dateObject).forEach(function(k) {
+            //     new Date(console.log(k))
+            // })
+            return resolve(dateObject)
         }
         tx.onerror = function () {
             return reject(tx.error)
