@@ -113,10 +113,7 @@ function initializeApp() {
           return;
         }
       }
-      else {
-        firebase.auth().settings.appVerificationDisabled = true
-
-      }
+      
 
       panel.innerHTML = '';
       panel.classList.remove('hidden');
