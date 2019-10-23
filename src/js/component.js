@@ -8,6 +8,22 @@ function createElement(tagName, attrs) {
     return el;
 }
 
+function createFab(icon) {
+    const button = createElement('button',{
+        className:'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited'
+    })
+    const span = createElement('span',{
+        className:'mdc-fab__icon material-icons',
+        textContent:icon
+    })
+    button.appendChild(span)
+    new mdc.ripple.MDCRipple(button);
+    setTimeout(function(){
+        button.classList.remove('mdc-fab--exited')
+    },200)
+    return button;
+}
+
 function createButton(name, icon) {
     const button = createElement('button', {
         className: 'mdc-button'

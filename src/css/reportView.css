@@ -6,3 +6,32 @@
 	padding-left: 10px;
 	padding-right: 10px;
 }
+
+.capitalize {
+	text-transform: capitalize;
+}
+.card-detail-section {
+	padding: 1rem;
+    padding-top: 0px;
+}
+.card-detail-section .payment-details h3 {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+.card-detail-section .payment-details h3:nth-child(1) {
+	margin-top: 0px;
+}
+
+.report-card .demo-card__primary {
+	padding: 1rem;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #ccc;
+}
+.report-card .detail-container {
+
+    padding-bottom: 10px;
+	padding-top: 10px;
+	padding-left: 0px;
+	padding-right: 0px;
+
+}

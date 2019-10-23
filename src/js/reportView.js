@@ -24,27 +24,16 @@ function reportView() {
       return;
     }
     if (evt.detail.index == 1) return expenseView(sectionContent)
-    incentiveView(sectionContent)
+    if (evt.detail.index == 2) return paymentView(sectionContent);
+
+
   })
 
   tabList.activateTab(0)
 }
 
 
-function incentiveView(sectionContent) {
-  sectionContent.dataset.view = 'incentive'
-  getReportSubs('incentive').then(function (subs) {
-    if (!subs.length) {
-      sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Are Not Eligible For Incentives</h3>'
-      return;
-    }
-    sectionContent.innerHTML = templateList(subs);
-    const el = document.getElementById('suggested-list')
-    if (!el) return;
-    const listInit = new mdc.list.MDCList(el)
-    handleTemplateListClick(listInit)
-  })
-}
+
 
 
 
@@ -77,15 +66,15 @@ function showTabs() {
         <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
         <span class="mdc-tab__content">
         <span class="mdc-tab__icon material-icons" aria-hidden="true">payment</span>
-
-          <span class="mdc-tab__text-label">Incentives</span>
+          <span class="mdc-tab__text-label">Payments</span>
         </span>
         <span class="mdc-tab-indicator">
           <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
         </span>
         <span class="mdc-tab__ripple"></span>
       </button>
-   
+
+      
         </div>
       </div>
     </div>
@@ -118,11 +107,11 @@ function getReportSubs(reportName) {
         cursor.continue();
         return;
       }
-      if(cursor.value.template === 'attendance regularization') {
+      if (cursor.value.template === 'attendance regularization') {
         cursor.continue();
         return
       }
-      
+
       subs.push(cursor.value)
       cursor.continue();
     }
@@ -133,4 +122,44 @@ function getReportSubs(reportName) {
       return reject(tx.error)
     }
   })
+}
+
+
+function toggleReportCard(selector) {
+  [].map.call(document.querySelectorAll(selector),function(el){
+    if (el) {
+        const icon = el.querySelector('.dropdown i')
+        icon.addEventListener('click', function () {
+            const detailContainer = el.querySelector('.detail-container')
+            if (detailContainer.classList.contains('hidden')) {
+                icon.textContent = 'keyboard_arrow_up'
+                detailContainer.classList.remove('hidden')
+            } else {
+                icon.textContent = 'keyboard_arrow_down'
+                detailContainer.classList.add('hidden')
+            }
+        })
+    }
+})
+}
+
+function createTemplateButton(subs) {
+  const button = createFab('add')
+  button.addEventListener('click', function () {
+    if (subs.length == 1) {
+      history.pushState(['addView'], null, null);
+      addView(subs[0])
+      return
+    }
+    const dialog = new Dialog('Choose Office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+    const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+    bottomDialog(dialog, ul)
+    
+    ul.listen('MDCList:action',function(evt){
+      history.pushState(['addView'], null, null);
+      addView(subs[evt.detail.index])
+      dialog.close()
+    })
+  })
+  return button;
 }

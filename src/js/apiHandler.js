@@ -1,4 +1,3 @@
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js');
 let deviceInfo;
 let currentDevice;
 let meta;
@@ -394,7 +393,7 @@ function create(requestBody, meta) {
 function removeFromOffice(offices, meta, db) {
   return new Promise(function (resolve, reject) {
 
-    const deleteTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity'], 'readwrite');
+    const deleteTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity'], 'readwrite');
     deleteTx.oncomplete = function () {
 
       const rootTx = db.transaction(['root'], 'readwrite')
@@ -438,7 +437,7 @@ function removeFromOffice(offices, meta, db) {
 
 function removeActivity(offices, tx) {
   const activityIndex = tx.objectStore('activity').index('office');
-  const listIndex = tx.objectStore('list').index('office')
+
   const childrenIndex = tx.objectStore('children').index('office')
   const mapindex = tx.objectStore('map').index('office')
   const calendarIndex = tx.objectStore('calendar').index('office')
@@ -446,7 +445,7 @@ function removeActivity(offices, tx) {
 
   offices.forEach(function (office) {
     removeByIndex(activityIndex, office)
-    removeByIndex(listIndex, office)
+   
     removeByIndex(childrenIndex, office)
     removeByIndex(mapindex, office)
     removeByIndex(calendarIndex, office)
@@ -490,19 +489,32 @@ function backblaze(body, meta) {
 }
 
 
-function updateReports(statusObject, reportObjectStore) {
-  console.log(reportObjectStore)
-  statusObject.forEach(function (item) {
-    item.joinedDate = Number(`${item.month}${item.date}${item.year}`);
-    reportObjectStore.put(item)
+
+
+
+function updateAttendance(attendanceData = [],store) {
+  attendanceData.forEach(function(value) {
+    store.put(value)
   })
 }
 
-function updateCalendar(activity, tx) {
+function updateReimbursements(reimbursementData = [],store) {
+  reimbursementData.forEach(function(value) {
+      store.put(value)
+    })
+}
 
+function updatePayments(paymentData = [],store) {
+  paymentData.forEach(function(value) {
+      store.put(value)
+  })
+}
+
+
+
+function updateCalendar(activity, tx) {
   const calendarObjectStore = tx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
-
   calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
@@ -589,14 +601,14 @@ function removeActivityFromDB(id, updateTx) {
   if (!id) return;
 
   const activityObjectStore = updateTx.objectStore('activity');
-  const listStore = updateTx.objectStore('list');
+  
   const chidlrenObjectStore = updateTx.objectStore('children');
   const calendarObjectStore = updateTx.objectStore('calendar').index('activityId')
   const mapObjectStore = updateTx.objectStore('map').index('activityId')
   const addendumStore = updateTx.objectStore('addendum').index('activityId');
 
   activityObjectStore.delete(id);
-  listStore.delete(id);
+ 
   chidlrenObjectStore.delete(id);
   removeByIndex(calendarObjectStore, id)
   removeByIndex(mapObjectStore, id);
@@ -621,36 +633,18 @@ function updateSubscription(subscription, tx) {
 }
 
 
-function createListStore(activity, tx) {
 
-  const requiredData = {
-    'activityId': activity.activityId,
-
-    'timestamp': activity.timestamp,
-    'activityName': activity.activityName,
-    'status': activity.status
-  }
-  const listStore = tx.objectStore('list');
-  listStore.get(activity.activityId).onsuccess = function (listEvent) {
-
-    const record = listEvent.target.result;
-    if (!record) {
-      requiredData.createdTime = activity.timestamp;
-    } else {
-      requiredData.createdTime = record.createdTime
-    }
-    listStore.put(requiredData);
-  }
-
-}
 
 function successResponse(read, param, db, resolve, reject) {
 
-  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users','reports'], 'readwrite');
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity', 'addendum', 'root', 'users','attendance','reimbursement','payment'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
   const userStore = updateTx.objectStore('users');
-  const reports = updateTx.objectStore('reports')
+  const attendaceStore = updateTx.objectStore('attendance')
+  const reimbursementStore = updateTx.objectStore('reimbursement')
+  const paymentStore = updateTx.objectStore('payment')
+
   let counter = {};
   let userTimestamp = {}
 
@@ -697,8 +691,10 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
+  updateAttendance(read.attendance,attendaceStore)
+  updateReimbursements(read.reimbursement,reimbursementStore)
+  updatePayments(read.payment,paymentStore)
 
-  updateReports(read.statusObject, reports);
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)

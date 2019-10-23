@@ -9,18 +9,12 @@
 .reim-card .demo-card__primary .mdc-typography--subtitle2 {
     margin-top: 5px;
 }
-.reim-card .demo-card__primary {
-    padding-bottom: 10px;
-}
+
 .reim-card .demo-card__title {
     font-weight: 500;
 }
-.reim-card .heading-container {
-    float: left;
-}
-.reim-card .dropdown {
-    float: right
-}
+
+
 .reim-auto-card p {
     word-wrap: break-word;
 }
@@ -117,4 +111,7 @@
 }
 .total-amount-container span:nth-child(2) {
     float: right;
+}
+.reim-card .amount-container {
+    padding-top: 0px;
 }

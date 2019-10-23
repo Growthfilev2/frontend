@@ -148,8 +148,8 @@ function homePanel(commonTasks) {
 
   </div>
   <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id='reports'>
-  <span class="material-icons mdc-fab__icon">description</span>
-  <span class="mdc-fab__label">My Reports</span>
+    <span class="material-icons mdc-fab__icon">description</span>
+    <span class="mdc-fab__label">My Reports</span>
  </button>
 </div>`
 }
@@ -520,8 +520,8 @@ function createArSuggestion(result) {
 
 function getYesterdayAtt() {
   return new Promise(function (resolve, reject) {
-    const tx = db.transaction('reports');
-    const store = tx.objectStore('reports');
+    const tx = db.transaction('attendance');
+    const store = tx.objectStore('attendance');
     let record;
     store.get(getYesterdayArDate()).onsuccess = function (event) {
       record = event.target.result;
@@ -613,6 +613,8 @@ function checkForUpdates() {
   })
 }
 
+
+
 function handleTemplateListClick(listInit) {
   listInit.singleSelection = true;
   listInit.selectedIndex = 0;
@@ -625,11 +627,25 @@ function handleTemplateListClick(listInit) {
       addView(valueSelectedList[0])
       return
     }
+    
 
-    const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
-    ${officeOfSelectedList.map(function(office){
+    const dialog = new Dialog('Choose Office', officeSelectionList(valueSelectedList), 'choose-office-subscription').create('simple');
+    const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+    bottomDialog(dialog, ul)
+    
+    ul.listen('MDCList:action', function (event) {
+      history.pushState(['addView'], null, null);
+      addView(valueSelectedList[event.detail.index])
+      dialog.close()
+    })
+  });
+}
+
+function officeSelectionList(subs){
+  const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
+    ${subs.map(function(sub){
       return `<li class='mdc-list-item'>
-      ${office}
+      ${sub.office}
       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
         keyboard_arrow_right
       </span>
@@ -637,16 +653,8 @@ function handleTemplateListClick(listInit) {
     }).join("")}
     </ul>`
 
-    const dialog = new Dialog('Choose Office', officeList, 'choose-office-subscription').create('simple');
-    const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
-
-    bottomDialog(dialog, ul)
-    ul.listen('MDCList:action', function (event) {
-      history.pushState(['addView'], null, null);
-      addView(valueSelectedList[event.detail.index])
-      dialog.close()
-    })
-  });
+    return officeList;
+  
 }
 
 function bottomDialog(dialog, ul) {
@@ -667,7 +675,6 @@ function bottomDialog(dialog, ul) {
     dialog.root_.querySelector('.mdc-dialog__surface').classList.remove('open');
   })
   dialog.open();
-
 }
 
 

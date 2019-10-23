@@ -132,7 +132,8 @@ function getLocation() {
       }
       return;
     }
-
+   
+    
     html5Geolocation().then(function (htmlLocation) {
       if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
         handleGeoLocationApi().then(resolve).catch(function (error) {
@@ -242,8 +243,9 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=36');
-  auth.getIdToken(false).then(function (token) {
+  let apiHandler = new Worker('js/apiHandler.js?version=40');
+
+  auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
     if (nonLocationRequest[requestType]) {
       requestGenerator.body = requestBody;
@@ -365,6 +367,10 @@ function handleComponentUpdation(readResponse) {
         };
         if (sectionContent.dataset.view === 'reimbursements') {
           expenseView(sectionContent)
+          return
+        }
+        if (sectionContent.dataset.view === 'payments') {
+          paymentView(sectionContent)
           return
         }
       } catch (e) {

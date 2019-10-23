@@ -1,17 +1,11 @@
 function attendenceView(sectionContent) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
-  
-  getReportSubs('attendance').then(function (subs) {
-    console.log(subs)
-    document.getElementById('start-load').classList.add('hidden')
-    const suggestionListEl = document.getElementById('suggested-list');
-    if (!suggestionListEl) return
-    suggestionListEl.innerHTML = templateList(subs)
-    const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
-    handleTemplateListClick(suggestionListInit)
+  document.getElementById('start-load').classList.add('hidden')
+  getSubscription('', 'leave').then(function (subs) {
+    if (!subs.length) return;
+    document.getElementById('attendance-view').appendChild(createTemplateButton(subs))
   }).catch(function (error) {
-    document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
       body: {
@@ -20,57 +14,50 @@ function attendenceView(sectionContent) {
     })
   })
 
-
-  getTodayStatData().then(function (todayString) {
-    document.getElementById('start-load').classList.add('hidden')
-
-    if (!todayString) return;
-    const el = document.querySelector('.today-stat');
-    if (!el) return;
-    el.innerHTML =
-      `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
-    ${todayString}
-    `;
-    [...document.querySelectorAll("[data-today-id]")].forEach(function (el) {
-      el.onclick = function () {
-        db.transaction('activity').objectStore('activity').get(el.dataset.todayId).onsuccess = function (event) {
-          const activityRecord = event.target.result
-          if (!activityRecord) return;
-          const heading = createActivityHeading(activityRecord)
-          showViewDialog(heading, activityRecord, 'view-form')
-        }
-      }
-    })
+  getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (myCreds) {
+    console.log(myCreds);
+    const officeEmployee = {}
+    myCreds.forEach(function (cred) {
+      officeEmployee[cred.office] = cred;
+    });
+    createAttendanceCard(officeEmployee)
   }).catch(function (error) {
-    document.getElementById('start-load').classList.add('hidden')
-
-    handleError({
-      message: error.message,
-      body: {
-        stack: error.stack || '',
-      }
-    })
+    createAttendanceCard();
   });
 
+}
+
+
+function createAttendanceCard(employeeRecord) {
   getMonthlyData().then(function (monthlyData) {
+    console.log(monthlyData)
+    const parent = document.getElementById('attendance-cards');
+    if(!monthlyData.length) {
+      parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendance record found</h5>`
+      return;
+    }
     document.getElementById('start-load').classList.add('hidden')
 
     let monthlyString = ''
     let month;
     monthlyData.forEach(function (record) {
       if (month !== record.month) {
-        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
+        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = record.month;
-      monthlyString += monthlyStatCard(record);
-    })
-    const el = document.querySelector('.monthly-stat');
-    if (!el) return;
-    el.innerHTML = monthlyString;
+      monthlyString += attendaceCard(record, employeeRecord);
+    });
+
+    if (!parent) return;
+    parent.innerHTML = monthlyString;
+    toggleReportCard('.attendance-card');
+
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
       el.addEventListener('click', checkStatusSubscription)
     });
+
   }).catch(function (error) {
+    console.log(error)
     document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
@@ -79,165 +66,135 @@ function attendenceView(sectionContent) {
       }
     })
   })
-
 }
 
-
-function attendanceDom() {
-  return `<div class='attendance-section'>
-  
-  <div class='mdc-layout-grid__inner'>
-  <div class='list-container mdc-layout-grid__cell--span-12'>
-    <ul class='mdc-list subscription-list' id='suggested-list'></ul>
-  </div>
-  </div>
-  <div class='today-stat mdc-layout-grid__inner'>
-  
-  </div>
-  <div class='monthly-stat'>
-  
-  </div>
-  
+function attendaceCard(data, employeeRecord) {
+  return `<div class='mdc-card report-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
+      <div class='mdc-card__primary-action'>
+        <div class="demo-card__primary">
+        <div class='left'>
+            <div class="month-date-cont">
+              <div class="day">${cardDate(data)}</div>
+              <div class="date">${data.date}</div>
+            </div>
+            <div class="heading-container">
+              <span class="demo-card__title mdc-typography ${data.attendance < 1 ? 'mdc-theme--error' :'mdc-theme--success'}">Attendance : ${data.attendance}</span>
+              <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0 card-office-title">${data.office}</h3>
+            </div>
+        </div>
+        <div class='right'>
+          <div class="dropdown-container dropdown">
+            <i class="material-icons">keyboard_arrow_down</i>
+            <div class='mdc-typography--subtitle2 mdc-theme--primary'>${attendanceStatusType(data)}</div>
+          </div>
+        </div>
+        </div>
+        <div class='detail-container hidden'>
+        <div class='text-container pt-10 pb-10'>
+          ${data.addendum.length ? `
+          <div class='detail count'>
+            Count : ${data.addendum.length} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Daily Activity Count'].value ? `/ ${employeeRecord[data.office]['Minimum Daily Activity Count'].value}` :''}
+          </div>
+          <div class='detail working-hour'>
+            ${calculateWorkedHours(data.addendum) ?`Working hours : ${calculateWorkedHours(data.addendum)} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Working Hours'].value ? `/ ${employeeRecord[data.office]['Minimum Working Hours'].value}` :''}` :''}
+            ` :''}
+          </div>
+        </div>
+      <div class='time-container'>
+          ${data.addendum.map(ad => {
+              return `<a class='time addendum-value mdc-typography--headline6 mdc-theme--primary' href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'>
+                  ${getAttendanceTime(ad)}
+                  <div class='mdc-typography--caption'>Check-in</div>
+              </a>`
+          }).join("")}
+         </div>         
+        </div>
+      </div>
+        ${data.attendance == 1 ? '' :`<div class="mdc-card__actions ${data.attendance > 0 && data.attendance < 1 ? 'mdc-card__actions--full-bleed' :''}">
+        ${attendaceButtons(data)}
+      </div>`
+    }
   </div>`
 }
 
 
 
-function getTodayStatData() {
-  return new Promise(function (resolve, reject) {
-
-
-    const startOfTodayTimestamp = moment().startOf('day').valueOf()
-
-    const myNumber = firebase.auth().currentUser.phoneNumber;
-    let todayCardString = '';
-    const result = [];
-
-
-    const activityTx = db.transaction('activity')
-    activityTx.objectStore('activity')
-      .index('timestamp')
-      .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if(!cursor.value.creator) {
-          cursor.continue();
-          return;
-        }
-        
-        if (cursor.value.creator.phoneNumber !== myNumber) {
-          cursor.continue();
-          return;
-        }
-        result.push(cursor.value);
-        cursor.continue();
-      }
-    activityTx.oncomplete = function () {
-      const addendumTx = db.transaction('addendum');
-
-      result.forEach(function (activity) {
-        addendumTx
-          .objectStore('addendum')
-          .index('activityId')
-          .get(activity.activityId).onsuccess = function (event) {
-            const result = event.target.result;
-            if (!result) return;
-            todayCardString += todayStatCard(result, activity);
-          }
-      })
-      addendumTx.oncomplete = function () {
-        return resolve(todayCardString);
-      }
-      addendumTx.onerror = function () {
-        return reject({
-          message: addendumTx.error
-        })
-      }
-    }
-    activityTx.onerror = function () {
-      return reject({
-        message: activityTx.error
-      })
-    }
-  })
+function getAttendanceTime(addendum) {
+  return moment(addendum.timestamp).format('HH:MM A')
 }
 
-function todayStatCard(addendum, activity) {
-  return `
-    <div class='mdc-card mdc-layout-grid__cell report-cards' data-today-id='${activity.activityId}'>
-      <div class="mdc-card__primary-action">
-        <div class="demo-card__primary">
-        <div class='card-heading-container'>
-        <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${activity.activityName}</h2>
-       ${addendum ?`   <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">${addendum.comment}</h3>` :'' }
-     
-        <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
-        </div>
-        <div class='activity-data'>
-        ${activity.venue.length ?`  <ul class='mdc-list mdc-list--two-line'>
-        ${viewVenue(activity,false)}
-        </ul>` :''}
-        ${activity.schedule.length ?`<ul class='mdc-list mdc-list--two-line'>
-        ${viewSchedule(activity)}
-        </ul>` :''}
-    
-        </div>
-      </div>
-    </div>  
-  </div>
-    `
-}
-
-function renderArCard(statusObject) {
-
-  if (statusObject.statusForDay == 1) {
-    return `<p class='present sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
+function calculateWorkedHours(addendums) {
+  const length = addendums.length
+  if (!length || length == 1) return ''
+  const duration = moment.duration(moment(new Date(addendums[length - 1].timestamp), 'DD/MM/YYYY HH:mm').diff(moment(new Date(addendums[0].timestamp), 'DD/MM/YYYY HH:mm'))).asHours()
+  console.log(duration)
+  if (Number(duration).toFixed(1) > 0) {
+    return Number(duration).toFixed(1)
   }
-  if (statusObject.statusForDay == 0) {
+  return ''
+  // return Number(duration).toFixed(1)
+
+}
+
+function attendanceStatusType(data) {
+  if (data.onLeave) {
+    return 'Applied for leave'
+  }
+  if (data.onAr) {
+    return 'Applied for AR'
+  }
+  if (data.onHoliday) {
+    return 'Holiday'
+  }
+  if (data.weeklyOff) {
+    return 'Weekly off'
+  }
+  return ''
+}
+
+function attendanceDom() {
+  return `<div class='attendance-section' id='attendance-view'>
+    <div class='monthly-stat  mdc-layout-grid__inner' id='attendance-cards'></div>
+  </div>`
+}
+
+function attendaceButtons(attendaceObject) {
+  if (attendaceObject.attendance == 1) return ``;
+
+  if (attendaceObject.attendance == 0) {
     return `
-    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
-      Apply AR
-    </button>
-    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="leave" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+    <button class='mdc-button mdc-card__action mdc-card__action--button status-button' data-template="leave" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
       Apply Leave
     </button>
-      <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
-
-  }
-  if (statusObject.statusForDay > 0 && statusObject.statusForDay < 1) {
-    return `
-    <button class='mdc-button mdc-theme--primary-bg status-button mdc-theme--on-primary' data-template="attendance regularization" data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
-      Apply AR
-    </button>
-      <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
-  }
-}
-
-function monthlyStatCard(value) {
-
-  const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
-  return `
-    <div class="month-container mdc-elevation--z2">
-        <div class="month-date-cont">
-          <span class='day'>${day}</span>
-          <p class='date'>${value.date}</p>
-        
-        </div>
-      <div class='btn-container'>
-        ${renderArCard(value)}
-      </div>
-  </div>
+    <button class='mdc-button mdc-card__action mdc-card__action--button status-button mdc-button--raised' data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
+    Apply AR
+  </button>
     `
+
+  }
+  if (attendaceObject.attendance > 0 && attendaceObject.attendance < 1) {
+
+    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action status-button">
+    <span class="mdc-button__label">Apply AR</span>
+    <i class="material-icons" aria-hidden="true">arrow_forward</i>
+  </button>`
+  }
 }
+
+
+function cardDate(value) {
+  return moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
+}
+
 
 function getMonthlyData() {
   return new Promise(function (resolve, reject) {
 
-    const tx = db.transaction('reports');
+    const tx = db.transaction('attendance');
 
     const result = []
-    tx.objectStore('reports')
-      .index('month')
+    tx.objectStore('attendance')
+      .index('key')
       .openCursor(null, 'prev')
       .onsuccess = function (event) {
         const cursor = event.target.result;
@@ -253,7 +210,7 @@ function getMonthlyData() {
           cursor.continue();
           return;
         }
-        if (!cursor.value.hasOwnProperty('statusForDay')) {
+        if (!cursor.value.hasOwnProperty('attendance')) {
           cursor.continue();
           return;
         }
@@ -261,6 +218,7 @@ function getMonthlyData() {
         cursor.continue();
       }
     tx.oncomplete = function () {
+
       return resolve(result);
     }
     tx.onerror = function () {
@@ -270,7 +228,6 @@ function getMonthlyData() {
     }
   })
 }
-
 
 function checkStatusSubscription(event) {
 
