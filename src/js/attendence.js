@@ -30,49 +30,17 @@ function attendenceView(sectionContent) {
 
 function createAttendanceCard(employeeRecord) {
   getMonthlyData().then(function (monthlyData) {
+    console.log(monthlyData)
     const parent = document.getElementById('attendance-cards');
-    // if(!monthlyData.length) {
-    //   parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendance record found</h5>`
-    //   return;
-    // }
+    if(!monthlyData.length) {
+      parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendance record found</h5>`
+      return;
+    }
     document.getElementById('start-load').classList.add('hidden')
 
     let monthlyString = ''
     let month;
-    [{
-      // attendance
-      id: 'aasd',
-      date: 5,
-      month: 10,
-      year: 2019,
-      office: "Puja Capital",
-      officeId: "asdasd",
-      onLeave: false,
-      onAr: false,
-      onLeave: false,
-      onHoliday: false,
-      weeklyOff: false,
-      attendance: 0,
-      addendum: [{
-        addendumId: "asd",
-        latitude: 28.213,
-        longitude: 77.123,
-        timestamp: Date.now(),
-        comment: "asdasd"
-      }, {
-        addendumId: "asd",
-        latitude: 28.213,
-        longitude: 77.123,
-        timestamp: Date.now(),
-        comment: "asdasd"
-      }, {
-        addendumId: "asd",
-        latitude: 28.213,
-        longitude: 77.123,
-        timestamp: Date.now(),
-        comment: "asdasd"
-      }]
-    }].forEach(function (record) {
+    monthlyData.forEach(function (record) {
       if (month !== record.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }

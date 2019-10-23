@@ -1,4 +1,3 @@
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js');
 let deviceInfo;
 let currentDevice;
 let meta;
@@ -500,108 +499,19 @@ function updateReports(statusObject, reportObjectStore) {
 }
 
 function updateAttendance(attendanceData = [],store) {
-  [{   
-    // attendance
-    id: 'aasd',
-    date: 5,
-    month: 10,
-    year: 2019,
-    office: "Puja Capital",
-    officeId: "asdasd",
-    onLeave: false, 
-    onAr: true, 
-    onLeave: false, 
-    onHoliday: false, 
-    weeklyOff: false, 
-    attendance: 0, 
-    addendum:[{
-        addendumId: "asd",
-        latitude: 28.213,
-        longitude: 77.123,
-        timestamp: Date.now(),
-        comment: "asdasd"
-    }]
-}].forEach(function(value) {
-    const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
-    value.key = sortKey
+  attendanceData.forEach(function(value) {
     store.put(value)
   })
 }
 
 function updateReimbursements(reimbursementData = [],store) {
-  [{
-   
-    date: 5,
-    month: 10,
-    year: 2019,
-    office: "Puja Capital",
-    officeId: "aospjdp",
-    amount: 100, 
-    currency: 'INR', 
-    id: "asdzxczxc",
-    reimbursementType: "claim", 
-    reimbursementName: "Lunch", 
-    details: {
-        rate: 3,
-        checkInTimestamp: Date.now(), 
-        startLocation: "", 
-        endLocation: "", 
-        "distanceTravelled": 3,
-        photoURL: "", 
-        status: "CANCELLED", 
-        claimId: "aasd", 
-    }
-},{
-  date: 5,
-  month: 10,
-  year: 2019,
-  office: "Puja Capitals",
-  officeId: "aospjdpzxcxczxczxczxc",
-  amount: 1800, 
-  currency: 'INR', 
-  id: "asd12312321312312323123123123123", 
-  reimbursementType: "km allowance", 
-  reimbursementName: "something", 
-  details: {
-      rate: 3,
-      checkInTimestamp: Date.now(), 
-      startLocation: "", 
-      endLocation: "", 
-      "distanceTravelled": "3",
-      photoURL: "", 
-      status: "PENDING", 
-      claimId: "aasd", 
-  }
-}].forEach(function(value) {
-    const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
-    value.key = sortKey
+  reimbursementData.forEach(function(value) {
       store.put(value)
     })
 }
 
 function updatePayments(paymentData = [],store) {
-
-  [{
-    
-    id: "ajsdpasdasd", 
-    date: 5,
-    month: 10,
-    year: 2019,
-    currency: 'INR',
-    "amount": "300", 
-    "office": 'Puja Capital', 
-    "officeId": 'gR0XF3YA03MA472QWkNp', 
-    "status": "processing", 
-    "type": "deduction", 
-    "cycleStartTime": 1569868200000, 
-    "cycleEndTime": 1572546599999, 
-    "lastUpdated": 1571401463191, 
-    "createdAt": 1571401463191, 
-    "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
-    phoneNumber: "", 
-}].forEach(function(value) {
-      const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
-      value.key = sortKey
+  paymentData.forEach(function(value) {
       store.put(value)
   })
 }

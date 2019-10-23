@@ -52,7 +52,7 @@ function expenseView(sectionContent) {
                 }
             })
         });
-        
+
         [].map.call(document.querySelectorAll(`[data-claimdata]`), function (el) {
             el.addEventListener('click', function () {
                 const data = JSON.parse(el.dataset.claimdata);
@@ -85,7 +85,6 @@ function claimViewContent(data) {
         ${data.details.photoURL  ? `<div class='photo-container'>
             <img src='${data.details.photoURL}'>
         </div>` :''}
-
     </div>`
 }
 
