@@ -126,6 +126,8 @@
 .attendance-card .text-container {
   display: flex;
   flex-wrap: wrap;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .attendance-card .text-container .count {

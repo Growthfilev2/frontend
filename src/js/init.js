@@ -205,7 +205,12 @@ function startApp() {
       if(db.objectStoreNames.contains('reports')) {
         db.deleteObjectStore('reports')
       }
-     
+      var rootStore = req.transaction.objectStore('root')
+      rootStore.get(dbName).onsuccess = function(rootEvent){
+        const record = rootEvent.target.result;
+        record.fromTime = 0;
+        rootStore.put(record);
+      }
       console.log('version upgrade')
     }
   }

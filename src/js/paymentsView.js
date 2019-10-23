@@ -16,7 +16,6 @@ function paymentView(sectionContent) {
             if (month !== new Date(timestamp).getMonth()) {
                 monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${new Date(timestamp).getMonth() + 1}-${new Date(timestamp).getFullYear()}`,'MM-YYYY').format('MMMM YYYY')}</div>`;
             };
-
             month = new Date(timestamp).getMonth();
             const offices = Object.keys(paymentData[key]);
             offices.forEach(function (office) {
@@ -26,8 +25,15 @@ function paymentView(sectionContent) {
         })
         if (!parent) return;
         parent.innerHTML = monthlyString;
-        toggleReportCard('.payment-card')
-
+        toggleReportCard('.payment-card');
+        [].map.call(document.querySelectorAll(`[data-paymentdata]`),function(el){
+            console.log(el)
+            el.addEventListener('click',function(){
+                const data = JSON.parse(el.dataset.paymentdata)
+                const dialog = new Dialog(paymentViewHeading(data),paymentViewContent(data),'payment-dialog').create('simple');
+                dialog.open();
+            })
+        })
     }).catch(function (error) {
         console.log(error)
         handleError({
@@ -98,7 +104,7 @@ function paymentCard(timestamp, office, paymentData) {
           <div class='amount-container'>
            ${paymentData[timestamp][office].map(function(payment){
                 return `
-                <div class='amount  mdc-typography--headline6 ${payment.status === 'CANCELLED' ? 'mdc-theme--error' : payment.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}'>
+                <div  data-paymentData='${JSON.stringify(payment)}' class='amount  mdc-typography--headline6 ${payment.status === 'CANCELLED' ? 'mdc-theme--error' : payment.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}'>
                     <div class='mdc-typography--caption'>${payment.type}</div>
                     ${payment.status === 'CANCELLED' ? 0 : convertAmountToCurrency(payment.amount,payment.currency)}
                     <div class='mdc-typography--caption'>${payment.status}</div>
@@ -111,15 +117,38 @@ function paymentCard(timestamp, office, paymentData) {
     </div>`
 }
 
+
+function paymentViewHeading(data){
+    return `<span class='capitalize'>${data.type}</span>
+    <div class='card-time mdc-typography--subtitle1 capitalize'>Created On ${formatCreatedTime(data.createdAt)}</p>
+    `
+}
+
+function paymentViewContent(data) {
+    return `<div class=claim-view'> 
+        ${data.amount ? `
+        <h3 class='mdc-typography--body1 info-heading mt-0'>
+            Amount : ${convertAmountToCurrency(Number(data.amount),data.currency)}` : ''}
+        </h3>
+      
+        ${data.status ? `<h3 class='mdc-typography--body1 info-heading mt-0'>
+           Status : ${data.status} 
+        </h3>` : ''}
+        ${data.cycleStartTime && data.cycleEndTime ? `<h3 class='mdc-typography--body1 info-heading'>
+            Cycle : ${moment(data.cycleStartTime).format('DD/MM/YYYY')} - ${moment(data.cycleEndTime).format('DD/MM/YYYY')}
+        </h3>` : ''}
+        
+    </div>`
+}
+
 function calculateTotalPayment(data) {
     let total = 0;
-    let currency = ''
+    let currency = '';
 
     data.forEach(function (value) {
         const amount = Number(value.amount)
         total = total + (amount);
         currency = value.currency
-
     })
     return convertAmountToCurrency(total, currency)
 }

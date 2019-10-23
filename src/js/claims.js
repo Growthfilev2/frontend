@@ -40,9 +40,9 @@ function expenseView(sectionContent) {
         parent.innerHTML = monthlyString;
         toggleReportCard('.reim-card');
 
-        [].map.call(document.querySelectorAll('.amount-container .amount'), function (el) {
+        [].map.call(document.querySelectorAll(`[data-claimId]`), function (el) {
             el.addEventListener('click', function () {
-                const id = el.dataset.relevantId;
+                const id = el.dataset.claimId;
                 db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
                     const activity = event.target.result;
                     if (activity) {
@@ -51,8 +51,42 @@ function expenseView(sectionContent) {
                     }
                 }
             })
+        });
+
+        [].map.call(document.querySelectorAll(`[data-claimdata]`), function (el) {
+            el.addEventListener('click', function () {
+                const data = JSON.parse(el.dataset.claimdata);
+                const dialog = new Dialog(claimViewHeading(data),claimViewContent(data),'claim-dialog').create('simple')
+                dialog.open();
+            })
         })
     })
+}
+
+function claimViewHeading(data){
+    return `${data.reimbursementType}
+    <p class="mdc-typography mdc-typography--subtitle2 mt-0 mb-0">${data.reimbursementName}</span>
+    <div class='card-time mdc-typography--subtitle1'>Created On ${formatCreatedTime(data.details.checkInTimestamp)}</p>
+    `
+}
+
+function claimViewContent(data) {
+    return `<div class=claim-view'> 
+        ${data.amount ? `Amount : ${convertAmountToCurrency(Number(data.amount),data.currency)}` : ''}
+        ${data.details.status ? `<h3 class='mdc-typography--body1 info-heading mt-0'>
+           Status : ${data.details.status} 
+        </h3>` : ''}
+        ${data.details.rate ? `<h3 class='mdc-typography--body1 info-heading'>
+            Rate : ${data.details.rate} 
+        </h3>` : ''}
+        ${data.details.distanceTravelled ? `<h3 class='mdc-typography--body1 info-heading'>
+            Distance travelled : ${data.details.distanceTravelled} KM
+        </h3>` :''}
+        ${data.details.photoURL  ? `<div class='photo-container'>
+            <img src='${data.details.photoURL}'>
+        </div>` :''}
+
+    </div>`
 }
 
 
@@ -85,15 +119,13 @@ function reimbursementCard(timestamp, office, data) {
       <div class='amount-container'>
         ${data[timestamp][office].map(function(value){
             return `
-                <div class='amount mdc-typography--headline6 ${value.details.status === 'CANCELLED' ? 'mdc-theme--error' : value.details.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}' data-relevant-id="${value.details.relevantActivityId}">
+                <div class='amount mdc-typography--headline6 ${value.details.status === 'CANCELLED' ? 'mdc-theme--error' : value.details.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}' ${value.details.claimId ? `data-claim-id="${value.details.claimId}"` :`data-claimData='${JSON.stringify(value)}'`}>
                     <div class='mdc-typography--caption'>${value.reimbursementType}</div>
                     ${value.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(value.amount,value.currency)}
                     <div class='mdc-typography--caption'>${value.details.status}</div>
                     <div class='mdc-typography--subtitle2'>${value.reimbursementName}</div>
                 </div>
-                
             `
-         
         }).join("")}
         </div>
       </div>
