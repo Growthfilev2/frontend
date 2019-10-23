@@ -490,13 +490,7 @@ function backblaze(body, meta) {
 
 
 
-function updateReports(statusObject, reportObjectStore) {
-  console.log(reportObjectStore)
-  statusObject.forEach(function (item) {
-    item.joinedDate = Number(`${item.month}${item.date}${item.year}`);
-    reportObjectStore.put(item)
-  })
-}
+
 
 function updateAttendance(attendanceData = [],store) {
   attendanceData.forEach(function(value) {
