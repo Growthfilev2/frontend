@@ -8,7 +8,7 @@ function paymentView(sectionContent) {
         const keys = Object.keys(paymentData);
 
         if (!keys.length) {
-            parent.innerHTML = "<h3 class='mdc-typography--headline5'>No payment records found</h3>"
+            parent.innerHTML = "<h3 class='mdc-typography--headline5 text-center'>No payment records found</h3>"
             return
         }
         keys.forEach(function (key) {

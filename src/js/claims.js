@@ -35,7 +35,7 @@ function expenseView(sectionContent) {
             offices.forEach(function (office) {
                 monthlyString += reimbursementCard(timestamp, office, reimbursementData);
             })
-        })
+        });
         if (!parent) return
         parent.innerHTML = monthlyString;
         toggleReportCard('.reim-card');
@@ -56,14 +56,21 @@ function expenseView(sectionContent) {
         [].map.call(document.querySelectorAll(`[data-claimdata]`), function (el) {
             el.addEventListener('click', function () {
                 const data = JSON.parse(el.dataset.claimdata);
-                const dialog = new Dialog(claimViewHeading(data),claimViewContent(data),'claim-dialog').create('simple')
+                const dialog = new Dialog(claimViewHeading(data), claimViewContent(data), 'claim-dialog').create('simple')
                 dialog.open();
             })
+        })
+    }).catch(function (error) {
+        handleError({
+            message: error.message,
+            body: {
+                stack: error.stack || '',
+            }
         })
     })
 }
 
-function claimViewHeading(data){
+function claimViewHeading(data) {
     return `${data.reimbursementType}
     <p class="mdc-typography mdc-typography--subtitle2 mt-0 mb-0">${data.reimbursementName}</span>
     <div class='card-time mdc-typography--subtitle1'>Created On ${formatCreatedTime(data.details.checkInTimestamp)}</p>
