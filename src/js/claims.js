@@ -52,7 +52,7 @@ function expenseView(sectionContent) {
                 }
             })
         });
-
+        
         [].map.call(document.querySelectorAll(`[data-claimdata]`), function (el) {
             el.addEventListener('click', function () {
                 const data = JSON.parse(el.dataset.claimdata);

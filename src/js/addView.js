@@ -9,8 +9,8 @@ function addView(sub) {
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
     <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
-    `
-
+    `;
+    
     document.getElementById('form-iframe').addEventListener("load", ev => {
         document.getElementById('form-iframe').contentWindow.init(sub);
     })
