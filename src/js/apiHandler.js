@@ -513,7 +513,7 @@ function updateReimbursements(reimbursementData,store) {
     officeId: "qweqwe",
     amount: "300",
     currency: 'INR', 
-    id: "adasd", 
+    id: "1", 
     reimbursementType: "km allowance", 
     reimbursementName: "Lunch", 
     details: {
@@ -531,10 +531,10 @@ function updateReimbursements(reimbursementData,store) {
   month: 9,
   year: 2019,
   office: "Puja Capital",
-  officeId: "qweqwe",
+  officeId: "10239-02",
   amount: "4000",
   currency: 'INR', 
-  id: "adasd123", 
+  id: "2", 
   reimbursementType: "daily allowance", 
   reimbursementName: "shortest straw", 
   details: {
@@ -547,8 +547,70 @@ function updateReimbursements(reimbursementData,store) {
       status: "CANCELLED", 
       claimId: "asdasd", 
   }
-}]
-  reimbursementData.forEach(function(value) {
+},{
+  date: 8,
+  month: 9,
+  year: 2019,
+  office: "Puja Capital",
+  officeId: "qweqwe213",
+  amount: "15",
+  currency: 'INR', 
+  id: "3", 
+  reimbursementType: "daily allowance", 
+  reimbursementName: "shortest straw", 
+  details: {
+      rate: "5",
+      checkInTimestamp: Date.now(), // unix
+      startLocation: "", 
+      endLocation: "", 
+      "distanceTravelled": 2,
+      photoURL: "", 
+      status: "CONFIRMED", 
+      claimId: "asdasd", 
+  }
+},{
+  date: 9,
+  month: 8,
+  year: 2019,
+  office: "Puja Capital",
+  officeId: "qweqwe213",
+  amount: "15",
+  currency: 'INR', 
+  id: "8", 
+  reimbursementType: "daily allowance", 
+  reimbursementName: "shortest straw", 
+  details: {
+      rate: "5",
+      checkInTimestamp: Date.now(), // unix
+      startLocation: "", 
+      endLocation: "", 
+      "distanceTravelled": 2,
+      photoURL: "", 
+      status: "CONFIRMED", 
+      claimId: "asdasd", 
+  }
+},{
+  date: 8,
+  month: 8,
+  year: 2019,
+  office: "Puja Capital",
+  officeId: "qweqwe213",
+  amount: "15",
+  currency: 'INR', 
+  id: "59", 
+  reimbursementType: "daily allowance", 
+  reimbursementName: "shortest straw", 
+  details: {
+      rate: "5",
+      checkInTimestamp: Date.now(), // unix
+      startLocation: "", 
+      endLocation: "", 
+      "distanceTravelled": 2,
+      photoURL: "", 
+      status: "CONFIRMED", 
+      claimId: "asdasd", 
+  }
+}].forEach(function(value) {
     store.put(value)
   })
 }
@@ -740,8 +802,8 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
-  // updateAttendance(read.attendace,attendace)
-  updateReimbursements(read.reimbursement,reimbursement)
+  // updateAttendance(read.attendace,attendaceStore)
+  updateReimbursements(read.reimbursement,reimbursementStore)
   updatePayments([{
     "date": 5,
     "month": 9,
