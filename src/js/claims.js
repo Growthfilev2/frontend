@@ -3,25 +3,7 @@ function expenseView(sectionContent) {
     sectionContent.dataset.view = 'reimbursements'
     getSubscription('', 'claim').then(function (subs) {
         if (!subs.length) return;
-        const claimBtn = createFab('add')
-
-        claimBtn.addEventListener('click', function () {
-            if (subs.length == 1) {
-                history.pushState(['addView'], null, null);
-                addView(subs[0])
-                return
-            }
-            const dialog = new Dialog('Choose Office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
-            const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(dialog, ul)
-
-            ul.listen('MDCList:action', function (evt) {
-                history.pushState(['addView'], null, null);
-                addView(subs[evt.detail.index])
-                dialog.close()
-            })
-        });
-        document.getElementById('reim-view').appendChild(claimBtn)
+        document.getElementById('reim-view').appendChild(createTemplateButton(subs))
     }).catch(function (error) {
         console.log(error)
         handleError({
@@ -32,7 +14,6 @@ function expenseView(sectionContent) {
             }
         })
     })
-
 
     getReimMonthlyData().then(function (reimbursementData) {
         console.log(reimbursementData)
