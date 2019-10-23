@@ -132,7 +132,8 @@ function getLocation() {
       }
       return;
     }
-
+   
+    
     html5Geolocation().then(function (htmlLocation) {
       if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
         handleGeoLocationApi().then(resolve).catch(function (error) {
@@ -211,7 +212,6 @@ function html5Geolocation() {
   })
 }
 
-let apiHandler = new Worker('js/apiHandler.js?version=35');
 
 
 function requestCreator(requestType, requestBody) {
@@ -243,7 +243,8 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  // let apiHandler = new Worker('js/apiHandler.js?version=35');
+  let apiHandler = new Worker('js/apiHandler.js?version=40');
+
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
     if (nonLocationRequest[requestType]) {
@@ -276,12 +277,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       return reject(event.data)
     };
   })

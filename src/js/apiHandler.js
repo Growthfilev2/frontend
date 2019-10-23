@@ -499,125 +499,28 @@ function updateReports(statusObject, reportObjectStore) {
   })
 }
 
-// function updateAttendance(attendanceData,store) {
-//   attendanceData.forEach(function(value) {
-//     store.put(value)
-//   })
-// }
-function updateReimbursements(reimbursementData,store) {
-  [{
-    date: 9,
-    month: 9,
-    year: 2019,
-    office: "Puja Capital",
-    officeId: "qweqwe",
-    amount: "300",
-    currency: 'INR', 
-    id: "1", 
-    reimbursementType: "km allowance", 
-    reimbursementName: "Lunch", 
-    details: {
-        rate: "3",
-        checkInTimestamp: Date.now(), // unix
-        startLocation: "", 
-        endLocation: "", 
-        "distanceTravelled": "22",
-        photoURL: "", 
-        status: "PENDING", 
-        claimId: "asdasd", 
-    }
-},{
-  date: 9,
-  month: 9,
-  year: 2019,
-  office: "Puja Capital",
-  officeId: "10239-02",
-  amount: "4000",
-  currency: 'INR', 
-  id: "2", 
-  reimbursementType: "daily allowance", 
-  reimbursementName: "shortest straw", 
-  details: {
-      rate: "5",
-      checkInTimestamp: Date.now(), // unix
-      startLocation: "", 
-      endLocation: "", 
-      "distanceTravelled": 2,
-      photoURL: "", 
-      status: "CANCELLED", 
-      claimId: "asdasd", 
-  }
-},{
-  date: 8,
-  month: 9,
-  year: 2019,
-  office: "Puja Capital",
-  officeId: "qweqwe213",
-  amount: "15",
-  currency: 'INR', 
-  id: "3", 
-  reimbursementType: "daily allowance", 
-  reimbursementName: "shortest straw", 
-  details: {
-      rate: "5",
-      checkInTimestamp: Date.now(), // unix
-      startLocation: "", 
-      endLocation: "", 
-      "distanceTravelled": 2,
-      photoURL: "", 
-      status: "CONFIRMED", 
-      claimId: "asdasd", 
-  }
-},{
-  date: 9,
-  month: 8,
-  year: 2019,
-  office: "Puja Capital",
-  officeId: "qweqwe213",
-  amount: "15",
-  currency: 'INR', 
-  id: "8", 
-  reimbursementType: "daily allowance", 
-  reimbursementName: "shortest straw", 
-  details: {
-      rate: "5",
-      checkInTimestamp: Date.now(), // unix
-      startLocation: "", 
-      endLocation: "", 
-      "distanceTravelled": 2,
-      photoURL: "", 
-      status: "CONFIRMED", 
-      claimId: "asdasd", 
-  }
-},{
-  date: 8,
-  month: 8,
-  year: 2019,
-  office: "Puja Capital",
-  officeId: "qweqwe213",
-  amount: "15",
-  currency: 'INR', 
-  id: "59", 
-  reimbursementType: "daily allowance", 
-  reimbursementName: "shortest straw", 
-  details: {
-      rate: "5",
-      checkInTimestamp: Date.now(), // unix
-      startLocation: "", 
-      endLocation: "", 
-      "distanceTravelled": 2,
-      photoURL: "", 
-      status: "CONFIRMED", 
-      claimId: "asdasd", 
-  }
-}].forEach(function(value) {
+function updateAttendance(attendanceData = [],store) {
+  attendanceData.forEach(function(value) {
+    const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
+    value.key = sortKey
     store.put(value)
   })
 }
 
-function updatePayments(paymentData,store) {
+function updateReimbursements(reimbursementData = [],store) {
+  reimbursementData.forEach(function(value) {
+    const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
+    value.key = sortKey
+      store.put(value)
+    })
+}
+
+function updatePayments(paymentData = [],store) {
+
   paymentData.forEach(function(value) {
-    store.put(value)
+      const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
+      value.key = sortKey
+      store.put(value)
   })
 }
 
@@ -802,25 +705,9 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
-  // updateAttendance(read.attendace,attendaceStore)
+  updateAttendance(read.attendance,attendaceStore)
   updateReimbursements(read.reimbursement,reimbursementStore)
-  updatePayments([{
-    "date": 5,
-    "month": 9,
-    year: 2019,
-    id: "217093",
-    'currency': 'INR',
-    "lastUpdated": 1571401463191, 
-    "type": "deduction", 
-    "amount": "-500", 
-    "createdAt": 1571401463191, 
-    "cycleStartDate": 1569868200000, 
-    "cycleEndDate": 1572546599999, 
-    "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
-    "office": 'Puja Capital',
-    "officeId": 'gR0XF3YA03MA472QWkNp',
-    status:'Processing'
-}],paymentStore)
+  updatePayments(read.payment,paymentStore)
 
 
   read.activities.forEach(function (activity) {

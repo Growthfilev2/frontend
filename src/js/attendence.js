@@ -41,41 +41,7 @@ function createAttendanceCard(employeeRecord) {
 
     let monthlyString = ''
     let month;
-    [{
-      date: 5,
-      month: 9,
-      year: 2019,
-      office: "Puja Capital",
-      officeId: "asdasd",
-      onLeave: false,
-      onAr: true,
-      onHoliday: false,
-      weeklyOff: false,
-      attendance: 0,
-      addendum: [{
-          addendumId: "asdasd",
-          latitude: "28.123",
-          longitude: "77.123",
-          timestamp: 1571660521701,
-          comment: "asjdpoasjpodjasd"
-        },
-        {
-          addendumId: "asdasd",
-          latitude: "28.123",
-          longitude: "77.123",
-          timestamp: 1571660521701,
-          comment: "asjdpoasjpodjasd"
-        },
-        {
-          addendumId: "asdasd",
-          latitude: "28.123",
-          longitude: "77.123",
-          timestamp: Date.now(),
-          comment: "asjdpoasjpodjasd"
-        }
-
-      ]
-    }].forEach(function (record) {
+    monthlyData.forEach(function (record) {
       if (month !== record.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
@@ -85,7 +51,7 @@ function createAttendanceCard(employeeRecord) {
 
     if (!parent) return;
     parent.innerHTML = monthlyString;
-    toggleReportCard('.attendace-card');
+    toggleReportCard('.attendance-card');
 
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
       el.addEventListener('click', checkStatusSubscription)
@@ -124,7 +90,7 @@ function attendaceCard(data, employeeRecord) {
           </div>
         </div>
         </div>
-        <div class='attendace-detail-container hidden'>
+        <div class='detail-container hidden'>
         <div class='text-container'>
           ${data.addendum.length ? `
           <div class='detail count'>
@@ -229,7 +195,7 @@ function getMonthlyData() {
 
     const result = []
     tx.objectStore('attendance')
-      .index('month')
+      .index('key')
       .openCursor(null, 'prev')
       .onsuccess = function (event) {
         const cursor = event.target.result;

@@ -113,10 +113,7 @@ function initializeApp() {
           return;
         }
       }
-      else {
-        // firebase.auth().settings.appVerificationDisabled = true
-
-      }
+      
 
       panel.innerHTML = '';
       panel.classList.remove('hidden');
@@ -203,9 +200,12 @@ function startApp() {
       createObjectStores(db, dbName)
     } else {
       createReportObjectStores(db);
-
-      db.deleteObjectStore('list')
-      db.deleteObjectStore('reports')
+      if(db.objectStoreNames.contains('list')) {
+        db.deleteObjectStore('list')
+      }
+      if(db.objectStoreNames.contains('reports')) {
+        db.deleteObjectStore('reports')
+      }
      
       console.log('version upgrade')
     }
@@ -562,6 +562,7 @@ function createReportObjectStores(db) {
     const attendance = db.createObjectStore('attendance',{
       keyPath:'id',
     })
+    attendance.createIndex('key','key')
     attendance.createIndex('date','date')
     attendance.createIndex('month','month')
     attendance.createIndex('office','office')
@@ -572,6 +573,8 @@ function createReportObjectStores(db) {
     const payments = db.createObjectStore('payment',{
       keyPath:'id'
     })
+    payments.createIndex('key','key')
+
     payments.createIndex('date','date')
     payments.createIndex('month','month')
     payments.createIndex('year','year')
@@ -583,6 +586,7 @@ function createReportObjectStores(db) {
     const reimbursements = db.createObjectStore('reimbursement',{
       keyPath:'id'
     })
+    reimbursements.createIndex('key','key')
     reimbursements.createIndex('date','date')
     reimbursements.createIndex('month','month')
     reimbursements.createIndex('year','year')
