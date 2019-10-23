@@ -500,7 +500,28 @@ function updateReports(statusObject, reportObjectStore) {
 }
 
 function updateAttendance(attendanceData = [],store) {
-  attendanceData.forEach(function(value) {
+  [{   
+    // attendance
+    id: 'aasd',
+    date: 5,
+    month: 10,
+    year: 2019,
+    office: "Puja Capital",
+    officeId: "asdasd",
+    onLeave: false, 
+    onAr: true, 
+    onLeave: false, 
+    onHoliday: false, 
+    weeklyOff: false, 
+    attendance: 0, 
+    addendum:[{
+        addendumId: "asd",
+        latitude: 28.213,
+        longitude: 77.123,
+        timestamp: Date.now(),
+        comment: "asdasd"
+    }]
+}].forEach(function(value) {
     const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
     value.key = sortKey
     store.put(value)
@@ -508,7 +529,50 @@ function updateAttendance(attendanceData = [],store) {
 }
 
 function updateReimbursements(reimbursementData = [],store) {
-  reimbursementData.forEach(function(value) {
+  [{
+   
+    date: 5,
+    month: 10,
+    year: 2019,
+    office: "Puja Capital",
+    officeId: "aospjdp",
+    amount: 500, 
+    currency: 'INR', 
+    id: "asd",
+    reimbursementType: "claim", 
+    reimbursementName: "Lunch", 
+    details: {
+        rate: 3,
+        checkInTimestamp: Date.now(), 
+        startLocation: "", 
+        endLocation: "", 
+        "distanceTravelled": 3,
+        photoURL: "", 
+        status: "PENDING", 
+        claimId: "aasd", 
+    }
+},{
+  date: 5,
+  month: 10,
+  year: 2019,
+  office: "Puja Capital",
+  officeId: "aospjdp",
+  amount: 800, 
+  currency: 'INR', 
+  id: "asd12312321312312323", 
+  reimbursementType: "km allowance", 
+  reimbursementName: "something", 
+  details: {
+      rate: 3,
+      checkInTimestamp: Date.now(), 
+      startLocation: "", 
+      endLocation: "", 
+      "distanceTravelled": "3",
+      photoURL: "", 
+      status: "CANCELLED", 
+      claimId: "aasd", 
+  }
+}].forEach(function(value) {
     const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
     value.key = sortKey
       store.put(value)
@@ -517,7 +581,25 @@ function updateReimbursements(reimbursementData = [],store) {
 
 function updatePayments(paymentData = [],store) {
 
-  paymentData.forEach(function(value) {
+  [{
+    
+    id: "ajsdp", 
+    date: 5,
+    month: 10,
+    year: 2019,
+    currency: 'INR',
+    "amount": "-500", 
+    "office": 'Puja Capital', 
+    "officeId": 'gR0XF3YA03MA472QWkNp', 
+    "status": "processing", 
+    "type": "deduction", 
+    "cycleStartTime": 1569868200000, 
+    "cycleEndTime": 1572546599999, 
+    "lastUpdated": 1571401463191, 
+    "createdAt": 1571401463191, 
+    "uid": "0f8oUu3AyNhYqVAqkGd2AElKev22",
+    phoneNumber: "", 
+}].forEach(function(value) {
       const sortKey = moment(`${value.date}-${value.month + 1}-${value.year}`,'DD-MM-YYYY').valueOf()
       value.key = sortKey
       store.put(value)
@@ -708,7 +790,6 @@ function successResponse(read, param, db, resolve, reject) {
   updateAttendance(read.attendance,attendaceStore)
   updateReimbursements(read.reimbursement,reimbursementStore)
   updatePayments(read.payment,paymentStore)
-
 
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;

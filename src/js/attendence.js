@@ -1,17 +1,30 @@
 function attendenceView(sectionContent) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
+  document.getElementById('start-load').classList.add('hidden')
+  getSubscription('', 'leave').then(function (subs) {
+    if (!subs.length) return;
+    const leaveBtn = createFab('add')
+  
+    leaveBtn.addEventListener('click', function () {
+      if (subs.length == 1) {
+        history.pushState(['addView'], null, null);
+        addView(subs[0])
+        return
+      }
+      const dialog = new Dialog('Choose Office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+      const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+      bottomDialog(dialog, ul)
+      
+      ul.listen('MDCList:action',function(evt){
+        history.pushState(['addView'], null, null);
+        addView(subs[evt.detail.index])
+        dialog.close()
+      })
+    });
+    document.getElementById('attendance-view').appendChild(leaveBtn)
 
-  getReportSubs('attendance').then(function (subs) {
-    console.log(subs)
-    document.getElementById('start-load').classList.add('hidden')
-    const suggestionListEl = document.getElementById('suggested-list');
-    if (!suggestionListEl) return
-    suggestionListEl.innerHTML = templateList(subs)
-    const suggestionListInit = new mdc.list.MDCList(suggestionListEl)
-    handleTemplateListClick(suggestionListInit)
   }).catch(function (error) {
-    document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
       body: {
@@ -36,12 +49,49 @@ function attendenceView(sectionContent) {
 
 function createAttendanceCard(employeeRecord) {
   getMonthlyData().then(function (monthlyData) {
-    const parent = document.getElementById('attendance');
+    const parent = document.getElementById('attendance-cards');
+    if(!monthlyData.length) {
+      parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendace record found</h5>`
+      return;
+    }
     document.getElementById('start-load').classList.add('hidden')
 
     let monthlyString = ''
     let month;
-    monthlyData.forEach(function (record) {
+    [{
+      // attendance
+      id: 'aasd',
+      date: 5,
+      month: 10,
+      year: 2019,
+      office: "Puja Capital",
+      officeId: "asdasd",
+      onLeave: false,
+      onAr: false,
+      onLeave: false,
+      onHoliday: false,
+      weeklyOff: false,
+      attendance: 0,
+      addendum: [{
+        addendumId: "asd",
+        latitude: 28.213,
+        longitude: 77.123,
+        timestamp: Date.now(),
+        comment: "asdasd"
+      }, {
+        addendumId: "asd",
+        latitude: 28.213,
+        longitude: 77.123,
+        timestamp: Date.now(),
+        comment: "asdasd"
+      }, {
+        addendumId: "asd",
+        latitude: 28.213,
+        longitude: 77.123,
+        timestamp: Date.now(),
+        comment: "asdasd"
+      }]
+    }].forEach(function (record) {
       if (month !== record.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${record.month + 1}-${record.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
@@ -70,7 +120,7 @@ function createAttendanceCard(employeeRecord) {
 }
 
 function attendaceCard(data, employeeRecord) {
-  return `<div class='mdc-card mdc-card--outlined attendance-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet'>
+  return `<div class='mdc-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
       <div class='mdc-card__primary-action'>
         <div class="demo-card__primary">
         <div class='left'>
@@ -129,7 +179,11 @@ function calculateWorkedHours(addendums) {
   if (!length || length == 1) return ''
   const duration = moment.duration(moment(new Date(addendums[length - 1].timestamp), 'DD/MM/YYYY HH:mm').diff(moment(new Date(addendums[0].timestamp), 'DD/MM/YYYY HH:mm'))).asHours()
   console.log(duration)
-  return Number(duration).toFixed(1)
+  if (Number(duration).toFixed(1) > 0) {
+    return Number(duration).toFixed(1)
+  }
+  return ''
+  // return Number(duration).toFixed(1)
 
 }
 
@@ -146,16 +200,12 @@ function attendanceStatusType(data) {
   if (data.weeklyOff) {
     return 'Weekly off'
   }
+  return ''
 }
 
 function attendanceDom() {
-  return `<div class='attendance-section'>
-  <div class='mdc-layout-grid__inner'>
-    <div class='list-container mdc-layout-grid__cell--span-12'>
-      <ul class='mdc-list subscription-list' id='suggested-list'></ul>
-    </div>
-  </div>
-  <div class='monthly-stat' id='attendance'></div>
+  return `<div class='attendance-section' id='attendance-view'>
+    <div class='monthly-stat  mdc-layout-grid__inner' id='attendance-cards'></div>
   </div>`
 }
 

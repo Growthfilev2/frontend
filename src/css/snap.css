@@ -31,14 +31,14 @@
   
   
   
-  .app-fab--absolute {
+  .app-fab--absolute.snap-fab {
     position: fixed;
     bottom: 1rem;
     right: 1rem;
   }
   
   @media(min-width: 1024px) {
-     .app-fab--absolute {
+     .app-fab--absolute.snap-fab {
       bottom: 1.5rem;
       right: 1.5rem;
     }

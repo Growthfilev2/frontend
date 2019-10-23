@@ -88,7 +88,6 @@ window.onpopstate = function (event) {
 
 function initializeApp() {
   window.addEventListener('load', function () {
-
     firebase.initializeApp(appKey.getKeys())
     progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));

@@ -79,8 +79,8 @@ function paymentCard(data) {
             ${data.createdAt ?`<h3 class='detail mdc-typography--body1'>
             Created : ${moment(data.createdAt).format('DD/MM/YYYY HH:mm')}
           </h3>` :'' }
-            ${data.cycleStartDate && data.cycleEndDate ? `<h3  class='detail  mdc-typography--body1'>
-                Cycle : ${moment(data.cycleStartDate).format('DD/MM/YYYY')} - ${moment(data.cycleEndDate).format('DD/MM/YYYY')}
+            ${data.cycleStartTime && data.cycleEndTime ? `<h3  class='detail  mdc-typography--body1'>
+                Cycle : ${moment(data.cycleStartTime).format('DD/MM/YYYY')} - ${moment(data.cycleEndTime).format('DD/MM/YYYY')}
             </h3>` :''}
           </div>
           </div>

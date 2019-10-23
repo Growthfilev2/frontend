@@ -1,14 +1,27 @@
 function expenseView(sectionContent) {
     sectionContent.innerHTML = reimDom();
     sectionContent.dataset.view = 'reimbursements'
+    getSubscription('', 'claim').then(function (subs) {
+        if (!subs.length) return;
+        const claimBtn = createFab('add')
 
-    getReportSubs('reimbursement').then(function (subs) {
-        const listEl = document.getElementById('suggested-list-reim')
-        if (subs.length && listEl) {
-            listEl.innerHTML = templateList(subs);
-            const listInit = new mdc.list.MDCList(listEl)
-            handleTemplateListClick(listInit)
-        }
+        claimBtn.addEventListener('click', function () {
+            if (subs.length == 1) {
+                history.pushState(['addView'], null, null);
+                addView(subs[0])
+                return
+            }
+            const dialog = new Dialog('Choose Office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+            const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+            bottomDialog(dialog, ul)
+
+            ul.listen('MDCList:action', function (evt) {
+                history.pushState(['addView'], null, null);
+                addView(subs[evt.detail.index])
+                dialog.close()
+            })
+        });
+        document.getElementById('reim-view').appendChild(claimBtn)
     }).catch(function (error) {
         console.log(error)
         handleError({
@@ -20,11 +33,17 @@ function expenseView(sectionContent) {
         })
     })
 
+
     getReimMonthlyData().then(function (reimbursementData) {
         console.log(reimbursementData)
-        let month = monthlyString = '';
-        const parent = document.getElementById('reimbursements')
+        const parent = document.getElementById('reimbursement-cards')
         const keys = Object.keys(reimbursementData);
+        if(!keys.length) {
+            parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No reimbursements found</h5>`
+            return;
+        }
+
+        let month = monthlyString = '';
         keys.forEach(function (key) {
             const timestamp = Number(key)
             if (month !== new Date(timestamp).getMonth()) {
@@ -32,17 +51,17 @@ function expenseView(sectionContent) {
             };
             month = new Date(timestamp).getMonth();
 
-            monthlyString += reimbursementCard(key,reimbursementData);
+            monthlyString += reimbursementCard(key, reimbursementData);
         })
         if (!parent) return
         parent.innerHTML = monthlyString;
         toggleReportCard('.reim-card');
         [].map.call(document.querySelectorAll('.amount-container .amount'), function (el) {
-            el.addEventListener('click',function() {
+            el.addEventListener('click', function () {
                 const id = el.dataset.relevantId;
                 db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
                     const activity = event.target.result;
-                    if(activity) {
+                    if (activity) {
                         const heading = createActivityHeading(activity)
                         showViewDialog(heading, activity, 'view-form');
                     }
@@ -53,7 +72,7 @@ function expenseView(sectionContent) {
 }
 
 
-function reimbursementCard(key,data) {
+function reimbursementCard(key, data) {
     return `<div class='mdc-card mdc-card--outlined reim-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet'>
     <div class='mdc-card__primary-action'>
       <div class="demo-card__primary">
@@ -68,7 +87,7 @@ function reimbursementCard(key,data) {
           </div>
           <div class="heading-container">
             <span class="demo-card__title mdc-typography">${totalReimAmount(data[key])}</span>
-            <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0 card-office-title">${data.office}</h3>
+            <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0 card-office-title">Puja Capital</h3>
           </div>
       </div>
       <div class='right'>
@@ -97,16 +116,16 @@ function reimbursementCard(key,data) {
 </div>`
 }
 
-function totalReimAmount(reimData){
+function totalReimAmount(reimData) {
     let total = 0;
     let currency = ''
-    reimData.forEach(function(data){
-        if(data.details.status !== 'CANCELLED') {
+    reimData.forEach(function (data) {
+        if (data.details.status !== 'CANCELLED') {
             total += data.amount
             currency = data.currency
         }
     })
-    return convertAmountToCurrency(total,currency)
+    return convertAmountToCurrency(total, currency)
 }
 
 
@@ -121,14 +140,8 @@ function convertAmountToCurrency(amount, currency) {
 
 
 function reimDom() {
-    return `<div class='reim-section'>
-        <div class='mdc-layout-grid__inner'>
-            <div id='text-container-reim' class='mdc-layout-grid__cell--span-12'></div>
-            <div class='list-container mdc-layout-grid__cell--span-12'>
-                <ul class='mdc-list subscription-list' id='suggested-list-reim'></ul>
-            </div>
-        </div>
-        <div id='reimbursements' class='mdc-layout-grid__inner'></div>
+    return `<div class='reim-section' id='reim-view'>
+        <div id='reimbursement-cards' class='mdc-layout-grid__inner'></div>
     `
 }
 
@@ -142,10 +155,9 @@ function getReimMonthlyData() {
         index.openCursor(null, 'prev').onsuccess = function (event) {
             const cursor = event.target.result;
             if (!cursor) return;
-            if(!dateObject[cursor.value.key]) {
+            if (!dateObject[cursor.value.key]) {
                 dateObject[cursor.value.key] = [cursor.value]
-            }
-            else {
+            } else {
                 dateObject[cursor.value.key].push(cursor.value)
             }
             cursor.continue();

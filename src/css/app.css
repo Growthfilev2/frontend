@@ -384,6 +384,9 @@ body {
 }
 
 /** fab**/
+.mdc-fab.mdc-fab--without-icon  .mdc-fab__icon{
+  font-size: 35px;
+}
 
 .app-fab--absolute {
   position: fixed;
