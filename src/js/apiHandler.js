@@ -536,9 +536,9 @@ function updateReimbursements(reimbursementData = [],store) {
     year: 2019,
     office: "Puja Capital",
     officeId: "aospjdp",
-    amount: 500, 
+    amount: 100, 
     currency: 'INR', 
-    id: "asd",
+    id: "asdzxczxc",
     reimbursementType: "claim", 
     reimbursementName: "Lunch", 
     details: {
@@ -548,18 +548,18 @@ function updateReimbursements(reimbursementData = [],store) {
         endLocation: "", 
         "distanceTravelled": 3,
         photoURL: "", 
-        status: "PENDING", 
+        status: "CANCELLED", 
         claimId: "aasd", 
     }
 },{
   date: 5,
   month: 10,
   year: 2019,
-  office: "Puja Capital",
-  officeId: "aospjdp",
-  amount: 800, 
+  office: "Puja Capitals",
+  officeId: "aospjdpzxcxczxczxczxc",
+  amount: 1800, 
   currency: 'INR', 
-  id: "asd12312321312312323", 
+  id: "asd12312321312312323123123123123", 
   reimbursementType: "km allowance", 
   reimbursementName: "something", 
   details: {
@@ -569,7 +569,7 @@ function updateReimbursements(reimbursementData = [],store) {
       endLocation: "", 
       "distanceTravelled": "3",
       photoURL: "", 
-      status: "CANCELLED", 
+      status: "PENDING", 
       claimId: "aasd", 
   }
 }].forEach(function(value) {
@@ -583,12 +583,12 @@ function updatePayments(paymentData = [],store) {
 
   [{
     
-    id: "ajsdp", 
+    id: "ajsdpasdasd", 
     date: 5,
     month: 10,
     year: 2019,
     currency: 'INR',
-    "amount": "-500", 
+    "amount": "300", 
     "office": 'Puja Capital', 
     "officeId": 'gR0XF3YA03MA472QWkNp', 
     "status": "processing", 

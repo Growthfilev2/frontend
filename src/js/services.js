@@ -243,7 +243,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=40');
+  let apiHandler = new Worker('js/apiHandler.js?version=42');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token

@@ -4,9 +4,7 @@ function attendenceView(sectionContent) {
   document.getElementById('start-load').classList.add('hidden')
   getSubscription('', 'leave').then(function (subs) {
     if (!subs.length) return;
-    
     document.getElementById('attendance-view').appendChild(createTemplateButton(subs))
-
   }).catch(function (error) {
     handleError({
       message: error.message,
@@ -33,10 +31,10 @@ function attendenceView(sectionContent) {
 function createAttendanceCard(employeeRecord) {
   getMonthlyData().then(function (monthlyData) {
     const parent = document.getElementById('attendance-cards');
-    if(!monthlyData.length) {
-      parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendace record found</h5>`
-      return;
-    }
+    // if(!monthlyData.length) {
+    //   parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendance record found</h5>`
+    //   return;
+    // }
     document.getElementById('start-load').classList.add('hidden')
 
     let monthlyString = ''
@@ -103,7 +101,7 @@ function createAttendanceCard(employeeRecord) {
 }
 
 function attendaceCard(data, employeeRecord) {
-  return `<div class='mdc-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
+  return `<div class='mdc-card report-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
       <div class='mdc-card__primary-action'>
         <div class="demo-card__primary">
         <div class='left'>
@@ -124,7 +122,7 @@ function attendaceCard(data, employeeRecord) {
         </div>
         </div>
         <div class='detail-container hidden'>
-        <div class='text-container'>
+        <div class='text-container pt-10 pb-10'>
           ${data.addendum.length ? `
           <div class='detail count'>
             Count : ${data.addendum.length} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Daily Activity Count'].value ? `/ ${employeeRecord[data.office]['Minimum Daily Activity Count'].value}` :''}

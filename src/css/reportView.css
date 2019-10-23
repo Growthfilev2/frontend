@@ -21,3 +21,16 @@
 .card-detail-section .payment-details h3:nth-child(1) {
 	margin-top: 0px;
 }
+
+.report-card .demo-card__primary {
+	padding: 1rem;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #ccc;
+}
+.report-card .detail-container {
+	padding-left: 0px;
+	padding-right: 0px;
+	padding: 1rem;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}

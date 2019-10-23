@@ -49,7 +49,7 @@
   color: #716c6c;
 }
 
- .sfd {
+.sfd {
   font-size: 20px;
   font-weight: 500;
 }
@@ -61,9 +61,11 @@
 .attendance-card .demo-card__primary {
   display: flex;
 }
-.attendance-card  .right {
+
+.attendance-card .right {
   margin-left: auto;
 }
+
 .month-container {
   display: table;
 
@@ -88,32 +90,37 @@
 .heading-container {
   float: left;
 }
+
 .dropdown {
   float: right;
   cursor: pointer;
   display: grid;
 }
+
 .dropdown i {
   float: right;
   text-align: right;
 }
+
 .card-office-title {
   margin-top: 7px;
 }
 
-.detail-container {
-  padding: 1rem;
-  padding-bottom: 10px;
-  padding-top: 0px;
-}
- .time-container, .amount-container {
-  padding-top: 20px;
-  width: 100%;
+
+.time-container,
+.amount-container {
+  grid-column-gap: 20px;
+  grid-template-columns: auto auto auto;
+  align-items: start;
+  display: grid;
+
+  grid-gap: 10px;
   text-align: center;
 }
-.time-container .time , .amount-container .amount {
- width: 33%;
- float: left;
+
+.time-container .time,
+.amount-container .amount {
+  width: inherit;
 }
 
 .attendance-card .text-container {
@@ -124,6 +131,7 @@
 .attendance-card .text-container .count {
   margin-right: 15px;
 }
+
 .detail-container .text-container .working-hour {
   margin-left: auto;
 }
