@@ -173,16 +173,16 @@ function homeView(suggestedTemplates) {
       clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
     const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
-    if(!ApplicationState.venue) {
+    if (!ApplicationState.venue) {
       generateCheckInVenueName(header);
     }
-    if(document.getElementById('change-location')) {
-      document.getElementById('change-location').addEventListener('click',function(){
+    if (document.getElementById('change-location')) {
+      document.getElementById('change-location').addEventListener('click', function () {
         progressBar.open();
         manageLocation(3).then(mapView).catch(handleLocationError);
       })
     }
-    
+
 
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.remove('hidden')
@@ -193,7 +193,7 @@ function homeView(suggestedTemplates) {
 
     panel.innerHTML = homePanel(commonTasks);
 
- 
+
     const commonListEl = document.getElementById('common-task-list');
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
@@ -288,7 +288,7 @@ function homeView(suggestedTemplates) {
       };
 
       history.pushState(['emailUpdation'], null, null)
-      emailUpdation()
+      emailUpdation(reportView)
     })
 
     if (!suggestionLength) return;
@@ -309,29 +309,28 @@ function homeView(suggestedTemplates) {
   }
 }
 
-function generateCheckInVenueName(header){
+function generateCheckInVenueName(header) {
   const lastCheckInCreatedTimestamp = ApplicationState.lastCheckInCreated;
-  if(!lastCheckInCreatedTimestamp) return;
-  if(!header) return;
+  if (!lastCheckInCreatedTimestamp) return;
+  if (!header) return;
   const myNumber = firebase.auth().currentUser.phoneNumber;
   const tx = db.transaction('addendum');
   const addendumStore = tx.objectStore('addendum')
   let addendums = [];
-  
-  if(addendumStore.indexNames.contains('KeyTimestamp')) {
-    const key = myNumber+myNumber
-    const range = IDBKeyRange.only([lastCheckInCreatedTimestamp,key])
-    addendumStore.index('KeyTimestamp').getAll(range).onsuccess = function(event){
-      if(!event.target.result.length) return;
+
+  if (addendumStore.indexNames.contains('KeyTimestamp')) {
+    const key = myNumber + myNumber
+    const range = IDBKeyRange.only([lastCheckInCreatedTimestamp, key])
+    addendumStore.index('KeyTimestamp').getAll(range).onsuccess = function (event) {
+      if (!event.target.result.length) return;
       addendums = event.target.result;
     };
-  }
-  else {
+  } else {
 
-    addendumStore.index('user').openCursor(myNumber).onsuccess = function(event){
-      const cursor  = event.target.result;
-      if(!cursor) return;
-      if(cursor.value.timestamp !== lastCheckInCreatedTimestamp) {
+    addendumStore.index('user').openCursor(myNumber).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.timestamp !== lastCheckInCreatedTimestamp) {
         cursor.continue();
         return;
       }
@@ -340,21 +339,21 @@ function generateCheckInVenueName(header){
     }
   }
 
-  tx.oncomplete = function(){
+  tx.oncomplete = function () {
     console.log(addendums);
-    if(!addendums.length) return;
-    addendums.forEach(function(addendum){
+    if (!addendums.length) return;
+    addendums.forEach(function (addendum) {
       const activityStore = db.transaction('activity').objectStore('activity');
-      activityStore.get(addendum.activityId).onsuccess = function(activityEvent) {
+      activityStore.get(addendum.activityId).onsuccess = function (activityEvent) {
         const activity = activityEvent.target.result;
-        if(!activity) return;
-        if(activity.template !== 'check-in') return;
+        if (!activity) return;
+        if (activity.template !== 'check-in') return;
         const commentArray = addendum.comment.split(" ");
         const index = commentArray.indexOf("from");
-        const nameOfLocation = commentArray.slice(index+1,commentArray.length).join(" ");
+        const nameOfLocation = commentArray.slice(index + 1, commentArray.length).join(" ");
         console.log(header)
         console.log(nameOfLocation)
-        if(header.root_.querySelector('.mdc-top-app-bar__title')) {
+        if (header.root_.querySelector('.mdc-top-app-bar__title')) {
           header.root_.querySelector('.mdc-top-app-bar__title').textContent = nameOfLocation;
         }
       }
@@ -443,7 +442,7 @@ function createUpdatesuggestion(result) {
       })
       button.appendChild(icon)
       button.appendChild(span)
-      
+
       button.addEventListener('click', function () {
         setActivityStatus(activity, buttonDetails.status)
         dialog.close()
@@ -589,7 +588,7 @@ function checkForUpdates() {
         activityRecords.forEach(function (record) {
           mapTx.objectStore('map').index('location').get(record.attachment.Location.value).onsuccess = function (event) {
             const mapRecord = event.target.result;
-            if(!mapRecord) return;
+            if (!mapRecord) return;
             if (!mapRecord.latitude || !mapRecord.longitude) return;
             if (calculateDistanceBetweenTwoPoints({
                 latitude: mapRecord.latitude,
@@ -603,7 +602,7 @@ function checkForUpdates() {
         }
       }
     }
-    
+
     calendarTx.onerror = function () {
       return reject({
         message: tx.error,
@@ -627,12 +626,12 @@ function handleTemplateListClick(listInit) {
       addView(valueSelectedList[0])
       return
     }
-    
+
 
     const dialog = new Dialog('Choose Office', officeSelectionList(valueSelectedList), 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
     bottomDialog(dialog, ul)
-    
+
     ul.listen('MDCList:action', function (event) {
       history.pushState(['addView'], null, null);
       addView(valueSelectedList[event.detail.index])
@@ -641,7 +640,7 @@ function handleTemplateListClick(listInit) {
   });
 }
 
-function officeSelectionList(subs){
+function officeSelectionList(subs) {
   const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
     ${subs.map(function(sub){
       return `<li class='mdc-list-item'>
@@ -653,8 +652,8 @@ function officeSelectionList(subs){
     }).join("")}
     </ul>`
 
-    return officeList;
-  
+  return officeList;
+
 }
 
 function bottomDialog(dialog, ul) {
@@ -789,30 +788,33 @@ function updateName() {
   })
 }
 
-function getEmailViewHeading(auth, updateOnly) {
+function getEmailViewHeading(auth) {
   const text = {
     topBarText: '',
     heading: '',
     btnText: 'Update'
   }
-  if (updateOnly) {
-    text.topBarText = 'Update Email';
-    return text;
-  }
+
   if (!auth.email) {
     text.topBarText = 'Add Email';
     text.heading = 'Please Add You Email Address To Continue'
     return text;
   }
-  text.topBarText = 'Verify Email'
-  text.heading = 'Please Verify Your Email Address To Continue'
-  text.btnText = 'Verify'
+  if (!auth.emailVerified) {
+
+    text.topBarText = 'Verify Email'
+    text.heading = 'Please Verify Your Email Address To Continue'
+    text.btnText = 'Verify'
+    return text;
+  }
+  text.topBarText = 'Update Email'
+  text.btnText = 'Update'
   return text;
 }
 
-function emailUpdation(updateOnly) {
+function emailUpdation(callback, updateOnly) {
   const auth = firebase.auth().currentUser;
-  const headings = getEmailViewHeading(auth, updateOnly)
+  const headings = getEmailViewHeading(auth)
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
   `
@@ -830,65 +832,62 @@ function emailUpdation(updateOnly) {
     document.getElementById('email-btn').addEventListener('click', function () {
       console.log(emailField)
 
+
       if (!emailReg(emailField.value)) {
-        emailField.focus();
-        emailField.foundation_.setValid(false);
-        emailField.foundation_.adapter_.shakeLabel(true);
+        setHelperInvalid(emailField)
         emailField.helperTextContent = 'Enter A Valid Email Id';
         return;
       };
 
-      if (updateOnly) {
-        if (emailField.value === firebase.auth().currentUser.email) {
-          emailField.foundation_.setValid(false);
-          emailField.foundation_.adapter_.shakeLabel(true);
-          emailField.helperTextContent = 'New Email Cannot Be Same As Previous Email';
+
+      progressBar.open();
+
+      if (auth.email) {
+        if (emailField.value !== auth.email) {
+          emailUpdate(emailField.value, callback)
+          return;
+        }
+        if (!auth.emailVerified) {
+          emailVerification(callback);
           return
         }
-        progressBar.open()
-        firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
-          firebase.auth().currentUser.sendEmailVerification().then(function () {
-            snacks('Email Verification Has Been Sent.')
-            history.pushState(['emailVerificationWait'], null, null)
-            emailVerificationWait(updateOnly)
-            progressBar.close()
-          }).catch(handleEmailError)
-        }).catch(handleEmailError)
+        progressBar.close()
+        setHelperInvalid(emailField)
+        emailField.helperTextContent = 'New Email Cannot Be Same As Previous Email';
         return
       }
-      progressBar.open()
-      if (emailField.value === firebase.auth().currentUser.email) {
-        firebase.auth().currentUser.sendEmailVerification().then(function () {
-          snacks('Email Verification Has Been Sent.')
-          progressBar.close();
-          history.pushState(['emailVerificationWait'], null, null)
-          emailVerificationWait()
-        }).catch(handleEmailError)
-        return;
-      };
 
-      firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
-        firebase.auth().currentUser.sendEmailVerification().then(function () {
-          snacks('Email Verification Has Been Sent.')
-          history.pushState(['emailVerificationWait'], null, null)
-          emailVerificationWait()
-          progressBar.close()
-        }).catch(handleEmailError)
-      }).catch(handleEmailError)
+      emailUpdate(emailField.value, callback)
       return
-    })
+    });
+
     if (!result.length && !updateOnly) {
       const skipbtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
       skipbtn.root_.classList.remove('hidden')
       skipbtn.root_.addEventListener('click', function () {
-        history.pushState(['reportView'], null, null);
-        reportView();
+        history.pushState([`${callback}`], null, null);
+        callback();
       })
     }
   })
 }
 
-function emailVerificationWait(updateOnly) {
+function emailUpdate(email, callback) {
+  firebase.auth().currentUser.updateEmail(email).then(function () {
+    emailVerification(callback)
+  }).catch(handleEmailError)
+}
+
+function emailVerification(callback) {
+  firebase.auth().currentUser.sendEmailVerification().then(function () {
+    snacks('Email Verification Has Been Sent.')
+    progressBar.close();
+    history.pushState(['emailVerificationWait'], null, null)
+    emailVerificationWait(callback)
+  }).catch(handleEmailError)
+}
+
+function emailVerificationWait(callback) {
   const auth = firebase.auth().currentUser
   document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
   <h3 class='mdc-typography--headline6'>Verification Link Has Been Sent To ${firebase.auth().currentUser.email}</h3>
@@ -908,12 +907,12 @@ function emailVerificationWait(updateOnly) {
         return;
       }
       progressBar.close()
-      if (updateOnly) {
-        history.go(-2);
-        return;
-      }
-      history.pushState(['reportView'], null, null)
-      reportView();
+      // if (updateOnly) {
+      //   history.go(-2);
+      //   return;
+      // }
+      history.pushState([`${callback}`], null, null)
+      callback();
     }, 2000)
   })
 }
@@ -984,5 +983,3 @@ ${reportString}
 `
 
 }
-
-

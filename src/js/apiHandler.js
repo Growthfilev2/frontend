@@ -16,8 +16,7 @@ const requestFunctionCaller = {
   backblaze: backblaze,
   updateAuth: updateAuth,
   comment: comment,
-  changePhoneNumber:changePhoneNumber
-
+  changePhoneNumber:changePhoneNumber,
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -102,7 +101,9 @@ self.onmessage = function (event) {
       }).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
       return;
     }
-
+    if(event.data.type === 'paymentMethods') {
+      paymentMethods(meta).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
+    }
     requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
   }
   req.onerror = function () {
@@ -241,7 +242,7 @@ function comment(body, meta) {
   return http(req)
 }
 
-function changePhoneNumber(body) {
+function changePhoneNumber(body,meta) {
   console.log('change number')
   const req = {
     method: 'POST',
@@ -253,6 +254,16 @@ function changePhoneNumber(body) {
   return http(req)
 }
 
+function paymentMethods(meta) {
+  const req = {
+    method: 'GET',
+    url: `${meta.apiUrl}paymentMethods`,
+    body: null,
+    token: meta.user.token,
+    timeout:null
+  }
+  return http(req)
+}
 
 function geolocationApi(body, meta,retry) {
 

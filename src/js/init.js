@@ -113,8 +113,6 @@ function initializeApp() {
         }
       }
       
-
-      panel.innerHTML = '';
       panel.classList.remove('hidden');
       panel.classList.remove('freeze');
       

@@ -213,6 +213,7 @@ function html5Geolocation() {
 }
 
 
+let apiHandler = new Worker('js/apiHandler.js?version=41');
 
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
@@ -222,7 +223,8 @@ function requestCreator(requestType, requestBody) {
     'backblaze': true,
     'removeFromOffice': true,
     'updateAuth': true,
-    'geolocationApi': true
+    'geolocationApi': true,
+     'paymentMethods':true
   }
   var auth = firebase.auth().currentUser;
 
@@ -243,7 +245,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=40');
+  // let apiHandler = new Worker('js/apiHandler.js?version=41');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
@@ -277,12 +279,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       return reject(event.data)
     };
   })
@@ -476,8 +478,8 @@ function getSubscription(office, template) {
 }
 
 function emailReg(email) {
-  const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return emailReg.test(String(email).toLowerCase())
+  const emailRegString = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return emailRegString.test(String(email).toLowerCase())
 }
 
 function formatTextToTitleCase(string) {
