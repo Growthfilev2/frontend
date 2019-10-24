@@ -224,7 +224,9 @@ function requestCreator(requestType, requestBody) {
     'removeFromOffice': true,
     'updateAuth': true,
     'geolocationApi': true,
-     'paymentMethods':true
+    'paymentMethods':true,
+    'removeBankAccount':true,
+    'newBankAccount':true
   }
   var auth = firebase.auth().currentUser;
 

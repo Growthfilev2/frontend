@@ -95,7 +95,6 @@ function createBaseDetails() {
     ${auth.phoneNumber}
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['changePhoneNumber'],null,null);changePhoneNumber()">edit</span>
   </li>
-  <li class='mdc-list-divider' role='seperator'></li>
   <li class='mdc-list-item'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
     Bank Accounts
@@ -136,8 +135,19 @@ function bankAccount() {
 
   [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
     if (!el) return;
-    el.addEventListener('click', function () {
-
+    el.addEventListener('click',function(){
+      progressBar.open()
+      el.addEventListener('click', function () {
+        const number = el.dataset.account;
+          requestCreator('removeBankAccount',{
+            bankAccount : number
+          }).then(function(){
+            snacks(`Account ${number} removed`)
+          }).catch(function(error){
+            progressBar.close()
+            snacks(error.response.message);
+          })
+      })
     })
   })
 
@@ -148,7 +158,7 @@ function bankAccount() {
       emailUpdation(profileView,true)
       return
     }
-    history.pushState(['addNewBankAccount'], null, null)
+    history.pushState(['addNewBankAccount'], null, null);
     addNewBankAccount();
   })
   document.getElementById('app-current-panel').appendChild(addNewBtn)
@@ -189,16 +199,16 @@ const header = getHeader('app-header', backIcon, '');
       
     </div>
     <div class='text-field-container mt-20'>
-      ${textField({
-        id:'email',
-        label:'Email',
-        disabled:true,
-        value:auth.email && auth.emailVerified ? auth.email : '',
-        type:'email'
-      })}
-      <div class="mdc-text-field-helper-line">
-        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
-      </div>
+        ${textField({
+          id:'email',
+          label:'Email',
+          disabled:true,
+          value:auth.email && auth.emailVerified ? auth.email : '',
+          type:'email'
+        })}
+        <div class="mdc-text-field-helper-line">
+          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
+        </div>
     </div>
 
     <div class='text-field-container mb-10'>
@@ -250,22 +260,30 @@ const header = getHeader('app-header', backIcon, '');
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);
     field.root_.classList.add('full-width')
-    fields[field.root_.id] = field;
+    fields[field.label_.root_.textContent] = field;
   })
 
   const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
   submitBtn.root_.addEventListener('click', function () {
     console.log(fields)
-    Object.keys(fields).forEach(function (label) {
-      const field = fields[label]
+    const labels = Object.keys(fields)
+    for (let index = 0; index < labels.length; index++) {
+      const label = labels[index]
+      const field = fields[label];
       if (!field.value) {
         setHelperInvalid(field)
-        field.helperTextContent = `Please add ${label}`
+        field.helperTextContent = `${label} Cannot Be Empty`
         return
       }
       field.helperTextContent = ''
+    }
+    progressBar.open();
+    requestCreator('newBankAccount').then(function(){
+        history.back();
+    }).catch(function(error){
+      snacks(error.response.message)
+      progressBar.close();
     })
-
   })
 }
 
@@ -353,10 +371,13 @@ function changePhoneNumber() {
       submitDialog.open();
       console.log(submitDialog)
       submitDialog.scrimClickAction = '';
-
+      
       requestCreator('changePhoneNumber', {
         newPhoneNumber: newNumberValue
       }).then(function (response) {
+        setTimeout(function(){
+          window.location.reload();
+        },5000)  
         console.log(response)
       }).catch(function (error) {
         progressBar.close();

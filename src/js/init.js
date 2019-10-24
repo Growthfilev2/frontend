@@ -112,15 +112,16 @@ function initializeApp() {
           return;
         }
       }
+      else {
+        firebase.auth().settings.appVerificationDisabledForTesting = true;
+      }
       
       panel.classList.remove('hidden');
-      panel.classList.remove('freeze');
-      
       if (!initApp) {
         document.getElementById('app-header').classList.remove('hidden')
         return
-      }
-
+      };
+      
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
 
@@ -176,7 +177,7 @@ function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
-  document.getElementById('app-current-panel').classList.remove('freeze');
+
   var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }

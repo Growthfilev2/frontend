@@ -17,6 +17,9 @@ const requestFunctionCaller = {
   updateAuth: updateAuth,
   comment: comment,
   changePhoneNumber:changePhoneNumber,
+  paymentMethods:paymentMethods,
+  newBankAccount:newBankAccount,
+  removeBankAccount:removeBankAccount
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -101,9 +104,7 @@ self.onmessage = function (event) {
       }).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
       return;
     }
-    if(event.data.type === 'paymentMethods') {
-      paymentMethods(meta).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
-    }
+  
     requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
   }
   req.onerror = function () {
@@ -265,6 +266,27 @@ function paymentMethods(meta) {
   return http(req)
 }
 
+function removeBankAccount(meta) {
+  const req = {
+    method: 'DELETE',
+    url: `${meta.apiUrl}paymentMethods/bankAccount?bankAccount=${meta}`,
+    body: null,
+    token: meta.user.token,
+    timeout:null
+  }
+  return http(req)
+}
+
+function newBankAccount(body,meta) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}paymentMethods`,
+    body: body,
+    token: meta.user.token,
+    timeout:null
+  }
+  return http(req)
+}
 function geolocationApi(body, meta,retry) {
 
   return new Promise(function (resolve, reject) {
