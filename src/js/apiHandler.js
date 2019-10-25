@@ -6,7 +6,6 @@ function getTime() {
   return Date.now()
 }
 
-
 const requestFunctionCaller = {
   dm: dm,
   statusChange: statusChange,
@@ -255,7 +254,7 @@ function changePhoneNumber(body,meta) {
   return http(req)
 }
 
-function paymentMethods(meta) {
+function paymentMethods(body,meta) {
   const req = {
     method: 'GET',
     url: `${meta.apiUrl}paymentMethods`,
@@ -266,10 +265,10 @@ function paymentMethods(meta) {
   return http(req)
 }
 
-function removeBankAccount(meta) {
+function removeBankAccount(body,meta) {
   const req = {
     method: 'DELETE',
-    url: `${meta.apiUrl}paymentMethods/bankAccount?bankAccount=${meta}`,
+    url: `${meta.apiUrl}paymentMethods/bankAccount?bankAccount=${body.bankAccount}`,
     body: null,
     token: meta.user.token,
     timeout:null
@@ -281,7 +280,7 @@ function newBankAccount(body,meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}paymentMethods`,
-    body: body,
+    body: JSON.stringify(body),
     token: meta.user.token,
     timeout:null
   }

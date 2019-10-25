@@ -588,7 +588,7 @@ function createReportObjectStores(db) {
 
     const reimbursements = db.createObjectStore('reimbursement',{
       keyPath:'id'
-    })
+    });
     reimbursements.createIndex('key','key')
     reimbursements.createIndex('date','date')
     reimbursements.createIndex('month','month')

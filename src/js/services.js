@@ -116,6 +116,7 @@ function handleLocationOld(maxRetry, location) {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
+  
     if (!navigator.onLine) return reject({
       message: 'BROKEN INTERNET CONNECTION'
     })
@@ -191,7 +192,6 @@ function iosLocationError(iosError) {
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
     navigator.geolocation.getCurrentPosition(function (position) {
-
       return resolve({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -206,14 +206,12 @@ function html5Geolocation() {
       })
     }, {
       maximumAge: 0,
-      timeout: 5000,
+      timeout: 8000,
       enableHighAccuracy: false
     })
   })
 }
 
-
-let apiHandler = new Worker('js/apiHandler.js?version=41');
 
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
@@ -247,7 +245,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  // let apiHandler = new Worker('js/apiHandler.js?version=41');
+  let apiHandler = new Worker('js/apiHandler.js?version=42');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
@@ -272,7 +270,8 @@ function requestCreator(requestType, requestBody) {
             ApplicationState.lastCheckInCreated = time
           }
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
-          console.log('sending')
+          console.log('sending', requestGenerator);
+          
           apiHandler.postMessage(requestGenerator);
         }).catch(handleLocationError)
         return;
@@ -281,12 +280,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       return reject(event.data)
     };
   })

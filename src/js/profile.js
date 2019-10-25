@@ -105,19 +105,16 @@ function createBaseDetails() {
 }
 
 function bankAccount() {
-  // requestCreator('paymentMethods').then(function(accounts){
-  const accounts = [{
-    beneId: "123123",
-    ifsc: "jlksjd;l-12309sad",
-    bankAccount: "1234 ** ** 5678"
-  }]
-  console.log(accounts);
-  const auth = firebase.auth().currentUser;
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  progressBar.open();
+  requestCreator('paymentMethods').then(function (accounts) {
+   
+    console.log(accounts);
+    const auth = firebase.auth().currentUser;
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Bank accounts</span>
     `
-  const header = getHeader('app-header', backIcon, '');
-  document.getElementById('app-current-panel').innerHTML = `
+    const header = getHeader('app-header', backIcon, '');
+    document.getElementById('app-current-panel').innerHTML = `
     <ul class='mdc-list mdc-list--two-line' id='bank-list'>
     ${accounts.map(function(account){
         return `<li class='mdc-list-item'>
@@ -130,44 +127,47 @@ function bankAccount() {
     }).join("")}
     </ul>
     `
-  const list = new mdc.list.MDCList(document.getElementById('bank-list'));
-  list.selectedIndex = 0;
+    const list = new mdc.list.MDCList(document.getElementById('bank-list'));
+    list.selectedIndex = 0;
 
-  [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
-    if (!el) return;
-    el.addEventListener('click',function(){
-      progressBar.open()
+    [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
+      if (!el) return;
       el.addEventListener('click', function () {
-        const number = el.dataset.account;
-          requestCreator('removeBankAccount',{
-            bankAccount : number
-          }).then(function(){
+        progressBar.open()
+        el.addEventListener('click', function () {
+          const number = el.dataset.account;
+          requestCreator('removeBankAccount', {
+            bankAccount: number
+          }).then(function () {
             snacks(`Account ${number} removed`)
-          }).catch(function(error){
+          }).catch(function (error) {
             progressBar.close()
             snacks(error.response.message);
           })
+        })
       })
     })
-  })
 
-  const addNewBtn = createFab('add');
-  addNewBtn.addEventListener('click', function () {
-    if(!auth.email || !auth.emailVerified) {
-      history.pushState(['emailUpdation'], null, null)
-      emailUpdation(profileView,true)
-      return
-    }
-    history.pushState(['addNewBankAccount'], null, null);
-    addNewBankAccount();
-  })
-  document.getElementById('app-current-panel').appendChild(addNewBtn)
-  // }).catch(console.error)
+    const addNewBtn = createFab('add');
+    addNewBtn.addEventListener('click', function () {
+      if (!auth.email || !auth.emailVerified) {
+        history.pushState(['emailUpdation'], null, null)
+        emailUpdation(profileView, true)
+        return
+      }
+      history.pushState(['addNewBankAccount'], null, null);
+      addNewBankAccount();
+    })
+    document.getElementById('app-current-panel').appendChild(addNewBtn);
 
+  }).catch(function(error){
+    progressBar.close();
+    snacks(error.response.message)
+  })
 }
 
 function getLast4digitsOfAccount(accountNumber) {
-  return accountNumber.slice(4, accountNumber.length)
+  return accountNumber.substr(accountNumber.length - 4)
 }
 
 function addNewBankAccount() {
@@ -175,7 +175,7 @@ function addNewBankAccount() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Add New Bank Account</span>
   `
-const header = getHeader('app-header', backIcon, '');
+  const header = getHeader('app-header', backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
   <div class='add-bank-container mt-20'>
@@ -254,14 +254,15 @@ const header = getHeader('app-header', backIcon, '');
   </div>
   `;
 
-  
- 
+
+
   const fields = {};
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);
     field.root_.classList.add('full-width')
     fields[field.label_.root_.textContent] = field;
-  })
+  });
+
 
   const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
   submitBtn.root_.addEventListener('click', function () {
@@ -278,9 +279,18 @@ const header = getHeader('app-header', backIcon, '');
       field.helperTextContent = ''
     }
     progressBar.open();
-    requestCreator('newBankAccount').then(function(){
-        history.back();
-    }).catch(function(error){
+    requestCreator('newBankAccount', {
+      name: auth.displayName,
+      email: auth.email,
+      phoneNumber: auth.phoneNumber,
+      bankAccount: fields['Bank Account'].value,
+      ifsc: fields['IFSC'].value,
+      address1: fields['Address'].value,
+      type: 'bankTransfer'
+    }).then(function () {
+      snacks('New Bank Account Added');
+      history.back();
+    }).catch(function (error) {
       snacks(error.response.message)
       progressBar.close();
     })
@@ -371,13 +381,13 @@ function changePhoneNumber() {
       submitDialog.open();
       console.log(submitDialog)
       submitDialog.scrimClickAction = '';
-      
+
       requestCreator('changePhoneNumber', {
         newPhoneNumber: newNumberValue
       }).then(function (response) {
-        setTimeout(function(){
+        setTimeout(function () {
           window.location.reload();
-        },5000)  
+        }, 5000)
         console.log(response)
       }).catch(function (error) {
         progressBar.close();
