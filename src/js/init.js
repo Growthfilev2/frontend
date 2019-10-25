@@ -573,8 +573,8 @@ function createReportObjectStores(db) {
     const payments = db.createObjectStore('payment',{
       keyPath:'id'
     })
-    payments.createIndex('key','key')
 
+    payments.createIndex('key','key')
     payments.createIndex('date','date')
     payments.createIndex('month','month')
     payments.createIndex('year','year')
@@ -682,8 +682,7 @@ function createObjectStores(db, uid) {
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
-
-
+  
   root.put({
     uid: uid,
     fromTime: 0,

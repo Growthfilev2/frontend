@@ -723,9 +723,9 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
-  updateAttendance(read.attendance,attendaceStore)
-  updateReimbursements(read.reimbursement,reimbursementStore)
-  updatePayments(read.payment,paymentStore)
+  updateAttendance(read.attendances,attendaceStore)
+  updateReimbursements(read.reimbursements,reimbursementStore)
+  updatePayments(read.payments,paymentStore)
 
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
