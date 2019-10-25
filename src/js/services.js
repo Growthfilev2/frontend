@@ -73,7 +73,7 @@ function manageLocation(maxRetry) {
 
 
   return new Promise(function (resolve, reject) {
-
+    
     getLocation().then(function (location) {
       if (location.accuracy >= 35000) {
         if (maxRetry > 0) {
@@ -115,7 +115,14 @@ function handleLocationOld(maxRetry, location) {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-  
+    return resolve({
+      latitude:28.123,
+      longitude:77.123,
+      accuracy:23,
+      lastLocationTime:Date.now(),
+      provider:'HTML5'
+    });
+    
     if (!navigator.onLine) return reject({
       message: 'BROKEN INTERNET CONNECTION'
     })
@@ -211,6 +218,7 @@ function html5Geolocation() {
   })
 }
 
+// let apiHandler = new Worker('js/apiHandler.js?version=43');
 
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {

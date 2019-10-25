@@ -93,7 +93,7 @@ function initializeApp() {
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
     const panel = this.document.getElementById('app-current-panel');
-    
+
     if (!window.Worker && !window.indexedDB) {
       const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
       incompatibleDialog.open();
@@ -112,13 +112,13 @@ function initializeApp() {
           return;
         }
       }
-     
+
       panel.classList.remove('hidden');
       if (!initApp) {
         document.getElementById('app-header').classList.remove('hidden')
         return
       };
-      
+
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
 
@@ -195,14 +195,14 @@ function startApp() {
       createObjectStores(db, dbName)
     } else {
       createReportObjectStores(db);
-      if(db.objectStoreNames.contains('list')) {
+      if (db.objectStoreNames.contains('list')) {
         db.deleteObjectStore('list')
       }
-      if(db.objectStoreNames.contains('reports')) {
+      if (db.objectStoreNames.contains('reports')) {
         db.deleteObjectStore('reports')
       }
       var rootStore = req.transaction.objectStore('root')
-      rootStore.get(dbName).onsuccess = function(rootEvent){
+      rootStore.get(dbName).onsuccess = function (rootEvent) {
         const record = rootEvent.target.result;
         record.fromTime = 0;
         rootStore.put(record);
@@ -517,7 +517,7 @@ function profileCheck() {
 }
 
 function areObjectStoreValid(names) {
-  const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum',]
+  const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum', ]
   for (let index = 0; index < stores.length; index++) {
     const el = stores[index];
     if (!names.contains(el)) {
@@ -557,43 +557,44 @@ function getEmployeeDetails(range, indexName) {
 }
 
 function createReportObjectStores(db) {
-  if(!db.objectStoreNames.contains('attendance')) {
+  if (!db.objectStoreNames.contains('attendance')) {
 
-    const attendance = db.createObjectStore('attendance',{
-      keyPath:'id',
+    const attendance = db.createObjectStore('attendance', {
+      keyPath: 'id',
     })
-    attendance.createIndex('key','key')
-    attendance.createIndex('date','date')
-    attendance.createIndex('month','month')
-    attendance.createIndex('office','office')
-    attendance.createIndex('attendance','attendance');
+    attendance.createIndex('key', 'key')
+    attendance.createIndex('date', 'date')
+    attendance.createIndex('month', 'month')
+    attendance.createIndex('office', 'office')
+    attendance.createIndex('attendance', 'attendance');
   }
-  if(!db.objectStoreNames.contains('payment')) {
+  if (!db.objectStoreNames.contains('payment')) {
 
-    const payments = db.createObjectStore('payment',{
-      keyPath:'id'
+    const payments = db.createObjectStore('payment', {
+      keyPath: 'id'
     })
 
-    payments.createIndex('key','key')
-    payments.createIndex('date','date')
-    payments.createIndex('month','month')
-    payments.createIndex('year','year')
-    payments.createIndex('status','status')
-    payments.createIndex('office','office')
+    payments.createIndex('key', 'key')
+    payments.createIndex('date', 'date')
+    payments.createIndex('month', 'month')
+    payments.createIndex('year', 'year')
+    payments.createIndex('status', 'status')
+    payments.createIndex('office', 'office')
   }
-  if(!db.objectStoreNames.contains('reimbursement')) {
+  if (!db.objectStoreNames.contains('reimbursement')) {
 
-    const reimbursements = db.createObjectStore('reimbursement',{
-      keyPath:'id'
+    const reimbursements = db.createObjectStore('reimbursement', {
+      keyPath: 'id'
     });
-    reimbursements.createIndex('key','key')
-    reimbursements.createIndex('date','date')
-    reimbursements.createIndex('month','month')
-    reimbursements.createIndex('year','year')
-    reimbursements.createIndex('office','office')
+    reimbursements.createIndex('key', 'key')
+    reimbursements.createIndex('date', 'date')
+    reimbursements.createIndex('month', 'month')
+    reimbursements.createIndex('year', 'year')
+    reimbursements.createIndex('office', 'office')
   }
 
 }
+
 function createObjectStores(db, uid) {
 
   const activity = db.createObjectStore('activity', {
@@ -605,7 +606,7 @@ function createObjectStores(db, uid) {
   activity.createIndex('hidden', 'hidden')
   activity.createIndex('template', 'template');
   activity.createIndex('status', 'status')
- 
+
   const users = db.createObjectStore('users', {
     keyPath: 'mobile'
   })
@@ -682,7 +683,6 @@ function createObjectStores(db, uid) {
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
-  
   root.put({
     uid: uid,
     fromTime: 0,

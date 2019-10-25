@@ -29,6 +29,7 @@ function attendenceView(sectionContent) {
 
 
 function createAttendanceCard(employeeRecord) {
+  console.log(employeeRecord)
   getMonthlyData().then(function (monthlyData) {
     console.log(monthlyData)
     const parent = document.getElementById('attendance-cards');
@@ -68,7 +69,10 @@ function createAttendanceCard(employeeRecord) {
   })
 }
 
+
+
 function attendaceCard(data, employeeRecord) {
+
   return `<div class='mdc-card report-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
       <div class='mdc-card__primary-action'>
         <div class="demo-card__primary">
@@ -93,10 +97,11 @@ function attendaceCard(data, employeeRecord) {
         <div class='text-container pt-10 pb-10'>
           ${data.addendum.length ? `
           <div class='detail count'>
-            Count : ${data.addendum.length} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Daily Activity Count'].value ? `/ ${employeeRecord[data.office]['Minimum Daily Activity Count'].value}` :''}
+            Count : ${getMinimumDalyCount(data,employeeRecord)}
           </div>
           <div class='detail working-hour'>
-            ${calculateWorkedHours(data.addendum) ?`Working hours : ${calculateWorkedHours(data.addendum)} ${Object.keys(employeeRecord).length && employeeRecord[data.office]['Minimum Working Hours'].value ? `/ ${employeeRecord[data.office]['Minimum Working Hours'].value}` :''}` :''}
+          
+          Working hours : ${getWorkingHoursText(data,employeeRecord)}
             ` :''}
           </div>
         </div>
@@ -117,6 +122,25 @@ function attendaceCard(data, employeeRecord) {
   </div>`
 }
 
+function getMinimumDalyCount(data,employeeRecord){
+  const offices = Object.keys(employeeRecord);
+  if(!offices.length) {
+    return `${data.addendum.length}`
+  }
+  if(!employeeRecord[data.office]) {
+    return `${data.addendum.length}`
+  }
+  return `/ ${employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value}`
+}
+
+function getWorkingHoursText(data,employeeRecord){
+  const hours = calculateWorkedHours(data.addendum);
+  if(!hours) return '';
+  const offices = Object.keys(employeeRecord);
+  if(!offices.length) return hours;
+  if(!employeeRecord[data.office]) return hours;
+  return `/ ${employeeRecord[data.office].attachment['Minimum Working Hours'].value} `
+}
 
 
 function getAttendanceTime(addendum) {
