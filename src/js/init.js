@@ -112,10 +112,7 @@ function initializeApp() {
           return;
         }
       }
-      else {
-        firebase.auth().settings.appVerificationDisabledForTesting = true;
-      }
-      
+     
       panel.classList.remove('hidden');
       if (!initApp) {
         document.getElementById('app-header').classList.remove('hidden')

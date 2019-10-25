@@ -206,7 +206,7 @@ function html5Geolocation() {
       })
     }, {
       maximumAge: 0,
-      timeout: 8000,
+      timeout: 5000,
       enableHighAccuracy: false
     })
   })
