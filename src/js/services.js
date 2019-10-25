@@ -83,7 +83,6 @@ function manageLocation(maxRetry) {
           }, 1000)
         } else {
           console.log('retry end of high accuracy')
-
           return handleLocationOld(3, location).then(resolve).catch(reject)
         }
       } else {
