@@ -641,6 +641,7 @@ function handleTemplateListClick(listInit) {
 }
 
 function officeSelectionList(subs) {
+  
   const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
     ${subs.map(function(sub){
       return `<li class='mdc-list-item'>

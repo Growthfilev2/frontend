@@ -175,13 +175,14 @@ function getReimMonthlyData() {
     return new Promise(function (resolve, reject) {
 
         const tx = db.transaction('reimbursement')
-        const index = tx.objectStore('reimbursement').index('month')
+        const index = tx.objectStore('reimbursement').index('key')
 
         const dateObject = {}
         index.openCursor(null, 'prev').onsuccess = function (event) {
             const cursor = event.target.result;
             if (!cursor) return;
             const officeObject = {}
+
             if (!dateObject[cursor.value.key]) {
                 officeObject[cursor.value.office] = [cursor.value]
                 dateObject[cursor.value.key] = officeObject;
@@ -197,9 +198,7 @@ function getReimMonthlyData() {
             cursor.continue();
         }
         tx.oncomplete = function () {
-            // Object.key(dateObject).forEach(function(k) {
-            //     new Date(console.log(k))
-            // })
+            console.log(dateObject)
             return resolve(dateObject)
         }
         tx.onerror = function () {

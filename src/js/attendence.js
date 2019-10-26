@@ -33,7 +33,7 @@ function createAttendanceCard(employeeRecord) {
   getMonthlyData().then(function (monthlyData) {
     console.log(monthlyData)
     const parent = document.getElementById('attendance-cards');
-    if(!monthlyData.length) {
+    if (!monthlyData.length) {
       parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendance record found</h5>`
       return;
     }
@@ -122,23 +122,23 @@ function attendaceCard(data, employeeRecord) {
   </div>`
 }
 
-function getMinimumDalyCount(data,employeeRecord){
+function getMinimumDalyCount(data, employeeRecord) {
   const offices = Object.keys(employeeRecord);
-  if(!offices.length) {
+  if (!offices.length) {
     return `${data.addendum.length}`
   }
-  if(!employeeRecord[data.office]) {
+  if (!employeeRecord[data.office]) {
     return `${data.addendum.length}`
   }
   return `/ ${employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value}`
 }
 
-function getWorkingHoursText(data,employeeRecord){
+function getWorkingHoursText(data, employeeRecord) {
   const hours = calculateWorkedHours(data.addendum);
-  if(!hours) return '';
+  if (!hours) return '';
   const offices = Object.keys(employeeRecord);
-  if(!offices.length) return hours;
-  if(!employeeRecord[data.office]) return hours;
+  if (!offices.length) return hours;
+  if (!employeeRecord[data.office]) return hours;
   return `/ ${employeeRecord[data.office].attachment['Minimum Working Hours'].value} `
 }
 
@@ -213,9 +213,7 @@ function cardDate(value) {
 
 function getMonthlyData() {
   return new Promise(function (resolve, reject) {
-
     const tx = db.transaction('attendance');
-
     const result = []
     tx.objectStore('attendance')
       .index('key')
@@ -238,6 +236,10 @@ function getMonthlyData() {
           cursor.continue();
           return;
         }
+        
+        cursor.value.addendum.sort(function (a, b) {
+          b.timestamp - a.timestamp
+        })
         result.push(cursor.value)
         cursor.continue();
       }
