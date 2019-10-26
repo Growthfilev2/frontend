@@ -265,8 +265,8 @@ function homeView(suggestedTemplates) {
     Promise.all([checkForUpdates(), getYesterdayAtt()]).then(function (results) {
 
       const updates = results[0]
-      const ars = results[1]
-      if (!updates.length && !hasValidAr(ars) && !suggestedTemplates.length) {
+      const ars = results[1];
+      if (!updates.length && !ars.length && !suggestedTemplates.length) {
         if (workTaskEl) {
           document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
         }
@@ -385,12 +385,6 @@ function getCommonTasks() {
   return tasks
 }
 
-function hasValidAr(arRecord) {
-  if (!arRecord) return;
-  if (!arRecord.hasOwnProperty('statusForDay')) return;
-  if (arRecord.statusForDay == 1) return;
-  return true
-}
 
 function createUpdatesuggestion(result) {
   const el = document.getElementById("duty-container");
@@ -459,56 +453,55 @@ function createUpdatesuggestion(result) {
 
 function getYesterdayArDate() {
   const date = new Date();
-  const ts = date.setDate(date.getDate() - 1);
-  const convertedDate = new Date(ts)
-  return Number(`${convertedDate.getMonth()}${convertedDate.getDate()}${convertedDate.getFullYear()}`)
+  return date.setDate(date.getDate() - 1);
 }
 
 
-function createArSuggestion(result) {
+function createArSuggestion(attendances) {
   const el = document.getElementById('ar-container');
-
-  if (!hasValidAr(result)) return;
 
   const ul = createElement('ul', {
     className: 'mdc-list subscription-list mdc-list--two-line'
   })
-  const li = createElement('li', {
-    className: 'mdc-list-item'
-  })
-  const icon = createElement('span', {
-    className: 'mdc-list-item__meta material-icons mdc-theme--primary',
-    textContent: 'keyboard_arrow_right'
-  })
-  const textCont = createElement('span', {
-    className: 'mdc-list-item__text'
-  })
-  const primaryText = createElement('span', {
-    className: 'mdc-list-item__primary-text'
-  })
-  const secondartText = createElement('span', {
-    className: 'mdc-list-item__secondary-text mdc-theme--error',
-    textContent: 'Status For Day Yesterday : ' + result.statusForDay
-  })
-  secondartText.style.marginTop = '5px';
-  secondartText.style.fontSize = '1rem';
+  attendances.forEach(function (record) {
 
-  if (result.statusForDay == 0) {
-    primaryText.textContent = 'Apply AR/Leave'
-  }
-  if (result.statusForDay > 0 && result.statusForDay < 1) {
-    primaryText.textContent = 'Apply AR'
-  }
-  textCont.appendChild(primaryText)
-  textCont.appendChild(secondartText);
-  li.appendChild(textCont);
+    const li = createElement('li', {
+      className: 'mdc-list-item'
+    })
+    const icon = createElement('span', {
+      className: 'mdc-list-item__meta material-icons mdc-theme--primary',
+      textContent: 'keyboard_arrow_right'
+    })
+    const textCont = createElement('span', {
+      className: 'mdc-list-item__text'
+    })
+    const primaryText = createElement('span', {
+      className: 'mdc-list-item__primary-text'
+    })
+    const secondartText = createElement('span', {
+      className: 'mdc-list-item__secondary-text mdc-theme--error',
+      textContent: 'Attendance Yesterday : ' + record.attendance
+    })
+    secondartText.style.marginTop = '5px';
+    secondartText.style.fontSize = '1rem';
 
-  li.addEventListener('click', function () {
-    history.pushState(['reportView'], null, null)
-    reportView();
+    if (record.attendance == 0) {
+      primaryText.textContent = 'Apply AR/Leave'
+    }
+    if (record.attendance > 0 && record.attendance < 1) {
+      primaryText.textContent = 'Apply AR'
+    }
+    textCont.appendChild(primaryText)
+    textCont.appendChild(secondartText);
+    li.appendChild(textCont);
+
+    li.addEventListener('click', function () {
+      history.pushState(['reportView'], null, null)
+      reportView(record);
+    })
+    li.appendChild(icon)
+    ul.appendChild(li)
   })
-  ul.appendChild(li)
-  li.appendChild(icon)
   if (!el) return;
   el.appendChild(ul)
   const list = new mdc.list.MDCList(ul);
@@ -520,13 +513,16 @@ function createArSuggestion(result) {
 function getYesterdayAtt() {
   return new Promise(function (resolve, reject) {
     const tx = db.transaction('attendance');
-    const store = tx.objectStore('attendance');
-    let record;
-    store.get(getYesterdayArDate()).onsuccess = function (event) {
-      record = event.target.result;
+    const index = tx.objectStore('attendance').index('key');
+    let records = [];
+    index.getAll(getYesterdayArDate()).onsuccess = function (event) {
+      records = event.target.result;
     }
     tx.oncomplete = function () {
-      return resolve(record)
+      const filter = records.filter(function (record) {
+        return record.attendance && record.attendance != 1
+      })
+      return resolve(filter)
     }
     tx.onerror = function () {
       return reject(tx.error)
@@ -641,7 +637,7 @@ function handleTemplateListClick(listInit) {
 }
 
 function officeSelectionList(subs) {
-  
+
   const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
     ${subs.map(function(sub){
       return `<li class='mdc-list-item'>

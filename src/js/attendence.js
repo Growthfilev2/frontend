@@ -1,4 +1,4 @@
-function attendenceView(sectionContent) {
+function attendenceView(sectionContent,yesterdayAttendanceRecord) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
   document.getElementById('start-load').classList.add('hidden')
@@ -20,7 +20,7 @@ function attendenceView(sectionContent) {
     myCreds.forEach(function (cred) {
       officeEmployee[cred.office] = cred;
     });
-    createAttendanceCard(officeEmployee)
+    createAttendanceCard(officeEmployee,yesterdayAttendanceRecord)
   }).catch(function (error) {
     createAttendanceCard();
   });
@@ -28,13 +28,13 @@ function attendenceView(sectionContent) {
 }
 
 
-function createAttendanceCard(employeeRecord) {
+function createAttendanceCard(employeeRecord,yesterdayAttendanceRecord) {
   console.log(employeeRecord)
   getMonthlyData().then(function (monthlyData) {
     console.log(monthlyData)
     const parent = document.getElementById('attendance-cards');
     if (!monthlyData.length) {
-      parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No attendance record found</h5>`
+      parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No Attendance Found</h5>`
       return;
     }
     document.getElementById('start-load').classList.add('hidden')
@@ -52,7 +52,9 @@ function createAttendanceCard(employeeRecord) {
     if (!parent) return;
     parent.innerHTML = monthlyString;
     toggleReportCard('.attendance-card');
-
+    if(yesterdayAttendanceRecord) {
+      document.querySelector(`[data-id="${yesterdayAttendanceRecord.id}"]`).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"})
+    }
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
       el.addEventListener('click', checkStatusSubscription)
     });
@@ -73,7 +75,7 @@ function createAttendanceCard(employeeRecord) {
 
 function attendaceCard(data, employeeRecord) {
 
-  return `<div class='mdc-card report-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
+  return `<div data-id="${data.id}" class='mdc-card report-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
       <div class='mdc-card__primary-action'>
         <div class="demo-card__primary">
         <div class='left'>

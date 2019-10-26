@@ -98,7 +98,7 @@ function createBaseDetails() {
   <li class='mdc-list-item'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
     Bank Accounts
-    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['bankAccount'],null,null);bankAccount()">edit</span>
+    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="bankAccount()">edit</span>
   </li>
   </ul>
 </div>`
@@ -107,7 +107,7 @@ function createBaseDetails() {
 function bankAccount() {
   progressBar.open();
   requestCreator('paymentMethods').then(function (accounts) {
-   
+    history.pushState(['bankAccount'],null,null);
     console.log(accounts);
     const auth = firebase.auth().currentUser;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
