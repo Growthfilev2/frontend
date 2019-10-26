@@ -88,7 +88,7 @@ function attendaceCard(data, employeeRecord) {
         </div>
         <div class='right'>
           <div class="dropdown-container dropdown">
-            <i class="material-icons">keyboard_arrow_down</i>
+            ${data.addendum.length ? `<i class="material-icons">keyboard_arrow_down</i>` :''} 
             <div class='mdc-typography--subtitle2 mdc-theme--primary'>${attendanceStatusType(data)}</div>
           </div>
         </div>
@@ -97,11 +97,11 @@ function attendaceCard(data, employeeRecord) {
         <div class='text-container pt-10 pb-10'>
           ${data.addendum.length ? `
           <div class='detail count'>
-            Count : ${getMinimumDalyCount(data,employeeRecord)}
+           ${getMinimumDalyCount(data,employeeRecord)}
           </div>
           <div class='detail working-hour'>
           
-          Working hours : ${getWorkingHoursText(data,employeeRecord)}
+            ${getWorkingHoursText(data,employeeRecord)}
             ` :''}
           </div>
         </div>
@@ -123,40 +123,43 @@ function attendaceCard(data, employeeRecord) {
 }
 
 function getMinimumDalyCount(data, employeeRecord) {
+
   const offices = Object.keys(employeeRecord);
   if (!offices.length) {
-    return `${data.addendum.length}`
+    return ` Count :  ${data.addendum.length}`
   }
   if (!employeeRecord[data.office]) {
-    return `${data.addendum.length}`
+    return ` Count : ${data.addendum.length}`
   }
-  return `/ ${employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value}`
+  if (!employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value) {
+    return ` Count : ${data.addendum.length}`
+  }
+  return `  Count :  ${data.addendum.length} / ${employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value}`
 }
 
 function getWorkingHoursText(data, employeeRecord) {
   const hours = calculateWorkedHours(data.addendum);
   if (!hours) return '';
   const offices = Object.keys(employeeRecord);
-  if (!offices.length) return hours;
-  if (!employeeRecord[data.office]) return hours;
-  return `/ ${employeeRecord[data.office].attachment['Minimum Working Hours'].value} `
+  if (!offices.length) return ` Working hours :  ${hours}`;
+  if (!employeeRecord[data.office]) return ` Working hours :  ${hours}`;
+  if (!employeeRecord[data.office].attachment['Minimum Working Hours'].value) return ` Working hours :  ${hours}`;
+  return ` Working hours :  ${hours} / ${employeeRecord[data.office].attachment['Minimum Working Hours'].value} `
 }
 
 
 function getAttendanceTime(addendum) {
-  return moment(addendum.timestamp).format('HH:MM A')
+
+  return moment(addendum.timestamp).format('hh:mm A')
 }
 
 function calculateWorkedHours(addendums) {
   const length = addendums.length
   if (!length || length == 1) return ''
-  const duration = moment.duration(moment(new Date(addendums[length - 1].timestamp), 'DD/MM/YYYY HH:mm').diff(moment(new Date(addendums[0].timestamp), 'DD/MM/YYYY HH:mm'))).asHours()
-  console.log(duration)
-  if (Number(duration).toFixed(1) > 0) {
-    return Number(duration).toFixed(1)
-  }
-  return ''
-  // return Number(duration).toFixed(1)
+  var hours = Math.abs(addendums[length - 1].timestamp - addendums[0].timestamp) / 3600000;
+  console.log(hours)
+  if (!hours) return '';
+  return Number(hours.toFixed(2))
 
 }
 
@@ -167,11 +170,14 @@ function attendanceStatusType(data) {
   if (data.onAr) {
     return 'Applied for AR'
   }
-  if (data.onHoliday) {
+  if (data.holiday) {
     return 'Holiday'
   }
   if (data.weeklyOff) {
     return 'Weekly off'
+  }
+  if(data.isLate) {
+    return 'Late'
   }
   return ''
 }
@@ -236,10 +242,11 @@ function getMonthlyData() {
           cursor.continue();
           return;
         }
-        
-        cursor.value.addendum.sort(function (a, b) {
-          b.timestamp - a.timestamp
-        })
+        if (cursor.value.addendum) {
+          cursor.value.addendum.sort(function (a, b) {
+            return a.timestamp - b.timestamp
+          })
+        }
         result.push(cursor.value)
         cursor.continue();
       }

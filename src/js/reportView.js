@@ -129,6 +129,7 @@ function toggleReportCard(selector) {
   [].map.call(document.querySelectorAll(selector),function(el){
     if (el) {
         const icon = el.querySelector('.dropdown i')
+        if(!icon) return;
         icon.addEventListener('click', function () {
             const detailContainer = el.querySelector('.detail-container')
             if (detailContainer.classList.contains('hidden')) {

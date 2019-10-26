@@ -680,37 +680,37 @@ function successResponse(read, param, db, resolve, reject) {
   let counter = {};
   let userTimestamp = {}
 
-  read.addendum.forEach(function (addendum) {
+  // read.addendum.forEach(function (addendum) {
 
-    if (addendum.unassign) {
-      if (addendum.user == param.user.phoneNumber) {
-        removeActivityFromDB(addendum.activityId, updateTx);
-      } else {
-        removeUserFromAssigneeInActivity(addendum, updateTx)
-      }
-    };
+  //   if (addendum.unassign) {
+  //     if (addendum.user == param.user.phoneNumber) {
+  //       removeActivityFromDB(addendum.activityId, updateTx);
+  //     } else {
+  //       removeUserFromAssigneeInActivity(addendum, updateTx)
+  //     }
+  //   };
 
-    if (addendum.isComment) {
-      if (addendum.assignee === param.user.phoneNumber) {
-        addendum.key = param.user.phoneNumber + addendum.user
-        userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user]  = [addendum]
-        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
-      } else {
-        addendum.key = param.user.phoneNumber + addendum.assignee
-        userTimestamp[addendum.assignee] ? userTimestamp[addendum.assignee].push(addendum) : userTimestamp[addendum.assignee] = [addendum];
-      }
-      addendumObjectStore.add(addendum)
-    } else {
+  //   if (addendum.isComment) {
+  //     if (addendum.assignee === param.user.phoneNumber) {
+  //       addendum.key = param.user.phoneNumber + addendum.user
+  //       userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user]  = [addendum]
+  //       counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
+  //     } else {
+  //       addendum.key = param.user.phoneNumber + addendum.assignee
+  //       userTimestamp[addendum.assignee] ? userTimestamp[addendum.assignee].push(addendum) : userTimestamp[addendum.assignee] = [addendum];
+  //     }
+  //     addendumObjectStore.add(addendum)
+  //   } else {
 
-      addendum.key = param.user.phoneNumber + addendum.user;
-      userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
-      // addendumObjectStore.add(addendum)
+  //     addendum.key = param.user.phoneNumber + addendum.user;
+  //     userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
+  //     // addendumObjectStore.add(addendum)
       
-      if (addendum.user !== param.user.phoneNumber) {
-        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
-      }
-    }
-  })
+  //     if (addendum.user !== param.user.phoneNumber) {
+  //       counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
+  //     }
+  //   }
+  // })
 
   if (read.locations.length) {
 
