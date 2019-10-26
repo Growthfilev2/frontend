@@ -453,6 +453,7 @@ function createUpdatesuggestion(result) {
 
 function getYesterdayArDate() {
   const date = new Date();
+  console.log(date.setDate(date.getDate() - 1))
   return date.setDate(date.getDate() - 1);
 }
 
@@ -512,17 +513,29 @@ function createArSuggestion(attendances) {
 
 function getYesterdayAtt() {
   return new Promise(function (resolve, reject) {
+    var date = new Date()
     const tx = db.transaction('attendance');
     const index = tx.objectStore('attendance').index('key');
     let records = [];
-    index.getAll(getYesterdayArDate()).onsuccess = function (event) {
-      records = event.target.result;
+    index.openCursor(IDBKeyRange.lowerBound(getYesterdayArDate())).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if(!cursor) return;
+      if(!cursor.value.hasOwnProperty('attendance')) {
+        cursor.continue();
+        return;
+      }
+      if(cursor.value.attendance == 1){
+        cursor.continue();
+        return;
+      }
+      
+      if(cursor.value.date === (date.getDate() -1) && cursor.value.month == date.getMonth() && cursor.value.year == date.getFullYear()) {
+        records.push(cursor.value)
+      } 
+      cursor.continue();
     }
     tx.oncomplete = function () {
-      const filter = records.filter(function (record) {
-        return record.attendance && record.attendance != 1
-      })
-      return resolve(filter)
+      return resolve(records)
     }
     tx.onerror = function () {
       return reject(tx.error)
