@@ -88,7 +88,7 @@ function attendaceCard(data, employeeRecord) {
         </div>
         <div class='right'>
           <div class="dropdown-container dropdown">
-            ${data.addendum.length ? `<i class="material-icons">keyboard_arrow_down</i>` :''} 
+            <i class="material-icons">keyboard_arrow_down</i>
             <div class='mdc-typography--subtitle2 mdc-theme--primary'>${attendanceStatusType(data)}</div>
           </div>
         </div>
@@ -96,14 +96,13 @@ function attendaceCard(data, employeeRecord) {
         <div class='detail-container hidden'>
         <div class='text-container pt-10 pb-10'>
           ${data.addendum.length ? `
-          <div class='detail count'>
-           ${getMinimumDalyCount(data,employeeRecord)}
-          </div>
-          <div class='detail working-hour'>
-          
-            ${getWorkingHoursText(data,employeeRecord)}
-            ` :''}
-          </div>
+            <div class='detail count'>
+              ${getMinimumDalyCount(data,employeeRecord)}
+            </div>
+            <div class='detail working-hour'>
+              ${getWorkingHoursText(data,employeeRecord)}
+            </div>
+          ` :'No Activities Found'}
         </div>
       <div class='time-container'>
           ${data.addendum.map(ad => {

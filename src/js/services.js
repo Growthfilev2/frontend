@@ -115,13 +115,7 @@ function handleLocationOld(maxRetry, location) {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude:28.123,
-      longitude:77.123,
-      accuracy:23,
-      lastLocationTime:Date.now(),
-      provider:'HTML5'
-    });
+   
     
     if (!navigator.onLine) return reject({
       message: 'BROKEN INTERNET CONNECTION'
@@ -252,7 +246,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=44');
+  let apiHandler = new Worker('js/apiHandler.js?version=45');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token

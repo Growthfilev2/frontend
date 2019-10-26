@@ -15,59 +15,59 @@ function expenseView(sectionContent) {
         })
     })
 
-    // getReimMonthlyData().then(function (reimbursementData) {
-    //     console.log(reimbursementData)
-    //     const parent = document.getElementById('reimbursement-cards')
-    //     const keys = Object.keys(reimbursementData);
-    //     if (!keys.length) {
-    //         parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No reimbursements found</h5>`
-    //         return;
-    //     }
+    getReimMonthlyData().then(function (reimbursementData) {
+        console.log(reimbursementData)
+        const parent = document.getElementById('reimbursement-cards')
+        const keys = Object.keys(reimbursementData);
+        if (!keys.length) {
+            parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No reimbursements found</h5>`
+            return;
+        }
 
-    //     let month = monthlyString = '';
-    //     keys.forEach(function (key) {
-    //         const timestamp = Number(key)
-    //         if (month !== new Date(timestamp).getMonth()) {
-    //             monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${new Date(timestamp).getMonth() + 1}-${new Date(timestamp).getFullYear()}`,'MM-YYYY').format('MMMM YYYY')}</div>`;
-    //         };
-    //         month = new Date(timestamp).getMonth();
-    //         const offices = Object.keys(reimbursementData[key]);
-    //         offices.forEach(function (office) {
-    //             monthlyString += reimbursementCard(timestamp, office, reimbursementData);
-    //         })
-    //     });
-    //     if (!parent) return
-    //     parent.innerHTML = monthlyString;
-    //     toggleReportCard('.reim-card');
+        let month = monthlyString = '';
+        keys.forEach(function (key) {
+            const timestamp = Number(key)
+            if (month !== new Date(timestamp).getMonth()) {
+                monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12-desktop mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet">${moment(`${new Date(timestamp).getMonth() + 1}-${new Date(timestamp).getFullYear()}`,'MM-YYYY').format('MMMM YYYY')}</div>`;
+            };
+            month = new Date(timestamp).getMonth();
+            const offices = Object.keys(reimbursementData[key]);
+            offices.forEach(function (office) {
+                monthlyString += reimbursementCard(timestamp, office, reimbursementData);
+            })
+        });
+        if (!parent) return
+        parent.innerHTML = monthlyString;
+        toggleReportCard('.reim-card');
 
-    //     [].map.call(document.querySelectorAll(`[data-claimId]`), function (el) {
-    //         el.addEventListener('click', function () {
-    //             const id = el.dataset.claimId;
-    //             db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
-    //                 const activity = event.target.result;
-    //                 if (activity) {
-    //                     const heading = createActivityHeading(activity)
-    //                     showViewDialog(heading, activity, 'view-form');
-    //                 }
-    //             }
-    //         })
-    //     });
+        [].map.call(document.querySelectorAll(`[data-claimId]`), function (el) {
+            el.addEventListener('click', function () {
+                const id = el.dataset.claimId;
+                db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
+                    const activity = event.target.result;
+                    if (activity) {
+                        const heading = createActivityHeading(activity)
+                        showViewDialog(heading, activity, 'view-form');
+                    }
+                }
+            })
+        });
 
-    //     [].map.call(document.querySelectorAll(`[data-claimdata]`), function (el) {
-    //         el.addEventListener('click', function () {
-    //             const data = JSON.parse(el.dataset.claimdata);
-    //             const dialog = new Dialog(claimViewHeading(data), claimViewContent(data), 'claim-dialog').create('simple')
-    //             dialog.open();
-    //         })
-    //     })
-    // }).catch(function (error) {
-    //     handleError({
-    //         message: error.message,
-    //         body: {
-    //             stack: error.stack || '',
-    //         }
-    //     })
-    // })
+        [].map.call(document.querySelectorAll(`[data-claimdata]`), function (el) {
+            el.addEventListener('click', function () {
+                const data = JSON.parse(el.dataset.claimdata);
+                const dialog = new Dialog(claimViewHeading(data), claimViewContent(data), 'claim-dialog').create('simple')
+                dialog.open();
+            })
+        })
+    }).catch(function (error) {
+        handleError({
+            message: error.message,
+            body: {
+                stack: error.stack || '',
+            }
+        })
+    })
 }
 
 function claimViewHeading(data) {
