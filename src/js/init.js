@@ -807,7 +807,6 @@ function openMap() {
         if (!oldState) return mapView(geopoint);
         const oldApplicationState = JSON.parse(oldState);
         if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
-
         const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
         const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
         if (isOlder || hasChangedLocation) return mapView(geopoint);
