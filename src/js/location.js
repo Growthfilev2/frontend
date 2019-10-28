@@ -14,7 +14,7 @@ function timeDelta(previousLocationTime, newLocationTime) {
     } catch (e) {
         console.log(e)
         const res = newLocationTime - previousLocationTime;
-        return res / 36e5;
+        return res / 36e6;
     }
 }
 
@@ -37,9 +37,14 @@ function isLocationMoreThanThreshold(distance) {
 }
 
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
-    var currentTime = moment();
-    var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds();
-    return duration > threshold
+    try {
+        var currentTime = moment();
+        var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds();
+        return duration > threshold
+    } catch(e){
+        const delta = Math.abs((Date.now() - lastLocationTime) / 1000);
+        return delta;
+    }
 }
 
 function toRad(value) {

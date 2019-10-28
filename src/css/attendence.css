@@ -128,6 +128,7 @@
   flex-wrap: wrap;
   padding-left: 1rem;
   padding-right: 1rem;
+  justify-content: center;
 }
 
 .attendance-card .text-container .count {
@@ -138,6 +139,6 @@
   margin-left: auto;
 }
 
-.attendance-card .mdc-card__actions .mdc-card__action:nth-child(2):not(full-bleed--action) {
+.attendance-card .mdc-card__actions .mdc-card__action--button:nth-child(2)  {
   margin-left: auto;
 }

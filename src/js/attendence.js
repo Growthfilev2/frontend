@@ -96,7 +96,7 @@ function attendaceCard(data, employeeRecord) {
         </div>
         </div>
         <div class='detail-container hidden'>
-        <div class='text-container pt-10 pb-10'>
+        <div class='text-container pt-10 pb-10 mdc-typography--body1'>
           ${data.addendum.length ? `
             <div class='detail count'>
               ${getMinimumDalyCount(data,employeeRecord)}
@@ -194,18 +194,17 @@ function attendaceButtons(attendaceObject) {
 
   if (attendaceObject.attendance == 0) {
     return `
-    <button class='mdc-button mdc-card__action mdc-card__action--button status-button' data-template="leave" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
+    <button class='mdc-button mdc-card__action mdc-card__action--button status-button' data-template="leave" data-id="${attendaceObject.id}" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}" ${attendaceObject.editable ? '' :'disabled'}>
       Apply Leave
     </button>
-    <button class='mdc-button mdc-card__action mdc-card__action--button status-button mdc-button--raised' data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
+    <button class='mdc-button mdc-card__action mdc-card__action--button status-button mdc-button--raised' data-id="${attendaceObject.id}" data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}" ${attendaceObject.editable ? '' :'disabled'}>
     Apply AR
   </button>
     `
 
   }
   if (attendaceObject.attendance > 0 && attendaceObject.attendance < 1) {
-
-    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action status-button">
+    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action status-button" data-id="${attendaceObject.id}" data-id="${attendaceObject.id}" ${attendaceObject.editable ? '' :'disabled'} data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
     <span class="mdc-button__label">Apply AR</span>
     <i class="material-icons" aria-hidden="true">arrow_forward</i>
   </button>`
@@ -297,6 +296,7 @@ function checkStatusSubscription(event) {
     }
     history.pushState(['addView'], null, null);
     subscription.date = dataset.date;
+    subscription.id = dataset.id
     addView(subscription)
   }
   tx.onerror = function () {

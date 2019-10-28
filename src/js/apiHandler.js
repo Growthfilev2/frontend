@@ -526,6 +526,7 @@ function backblaze(body, meta) {
 
 function updateAttendance(attendanceData = [],store) {
   attendanceData.forEach(function(value) {
+    value.editable = true;
     store.put(value)
   })
 }
@@ -758,7 +759,6 @@ function successResponse(read, param, db, resolve, reject) {
     })
   })
 
-  console.log(userTimestamp)
   Object.keys(userTimestamp).forEach(function (number) {
    
     const currentAddendums = userTimestamp[number]
@@ -768,11 +768,11 @@ function successResponse(read, param, db, resolve, reject) {
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
         if (!record) return;
-        console.log(record);
+     
   
         record.assignees.forEach(function (user) {
           addendum.key = param.user.phoneNumber + user.phoneNumber;
-          console.log(addendum);
+        
           addendumObjectStore.put(addendum);
           if (number === param.user.phoneNumber) {
             updateUserStore(userStore, user.phoneNumber, addendum)

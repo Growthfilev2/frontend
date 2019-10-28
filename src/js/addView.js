@@ -8,7 +8,7 @@ function addView(sub) {
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
     `;
     
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -42,11 +42,21 @@ function sendFormToParent(formData) {
             progressBar.close();
             if(formData.template === 'attendance regularization') {
                 successDialog(`You Applied for an AR`);
-
+                const tx =  db.transaction('attendance','readwrite');
+                const store = tx.objectStore('attendance')
+                store.get(formData.id).onsuccess = function(event){
+                    const record = event.target.result;
+                    if(!record) return;
+                    record.editable = false;
+                    store.put(record)
+                }
+                tx.oncomplete = function() {
+                    getSuggestions();
+                }
+                return;
             }
-            else {
+            successDialog(`You Created a ${formData.template}`);  
 
-            } successDialog(`You Created a ${formData.template}`);
             if (formData.template === 'customer') {
                 ApplicationState.knownLocation = true;
                 ApplicationState.venue = {
@@ -59,21 +69,17 @@ function sendFormToParent(formData) {
                     longitude:formData.venue[0].geopoint.longitude
                 }
                 localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
-                getSuggestions();
                 Object.keys(customerAuths).forEach(function(customerNumber){
-                
                     requestCreator('updateAuth', customerAuths[customerNumber]).then(function (response) {
                         console.log(response)
                     }).catch(function(error){
                         console.log(error.response.message)
                     })
                 })
-      
-                return;
             }
-           
+
             getSuggestions();
-            
+            return;
         })
         .catch(function (error) {
             progressBar.close();
