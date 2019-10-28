@@ -521,7 +521,6 @@ function backblaze(body, meta) {
 }
 
 
-
 function updateAttendance(attendanceData = [],store) {
   attendanceData.forEach(function(value) {
     value.editable = true;
@@ -868,7 +867,7 @@ function updateIDB(config) {
     tx.oncomplete = function () {
       const req = {
         method: 'GET',
-        url: `${config.meta.apiUrl}read?from=${time}`,
+        url: `${config.meta.apiUrl}read1?from=${time}`,
         data: null,
         token: config.meta.user.token
       };
