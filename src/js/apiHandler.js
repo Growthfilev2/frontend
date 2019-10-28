@@ -522,8 +522,6 @@ function backblaze(body, meta) {
 
 
 
-
-
 function updateAttendance(attendanceData = [],store) {
   attendanceData.forEach(function(value) {
     value.editable = true;
@@ -724,6 +722,10 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
+  console.log('attendace length',read.attendances.length)
+  console.log('reim length',read.reimbursements.length)
+  console.log('payments length',read.payments.length)
+
   updateAttendance(read.attendances,attendaceStore)
   updateReimbursements(read.reimbursements,reimbursementStore)
   updatePayments(read.payments,paymentStore)
@@ -838,7 +840,8 @@ function updateRoot(read, tx, uid, counter) {
   const store = tx.objectStore('root')
   store.get(uid).onsuccess = function (event) {
     const record = event.target.result;
-    record.fromTime = read.upto;
+    // record.fromTime = read.upto;
+    record.fromTime = 0;
     if (record.totalCount) {
       record.totalCount += totalCount;
     } else {

@@ -74,14 +74,6 @@ function manageLocation(maxRetry) {
 
   return new Promise(function (resolve, reject) {
 
-    return resolve({
-      latitude:22.23,
-      longitude:77.123,
-      lastLocationTime:Date.now(),
-      accuracy:400,
-      provider:'HTML5'
-    })
-
     getLocation().then(function (location) {
       if (location.accuracy >= 35000) {
         if (maxRetry > 0) {
@@ -254,7 +246,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=45');
+  let apiHandler = new Worker('js/apiHandler.js?version=46');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
