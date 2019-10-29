@@ -27,11 +27,7 @@ function getStoredLocation() {
 
 function isLocationOld(newLocation, oldLocation,provider) {
     if (!oldLocation) return false;
-    const match = oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;
-    if(provider === 'HTML5' && match) {
-            return oldLocation.provider && newLocation.provider === provider;
-    }
-    return match;
+    return oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;    
 }
 
 function isLocationMoreThanThreshold(distance) {

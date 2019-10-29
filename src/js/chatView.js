@@ -560,6 +560,7 @@ function createActivityHeading(activity) {
 }
 
 function getStatusArray(activity) {
+    console.log(activity)
     const items = [];
     const confirm = {
         name: 'Confirm',
@@ -925,33 +926,39 @@ function activityDomCustomer(activityRecord) {
 function addAssignee(record, userArray) {
     progressBar.open();
     closeSearchBar();
-    requestCreator('share', {
-        activityId: record.activityId,
-        share: userArray
-    }).then(function () {
-        progressBar.close();
-        snacks(`You Added ${userArray.length} People`)
-        history.back();
-    }).catch(function (error) {
-        snacks(error.response.message)
-        progressBar.close();
-    })
+    appLocation(3).then(function(geopoint){
+        requestCreator('share', {
+            activityId: record.activityId,
+            share: userArray
+        },geopoint).then(function () {
+            progressBar.close();
+            snacks(`You Added ${userArray.length} People`)
+            history.back();
+        }).catch(function (error) {
+            snacks(error.response.message)
+            progressBar.close();
+        })
+
+    }).catch(handleLocationError)
 }
 
 
 function setActivityStatus(record, status) {
     progressBar.open();
-    requestCreator('statusChange', {
-        activityId: record.activityId,
-        status: status
-    }).then(function () {
-        snacks(`${record.activityName} is ${status}`)
-        progressBar.close();
+    appLocation(3).then(function(geopoint){
 
-    }).catch(function (error) {
-        snacks(error.response.message);
-        progressBar.close();
-    })
+        requestCreator('statusChange', {
+            activityId: record.activityId,
+            status: status
+        },geopoint).then(function () {
+            snacks(`${record.activityName} is ${status}`)
+            progressBar.close();
+    
+        }).catch(function (error) {
+            snacks(error.response.message);
+            progressBar.close();
+        })
+    }).catch(handleLocationError)
 }
 
 
@@ -1206,16 +1213,18 @@ function getUserChats(userRecord) {
                 comment: val
             }
             requestBody[param] = paramValue
-            requestCreator(input.dataset.name, requestBody).then(function () {
-                parent.appendChild(messageBoxDom(val, 'me', Date.now()))
-                setBottomScroll();
-                input.value = ''
-                progressBar.close()
-            }).catch(function (error) {
-                input.value = ''
-                progressBar.close()
-                snacks(error.response.message);
-            })
+            appLocation(3).then(function(geopoint){
+                requestCreator(input.dataset.name, requestBody,geopoint).then(function () {
+                    parent.appendChild(messageBoxDom(val, 'me', Date.now()))
+                    setBottomScroll();
+                    input.value = ''
+                    progressBar.close()
+                }).catch(function (error) {
+                    input.value = ''
+                    progressBar.close()
+                    snacks(error.response.message);
+                })
+            }).catch(handleLocationError)
             input.dataset.name = 'dm';
             input.dataset.param = 'assignee'
             input.dataset.paramValue = userRecord.mobile

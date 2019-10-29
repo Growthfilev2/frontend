@@ -48,6 +48,9 @@ function handleLocationError(error, onAppOpen) {
   }
 
   switch (error.message) {
+    case 'THRESHOLD EXCEED':
+      mapView(error.body.geopoint)
+      break;
     case 'BROKEN INTERNET CONNECTION':
       if (onAppOpen) {
         failureScreen({
@@ -154,15 +157,15 @@ function mapView(location) {
     console.log('idle_once');
     loadNearByLocations(o, map, location).then(function (nearByLocations) {
       ApplicationState.nearByLocations = nearByLocations;
-      if (!nearByLocations.length) return createUnkownCheckIn()
-      if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0]);
+      if (!nearByLocations.length) return createUnkownCheckIn('',location)
+      if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0],location);
       document.getElementById('map').style.display = 'block'
-      loadCardData(nearByLocations, map)
+      loadCardData(nearByLocations, map,location)
     })
   });
 }
 
-function createUnkownCheckIn(cardProd) {
+function createUnkownCheckIn(cardProd,geopoint) {
   document.getElementById('start-load').classList.remove('hidden');
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
@@ -172,7 +175,7 @@ function createUnkownCheckIn(cardProd) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
 
-    prom.push(requestCreator('create', fillVenueInCheckInSub(copy, '')))
+    prom.push(requestCreator('create', fillVenueInCheckInSub(copy, ''),geopoint))
   })
 
   if (cardProd) {
@@ -198,7 +201,7 @@ function createUnkownCheckIn(cardProd) {
   })
 }
 
-function loadCardData(venues, map) {
+function loadCardData(venues, map,geopoint) {
   document.getElementById('start-load').classList.add('hidden');
   ApplicationState.knownLocation = true;
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
@@ -219,15 +222,15 @@ function loadCardData(venues, map) {
   ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
     console.log(evt.detail.index)
-    if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd);
+    if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd,geopoint);
     focusMarker(map, markersObject, evt.detail.index)
     cardProd.open();
     const selectedVenue = venues[evt.detail.index];
-    createKnownCheckIn(selectedVenue);
+    createKnownCheckIn(selectedVenue,'',geopoint);
   })
 };
 
-function createKnownCheckIn(selectedVenue, cardProd) {
+function createKnownCheckIn(selectedVenue, cardProd,geopoint) {
 
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
@@ -235,10 +238,11 @@ function createKnownCheckIn(selectedVenue, cardProd) {
     cardProd.open();
   }
 
-  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
+  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue),geopoint).then(function () {
 
     successDialog('Check-In Created')    
     ApplicationState.venue = selectedVenue
+    debugger;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions();
   }).catch(function (error) {
@@ -418,7 +422,7 @@ function setFilePath(base64) {
     sub.share = []
     progressBar.open();
 
-    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue)).then(function () {
+    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue),ApplicationState.geopoint).then(function () {
       getSuggestions()
       successDialog('Check-In Created')
       progressBar.close()

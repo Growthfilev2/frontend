@@ -381,21 +381,22 @@ function changePhoneNumber() {
       submitDialog.open();
       console.log(submitDialog)
       submitDialog.scrimClickAction = '';
-
-      requestCreator('changePhoneNumber', {
-        newPhoneNumber: newNumberValue
-      }).then(function (response) {
-        setTimeout(function () {
-          window.location.reload();
-        }, 5000)
-        console.log(response)
-      }).catch(function (error) {
-        progressBar.close();
-        submitDialog.close();
-        document.getElementById('app-current-panel').classList.remove('freeze')
-        console.log(error)
-        snacks(error.response.message);
-      })
+      appLocation(3).then(function(geopoint){
+        requestCreator('changePhoneNumber', {
+          newPhoneNumber: newNumberValue
+        },geopoint).then(function (response) {
+          setTimeout(function () {
+            window.location.reload();
+          }, 5000)
+          console.log(response)
+        }).catch(function (error) {
+          progressBar.close();
+          submitDialog.close();
+          document.getElementById('app-current-panel').classList.remove('freeze')
+          console.log(error)
+          snacks(error.response.message);
+        })
+      }).catch(handleLocationError)
     })
   })
 
