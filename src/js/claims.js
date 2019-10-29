@@ -183,19 +183,19 @@ function getReimMonthlyData() {
             const cursor = event.target.result;
             if (!cursor) return;
             const officeObject = {}
-
             if (!dateObject[cursor.value.key]) {
                 officeObject[cursor.value.office] = [cursor.value]
                 dateObject[cursor.value.key] = officeObject;
                 cursor.continue();
                 return
             }
+
             if (dateObject[cursor.value.key][cursor.value.office]) {
                 dateObject[cursor.value.key][cursor.value.office].push(cursor.value)
             } else {
                 dateObject[cursor.value.key][cursor.value.office] = [cursor.value]
-            }
-
+            };
+            
             cursor.continue();
         }
         tx.oncomplete = function () {

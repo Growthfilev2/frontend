@@ -530,6 +530,7 @@ function updateAttendance(attendanceData = [],store) {
 
 function updateReimbursements(reimbursementData = [],store) {
   reimbursementData.forEach(function(value) {
+    console.log(value.id)
       store.put(value)
     })
 }
@@ -727,6 +728,7 @@ function successResponse(read, param, db, resolve, reject) {
 
   updateAttendance(read.attendances,attendaceStore)
   updateReimbursements(read.reimbursements,reimbursementStore)
+
   updatePayments(read.payments,paymentStore)
 
   read.activities.forEach(function (activity) {

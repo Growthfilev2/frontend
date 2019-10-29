@@ -158,7 +158,7 @@ function calculateWorkedHours(addendums) {
   const length = addendums.length
   if (!length || length == 1) return ''
   var hours = Math.abs(addendums[length - 1].timestamp - addendums[0].timestamp) / 3600000;
-  console.log(hours)
+
   if (!hours) return '';
   return Number(hours.toFixed(2))
 
