@@ -73,13 +73,7 @@ function manageLocation(maxRetry) {
 
 
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude:22,
-      longitude:77,
-      accuracy:90,
-      lastLocationTime:Date.now(),
-      provider:'HTML5'
-    })
+    
     getLocation().then(function (location) {
       if (location.accuracy >= 35000) {
         if (maxRetry > 0) {

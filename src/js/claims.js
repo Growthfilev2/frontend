@@ -40,7 +40,7 @@ function expenseView(sectionContent) {
         parent.innerHTML = monthlyString;
         toggleReportCard('.reim-card');
 
-        [].map.call(document.querySelectorAll(`[data-claimId]`), function (el) {
+        [].map.call(document.querySelectorAll(`[data-claim-id]`), function (el) {
             el.addEventListener('click', function () {
                 const id = el.dataset.claimId;
                 db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
@@ -53,9 +53,9 @@ function expenseView(sectionContent) {
             })
         });
 
-        [].map.call(document.querySelectorAll(`[data-claimdata]`), function (el) {
+        [].map.call(document.querySelectorAll(`[data-claim-data]`), function (el) {
             el.addEventListener('click', function () {
-                const data = JSON.parse(el.dataset.claimdata);
+                const data = JSON.parse(el.dataset.claimData);
                 const dialog = new Dialog(claimViewHeading(data), claimViewContent(data), 'claim-dialog').create('simple')
                 dialog.open();
             })
@@ -125,7 +125,7 @@ function reimbursementCard(timestamp, office, data) {
       <div class='amount-container'>
         ${data[timestamp][office].map(function(value){
             return `
-                <div class='amount mdc-typography--headline6 ${value.details.status === 'CANCELLED' ? 'mdc-theme--error' : value.details.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}' ${value.details.claimId ? `data-claim-id="${value.details.claimId}"` :`data-claimData='${JSON.stringify(value)}'`}>
+                <div class='amount mdc-typography--headline6 ${value.details.status === 'CANCELLED' ? 'mdc-theme--error' : value.details.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}' ${value.details.claimId ? `data-claim-id="${value.details.claimId}"` :`data-claim-data='${JSON.stringify(value)}'`}>
                     <div class='mdc-typography--caption'>${value.reimbursementType}</div>
                     ${value.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(value.amount,value.currency)}
                     <div class='mdc-typography--caption'>${value.details.status}</div>
