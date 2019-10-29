@@ -39,3 +39,29 @@
 .monthly-stat , #reimbursement-cards  {
 	padding-bottom: 80px;
 }
+.card-office-title {
+	white-space: nowrap; 
+	width: 100%; 
+	overflow: hidden;
+	text-overflow: ellipsis; 
+}
+@media(max-width:320px) {
+	.card-office-title {
+		width: 100px;
+	}
+}
+@media(min-width:321px) and (max-width:360px) {
+	.card-office-title {
+		width: 150px;
+	}
+}
+@media (min-width:361px) and (max-width:480px) {
+	.card-office-title {
+		width: 200px;
+	}
+}
+@media(min-width:481px) and (max-width: 800px) {
+	.card-office-title {
+		width: 300px;
+	}
+}

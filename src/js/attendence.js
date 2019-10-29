@@ -75,7 +75,7 @@ function createAttendanceCard(employeeRecord,yesterdayAttendanceRecord) {
 
 function attendaceCard(data, employeeRecord) {
 
-  return `<div data-id="${data.id}" class='mdc-card report-card mdc-card--outlined attendance-card mdc-layout-grid__cell'>
+  return `<div data-id="${data.id}" class='mdc-card report-card mdc-card--outlined attendance-card mdc-layout-grid__cell mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-8-tablet '>
       <div class='mdc-card__primary-action'>
         <div class="demo-card__primary">
         <div class='left'>
@@ -166,10 +166,10 @@ function calculateWorkedHours(addendums) {
 
 function attendanceStatusType(data) {
   if (data.onLeave) {
-    return 'Applied for leave'
+    return 'On leave'
   }
   if (data.onAr) {
-    return 'Applied for AR'
+    return 'On AR'
   }
   if (data.holiday) {
     return 'Holiday'

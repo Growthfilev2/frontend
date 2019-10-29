@@ -8,7 +8,7 @@ function addView(sub) {
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
     `;
     
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -110,6 +110,7 @@ function setContactForCustomerFailed(exceptionMessage){
     })
 }
 
+
 function setContactForSecondCustomer(contactString){
     const contactDetails = parseContact(contactString);
     document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'Second Contact');
@@ -122,6 +123,5 @@ function setContactForSecondCustomerFailed(exceptionMessage){
 }
 
 function expenseClaimImage(base64) {
-    document.getElementById('form-iframe').contentWindow.setExpenseImage(base64);
-  
+    document.getElementById('form-iframe').contentWindow.setExpenseImage(base64); 
 }

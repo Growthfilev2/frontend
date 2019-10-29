@@ -25,10 +25,13 @@ function getStoredLocation() {
 
 }
 
-function isLocationOld(newLocation, oldLocation) {
+function isLocationOld(newLocation, oldLocation,provider) {
     if (!oldLocation) return false;
-    return oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude
-
+    const match = oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;
+    if(provider === 'HTML5' && match) {
+            return oldLocation.provider && newLocation.provider === provider;
+    }
+    return match;
 }
 
 function isLocationMoreThanThreshold(distance) {
