@@ -276,7 +276,7 @@ function requestCreator(requestType, requestBody, geopoint) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=48');
+  let apiHandler = new Worker('js/apiHandler.js?version=49');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
