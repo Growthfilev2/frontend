@@ -530,7 +530,7 @@ function updateAttendance(attendanceData = [],store) {
 
 function updateReimbursements(reimbursementData = [],store) {
   reimbursementData.forEach(function(value) {
-    console.log(value.id)
+
       store.put(value)
     })
 }

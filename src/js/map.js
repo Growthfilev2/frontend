@@ -242,7 +242,6 @@ function createKnownCheckIn(selectedVenue, cardProd,geopoint) {
 
     successDialog('Check-In Created')    
     ApplicationState.venue = selectedVenue
-    debugger;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions();
   }).catch(function (error) {

@@ -53,13 +53,14 @@ function expenseView(sectionContent) {
             })
         });
 
-        [].map.call(document.querySelectorAll(`[data-claim-data]`), function (el) {
-            el.addEventListener('click', function () {
-                const data = JSON.parse(el.dataset.claimData);
-                const dialog = new Dialog(claimViewHeading(data), claimViewContent(data), 'claim-dialog').create('simple')
-                dialog.open();
-            })
-        })
+        // [].map.call(document.querySelectorAll(`[data-claim-data]`), function (el) {
+        //     el.addEventListener('click', function () {
+        //         const data = JSON.parse(el.dataset.claimData);
+        //         // const dialog = new Dialog(claimViewHeading(data), claimViewContent(data), 'claim-dialog').create('simple')
+        //         // dialog.open();
+                
+        //     })
+        // })
     }).catch(function (error) {
         handleError({
             message: error.message,
@@ -79,7 +80,10 @@ function claimViewHeading(data) {
 
 function claimViewContent(data) {
     return `<div class=claim-view'> 
-        ${data.amount ? `Amount : ${convertAmountToCurrency(Number(data.amount),data.currency)}` : ''}
+        ${data.amount ? `<h3 class='mdc-typography--body1 info-heading mt-0'>Amount : ${convertAmountToCurrency(Number(data.amount),data.currency)}</h3>` : ''}
+
+        <a class='mdc-typography--body1 info-heading mt-0' href='https://www.google.com/maps/dir/?api=1&origin=22,77&destination=21,76'>View route </a>
+        
         ${data.details.status ? `<h3 class='mdc-typography--body1 info-heading mt-0'>
            Status : ${data.details.status} 
         </h3>` : ''}
@@ -125,13 +129,10 @@ function reimbursementCard(timestamp, office, data) {
       <div class='amount-container'>
         ${data[timestamp][office].map(function(value){
             return `
-                <div class='amount mdc-typography--headline6 ${value.details.status === 'CANCELLED' ? 'mdc-theme--error' : value.details.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}' ${value.details.claimId ? `data-claim-id="${value.details.claimId}"` :`data-claim-data='${JSON.stringify(value)}'`}>
-                    <div class='mdc-typography--caption'>${value.reimbursementType}</div>
-                    ${value.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(value.amount,value.currency)}
-                    <div class='mdc-typography--caption'>${value.details.status}</div>
-                    <div class='mdc-typography--subtitle2'>${value.reimbursementName}</div>
+                <div class='amount mdc-typography--headline6 ${value.details.status === 'CANCELLED' ? 'mdc-theme--error' : value.details.status === 'CONFIRMED' ? 'mdc-theme--success' : ''}' ${value.details.claimId ? `data-claim-id="${value.details.claimId}"` :''}>
+                    ${value.reimbursementType === 'km allowance' ? kmAllowanceDetail(value) : claimDetail(value)}
                 </div>
-            `
+                `
         }).join("")}
         </div>
       </div>
@@ -141,6 +142,22 @@ function reimbursementCard(timestamp, office, data) {
 
 }
 
+function claimDetail(value){
+    return `<div class='mdc-typography--caption'>${value.reimbursementType || ''}</div>
+    ${value.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(value.amount,value.currency) || ''}
+    <div class='mdc-typography--caption'>${value.details.status || ''}</div>
+    <div class='mdc-typography--subtitle2'>${value.reimbursementName || ''}</div>`
+}
+function kmAllowanceDetail(value) {
+    return `
+    <a href='https://www.google.com/maps/dir/?api=1&origin=City+Hall%2C+New+York%2C+NY&destination=${value.details.endLocation._latitude}%2C${value.details.endLocation._longitude}'>
+        <div class='mdc-typography--caption'>${value.reimbursementType || ''}</div>
+        ${value.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(value.amount,value.currency) || ''}
+        <div class='mdc-typography--caption'>${value.details.rate ? convertAmountToCurrency(Number(value.details.rate),value.currency) : ''}</div>
+        <div class='mdc-typography--subtitle2'>${value.details.distanceTravelled + ' KM' || ''}</div>
+    </a>
+    `
+}
 function calculateTotalReim(data) {
     let total = 0;
     let currency = ''
