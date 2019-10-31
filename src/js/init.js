@@ -790,9 +790,9 @@ function openMap() {
     getCheckInSubs().then(function (checkInSubs) {
 
       if (!Object.keys(checkInSubs).length) {
-        manageLocation(3).then(function (location) {
+        appLocation(3).then(function (geopoint) {
           document.getElementById('start-load').classList.add('hidden');
-          ApplicationState.location = location;
+          ApplicationState.location = geopoint;
           localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
           getSuggestions()
         }).catch(function (error) {
@@ -802,18 +802,18 @@ function openMap() {
       };
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       const oldState = localStorage.getItem('ApplicationState')
-      manageLocation(3).then(function (geopoint) {
-        document.getElementById('start-load').classList.add('hidden');
-        if (!oldState) return mapView(geopoint);
-        const oldApplicationState = JSON.parse(oldState);
-        if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
-        const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
-        const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
-        if (isOlder || hasChangedLocation) return mapView(geopoint);
-        ApplicationState = oldApplicationState
-        return getSuggestions()
-      }).catch(function (error) {
-        handleLocationError(error, true)
+      appLocation(3).then(function (geopoint) {
+          document.getElementById('start-load').classList.add('hidden');
+          if (!oldState) return mapView(geopoint);
+          const oldApplicationState = JSON.parse(oldState);
+          if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
+          const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
+          const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
+          if (isOlder || hasChangedLocation) return mapView(geopoint);
+          ApplicationState = oldApplicationState
+          return getSuggestions()
+        }).catch(function (error) {
+          handleLocationError(error, true)
       })
     })
   })

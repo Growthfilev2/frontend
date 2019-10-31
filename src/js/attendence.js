@@ -15,7 +15,6 @@ function attendenceView(sectionContent,yesterdayAttendanceRecord) {
   })
 
   getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (myCreds) {
-    console.log(myCreds);
     const officeEmployee = {}
     myCreds.forEach(function (cred) {
       officeEmployee[cred.office] = cred;
@@ -29,9 +28,7 @@ function attendenceView(sectionContent,yesterdayAttendanceRecord) {
 
 
 function createAttendanceCard(employeeRecord,yesterdayAttendanceRecord) {
-  console.log(employeeRecord)
   getMonthlyData().then(function (monthlyData) {
-    console.log(monthlyData)
     const parent = document.getElementById('attendance-cards');
     if (!monthlyData.length) {
       parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No Attendance Found</h5>`
@@ -56,6 +53,7 @@ function createAttendanceCard(employeeRecord,yesterdayAttendanceRecord) {
       document.querySelector(`[data-id="${yesterdayAttendanceRecord.id}"]`).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"})
     }
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
+      
       el.addEventListener('click', checkStatusSubscription)
     });
 
@@ -263,10 +261,8 @@ function getMonthlyData() {
 }
 
 function checkStatusSubscription(event) {
-
-  const el = event.target;
+  const el = event.target.closest('button');
   const dataset = el.dataset;
-  console.log(dataset)
   const tx = db.transaction('subscriptions', 'readwrite');
   const fetch = tx
     .objectStore('subscriptions')
@@ -294,11 +290,14 @@ function checkStatusSubscription(event) {
       snacks(`You Don't Have ${formatTextToTitleCase(dataset.template)} Subscription`);
       return
     }
+  
     history.pushState(['addView'], null, null);
     subscription.date = dataset.date;
     subscription.id = dataset.id
     addView(subscription)
+  
   }
+
   tx.onerror = function () {
     return reject({
       message: tx.error,

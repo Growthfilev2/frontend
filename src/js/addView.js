@@ -8,7 +8,7 @@ function addView(sub) {
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
     `;
     
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -21,70 +21,72 @@ function sendFormToParent(formData) {
     
     const customerAuths = formData.customerAuths;
     delete formData.customerAuths;
-    if(Array.isArray(formData)) {
-        const prom = []
-        const templateName = formData[0].template
-        formData.forEach(function(form){
-         prom.push(requestCreator('create',form))
-        })
-       
-        Promise.all(prom).then(function(response){
-            progressBar.close();
-            successDialog(`You Created a ${templateName}`);
-            getSuggestions();
-        }).catch(function(error){
-            progressBar.close();
-            snacks(error.response.message,'Okay')
-        })
-        return;
-    }
-    requestCreator('create', formData).then(function () {
-            progressBar.close();
-            if(formData.template === 'attendance regularization') {
-                successDialog(`You Applied for an AR`);
-                const tx =  db.transaction('attendance','readwrite');
-                const store = tx.objectStore('attendance')
-                store.get(formData.id).onsuccess = function(event){
-                    const record = event.target.result;
-                    if(!record) return;
-                    record.editable = false;
-                    store.put(record)
-                }
-                tx.oncomplete = function() {
-                    getSuggestions();
-                }
-                return;
-            }
-            successDialog(`You Created a ${formData.template}`);  
-
-            if (formData.template === 'customer') {
-                ApplicationState.knownLocation = true;
-                ApplicationState.venue = {
-                    office: formData.office,
-                    template: formData.template,
-                    status: formData.status,
-                    location:formData.venue[0].location,
-                    address:formData.venue[0].address,
-                    latitude:formData.venue[0].geopoint.latitude,
-                    longitude:formData.venue[0].geopoint.longitude
-                }
-                localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
-                Object.keys(customerAuths).forEach(function(customerNumber){
-                    requestCreator('updateAuth', customerAuths[customerNumber]).then(function (response) {
-                        console.log(response)
-                    }).catch(function(error){
-                        console.log(error.response.message)
-                    })
-                })
-            }
-
-            getSuggestions();
+    appLocation(3).then(function(geopoint){
+        if(Array.isArray(formData)) {
+            const prom = []
+            const templateName = formData[0].template
+            formData.forEach(function(form){
+             prom.push(requestCreator('create',form,geopoint))
+            })
+           
+            Promise.all(prom).then(function(response){
+                progressBar.close();
+                successDialog(`You Created a ${templateName}`);
+                getSuggestions();
+            }).catch(function(error){
+                progressBar.close();
+                snacks(error.response.message,'Okay')
+            })
             return;
+        }
+        requestCreator('create', formData,geopoint).then(function () {
+                progressBar.close();
+                if(formData.template === 'attendance regularization') {
+                    successDialog(`You Applied for an AR`);
+                    const tx =  db.transaction('attendance','readwrite');
+                    const store = tx.objectStore('attendance')
+                    store.get(formData.id).onsuccess = function(event){
+                        const record = event.target.result;
+                        if(!record) return;
+                        record.editable = false;
+                        store.put(record)
+                    }
+                    tx.oncomplete = function() {
+                        getSuggestions();
+                    }
+                    return;
+                }
+                successDialog(`You Created a ${formData.template}`);  
+    
+                if (formData.template === 'customer') {
+                    ApplicationState.knownLocation = true;
+                    ApplicationState.venue = {
+                        office: formData.office,
+                        template: formData.template,
+                        status: formData.status,
+                        location:formData.venue[0].location,
+                        address:formData.venue[0].address,
+                        latitude:formData.venue[0].geopoint.latitude,
+                        longitude:formData.venue[0].geopoint.longitude
+                    }
+                    localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+                    Object.keys(customerAuths).forEach(function(customerNumber){
+                        requestCreator('updateAuth', customerAuths[customerNumber],geopoint).then(function (response) {
+                            console.log(response)
+                        }).catch(function(error){
+                            console.log(error.response.message)
+                        })
+                    })
+                }
+    
+                getSuggestions();
+                return;
+            }).catch(function (error) {
+                progressBar.close();
+                snacks(error.response.message,'Okay')
         })
-        .catch(function (error) {
-            progressBar.close();
-            snacks(error.response.message,'Okay')
-    })
+
+    }).catch(handleLocationError)
 }
 
 

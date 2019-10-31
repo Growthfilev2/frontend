@@ -68,9 +68,33 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
+function appLocation(maxRetry) {
+  return new Promise(function (resolve, reject) {
+
+    manageLocation(maxRetry).then(function (geopoint) {
+      if (!ApplicationState.location)  {
+        ApplicationState.location = geopoint
+        localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+        return resolve(geopoint);
+      }
+      if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+        return reject({
+          message: 'THRESHOLD EXCEED',
+          body: {
+            geopoint: geopoint
+          }
+        })
+      }
+      ApplicationState.location = geopoint
+      localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+      return resolve(geopoint)
+    }).catch(function(error){
+        reject(error)
+    })
+  })
+}
 
 function manageLocation(maxRetry) {
-
 
   return new Promise(function (resolve, reject) {
     
@@ -96,7 +120,7 @@ function manageLocation(maxRetry) {
 function handleLocationOld(maxRetry, location) {
   return new Promise(function (resolve, reject) {
     const storedLocation = getStoredLocation();
-    
+
     if (!storedLocation) return resolve(location)
     if (!isLocationOld(storedLocation, location)) return resolve(location);
     if (maxRetry > 0) {
@@ -115,8 +139,8 @@ function handleLocationOld(maxRetry, location) {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-   
-    
+
+
     if (!navigator.onLine) return reject({
       message: 'BROKEN INTERNET CONNECTION'
     })
@@ -129,12 +153,17 @@ function getLocation() {
           window.removeEventListener('iosLocation', _iosLocation, true);
         }, true)
       } catch (e) {
-        html5Geolocation().then(resolve).catch(reject)
+        console.log(e);
+        html5Geolocation().then(function(geopoint){
+          return resolve(geopoint)
+        }).catch(function(error){
+          reject(error)
+        })
       }
       return;
     }
-   
-    
+
+
     html5Geolocation().then(function (htmlLocation) {
       if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
         handleGeoLocationApi().then(resolve).catch(function (error) {
@@ -178,14 +207,16 @@ function handleGeoLocationApi() {
   })
 }
 
-
 function iosLocationError(iosError) {
   html5Geolocation().then(function (geopoint) {
     var iosLocation = new CustomEvent('iosLocation', {
       "detail": geopoint
     });
     window.dispatchEvent(iosLocation)
-  }).catch(handleLocationError)
+  }).catch(function(error){
+    
+    reject(error);
+  })
   handleError(iosError)
 }
 
@@ -197,7 +228,7 @@ function html5Geolocation() {
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
         provider: 'HTML5',
-        isLocationOld: isLocationOld(position.coords, getStoredLocation(),'HTML5'),
+        isLocationOld: isLocationOld(position.coords, getStoredLocation(), 'HTML5'),
         lastLocationTime: Date.now(),
       })
     }, function (error) {
@@ -212,9 +243,8 @@ function html5Geolocation() {
   })
 }
 
-// let apiHandler = new Worker('js/apiHandler.js?version=43');
 
-function requestCreator(requestType, requestBody) {
+function requestCreator(requestType, requestBody, geopoint) {
   const nonLocationRequest = {
     'instant': true,
     'now': true,
@@ -223,9 +253,9 @@ function requestCreator(requestType, requestBody) {
     'removeFromOffice': true,
     'updateAuth': true,
     'geolocationApi': true,
-    'paymentMethods':true,
-    'removeBankAccount':true,
-    'newBankAccount':true
+    'paymentMethods': true,
+    'removeBankAccount': true,
+    'newBankAccount': true
   }
   var auth = firebase.auth().currentUser;
 
@@ -246,7 +276,7 @@ function requestCreator(requestType, requestBody) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=46');
+  let apiHandler = new Worker('js/apiHandler.js?version=48');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
@@ -258,23 +288,15 @@ function requestCreator(requestType, requestBody) {
       getRootRecord().then(function (rootRecord) {
         const time = fetchCurrentTime(rootRecord.serverTime);
         requestBody['timestamp'] = time
+        requestBody['geopoint'] = geopoint;
+        requestGenerator.body = requestBody;
+        if (requestBody.template === 'check-in') {
+          ApplicationState.lastCheckInCreated = time
+        }
+        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
+        console.log('sending', requestGenerator);
+        apiHandler.postMessage(requestGenerator);
 
-        manageLocation(3).then(function (geopoint) {
-          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-            mapView(geopoint);
-            return;
-          };
-          ApplicationState.location = geopoint;
-          requestBody['geopoint'] = geopoint;
-          requestGenerator.body = requestBody;
-          if (requestBody.template === 'check-in') {
-            ApplicationState.lastCheckInCreated = time
-          }
-          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
-          console.log('sending', requestGenerator);
-          
-          apiHandler.postMessage(requestGenerator);
-        }).catch(handleLocationError)
         return;
       });
     }
@@ -392,12 +414,7 @@ function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
-
-  manageLocation(3).then(function (geopoint) {
-    if (!ApplicationState.location) return;
-    if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
-    mapView(geopoint);
-  }).catch(handleLocationError)
+  appLocation(3).then(console.log).catch(handleLocationError)
 }
 
 
