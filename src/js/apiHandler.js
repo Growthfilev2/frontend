@@ -536,9 +536,9 @@ function updateReimbursements(reimbursementData = [],store) {
 }
 
 function updatePayments(paymentData = [],store) {
-  paymentData.forEach(function(value) {
-      store.put(value)
-  })
+  // paymentData.forEach(function(value) {
+  //     store.put(value)
+  // })
 }
 
 
@@ -722,9 +722,7 @@ function successResponse(read, param, db, resolve, reject) {
     }
   }
 
-  console.log('attendace length',read.attendances.length)
-  console.log('reim length',read.reimbursements.length)
-  console.log('payments length',read.payments.length)
+
 
   updateAttendance(read.attendances,attendaceStore)
   updateReimbursements(read.reimbursements,reimbursementStore)
