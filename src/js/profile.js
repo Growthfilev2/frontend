@@ -95,7 +95,7 @@ function createBaseDetails() {
     ${auth.phoneNumber}
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['changePhoneNumber'],null,null);changePhoneNumber()">edit</span>
   </li>
-  <li class='mdc-list-item'>
+  <li class='mdc-list-item hidden'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
     Bank Accounts
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="bankAccount()">edit</span>
@@ -207,7 +207,7 @@ function addNewBankAccount() {
           type:'email'
         })}
         <div class="mdc-text-field-helper-line">
-          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
+          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
         </div>
     </div>
 
@@ -221,7 +221,7 @@ function addNewBankAccount() {
         required:true
       })}
       <div class="mdc-text-field-helper-line">
-        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
+        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
       </div>
     </div>
 
