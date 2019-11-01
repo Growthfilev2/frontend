@@ -839,8 +839,7 @@ function updateRoot(read, tx, uid, counter) {
   const store = tx.objectStore('root')
   store.get(uid).onsuccess = function (event) {
     const record = event.target.result;
-    // record.fromTime = read.upto;
-    record.fromTime = 0;
+    record.fromTime = read.upto;
     if (record.totalCount) {
       record.totalCount += totalCount;
     } else {
@@ -867,7 +866,7 @@ function updateIDB(config) {
     tx.oncomplete = function () {
       const req = {
         method: 'GET',
-        url: `${config.meta.apiUrl}read1?from=${time}`,
+        url: `${config.meta.apiUrl}read?from=${time}`,
         data: null,
         token: config.meta.user.token
       };

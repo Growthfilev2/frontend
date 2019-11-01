@@ -2,7 +2,7 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-let DB_VERSION = 20;
+let DB_VERSION = 30;
 let initApp = true;
 
 
