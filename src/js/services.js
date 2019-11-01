@@ -89,7 +89,7 @@ function appLocation(maxRetry) {
       localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
       return resolve(geopoint)
     }).catch(function(error){
-        reject(error)
+      reject(error)
     })
   })
 }
