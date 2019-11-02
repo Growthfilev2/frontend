@@ -819,6 +819,8 @@ function openMap() {
   })
 }
 
+
+
 function fillVenueInCheckInSub(sub, venue) {
   const vd = sub.venue[0];
   sub.venue = [{

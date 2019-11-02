@@ -22,10 +22,9 @@ function getStoredLocation() {
     const oldState = localStorage.getItem('ApplicationState')
     if (!oldState) return;
     return JSON.parse(oldState).location
-
 }
 
-function isLocationOld(newLocation, oldLocation,provider) {
+function isLocationOld(newLocation, oldLocation) {
     if (!oldLocation) return false;
     return oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;    
 }

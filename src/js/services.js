@@ -228,7 +228,7 @@ function html5Geolocation() {
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
         provider: 'HTML5',
-        isLocationOld: isLocationOld(position.coords, getStoredLocation(), 'HTML5'),
+        isLocationOld: isLocationOld(position.coords, getStoredLocation()),
         lastLocationTime: Date.now(),
       })
     }, function (error) {
@@ -276,7 +276,7 @@ function requestCreator(requestType, requestBody, geopoint) {
 
     }
   };
-  let apiHandler = new Worker('js/apiHandler.js?version=50');
+  let apiHandler = new Worker('js/apiHandler.js?version=51');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
@@ -446,7 +446,6 @@ function debounce(func, wait, immeditate) {
   }
 }
 
-
 function removeChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
@@ -481,7 +480,6 @@ function getSubscription(office, template) {
     const subscription = tx.objectStore('subscriptions')
     let range;
     let index;
-
     if (office) {
       index = subscription.index('validSubscription')
       range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
@@ -489,7 +487,6 @@ function getSubscription(office, template) {
       index = subscription.index('templateStatus');
       range = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])
     }
-
     index.getAll(range).onsuccess = function (event) {
       return resolve(event.target.result)
     }

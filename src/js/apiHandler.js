@@ -839,7 +839,8 @@ function updateRoot(read, tx, uid, counter) {
   const store = tx.objectStore('root')
   store.get(uid).onsuccess = function (event) {
     const record = event.target.result;
-    record.fromTime = read.upto;
+    // record.fromTime = read.upto;
+    record.fromTime = 0;
     if (record.totalCount) {
       record.totalCount += totalCount;
     } else {
@@ -866,11 +867,10 @@ function updateIDB(config) {
     tx.oncomplete = function () {
       const req = {
         method: 'GET',
-        url: `${config.meta.apiUrl}read?from=${time}`,
+        url: `${config.meta.apiUrl}read1?from=${time}`,
         data: null,
         token: config.meta.user.token
       };
-
 
       http(req)
         .then(function (response) {
@@ -878,7 +878,7 @@ function updateIDB(config) {
         }).catch(function (error) {
           return reject(error)
         })
-    }
+    } 
   })
 }
 

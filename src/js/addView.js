@@ -1,6 +1,5 @@
 function addView(sub) {
-    
-
+   
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${formatTextToTitleCase(sub.template)}</span>
     `
@@ -8,12 +7,13 @@ function addView(sub) {
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
     `;
     
     document.getElementById('form-iframe').addEventListener("load", ev => {
         document.getElementById('form-iframe').contentWindow.init(sub);
     })
+
 }
 
 function sendFormToParent(formData) {
@@ -117,12 +117,14 @@ function setContactForSecondCustomer(contactString){
     const contactDetails = parseContact(contactString);
     document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'Second Contact');
 }
+
 function setContactForSecondCustomerFailed(exceptionMessage){
     handleError({
         message:exceptionMessage,
         body:''
     })
 }
+
 
 function expenseClaimImage(base64) {
     document.getElementById('form-iframe').contentWindow.setExpenseImage(base64); 
