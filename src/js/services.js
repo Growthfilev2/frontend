@@ -71,10 +71,11 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
 
+
     manageLocation(maxRetry).then(function (geopoint) {
-      if (!ApplicationState.location)  {
+      if (!ApplicationState.location) {
         ApplicationState.location = geopoint
-        localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
         return resolve(geopoint);
       }
       if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
@@ -86,9 +87,9 @@ function appLocation(maxRetry) {
         })
       }
       ApplicationState.location = geopoint
-      localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
-    }).catch(function(error){
+    }).catch(function (error) {
       reject(error)
     })
   })
@@ -97,7 +98,7 @@ function appLocation(maxRetry) {
 function manageLocation(maxRetry) {
 
   return new Promise(function (resolve, reject) {
-    
+
     getLocation().then(function (location) {
       if (location.accuracy >= 35000) {
         if (maxRetry > 0) {
@@ -153,10 +154,9 @@ function getLocation() {
           window.removeEventListener('iosLocation', _iosLocation, true);
         }, true)
       } catch (e) {
-        console.log(e);
-        html5Geolocation().then(function(geopoint){
+        html5Geolocation().then(function (geopoint) {
           return resolve(geopoint)
-        }).catch(function(error){
+        }).catch(function (error) {
           reject(error)
         })
       }
@@ -213,8 +213,8 @@ function iosLocationError(iosError) {
       "detail": geopoint
     });
     window.dispatchEvent(iosLocation)
-  }).catch(function(error){
-    
+  }).catch(function (error) {
+
     reject(error);
   })
   handleError(iosError)
@@ -242,7 +242,6 @@ function html5Geolocation() {
     })
   })
 }
-
 
 function requestCreator(requestType, requestBody, geopoint) {
   const nonLocationRequest = {
@@ -276,6 +275,7 @@ function requestCreator(requestType, requestBody, geopoint) {
 
     }
   };
+
   let apiHandler = new Worker('js/apiHandler.js?version=51');
 
   auth.getIdToken().then(function (token) {

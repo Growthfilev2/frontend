@@ -523,7 +523,7 @@ function backblaze(body, meta) {
 
 function updateAttendance(attendanceData = [],store) {
   attendanceData.forEach(function(value) {
-    value.editable = true;
+    value.editable = 1;
     store.put(value)
   })
 }
@@ -761,7 +761,7 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
   Object.keys(userTimestamp).forEach(function (number) {
-   
+    
     const currentAddendums = userTimestamp[number]
     currentAddendums.forEach(function(addendum){
       if (addendum.isComment) return updateUserStore(userStore, number, addendum);
@@ -839,8 +839,7 @@ function updateRoot(read, tx, uid, counter) {
   const store = tx.objectStore('root')
   store.get(uid).onsuccess = function (event) {
     const record = event.target.result;
-    // record.fromTime = read.upto;
-    record.fromTime = 0;
+    record.fromTime = read.upto;
     if (record.totalCount) {
       record.totalCount += totalCount;
     } else {

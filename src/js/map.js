@@ -158,7 +158,7 @@ function mapView(location) {
     loadNearByLocations(o, map, location).then(function (nearByLocations) {
       ApplicationState.nearByLocations = nearByLocations;
       if (!nearByLocations.length) return createUnkownCheckIn('',location)
-      if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0],location);
+      if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0],'',location);
       document.getElementById('map').style.display = 'block'
       loadCardData(nearByLocations, map,location)
     })
