@@ -276,7 +276,7 @@ function requestCreator(requestType, requestBody, geopoint) {
     }
   };
 
-  let apiHandler = new Worker('js/apiHandler.js?version=51');
+  let apiHandler = new Worker('js/apiHandler.js?version=52');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
@@ -362,6 +362,7 @@ function updateIosLocation(geopointIos) {
 }
 
 function handleComponentUpdation(readResponse) {
+  console.log(readResponse)
   if (readResponse.response.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs

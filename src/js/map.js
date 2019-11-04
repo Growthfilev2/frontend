@@ -421,7 +421,7 @@ function setFilePath(base64) {
     sub.share = []
     progressBar.open();
 
-    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue),ApplicationState.geopoint).then(function () {
+    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue),ApplicationState.location).then(function () {
       getSuggestions()
       successDialog('Check-In Created')
       progressBar.close()
