@@ -150,7 +150,7 @@ function claimDetail(value){
 }
 function kmAllowanceDetail(value) {
     return `
-    <a style='text-decoration: none;' href='https://www.google.com/maps/dir/?api=1&origin=${value.details.startLocation._latitude}%2C${value.details.endLocation._longitude}&destination=${value.details.endLocation._latitude}%2C${value.details.endLocation._longitude}'>
+    <a style='text-decoration: none;' href='https://www.google.com/maps/dir/?api=1&origin=${value.details.startLocation.latitude}%2C${value.details.startLocation.longitude}&destination=${value.details.endLocation.latitude}%2C${value.details.endLocation.longitude}'>
         <div class='mdc-typography--caption'>${value.reimbursementType || ''}</div>
         ${value.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(value.amount,value.currency) || ''}
         <div class='mdc-typography--caption'>${value.details.rate ? convertAmountToCurrency(Number(value.details.rate),value.currency) : ''}</div>

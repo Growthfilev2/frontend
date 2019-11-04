@@ -71,7 +71,6 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
 
-
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -242,6 +241,7 @@ function html5Geolocation() {
     })
   })
 }
+
 
 function requestCreator(requestType, requestBody, geopoint) {
   const nonLocationRequest = {

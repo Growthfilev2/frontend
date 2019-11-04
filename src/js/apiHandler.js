@@ -178,16 +178,13 @@ function fetchServerTime(body, meta, db) {
       rootStore.put(record);
     }
     tx.oncomplete = function () {
-
       const httpReq = {
         method: 'GET',
         url: url,
         body: null,
         token: meta.user.token
       }
-
       http(httpReq).then(resolve).catch(reject)
-
     }
   })
 }
@@ -286,6 +283,7 @@ function newBankAccount(body,meta) {
   }
   return http(req)
 }
+
 function geolocationApi(body, meta,retry) {
 
   return new Promise(function (resolve, reject) {
@@ -395,9 +393,6 @@ function share(body, meta) {
 
 }
 
-
-
-
 function update(body, meta) {
   const req = {
     method: 'PATCH',
@@ -464,9 +459,6 @@ function removeFromOffice(offices, meta, db) {
   })
 }
 
-
-
-
 function removeActivity(offices, tx) {
   const activityIndex = tx.objectStore('activity').index('office');
 
@@ -495,6 +487,8 @@ function removeByIndex(index, range) {
   }
 }
 
+
+
 function updateAuth(body, meta) {
   const req = {
     method: 'POST',
@@ -503,7 +497,6 @@ function updateAuth(body, meta) {
     token: meta.user.token,
     timeout:15000
   }
-
   return http(req)
 }
 
@@ -680,6 +673,7 @@ function successResponse(read, param, db, resolve, reject) {
   let userTimestamp = {}
 
   read.addendum.forEach(function (addendum) {
+   
 
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
@@ -730,6 +724,7 @@ function successResponse(read, param, db, resolve, reject) {
   updatePayments(read.payments,paymentStore)
 
   read.activities.forEach(function (activity) {
+   
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)
     activityObjectStore.put(activity);
