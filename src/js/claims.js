@@ -52,15 +52,6 @@ function expenseView(sectionContent) {
                 }
             })
         });
-
-        // [].map.call(document.querySelectorAll(`[data-claim-data]`), function (el) {
-        //     el.addEventListener('click', function () {
-        //         const data = JSON.parse(el.dataset.claimData);
-        //         // const dialog = new Dialog(claimViewHeading(data), claimViewContent(data), 'claim-dialog').create('simple')
-        //         // dialog.open();
-                
-        //     })
-        // })
     }).catch(function (error) {
         handleError({
             message: error.message,
@@ -71,33 +62,6 @@ function expenseView(sectionContent) {
     })
 }
 
-function claimViewHeading(data) {
-    return `${data.reimbursementType}
-    <p class="mdc-typography mdc-typography--subtitle2 mt-0 mb-0">${data.reimbursementName}</span>
-    <div class='card-time mdc-typography--subtitle1'>Created On ${formatCreatedTime(data.details.checkInTimestamp)}</p>
-    `
-}
-
-function claimViewContent(data) {
-    return `<div class=claim-view'> 
-        ${data.amount ? `<h3 class='mdc-typography--body1 info-heading mt-0'>Amount : ${convertAmountToCurrency(Number(data.amount),data.currency)}</h3>` : ''}
-
-        <a class='mdc-typography--body1 info-heading mt-0' href='https://www.google.com/maps/dir/?api=1&origin=22,77&destination=21,76'>View route </a>
-        
-        ${data.details.status ? `<h3 class='mdc-typography--body1 info-heading mt-0'>
-           Status : ${data.details.status} 
-        </h3>` : ''}
-        ${data.details.rate ? `<h3 class='mdc-typography--body1 info-heading'>
-            Rate : ${data.details.rate} 
-        </h3>` : ''}
-        ${data.details.distanceTravelled ? `<h3 class='mdc-typography--body1 info-heading'>
-            Distance travelled : ${data.details.distanceTravelled} KM
-        </h3>` :''}
-        ${data.details.photoURL  ? `<div class='photo-container'>
-            <img src='${data.details.photoURL}'>
-        </div>` :''}
-    </div>`
-}
 
 
 function reimbursementCard(timestamp, office, data) {

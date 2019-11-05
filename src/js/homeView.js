@@ -520,10 +520,12 @@ function getYesterdayAtt() {
     index.openCursor(IDBKeyRange.lowerBound(getYesterdayArDate())).onsuccess = function (event) {
       const cursor = event.target.result;
       if(!cursor) return;
+
       if(!cursor.value.hasOwnProperty('attendance')) {
         cursor.continue();
         return;
       }
+      
       if(cursor.value.attendance == 1){
         cursor.continue();
         return;
