@@ -14,7 +14,7 @@ function expenseView(sectionContent) {
             }
         })
     })
-
+    
     getReimMonthlyData().then(function (reimbursementData) {
         console.log(reimbursementData)
         const parent = document.getElementById('reimbursement-cards')
@@ -61,7 +61,6 @@ function expenseView(sectionContent) {
         })
     })
 }
-
 
 
 function reimbursementCard(timestamp, office, data) {

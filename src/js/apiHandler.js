@@ -28,8 +28,6 @@ function sendSuccessRequestToMainThread(response, success) {
   })
 }
 
-
-
 function sendErrorRequestToMainThread(error) {
   console.log(error)
   const errorObject = {
@@ -48,7 +46,6 @@ function sendErrorRequestToMainThread(error) {
   } else {
     instant(JSON.stringify(errorObject.response), meta)
   }
-
   self.postMessage(errorObject)
 }
 
@@ -523,9 +520,8 @@ function updateAttendance(attendanceData = [],store) {
 
 function updateReimbursements(reimbursementData = [],store) {
   reimbursementData.forEach(function(value) {
-
       store.put(value)
-    })
+  })
 }
 
 function updatePayments(paymentData = [],store) {
@@ -533,7 +529,6 @@ function updatePayments(paymentData = [],store) {
   //     store.put(value)
   // })
 }
-
 
 
 function updateCalendar(activity, tx) {
@@ -815,7 +810,7 @@ function successResponse(read, param, db, resolve, reject) {
       updateSubscription(subscription, updateTx)
     }
   })
-
+  
   updateRoot(read, updateTx, param.user.uid, counter);
   updateTx.oncomplete = function () {
     console.log("all completed");
