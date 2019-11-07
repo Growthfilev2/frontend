@@ -144,8 +144,6 @@ function convertAmountToCurrency(amount, currency) {
     }).format(amount)
 }
 
-
-
 function reimDom() {
     return `<div class='reim-section' id='reim-view'>
         <div id='reimbursement-cards' class='mdc-layout-grid__inner'></div>
@@ -157,7 +155,6 @@ function getReimMonthlyData() {
 
         const tx = db.transaction('reimbursement')
         const index = tx.objectStore('reimbursement').index('key')
-
         const dateObject = {}
         index.openCursor(null, 'prev').onsuccess = function (event) {
             const cursor = event.target.result;
@@ -175,10 +172,22 @@ function getReimMonthlyData() {
             } else {
                 dateObject[cursor.value.key][cursor.value.office] = [cursor.value]
             };
-            
+
             cursor.continue();
         }
         tx.oncomplete = function () {
+            try {
+                Object.keys(dateObject).forEach(function(timestamp){
+                    Object.keys(dateObject[timestamp]).forEach(function(office){
+                        dateObject[timestamp][office].sort(function(a,b){
+                            return b.timestamp - a.timestamp
+                        })
+                    })
+                });
+            }catch(e){
+                console.log(e)
+            }
+
             console.log(dateObject)
             return resolve(dateObject)
         }
