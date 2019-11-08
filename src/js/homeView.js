@@ -198,26 +198,7 @@ function homeView(suggestedTemplates) {
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
       commonTaskList.singleSelection = true;
-      const rootTx = db.transaction('root', 'readwrite')
-      const rootStore = rootTx.objectStore('root')
-      rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-
-        const rootRecord = event.target.result;
-        if (!rootRecord) return;
-        if (rootRecord.totalCount && rootRecord.totalCount > 0) {
-          const el = document.getElementById('open-chat-list');
-          if (!el) return;
-          const metaIcon = el.querySelector('.mdc-list-item__meta')
-          metaIcon.classList.remove('material-icons');
-          metaIcon.innerHTML = `<div class='chat-count mdc-typography--subtitle2'>${rootRecord.totalCount}</div>`
-        }
-
-        if (rootRecord.totalCount < 0) {
-          rootRecord.totalCount = 0;
-          rootStore.put(rootRecord);
-        }
-      };
-
+    
       commonTaskList.listen('MDCList:action', function (commonListEvent) {
         const selectedType = commonTasks[commonListEvent.detail.index];
         if (selectedType.name === 'Change Location') {
@@ -487,10 +468,10 @@ function createArSuggestion(attendances) {
     secondartText.style.fontSize = '1rem';
 
     if (record.attendance == 0) {
-      primaryText.textContent = 'Apply AR/Leave'
+      primaryText.textContent = `Apply AR/Leave : ${record.office}`
     }
     if (record.attendance > 0 && record.attendance < 1) {
-      primaryText.textContent = 'Apply AR'
+      primaryText.textContent = `Apply AR : ${record.office}`
     }
     textCont.appendChild(primaryText)
     textCont.appendChild(secondartText);

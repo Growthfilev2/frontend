@@ -221,7 +221,7 @@ function getOtherContacts() {
 
 function readLatestChats(initList) {
     currentChatsArray = [];
-    const tx = db.transaction(['users', 'root'], 'readwrite');
+    const tx = db.transaction(['users'], 'readwrite');
     const index = tx.objectStore('users').index('timestamp');
     const auth = firebase.auth().currentUser;
 
@@ -239,35 +239,13 @@ function readLatestChats(initList) {
             return;
         };
 
-
-
-        if (ApplicationState.currentChatSlected === cursor.value.mobile && cursor.value.count) {
-            var currentUserCount = cursor.value.count;
-            cursor.value.count = 0;
-            const update = cursor.update(cursor.value);
-            update.onsuccess = function () {
-                console.log("count reset")
-                const rootStore = tx.objectStore('root')
-                rootStore.get(auth.uid).onsuccess = function (event) {
-                    const record = event.target.result;
-                    if (record) {
-                        console.log(currentUserCount)
-                        if (record.totalCount) {
-                            record.totalCount = record.totalCount - currentUserCount;
-                            rootStore.put(record)
-                        }
-                    }
-                }
-            }
-        }
-
         currentChats += userLi(cursor.value)
         currentChatsArray.push(cursor.value)
 
         cursor.continue();
     }
     tx.oncomplete = function () {
-        ApplicationState.currentChatSlected = null;
+      
         const chatsEl = document.getElementById('chats')
         document.querySelector('.chats-container').classList.remove("hidden")
         if (!chatsEl) return
@@ -326,7 +304,6 @@ function userLi(value) {
     </span>
     </span>
     <span class="mdc-list-item__meta" aria-hidden="true">
-    ${value.count ? `<div class='chat-count mdc-typography--subtitle2'>${value.count}</div>` :''}
     <span class='chat-time mdc-typography--subtitle2'>
         ${value.timestamp ? formatCreatedTime(value.timestamp) : ''}</span>
     </span>
@@ -401,7 +378,7 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
-    ApplicationState.currentChatSlected = userRecord.mobile;
+ 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
