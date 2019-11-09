@@ -238,7 +238,7 @@ function getMonthlyData() {
         }
         const recordDate = `${cursor.value.year}-${cursor.value.month +1}-${cursor.value.date}`
         const today = moment().format('YYYY-MM-DD')
-        if (moment(today, 'YYYY-MM-DD').isSameOrBefore(moment(recordDate, 'YYYY-MM-DD'))) {
+        if (moment(today, 'YYYY-MM-DD').isBefore(moment(recordDate, 'YYYY-MM-DD'))) {
           cursor.continue();
           return;
         }
