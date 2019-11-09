@@ -1,9 +1,11 @@
 function expenseView(sectionContent) {
     sectionContent.innerHTML = reimDom();
     sectionContent.dataset.view = 'reimbursements'
+    const el = document.getElementById('reim-view')
     getSubscription('', 'claim').then(function (subs) {
         if (!subs.length) return;
-        document.getElementById('reim-view').appendChild(createTemplateButton(subs))
+        if(!el) return
+        el.appendChild(createTemplateButton(subs))
     }).catch(function (error) {
         console.log(error)
         handleError({

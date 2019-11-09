@@ -21,8 +21,6 @@ var readDebounce = debounce(function () {
 window.addEventListener('callRead', readDebounce);
 
 
-
-
 function handleError(error) {
   console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));

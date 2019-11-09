@@ -1,10 +1,12 @@
-function attendenceView(sectionContent,yesterdayAttendanceRecord) {
+function attendenceView(sectionContent, yesterdayAttendanceRecord) {
   sectionContent.innerHTML = attendanceDom();
   sectionContent.dataset.view = 'attendence'
   document.getElementById('start-load').classList.add('hidden')
+  const el = document.getElementById('attendance-view')
   getSubscription('', 'leave').then(function (subs) {
     if (!subs.length) return;
-    document.getElementById('attendance-view').appendChild(createTemplateButton(subs))
+    if (!el) return;
+    el.appendChild(createTemplateButton(subs))
   }).catch(function (error) {
     handleError({
       message: error.message,
@@ -19,7 +21,7 @@ function attendenceView(sectionContent,yesterdayAttendanceRecord) {
     myCreds.forEach(function (cred) {
       officeEmployee[cred.office] = cred;
     });
-    createAttendanceCard(officeEmployee,yesterdayAttendanceRecord)
+    createAttendanceCard(officeEmployee, yesterdayAttendanceRecord)
   }).catch(function (error) {
     createAttendanceCard();
   });
@@ -27,7 +29,7 @@ function attendenceView(sectionContent,yesterdayAttendanceRecord) {
 }
 
 
-function createAttendanceCard(employeeRecord,yesterdayAttendanceRecord) {
+function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
   getMonthlyData().then(function (monthlyData) {
     const parent = document.getElementById('attendance-cards');
     if (!monthlyData.length) {
@@ -49,11 +51,15 @@ function createAttendanceCard(employeeRecord,yesterdayAttendanceRecord) {
     if (!parent) return;
     parent.innerHTML = monthlyString;
     toggleReportCard('.attendance-card');
-    if(yesterdayAttendanceRecord) {
-      document.querySelector(`[data-id="${yesterdayAttendanceRecord.id}"]`).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"})
+    if (yesterdayAttendanceRecord) {
+      document.querySelector(`[data-id="${yesterdayAttendanceRecord.id}"]`).scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest"
+      })
     }
     [].map.call(document.querySelectorAll('.status-button'), function (el) {
-      
+
       el.addEventListener('click', checkStatusSubscription)
     });
 
@@ -175,7 +181,7 @@ function attendanceStatusType(data) {
   if (data.weeklyOff) {
     return 'Weekly off'
   }
-  if(data.isLate) {
+  if (data.isLate) {
     return 'Late'
   }
   return ''
@@ -290,12 +296,12 @@ function checkStatusSubscription(event) {
       snacks(`You Don't Have ${formatTextToTitleCase(dataset.template)} Subscription`);
       return
     }
-  
+
     history.pushState(['addView'], null, null);
     subscription.date = dataset.date;
     subscription.id = dataset.id
     addView(subscription)
-  
+
   }
 
   tx.onerror = function () {
