@@ -193,6 +193,12 @@ function attendanceDom() {
   </div>`
 }
 
+function isAttendaceCardToday(attendaceObject){
+  const date = new Date();
+  return attendaceObject.date == date.getDate() && attendaceObject.month == date.getMonth() && attendaceObject.year == date.getFullYear();
+ 
+}
+
 function attendaceButtons(attendaceObject) {
   if (attendaceObject.attendance == 1) return ``;
 
@@ -201,14 +207,14 @@ function attendaceButtons(attendaceObject) {
     <button class='mdc-button mdc-card__action mdc-card__action--button status-button' data-template="leave" data-id="${attendaceObject.id}" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}" ${attendaceObject.editable ? '' :'disabled'}>
       Apply Leave
     </button>
-    <button class='mdc-button mdc-card__action mdc-card__action--button status-button mdc-button--raised' data-id="${attendaceObject.id}" data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}" ${attendaceObject.editable ? '' :'disabled'}>
+    <button class='mdc-button mdc-card__action mdc-card__action--button status-button mdc-button--raised' data-id="${attendaceObject.id}" data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}" ${attendaceObject.editable && !isAttendaceCardToday(attendaceObject) ? '' :'disabled'}>
     Apply AR
   </button>
     `
 
   }
   if (attendaceObject.attendance > 0 && attendaceObject.attendance < 1) {
-    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action status-button" data-id="${attendaceObject.id}" data-id="${attendaceObject.id}" ${attendaceObject.editable ? '' :'disabled'} data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
+    return `<button class="mdc-button mdc-card__action mdc-card__action--button full-bleed--action status-button" data-id="${attendaceObject.id}" data-id="${attendaceObject.id}" ${attendaceObject.editable && !isAttendaceCardToday(attendaceObject) ? '' :'disabled'} data-template="attendance regularization" data-office="${attendaceObject.office}"  data-date="${attendaceObject.year}/${attendaceObject.month + 1}/${attendaceObject.date}">
     <span class="mdc-button__label">Apply AR</span>
     <i class="material-icons" aria-hidden="true">arrow_forward</i>
   </button>`
