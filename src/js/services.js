@@ -240,6 +240,7 @@ function html5Geolocation() {
   })
 }
 
+let apiHandler = new Worker('js/apiHandler.js?version=53');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const nonLocationRequest = {
@@ -274,7 +275,6 @@ function requestCreator(requestType, requestBody, geopoint) {
     }
   };
 
-  let apiHandler = new Worker('js/apiHandler.js?version=52');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
@@ -301,12 +301,12 @@ function requestCreator(requestType, requestBody, geopoint) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       return reject(event.data)
     };
   })
