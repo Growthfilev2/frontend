@@ -193,10 +193,10 @@ function attendanceDom() {
   </div>`
 }
 
-function isAttendaceCardToday(attendaceObject){
+function isAttendaceCardToday(attendaceObject) {
   const date = new Date();
   return attendaceObject.date == date.getDate() && attendaceObject.month == date.getMonth() && attendaceObject.year == date.getFullYear();
- 
+
 }
 
 function attendaceButtons(attendaceObject) {
@@ -251,12 +251,13 @@ function getMonthlyData() {
         if (!cursor.value.hasOwnProperty('attendance')) {
           cursor.continue();
           return;
+        };
+        if (!cursor.value.addendum) {
+          cursor.value.addendum = [];
         }
-        if (cursor.value.addendum) {
-          cursor.value.addendum.sort(function (a, b) {
-            return a.timestamp - b.timestamp
-          })
-        }
+        cursor.value.addendum.sort(function (a, b) {
+          return a.timestamp - b.timestamp
+        })
         result.push(cursor.value)
         cursor.continue();
       }

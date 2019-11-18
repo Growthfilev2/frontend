@@ -782,41 +782,39 @@ function getCheckInSubs() {
 
 function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
-
-  hasDataInDB().then(function (data) {
-
-    if (!data) return showNoOfficeFound();
-
-    getCheckInSubs().then(function (checkInSubs) {
+  appLocation(3).then(function (geopoint) {
+    Promise.all([hasDataInDB(), getCheckInSubs()]).then(function (results) {
+      const isEmployeeWithData = results[0];
+      const checkInSubs = results[1];
+      document.getElementById('start-load').classList.add('hidden');
+      if (!isEmployeeWithData) {
+        newEmployeeView(geopoint);
+        return;
+      }
 
       if (!Object.keys(checkInSubs).length) {
-        appLocation(3).then(function (geopoint) {
-          document.getElementById('start-load').classList.add('hidden');
-          ApplicationState.location = geopoint;
-          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-          getSuggestions()
-        }).catch(function (error) {
-          handleLocationError(error, true)
-        })
+        ApplicationState.location = geopoint;
+        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+        getSuggestions()
         return
       };
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       const oldState = localStorage.getItem('ApplicationState')
-      appLocation(3).then(function (geopoint) {
-          document.getElementById('start-load').classList.add('hidden');
-          if (!oldState) return mapView(geopoint);
-          const oldApplicationState = JSON.parse(oldState);
-          if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
-          const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
-          const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
-          if (isOlder || hasChangedLocation) return mapView(geopoint);
-          ApplicationState = oldApplicationState
-          return getSuggestions()
-        }).catch(function (error) {
-          handleLocationError(error, true)
-      })
+
+      if (!oldState) return mapView(geopoint);
+      const oldApplicationState = JSON.parse(oldState);
+      if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
+      const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
+      const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
+      if (isOlder || hasChangedLocation) return mapView(geopoint);
+      ApplicationState = oldApplicationState
+      return getSuggestions()
     })
+  }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden');
+    handleLocationError(error, true)
   })
+
 }
 
 

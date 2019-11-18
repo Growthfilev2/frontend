@@ -278,13 +278,8 @@ function venueList(venue) {
 
 }
 
-function showNoOfficeFound() {
-  const content = `<h3 class='mdc-typography--headline6'>No Office Found For ${firebase.auth().currentUser.phoneNumber}</h3>
-  <p>Please Contact Your Administrator</p>
-  `
-  const dialog = new Dialog('No Office Found', content).create('simple');
-  dialog.scrimClickAction = ''
-  dialog.open();
+function newEmployeeView(geopoint) {
+    console.log("no office is found :/");
 }
 
 
