@@ -1,7 +1,7 @@
 function addView(sub) {
    
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">${formatTextToTitleCase(sub.template)}</span>
+    <span class="mdc-top-app-bar__title">${sub.template === 'employee' ? 'Check-in subscribers' : formatTextToTitleCase(sub.template)}</span>
     `
     const header = getHeader('app-header', backIcon, '');
 
@@ -101,6 +101,7 @@ return {
     }
 }
 
+
 function setContactForCustomer(contactString){
     const contactDetails = parseContact(contactString);
     document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'First Contact');
@@ -111,6 +112,15 @@ function setContactForCustomerFailed(exceptionMessage){
         body:''
     })
 }
+
+function getContactForEmployee(contactString){
+    const contactDetails = parseContact(contactString);
+    console.log(contactDetails)
+    // setTimeout(() => {
+        document.getElementById('form-iframe').contentWindow.setContact(contactDetails);
+    // }, 100);
+}
+
 
 
 function setContactForSecondCustomer(contactString){

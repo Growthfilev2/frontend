@@ -24,9 +24,10 @@ function createFab(icon) {
     return button;
 }
 
-function createButton(name, icon) {
+function createButton(name, icon,id) {
     const button = createElement('button', {
-        className: 'mdc-button'
+        className: 'mdc-button',
+        id:id || ''
     })
     const span = createElement('span', {
         className: 'mdc-button__label',
@@ -44,12 +45,18 @@ function createButton(name, icon) {
     return button
 }
 
+function createLi(itemName) {
+    const li = createElement('li',{
+        className:'mdc-list-item',
+        textContent:itemName
+    })
+    return li
+}
+
 function Dialog(title, content, id) {
     this.title = title;
     this.content = content;
     this.id = id;
-
-
 }
 
 Dialog.prototype.create = function (type) {
@@ -191,7 +198,8 @@ function textFieldTelephone(attr) {
 }
 
 function textField(attr) {
-    return `<div class="mdc-text-field mdc-text-field--outlined full-width ${attr.disabled ? 'mdc-text-field--disabled' :''}" id='${attr.id}'>
+    return `<div class="mdc-text-field mdc-text-field--outlined full-width ${attr.icon ? 'mdc-text-field--with-leading-icon' :''} ${attr.disabled ? 'mdc-text-field--disabled' :''}" id='${attr.id}'>
+    ${attr.icon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.icon}</i>`:''}
     <input type="text" class="mdc-text-field__input" value="${attr.value || ''}" type="${attr.type}" required="${attr.required}" ${attr.disabled ? 'disabled':''}>
     <div class="mdc-notched-outline">
       <div class="mdc-notched-outline__leading"></div>

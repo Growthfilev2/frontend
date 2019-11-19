@@ -408,12 +408,11 @@ function handleComponentUpdation(readResponse) {
 }
 
 
-
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
-  appLocation(3).then(console.log).catch(handleLocationError)
+  // appLocation(3).then(console.log).catch(handleLocationError)
 }
 
 

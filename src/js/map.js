@@ -14,6 +14,7 @@ var markersObject = {
   infowindow: []
 }
 var geocodeVenue = '';
+
 function failureScreen(error, callback) {
 
   document.getElementById('start-load').classList.add('hidden');
@@ -79,9 +80,9 @@ function handleLocationError(error, onAppOpen) {
     default:
       handleError({
         message: error.message,
-        body:{
-          reason : error.body || error,
-          stack : error.stack || ''
+        body: {
+          reason: error.body || error,
+          stack: error.stack || ''
         }
       })
       if (onAppOpen) {
@@ -157,15 +158,15 @@ function mapView(location) {
     console.log('idle_once');
     loadNearByLocations(o, map, location).then(function (nearByLocations) {
       ApplicationState.nearByLocations = nearByLocations;
-      if (!nearByLocations.length) return createUnkownCheckIn('',location)
-      if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0],'',location);
+      if (!nearByLocations.length) return createUnkownCheckIn('', location)
+      if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], '', location);
       document.getElementById('map').style.display = 'block'
-      loadCardData(nearByLocations, map,location)
+      loadCardData(nearByLocations, map, location)
     })
   });
 }
 
-function createUnkownCheckIn(cardProd,geopoint) {
+function createUnkownCheckIn(cardProd, geopoint) {
   document.getElementById('start-load').classList.remove('hidden');
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
@@ -175,7 +176,7 @@ function createUnkownCheckIn(cardProd,geopoint) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
 
-    prom.push(requestCreator('create', fillVenueInCheckInSub(copy, ''),geopoint))
+    prom.push(requestCreator('create', fillVenueInCheckInSub(copy, ''), geopoint))
   })
 
   if (cardProd) {
@@ -201,7 +202,7 @@ function createUnkownCheckIn(cardProd,geopoint) {
   })
 }
 
-function loadCardData(venues, map,geopoint) {
+function loadCardData(venues, map, geopoint) {
   document.getElementById('start-load').classList.add('hidden');
   ApplicationState.knownLocation = true;
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
@@ -222,15 +223,15 @@ function loadCardData(venues, map,geopoint) {
   ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
     console.log(evt.detail.index)
-    if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd,geopoint);
+    if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd, geopoint);
     focusMarker(map, markersObject, evt.detail.index)
     cardProd.open();
     const selectedVenue = venues[evt.detail.index];
-    createKnownCheckIn(selectedVenue,'',geopoint);
+    createKnownCheckIn(selectedVenue, '', geopoint);
   })
 };
 
-function createKnownCheckIn(selectedVenue, cardProd,geopoint) {
+function createKnownCheckIn(selectedVenue, cardProd, geopoint) {
 
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
@@ -238,9 +239,9 @@ function createKnownCheckIn(selectedVenue, cardProd,geopoint) {
     cardProd.open();
   }
 
-  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue),geopoint).then(function () {
+  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue), geopoint).then(function () {
 
-    successDialog('Check-In Created')    
+    successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions();
@@ -278,10 +279,10 @@ function venueList(venue) {
 
 }
 
-function newEmployeeView(geopoint) {
-    console.log("no office is found :/");
-}
 
+function newOfficeView() {
+
+}
 
 
 function selectionBox() {
@@ -416,7 +417,7 @@ function setFilePath(base64) {
     sub.share = []
     progressBar.open();
 
-    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue),ApplicationState.location).then(function () {
+    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
       getSuggestions()
       successDialog('Check-In Created')
       progressBar.close()
@@ -560,4 +561,3 @@ function loadNearByLocations(o, map, location) {
     }
   })
 }
-

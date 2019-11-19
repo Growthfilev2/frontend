@@ -1,9 +1,10 @@
 function getSuggestions() {
-  if (ApplicationState.knownLocation) {
-    getKnownLocationSubs().then(homeView);
-    return;
-  }
-  return getSubsWithVenue().then(homeView)
+  // if (ApplicationState.knownLocation) {
+  //   getKnownLocationSubs().then(homeView);
+  //   return;
+  // }
+  // return getSubsWithVenue().then(homeView)
+  homeView();
 }
 
 function getKnownLocationSubs() {
@@ -164,15 +165,25 @@ function homeHeaderStartContent(name) {
 
 function homeView(suggestedTemplates) {
   document.getElementById('start-load').classList.add('hidden')
+  // if (isEmployeeWithData) {
+    // history.pushState(['newEmployeeView'],null,null)
+    // newEmployeeView();
+    // return;
+  // }
   try {
     const commonTasks = getCommonTasks();
     progressBar.close();
-    history.pushState(['homeView'], null, null);
+    // history.pushState(['homeView'], null, null);
     let clearIcon = ''
     if (ApplicationState.nearByLocations.length > 1) {
       clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
     const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
+    
+    history.pushState(['newUserLandingpage'],null,null)
+    newUserLandingpage();
+    return;
+   
     if (!ApplicationState.venue) {
       generateCheckInVenueName(header);
     }
@@ -975,4 +986,235 @@ ${reportString}
 </div>
 `
 
+}
+
+
+function newUserLandingpage() {
+  const appEl = document.getElementById('app-current-panel');
+  appEl.classList.add('mdc-theme--primary-bg');
+  
+  appEl.innerHTML = `
+  <div class='landing-page-container'>
+  
+  <div class='text-box text-center mdc-theme--on-primary'>
+    <p class='mdc-typography--headline5 mt-0'>Welcome to GROWTHFILE, Lorem ipsum</p>
+  </div>
+  <div class='card-box-container mdc-layout-grid__inner'>
+  <div class='selection-box mdc-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell mdc-card--outlined text-center' id='search-office-box'>
+    <div class='content'>
+      <div class='icon-container'>
+        <i class='material-icons mdc-theme--primary'>search</i>
+      </div>
+      <div class='text'>
+        <p class='mdc-typography--body1 mt-10 mb-0'>Search Office</p>
+      </div>
+    </div>
+  </div>
+  <div class='selection-box mdc-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell mdc-card--outlined text-center' id='search-office-box'>
+    <div class='content'>
+      <div class='icon-container'>
+        <i class='material-icons mdc-theme--primary'>edit</i>
+      </div>
+      <div class='text'>
+        <p class='mdc-typography--body1 mt-10 mb-0'>Create Office</p>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>'
+  `
+
+
+}
+
+function newEmployeeView(geopoint) {
+  console.log("no office is found :/");
+  document.getElementById('app-header').classList.add('hidden')
+  const appEl = document.getElementById('app-current-panel');
+
+  appEl.innerHTML = `<div class='new-join'>
+      <div class='search-bar-container'>
+        ${textField({
+          id:'search-office',
+          type:'text',
+          label:'Search Office',
+          icon:'search'
+        })}
+      </div>
+      <div class='search-results-container'>
+          <ul class='mdc-list' id='search-result-list'>
+          </ul>
+      </div>
+      <div id='create-new-office-container' class='office-search-fail'>
+      
+      </div>
+    </div>
+    `
+  const searchBar = new mdc.textField.MDCTextField(document.getElementById('search-office'))
+  const searchResultList = new mdc.list.MDCList(document.getElementById('search-result-list'))
+  const createOfficeButtonContainer =   document.getElementById('create-new-office-container');
+  const testOffices = ['Sonic Youth', 'Pink Floyd', 'Beatles', 'Metallica'];
+
+  searchBar.input_.addEventListener('input', function (evt) {
+    searchResultList.root_.innerHTML = ''
+    testOffices.forEach(function (office) {
+      const smallCase = office.toLowerCase()
+      if (smallCase.indexOf(evt.target.value.toLowerCase()) > -1) {
+        const li = createLi(office)
+        li.dataset.name = office;
+        searchResultList.root_.appendChild(li)
+      }
+    })
+    if(!searchResultList.listElements.length) {
+
+      if(createOfficeButtonContainer.querySelector('p')) {
+        createOfficeButtonContainer.querySelector('p').textContent = `"${evt.target.value}" did not match any results.`
+        return;
+      }
+
+      const p = createElement('p',{
+        className:'mdc-typography--body1',
+        textContent:`"${evt.target.value}" did not match any results.`
+      })
+      
+      const button = createButton('Create New Office','','create-new-office-btn');
+      button.classList.add('mdc-button--raised');
+      createOfficeButtonContainer.appendChild(p)
+      if(document.getElementById('create-new-office-btn')) return;
+      createOfficeButtonContainer.appendChild(button);
+      button.addEventListener('click',function(){
+        newOfficeView();
+        return;
+      })
+    }
+    else {
+      createOfficeButtonContainer.innerHTML = ''
+    }
+  });
+  searchBar.input_.dispatchEvent(new Event('input'));
+
+  searchResultList.listen('MDCList:action', function (evt) {
+   const selectedOffice =  searchResultList.listElements[evt.detail.index].dataset.name;
+   console.log(selectedOffice)
+   searchBar.value = selectedOffice;
+   createNewEmployee(selectedOffice);
+  })
+
+}
+
+function createNewEmployee(office){
+  document.getElementById('app-header').classList.remove('hidden')
+  const appEl = document.getElementById('app-current-panel')
+  history.pushState(['addView'], null, null);
+  addView({
+    "schedule": [],
+    "template":'employee',
+    "attachment": {
+        "Department": {
+            "value": "",
+            "type": "department"
+        },
+        "Product Specialization": {
+            "type": "string",
+            "value": ""
+        },
+        "Minimum Working Hours": {
+            "type": "number",
+            "value": ""
+        },
+        "Daily End Time": {
+            "value": "",
+            "type": "HH:MM"
+        },
+        "Monthly Off Days": {
+            "type": "number",
+            "value": ""
+        },
+        "Designation": {
+            "type": "string",
+            "value": ""
+        },
+        "Maximum Advance Amount Given": {
+            "type": "number",
+            "value": ""
+        },
+        "Employee Based In Customer Location": {
+            "type": "boolean",
+            "value": ""
+        },
+        "Minimum Daily Activity Count": {
+            "type": "number",
+            "value": ""
+        },
+        "Start Point Latitude": {
+            "type": "number",
+            "value": ""
+        },
+        "Employee Code": {
+            "type": "string",
+            "value": ""
+        },
+        "Second Supervisor": {
+            "type": "phoneNumber",
+            "value": ""
+        },
+        "Daily Start Time": {
+            "type": "HH:MM",
+            "value": ""
+        },
+        "Scheduled Only": {
+            "type": "boolean",
+            "value": ""
+        },
+        "Name": {
+            "type": "string",
+            "value": ""
+        },
+        "KM Daily Limit": {
+            "type": "string",
+            "value": ""
+        },
+        "Employee Contact": {
+            "type": "phoneNumber",
+            "value": ""
+        },
+        "KM Rate": {
+            "type": "string",
+            "value": ""
+        },
+        "First Supervisor": {
+            "type": "phoneNumber",
+            "value": ""
+        },
+        "Location Validation Check": {
+            "type": "boolean",
+            "value": ""
+        },
+        "Region": {
+            "type": "region",
+            "value": ""
+        },
+        "Task Specialization": {
+            "type": "string",
+            "value": ""
+        },
+        "Start Point Longitude": {
+            "type": "number",
+            "value": ""
+        },
+        "Base Location": {
+            "type": "branch",
+            "value": ""
+        },
+        "Third Supervisor": {
+            "value": "",
+            "type": "phoneNumber"
+        }
+    },
+    "venue": [],
+   
+  })
+  // document.querySelector('#section-start .mdc-top-app-bar__navigation-icon').addEventListener('click',function(){
+  //   history.back();
+  // })
 }

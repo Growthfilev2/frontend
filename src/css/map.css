@@ -202,3 +202,15 @@
       max-width: 48%;
     }
   }
+
+/** new join **/
+.new-join {
+  padding: 20px;
+}
+.office-search-fail {
+  text-align: center;
+}
+.office-search-fail button {
+  display: block;
+  margin: 0 auto;
+}

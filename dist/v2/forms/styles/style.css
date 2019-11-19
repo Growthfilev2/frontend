@@ -136,6 +136,7 @@ body {
 .forms .form-list .form-component .submit-btn {
   display: block;
   margin: 0 auto;
+ 
 }
 
 .forms .form-list .form-component .mdc-text-field,
@@ -206,4 +207,36 @@ body {
   color: black;
   padding-left: 5px;
 
+}
+
+.app-fab--absolute {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+}
+
+@media(min-width: 1024px) {
+   .app-fab--absolute {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+}
+
+.employee-form .form-list {
+  /* min-height: 600px; */
+  height: calc(100vh - 18vh);
+  position: relative;
+}
+
+.app-fab--absolute {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+}
+
+@media(min-width: 1024px) {
+   .app-fab--absolute {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
 }

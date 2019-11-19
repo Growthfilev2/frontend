@@ -8,7 +8,7 @@ function createDate(dateObject) {
     if (date < 10) {
         date = '0' + date
     };
-    
+
     return `${dateObject.getFullYear()}-${month}-${date}`
 }
 
@@ -27,15 +27,15 @@ function showSecondDate(event, className, dataName) {
 
 
 function initializeDates(subscriptionTemplate, defaultDateString) {
-   
+
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);
-        startfield.addEventListener('change',function(evt){
+        startfield.addEventListener('change', function (evt) {
             endField.value = evt.target.value
             endField.min = evt.target.value
         });
-        startfield.value = endField.value = endField.min =  defaultDateString
+        startfield.value = endField.value = endField.min = defaultDateString
     });
 }
 
@@ -45,7 +45,7 @@ function getNewSchedule(subscriptionTemplate) {
     let index = 0;
     let isScheduleValid = false;
     const length = subscriptionTemplate.schedule.length;
-    for (index;index < length; index++) {
+    for (index; index < length; index++) {
         const name = subscriptionTemplate.schedule[index]
 
         const startDate = document.querySelector(`[data-name="${name} start date"]`).value;
@@ -59,9 +59,9 @@ function getNewSchedule(subscriptionTemplate) {
             break;
         }
         const startDate_UTS = Date.parse(startDate);
-        const endDate_UTS = Date.parse(endDate) 
-        if(startDate_UTS > endDate_UTS) {
-            parent.snacks('start date in ' + name +' cannot be greater than end date');
+        const endDate_UTS = Date.parse(endDate)
+        if (startDate_UTS > endDate_UTS) {
+            parent.snacks('start date in ' + name + ' cannot be greater than end date');
             break;
         }
         isScheduleValid = true;
@@ -71,9 +71,9 @@ function getNewSchedule(subscriptionTemplate) {
             endTime: endDate_UTS,
         })
     }
-    if(isScheduleValid) return newSchedules;
+    if (isScheduleValid) return newSchedules;
 
-    return ;
+    return;
 
 }
 
@@ -125,4 +125,30 @@ function createProductAmount(product) {
     <input class="mdc-list-item__meta amount-input" aria-hidden="true" placeholder="Add Amount" type='number'>
     `
     return li;
+}
+
+function createElement(tagName, attrs) {
+    const el = document.createElement(tagName)
+    if (attrs) {
+        Object.keys(attrs).forEach(function (attr) {
+            el[attr] = attrs[attr]
+        })
+    }
+    return el;
+}
+
+function createPhoneNumberLi(contactObject) {
+
+    const li = createElement('li', {
+        className: 'mdc-list-item',
+    })
+    li.dataset.number = contactObject.phoneNumber;
+
+    li.innerHTML = `<span class="mdc-list-item__text">
+        <span class="mdc-list-item__primary-text">${contactObject.displayName}</span>
+        <span class="mdc-list-item__secondary-text">${contactObject.phoneNumber}</span>
+    </span>
+    <span class="mdc-list-item__meta material-icons mdc-theme--error" aria-hidden="true">clear</span>
+    `
+    return li
 }
