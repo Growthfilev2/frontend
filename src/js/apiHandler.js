@@ -678,6 +678,7 @@ function successResponse(read, param, db, resolve, reject) {
       }
     };
 
+
     if (addendum.isComment) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
@@ -686,7 +687,8 @@ function successResponse(read, param, db, resolve, reject) {
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
         userTimestamp[addendum.assignee] ? userTimestamp[addendum.assignee].push(addendum) : userTimestamp[addendum.assignee] = [addendum];
-      }
+      };
+
       addendumObjectStore.add(addendum)
     } else {
 
@@ -713,11 +715,11 @@ function successResponse(read, param, db, resolve, reject) {
 
 
 
+  
+
   updateAttendance(read.attendances,attendaceStore)
   updateReimbursements(read.reimbursements,reimbursementStore)
-
   updatePayments(read.payments,paymentStore)
-
   read.activities.forEach(function (activity) {
    
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
