@@ -668,6 +668,7 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.addendum.forEach(function (addendum) {
    
+    if(!addendum.hasOwnProperty('user')) return;
 
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
