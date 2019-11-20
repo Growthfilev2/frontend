@@ -1190,22 +1190,23 @@ function getUserChats(userRecord) {
                 comment: val
             }
             requestBody[param] = paramValue
+
             appLocation(3).then(function(geopoint){
                 requestCreator(input.dataset.name, requestBody,geopoint).then(function () {
                     parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                     setBottomScroll();
                     input.value = ''
                     progressBar.close()
+                    input.dataset.name = 'dm';
+                    input.dataset.param = 'assignee'
+                    input.dataset.paramValue = userRecord.mobile
+                    input.placeholder = 'Type a message'
                 }).catch(function (error) {
                     input.value = ''
                     progressBar.close()
                     snacks(error.response.message);
                 })
             }).catch(handleLocationError)
-            input.dataset.name = 'dm';
-            input.dataset.param = 'assignee'
-            input.dataset.paramValue = userRecord.mobile
-            input.placeholder = 'Type a message'
         });
     }
 }

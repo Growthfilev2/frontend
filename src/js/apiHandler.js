@@ -133,7 +133,6 @@ function http(request) {
 
       if (xhr.readyState === 4) {
 
-
         if (!xhr.status || xhr.status > 226) {
           if (!xhr.response) return;
           const errorObject = JSON.parse(xhr.response)
@@ -679,20 +678,29 @@ function successResponse(read, param, db, resolve, reject) {
     };
 
     if (addendum.isComment) {
-      if (addendum.assignee === param.user.phoneNumber) {
-        addendum.key = param.user.phoneNumber + addendum.user
-        userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user]  = [addendum]
-        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
-      } else {
-        addendum.key = param.user.phoneNumber + addendum.assignee
-        userTimestamp[addendum.assignee] ? userTimestamp[addendum.assignee].push(addendum) : userTimestamp[addendum.assignee] = [addendum];
+      if(addendum.hasOwnProperty('assignee')) {
+        if (addendum.assignee === param.user.phoneNumber) {
+          addendum.key = param.user.phoneNumber + addendum.user
+          userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user]  = [addendum]
+          counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
+        } else {
+          addendum.key = param.user.phoneNumber + addendum.assignee
+          userTimestamp[addendum.assignee] ? userTimestamp[addendum.assignee].push(addendum) : userTimestamp[addendum.assignee] = [addendum];
+        }
       }
+      else {
+        addendum.key = param.user.phoneNumber + addendum.user;
+        userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
+        if (addendum.user !== param.user.phoneNumber) {
+          counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
+        }
+      }
+
       addendumObjectStore.add(addendum)
     } else {
 
       addendum.key = param.user.phoneNumber + addendum.user;
       userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
-      // addendumObjectStore.add(addendum)
       
       if (addendum.user !== param.user.phoneNumber) {
         counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
@@ -710,8 +718,6 @@ function successResponse(read, param, db, resolve, reject) {
       });
     }
   }
-
-
 
   updateAttendance(read.attendances,attendaceStore)
   updateReimbursements(read.reimbursements,reimbursementStore)
@@ -754,13 +760,12 @@ function successResponse(read, param, db, resolve, reject) {
     
     const currentAddendums = userTimestamp[number]
     currentAddendums.forEach(function(addendum){
-      if (addendum.isComment) return updateUserStore(userStore, number, addendum);
+      if (addendum.isComment && addendum.assignee) return updateUserStore(userStore, number, addendum);
       const activityId = addendum.activityId
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
         if (!record) return;
      
-  
         record.assignees.forEach(function (user) {
           addendum.key = param.user.phoneNumber + user.phoneNumber;
         
@@ -769,14 +774,11 @@ function successResponse(read, param, db, resolve, reject) {
             updateUserStore(userStore, user.phoneNumber, addendum)
           }
           if (number === user.phoneNumber) {
-              updateUserStore(userStore, number, addendum)
+            updateUserStore(userStore, number, addendum)
           }
         })
       }
     })
-
-    // if is system generated
-    
   })
 
   function updateUserStore(userStore, phoneNumber, currentAddendum) {
