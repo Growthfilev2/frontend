@@ -33,7 +33,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
   getMonthlyData().then(function (monthlyData) {
     const parent = document.getElementById('attendance-cards');
     if (!monthlyData.length) {
-      if(parent) {
+      if (parent) {
         parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No Attendance Found</h5>`
       }
       return;
@@ -195,10 +195,10 @@ function attendanceDom() {
   </div>`
 }
 
-function isAttendaceCardToday(attendaceObject){
+function isAttendaceCardToday(attendaceObject) {
   const date = new Date();
   return attendaceObject.date == date.getDate() && attendaceObject.month == date.getMonth() && attendaceObject.year == date.getFullYear();
- 
+
 }
 
 function attendaceButtons(attendaceObject) {
@@ -254,7 +254,10 @@ function getMonthlyData() {
           cursor.continue();
           return;
         }
-        if (cursor.value.addendum) {
+        if (!cursor.value.hasOwnProperty('addendum')) {
+          cursor.value.addendum = [];
+        }
+        else {
           cursor.value.addendum.sort(function (a, b) {
             return a.timestamp - b.timestamp
           })
