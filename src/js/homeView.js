@@ -165,7 +165,7 @@ function homeHeaderStartContent(name) {
 
 function homeView(suggestedTemplates) {
   document.getElementById('start-load').classList.add('hidden')
-  
+
   try {
     const commonTasks = getCommonTasks();
     progressBar.close();
@@ -175,8 +175,8 @@ function homeView(suggestedTemplates) {
       clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
     const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
-    
-   
+
+
     if (!ApplicationState.venue) {
       generateCheckInVenueName(header);
     }
@@ -202,7 +202,7 @@ function homeView(suggestedTemplates) {
     if (commonListEl) {
       const commonTaskList = new mdc.list.MDCList(commonListEl);
       commonTaskList.singleSelection = true;
-    
+
       commonTaskList.listen('MDCList:action', function (commonListEvent) {
         const selectedType = commonTasks[commonListEvent.detail.index];
         if (selectedType.name === 'Change Location') {
@@ -504,21 +504,21 @@ function getYesterdayAtt() {
     let records = [];
     index.openCursor(IDBKeyRange.lowerBound(getYesterdayArDate())).onsuccess = function (event) {
       const cursor = event.target.result;
-      if(!cursor) return;
+      if (!cursor) return;
 
-      if(!cursor.value.hasOwnProperty('attendance')) {
+      if (!cursor.value.hasOwnProperty('attendance')) {
         cursor.continue();
         return;
       }
-      
-      if(cursor.value.attendance == 1){
+
+      if (cursor.value.attendance == 1) {
         cursor.continue();
         return;
       }
-      
-      if(cursor.value.date === (date.getDate() -1) && cursor.value.month == date.getMonth() && cursor.value.year == date.getFullYear()) {
+
+      if (cursor.value.date === (date.getDate() - 1) && cursor.value.month == date.getMonth() && cursor.value.year == date.getFullYear()) {
         records.push(cursor.value)
-      } 
+      }
       cursor.continue();
     }
     tx.oncomplete = function () {
@@ -978,44 +978,62 @@ ${reportString}
 
 </div>
 `
+}
+
+
+
+function newUserLandingpage(geopoint) {
+  const appEl = document.getElementById('app-current-panel');
+  appEl.innerHTML = '';
+
+  const container = createElement('div', {
+    className: 'landing-page-container text-center'
+  })
+  container.innerHTML = `<div class='text-box'>
+  <p class='mdc-typography--headline5 mt-0'>Welcome to GROWTHFILE, Lorem ipsum</p>
+</div>`
+
+  const cardBoxCont = createElement('div', {
+    className: 'card-box-container'
+  })
+
+  const card = createElement('div', {
+    className: 'selection-box mdc-card  mdc-card--outlined'
+  })
+  card.innerHTML = `<div class='content'>
+  <div class='icon-container'>
+    <i class='material-icons mdc-theme--primary'>search</i>
+  </div>
+  <div class='text'>
+    <p class='mdc-typography--body1 mt-10 mb-0'>Search Office</p>
+  </div>
+</div>`
+
+  card.addEventListener('click', function () {
+    searchOffice(geopoint);
+  })
+  cardBoxCont.appendChild(card)
+  container.appendChild(cardBoxCont)
+  appEl.appendChild(container);
 
 }
 
 
-function newUserLandingpage() {
+function searchOffice(geopoint) {
   const appEl = document.getElementById('app-current-panel');
-  appEl.classList.add('mdc-theme--primary-bg');
+  appEl.innerHTML = `<div class='search-map-cont'></div>`;
+
+  const map = new google.maps.Map(document.querySelector('.search-map-cont'),{
+    zoom:16,
+    center:{
+      lat:geopoint.latitude,
+      lng:geopoint.longitude
+    },
+    disableDefaultUI:true
+  });
+
   
-  appEl.innerHTML = `
-  <div class='landing-page-container'>
-  
-  <div class='text-box text-center mdc-theme--on-primary'>
-    <p class='mdc-typography--headline5 mt-0'>Welcome to GROWTHFILE, Lorem ipsum</p>
-  </div>
-  <div class='card-box-container mdc-layout-grid__inner'>
-  <div class='selection-box mdc-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell mdc-card--outlined text-center' id='search-office-box'>
-    <div class='content'>
-      <div class='icon-container'>
-        <i class='material-icons mdc-theme--primary'>search</i>
-      </div>
-      <div class='text'>
-        <p class='mdc-typography--body1 mt-10 mb-0'>Search Office</p>
-      </div>
-    </div>
-  </div>
-  <div class='selection-box mdc-card mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell mdc-card--outlined text-center' id='search-office-box'>
-    <div class='content'>
-      <div class='icon-container'>
-        <i class='material-icons mdc-theme--primary'>edit</i>
-      </div>
-      <div class='text'>
-        <p class='mdc-typography--body1 mt-10 mb-0'>Create Office</p>
-      </div>
-    </div>
-  </div>
-  </div>
-  </div>'
-  `
+
 
 
 }
@@ -1045,7 +1063,7 @@ function newEmployeeView(geopoint) {
     `
   const searchBar = new mdc.textField.MDCTextField(document.getElementById('search-office'))
   const searchResultList = new mdc.list.MDCList(document.getElementById('search-result-list'))
-  const createOfficeButtonContainer =   document.getElementById('create-new-office-container');
+  const createOfficeButtonContainer = document.getElementById('create-new-office-container');
   const testOffices = ['Sonic Youth', 'Pink Floyd', 'Beatles', 'Metallica'];
 
   searchBar.input_.addEventListener('input', function (evt) {
@@ -1058,154 +1076,153 @@ function newEmployeeView(geopoint) {
         searchResultList.root_.appendChild(li)
       }
     })
-    if(!searchResultList.listElements.length) {
+    if (!searchResultList.listElements.length) {
 
-      if(createOfficeButtonContainer.querySelector('p')) {
+      if (createOfficeButtonContainer.querySelector('p')) {
         createOfficeButtonContainer.querySelector('p').textContent = `"${evt.target.value}" did not match any results.`
         return;
       }
 
-      const p = createElement('p',{
-        className:'mdc-typography--body1',
-        textContent:`"${evt.target.value}" did not match any results.`
+      const p = createElement('p', {
+        className: 'mdc-typography--body1',
+        textContent: `"${evt.target.value}" did not match any results.`
       })
-      
-      const button = createButton('Create New Office','','create-new-office-btn');
+
+      const button = createButton('Create New Office', '', 'create-new-office-btn');
       button.classList.add('mdc-button--raised');
       createOfficeButtonContainer.appendChild(p)
-      if(document.getElementById('create-new-office-btn')) return;
+      if (document.getElementById('create-new-office-btn')) return;
       createOfficeButtonContainer.appendChild(button);
-      button.addEventListener('click',function(){
+      button.addEventListener('click', function () {
         newOfficeView();
         return;
       })
-    }
-    else {
+    } else {
       createOfficeButtonContainer.innerHTML = ''
     }
   });
   searchBar.input_.dispatchEvent(new Event('input'));
 
   searchResultList.listen('MDCList:action', function (evt) {
-   const selectedOffice =  searchResultList.listElements[evt.detail.index].dataset.name;
-   console.log(selectedOffice)
-   searchBar.value = selectedOffice;
-   createNewEmployee(selectedOffice);
+    const selectedOffice = searchResultList.listElements[evt.detail.index].dataset.name;
+    console.log(selectedOffice)
+    searchBar.value = selectedOffice;
+    createNewEmployee(selectedOffice);
   })
 
 }
 
-function createNewEmployee(office){
+function createNewEmployee(office) {
   document.getElementById('app-header').classList.remove('hidden')
   const appEl = document.getElementById('app-current-panel')
   history.pushState(['addView'], null, null);
   addView({
     "schedule": [],
-    "template":'employee',
+    "template": 'employee',
     "attachment": {
-        "Department": {
-            "value": "",
-            "type": "department"
-        },
-        "Product Specialization": {
-            "type": "string",
-            "value": ""
-        },
-        "Minimum Working Hours": {
-            "type": "number",
-            "value": ""
-        },
-        "Daily End Time": {
-            "value": "",
-            "type": "HH:MM"
-        },
-        "Monthly Off Days": {
-            "type": "number",
-            "value": ""
-        },
-        "Designation": {
-            "type": "string",
-            "value": ""
-        },
-        "Maximum Advance Amount Given": {
-            "type": "number",
-            "value": ""
-        },
-        "Employee Based In Customer Location": {
-            "type": "boolean",
-            "value": ""
-        },
-        "Minimum Daily Activity Count": {
-            "type": "number",
-            "value": ""
-        },
-        "Start Point Latitude": {
-            "type": "number",
-            "value": ""
-        },
-        "Employee Code": {
-            "type": "string",
-            "value": ""
-        },
-        "Second Supervisor": {
-            "type": "phoneNumber",
-            "value": ""
-        },
-        "Daily Start Time": {
-            "type": "HH:MM",
-            "value": ""
-        },
-        "Scheduled Only": {
-            "type": "boolean",
-            "value": ""
-        },
-        "Name": {
-            "type": "string",
-            "value": ""
-        },
-        "KM Daily Limit": {
-            "type": "string",
-            "value": ""
-        },
-        "Employee Contact": {
-            "type": "phoneNumber",
-            "value": ""
-        },
-        "KM Rate": {
-            "type": "string",
-            "value": ""
-        },
-        "First Supervisor": {
-            "type": "phoneNumber",
-            "value": ""
-        },
-        "Location Validation Check": {
-            "type": "boolean",
-            "value": ""
-        },
-        "Region": {
-            "type": "region",
-            "value": ""
-        },
-        "Task Specialization": {
-            "type": "string",
-            "value": ""
-        },
-        "Start Point Longitude": {
-            "type": "number",
-            "value": ""
-        },
-        "Base Location": {
-            "type": "branch",
-            "value": ""
-        },
-        "Third Supervisor": {
-            "value": "",
-            "type": "phoneNumber"
-        }
+      "Department": {
+        "value": "",
+        "type": "department"
+      },
+      "Product Specialization": {
+        "type": "string",
+        "value": ""
+      },
+      "Minimum Working Hours": {
+        "type": "number",
+        "value": ""
+      },
+      "Daily End Time": {
+        "value": "",
+        "type": "HH:MM"
+      },
+      "Monthly Off Days": {
+        "type": "number",
+        "value": ""
+      },
+      "Designation": {
+        "type": "string",
+        "value": ""
+      },
+      "Maximum Advance Amount Given": {
+        "type": "number",
+        "value": ""
+      },
+      "Employee Based In Customer Location": {
+        "type": "boolean",
+        "value": ""
+      },
+      "Minimum Daily Activity Count": {
+        "type": "number",
+        "value": ""
+      },
+      "Start Point Latitude": {
+        "type": "number",
+        "value": ""
+      },
+      "Employee Code": {
+        "type": "string",
+        "value": ""
+      },
+      "Second Supervisor": {
+        "type": "phoneNumber",
+        "value": ""
+      },
+      "Daily Start Time": {
+        "type": "HH:MM",
+        "value": ""
+      },
+      "Scheduled Only": {
+        "type": "boolean",
+        "value": ""
+      },
+      "Name": {
+        "type": "string",
+        "value": ""
+      },
+      "KM Daily Limit": {
+        "type": "string",
+        "value": ""
+      },
+      "Employee Contact": {
+        "type": "phoneNumber",
+        "value": ""
+      },
+      "KM Rate": {
+        "type": "string",
+        "value": ""
+      },
+      "First Supervisor": {
+        "type": "phoneNumber",
+        "value": ""
+      },
+      "Location Validation Check": {
+        "type": "boolean",
+        "value": ""
+      },
+      "Region": {
+        "type": "region",
+        "value": ""
+      },
+      "Task Specialization": {
+        "type": "string",
+        "value": ""
+      },
+      "Start Point Longitude": {
+        "type": "number",
+        "value": ""
+      },
+      "Base Location": {
+        "type": "branch",
+        "value": ""
+      },
+      "Third Supervisor": {
+        "value": "",
+        "type": "phoneNumber"
+      }
     },
     "venue": [],
-   
+
   })
   // document.querySelector('#section-start .mdc-top-app-bar__navigation-icon').addEventListener('click',function(){
   //   history.back();

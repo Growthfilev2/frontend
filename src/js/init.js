@@ -782,14 +782,21 @@ function getCheckInSubs() {
 
 function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
-  appLocation(3).then(function (geopoint) {
+  // appLocation(3).then(function (geopoint) {
+
     Promise.all([hasDataInDB(), getCheckInSubs()]).then(function (results) {
       const isEmployeeWithData = results[0];
       const checkInSubs = results[1];
       document.getElementById('start-load').classList.add('hidden');
       if (isEmployeeWithData) {
         history.pushState(['newUserLandingpage'], null, null)
-        newUserLandingpage();
+        newUserLandingpage({
+          latitude:28.5463559,
+          longitude:77.2520095,
+          lastLocationTime:Date.now(),
+          provider:'HTML5',
+          accuracy:30
+        });
         return;
       }
 
@@ -810,11 +817,12 @@ function openMap() {
       if (isOlder || hasChangedLocation) return mapView(geopoint);
       ApplicationState = oldApplicationState
       return getSuggestions()
-    })
-  }).catch(function (error) {
-    document.getElementById('start-load').classList.add('hidden');
-    handleLocationError(error, true)
-  })
+    });
+    
+  // }).catch(function (error) {
+  //   document.getElementById('start-load').classList.add('hidden');
+  //   handleLocationError(error, true)
+  // })
 }
 
 

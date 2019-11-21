@@ -223,3 +223,26 @@ function textArea(attr) {
     </div>
   </div>`
 }
+
+
+function searchCustomControl() {
+var controlDiv = createElement('div');
+
+// Set CSS for the control border
+
+var controlUI = createElement('div',{
+    style:'background-color:'
+});
+
+// Set CSS for the control interior
+var controlText = document.createElement('div');
+controlText.style.color = 'rgb(25,25,25)';
+controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+controlText.style.fontSize = '16px';
+controlText.style.lineHeight = '38px';
+controlText.style.paddingLeft = '5px';
+controlText.style.paddingRight = '5pxm';
+controlText.innerHTML = 'Center Map';
+controlUI.appendChild(controlText);
+controlDiv.appendChild(controlUI);
+}
