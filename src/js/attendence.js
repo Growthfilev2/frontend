@@ -33,7 +33,9 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
   getMonthlyData().then(function (monthlyData) {
     const parent = document.getElementById('attendance-cards');
     if (!monthlyData.length) {
-      parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No Attendance Found</h5>`
+      if (parent) {
+        parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No Attendance Found</h5>`
+      }
       return;
     }
     document.getElementById('start-load').classList.add('hidden')
@@ -255,9 +257,14 @@ function getMonthlyData() {
         if (!cursor.value.addendum) {
           cursor.value.addendum = [];
         }
-        cursor.value.addendum.sort(function (a, b) {
-          return a.timestamp - b.timestamp
-        })
+        if (!cursor.value.hasOwnProperty('addendum')) {
+          cursor.value.addendum = [];
+        }
+        else {
+          cursor.value.addendum.sort(function (a, b) {
+            return a.timestamp - b.timestamp
+          })
+        }
         result.push(cursor.value)
         cursor.continue();
       }

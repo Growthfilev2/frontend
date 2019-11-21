@@ -22,7 +22,9 @@ function expenseView(sectionContent) {
         const parent = document.getElementById('reimbursement-cards')
         const keys = Object.keys(reimbursementData);
         if (!keys.length) {
-            parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No Reimbursement Found</h5>`
+            if(parent) {
+                parent.innerHTML = `<h5 class='mdc-typography--headline5 mdc-layout-grid__cell--span-12 text-center'>No Reimbursement Found</h5>`
+            }
             return;
         }
 
