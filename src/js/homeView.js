@@ -165,24 +165,17 @@ function homeHeaderStartContent(name) {
 
 function homeView(suggestedTemplates) {
   document.getElementById('start-load').classList.add('hidden')
-  // if (isEmployeeWithData) {
-    // history.pushState(['newEmployeeView'],null,null)
-    // newEmployeeView();
-    // return;
-  // }
+  
   try {
     const commonTasks = getCommonTasks();
     progressBar.close();
-    // history.pushState(['homeView'], null, null);
+    history.pushState(['homeView'], null, null);
     let clearIcon = ''
     if (ApplicationState.nearByLocations.length > 1) {
       clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
     const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
     
-    history.pushState(['newUserLandingpage'],null,null)
-    newUserLandingpage();
-    return;
    
     if (!ApplicationState.venue) {
       generateCheckInVenueName(header);
