@@ -9,25 +9,25 @@ function createElement(tagName, attrs) {
 }
 
 function createFab(icon) {
-    const button = createElement('button',{
-        className:'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited'
+    const button = createElement('button', {
+        className: 'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited'
     })
-    const span = createElement('span',{
-        className:'mdc-fab__icon material-icons',
-        textContent:icon
+    const span = createElement('span', {
+        className: 'mdc-fab__icon material-icons',
+        textContent: icon
     })
     button.appendChild(span)
     new mdc.ripple.MDCRipple(button);
-    setTimeout(function(){
+    setTimeout(function () {
         button.classList.remove('mdc-fab--exited')
-    },200)
+    }, 200)
     return button;
 }
 
-function createButton(name, icon,id) {
+function createButton(name, icon, id) {
     const button = createElement('button', {
         className: 'mdc-button',
-        id:id || ''
+        id: id || ''
     })
     const span = createElement('span', {
         className: 'mdc-button__label',
@@ -46,9 +46,9 @@ function createButton(name, icon,id) {
 }
 
 function createLi(itemName) {
-    const li = createElement('li',{
-        className:'mdc-list-item',
-        textContent:itemName
+    const li = createElement('li', {
+        className: 'mdc-list-item',
+        textContent: itemName
     })
     return li
 }
@@ -110,7 +110,7 @@ Dialog.prototype.create = function (type) {
             textContent: 'Okay'
         });
 
-        
+
         okButton.setAttribute('data-mdc-dialog-action', 'accept')
         this.footer.appendChild(cancelButton)
         this.footer.appendChild(okButton);
@@ -225,24 +225,13 @@ function textArea(attr) {
 }
 
 
-function searchCustomControl() {
-var controlDiv = createElement('div');
-
-// Set CSS for the control border
-
-var controlUI = createElement('div',{
-    style:'background-color:'
-});
-
-// Set CSS for the control interior
-var controlText = document.createElement('div');
-controlText.style.color = 'rgb(25,25,25)';
-controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-controlText.style.fontSize = '16px';
-controlText.style.lineHeight = '38px';
-controlText.style.paddingLeft = '5px';
-controlText.style.paddingRight = '5pxm';
-controlText.innerHTML = 'Center Map';
-controlUI.appendChild(controlText);
-controlDiv.appendChild(controlUI);
+function SearchCustomControl(controlDiv) {
+    const controlUI = createElement('div');
+    
+    controlUI.innerHTML = textField({
+        id: 'search-address',
+        label: 'Search',
+        icon: 'search'
+    })
+    controlDiv.appendChild(controlUI);
 }

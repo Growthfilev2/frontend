@@ -294,4 +294,17 @@
 
 .search-map-cont {
     height: 100%;
+    width: 100%;
+    
+}
+.search-control-div {
+    top: 20px !important;
+    left: 10px !important;
+    right: 10px !important;
+    max-width: 480px !important;
+    margin:0 auto;
+    
+}
+.search-control-div .mdc-text-field {
+    background-color: white;
 }

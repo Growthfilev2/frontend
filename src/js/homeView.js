@@ -1011,7 +1011,8 @@ function newUserLandingpage(geopoint) {
 
   card.addEventListener('click', function () {
     searchOffice(geopoint);
-  })
+  });
+
   cardBoxCont.appendChild(card)
   container.appendChild(cardBoxCont)
   appEl.appendChild(container);
@@ -1023,19 +1024,26 @@ function searchOffice(geopoint) {
   const appEl = document.getElementById('app-current-panel');
   appEl.innerHTML = `<div class='search-map-cont'></div>`;
 
-  const map = new google.maps.Map(document.querySelector('.search-map-cont'),{
-    zoom:16,
-    center:{
-      lat:geopoint.latitude,
-      lng:geopoint.longitude
+  const map = new google.maps.Map(document.querySelector('.search-map-cont'), {
+    zoom: 16,
+    center: {
+      lat: geopoint.latitude,
+      lng: geopoint.longitude
     },
-    disableDefaultUI:true
+    disableDefaultUI: true
   });
 
+  const searchControlDiv = createElement('div',{
+    className:'search-control-div'
+  })
+  const searchControl = new SearchCustomControl(searchControlDiv);
+  searchControlDiv.index = 1;
+  map.controls[google.maps.ControlPosition.TOP_CENTER].push(searchControlDiv);
+  const textField = new mdc.textField.MDCTextField(searchControlDiv.querySelector('.mdc-text-field'));
+  textField.input_.addEventListener('input',function(event){
+    console.log(event)
+  })
   
-
-
-
 }
 
 function newEmployeeView(geopoint) {
