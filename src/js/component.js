@@ -53,6 +53,7 @@ function createLi(itemName) {
     return li
 }
 
+
 function Dialog(title, content, id) {
     this.title = title;
     this.content = content;
@@ -225,13 +226,3 @@ function textArea(attr) {
 }
 
 
-function SearchCustomControl(controlDiv) {
-    const controlUI = createElement('div');
-    
-    controlUI.innerHTML = textField({
-        id: 'search-address',
-        label: 'Search',
-        icon: 'search'
-    })
-    controlDiv.appendChild(controlUI);
-}

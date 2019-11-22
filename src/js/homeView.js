@@ -1022,9 +1022,22 @@ function newUserLandingpage(geopoint) {
 
 function searchOffice(geopoint) {
   const appEl = document.getElementById('app-current-panel');
-  appEl.innerHTML = `<div class='search-map-cont'></div>`;
+  appEl.innerHTML = `<div class='search-map-cont'>
+   <div class='search-container'>
+    ${textField({
+      id: 'search-address',
+      label: 'Search',
+      icon: 'search'
+    })}
+    <div class='search-result-container'>
+       <ul class='mdc-list mdc-list--two-line mdc-list--avatar-list' id='place-query-ul'>
+       </ul>
+    </div>
+   </div>
+  <div id='map-search'></div>
+  </div>`;
 
-  const map = new google.maps.Map(document.querySelector('.search-map-cont'), {
+  const map = new google.maps.Map(document.getElementById('map-search'), {
     zoom: 16,
     center: {
       lat: geopoint.latitude,
@@ -1033,18 +1046,65 @@ function searchOffice(geopoint) {
     disableDefaultUI: true
   });
 
-  const searchControlDiv = createElement('div',{
-    className:'search-control-div'
+
+
+  const searchField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
+
+  const placeRequesParam = {
+    query: '',
+    fields: ['name', 'geometry', 'place_id', 'plus_code', 'formatted_address']
+  }
+  searchField.input_.addEventListener('input', function (event) {
+    var searchEvent = new CustomEvent('searchPlaces', {
+      detail: {
+        value: event.target.value,
+        map: map,
+        placeRequesParam: placeRequesParam
+      }
+    });
+
+    window.dispatchEvent(searchEvent);
   })
-  const searchControl = new SearchCustomControl(searchControlDiv);
-  searchControlDiv.index = 1;
-  map.controls[google.maps.ControlPosition.TOP_CENTER].push(searchControlDiv);
-  const textField = new mdc.textField.MDCTextField(searchControlDiv.querySelector('.mdc-text-field'));
-  textField.input_.addEventListener('input',function(event){
-    console.log(event)
-  })
-  
 }
+
+var searchDebounde = debounce(function (event) {
+  const map = event.detail.map;
+  const placeRequesParam = event.detail.placeRequesParam;
+  const value = event.detail.value
+  placeRequesParam.query = value;
+  const service = new google.maps.places.PlacesService(map);
+  const mapCont = document.getElementById('map-search')
+  const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
+  service.findPlaceFromQuery(placeRequesParam, function (results, status) {
+
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      console.log(results)
+      ul.root_.innerHTML = ''
+      if (results.length > 0) {
+        // mapCont.classList.add('hidden')
+        for (var i = 0; i < results.length; i++) {
+          const li = createElement('li', {
+            className: 'mdc-list-item'
+          });
+          li.innerHTML = `<span class='mdc-list-item__graphic material-icons'>location_on</span>
+            <span class='mdc-list-item__text'>
+                <span class='mdc-list-item__primary-text'>${results[i].name}</span>
+                <span class='mdc-list-item__secondary-text'>${results[i].formatted_address}</span>
+            </span>`
+          li.addEventListener('click', function () {
+            
+          });
+          ul.root_.appendChild(li);
+        }
+      } else {
+        // mapCont.classList.('hidden')
+      }
+    }
+  })
+}, 2000, false)
+
+window.addEventListener('searchPlaces', searchDebounde)
+
 
 function newEmployeeView(geopoint) {
   console.log("no office is found :/");
