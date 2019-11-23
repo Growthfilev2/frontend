@@ -1078,6 +1078,7 @@ function searchOffice(geopoint) {
     document.getElementById('place-query-ul').innerHTML = ''
     searchField.focus();
     map.setCenter(center)
+    createMarker()
   })
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
@@ -1112,30 +1113,24 @@ var searchDebounde = debounce(function (event) {
   var infowindow = new google.maps.InfoWindow();
   service.findPlaceFromQuery(placeRequesParam, function (results, status) {
     ul.root_.innerHTML = ''
-
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       console.log(results)
-
       for (var i = 0; i < results.length; i++) {
         createMarker(results[i], map, infowindow)
         const li = searchPlaceResultList(results[i].name, results[i].formatted_address);
         li.addEventListener('click', function () {
-
         });
         ul.root_.appendChild(li);
       }
       map.setCenter(results[0].geometry.location);
-
     } else {
-      console.log(results)
-      console.log(status)
+      createMarker()
       map.setCenter({
         lat:geopoint.latitude,
         lng:geopoint.longitude
       })
       const supportLi = searchPlaceResultList(`No result found for "${value}"`,`Add "${value}" as a company`,'add');
       ul.root_.appendChild(supportLi);
-  
     }
   })
 }, 1000, false)
@@ -1156,7 +1151,14 @@ function searchPlaceResultList(primaryText, secondaryText, icon) {
 
 }
 
+var searchPlaceMarkers = [];
+
 function createMarker(place, map, infowindow) {
+  searchPlaceMarkers.forEach(function(oldMarker){
+    oldMarker.setMap(null);
+  })
+  searchPlaceMarkers = [];
+  if(!place) return;
   var marker = new google.maps.Marker({
     map: map,
     position: place.geometry.location
@@ -1166,6 +1168,7 @@ function createMarker(place, map, infowindow) {
     infowindow.setContent(place.name);
     infowindow.open(map, this);
   });
+  searchPlaceMarkers.push(marker);
 }
 
 function createNewEmployee(office) {
