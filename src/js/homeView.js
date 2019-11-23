@@ -1077,6 +1077,7 @@ function searchOffice(geopoint) {
     searchField.trailingIcon_.root_.classList.add('hidden')
     document.getElementById('place-query-ul').innerHTML = ''
     searchField.focus();
+    map.setCenter(center)
   })
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
@@ -1084,12 +1085,14 @@ function searchOffice(geopoint) {
     fields: ['name', 'geometry', 'place_id', 'plus_code', 'formatted_address']
   }
   searchField.input_.addEventListener('input', function (event) {
+    if(!event.target.value.trim()) return
     searchField.trailingIcon_.root_.classList.remove('hidden')
     var searchEvent = new CustomEvent('searchPlaces', {
       detail: {
         value: event.target.value,
         map: map,
-        placeRequesParam: placeRequesParam
+        placeRequesParam: placeRequesParam,
+        geopoint:geopoint
       }
     });
 
@@ -1100,7 +1103,8 @@ function searchOffice(geopoint) {
 var searchDebounde = debounce(function (event) {
   const map = event.detail.map;
   const placeRequesParam = event.detail.placeRequesParam;
-  const value = event.detail.value
+  const value = event.detail.value;
+  const geopoint = event.detail.geopoint
   placeRequesParam.query = value;
   const service = new google.maps.places.PlacesService(map);
   const mapCont = document.getElementById('map-search')
@@ -1125,6 +1129,10 @@ var searchDebounde = debounce(function (event) {
     } else {
       console.log(results)
       console.log(status)
+      map.setCenter({
+        lat:geopoint.latitude,
+        lng:geopoint.longitude
+      })
       const supportLi = searchPlaceResultList(`No result found for "${value}"`,`Add "${value}" as a company`,'add');
       ul.root_.appendChild(supportLi);
   
