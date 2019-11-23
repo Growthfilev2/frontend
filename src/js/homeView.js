@@ -16,7 +16,6 @@ function getKnownLocationSubs() {
     store.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-
       if (cursor.value.status === 'CANCELLED') {
         cursor.delete()
         cursor.continue();
@@ -29,7 +28,8 @@ function getKnownLocationSubs() {
         }
       })
       cursor.continue();
-    }
+    };
+
     tx.oncomplete = function () {
       resolve(result)
     }
@@ -1027,7 +1027,9 @@ function searchOffice(geopoint) {
     ${textField({
       id: 'search-address',
       label: 'Search',
-      icon: 'search'
+      leadingIcon:'search',
+      trailingIcon:'clear',
+      autocomplete:'organization'
     })}
     <div class='search-result-container'>
        <ul class='mdc-list mdc-list--two-line mdc-list--avatar-list' id='place-query-ul'>
@@ -1037,24 +1039,52 @@ function searchOffice(geopoint) {
   <div id='map-search'></div>
   </div>`;
 
+  const center = {
+    lat: geopoint.latitude,
+    lng: geopoint.longitude
+  }
+
+
   const map = new google.maps.Map(document.getElementById('map-search'), {
-    zoom: 16,
-    center: {
-      lat: geopoint.latitude,
-      lng: geopoint.longitude
-    },
+    zoom: 15,
+    center: center,
     disableDefaultUI: true
   });
 
 
+  var marker = new google.maps.Marker({
+    position: center,
+    icon: './img/bluecircle.png',
+    map: map
+  });
+
+  var radiusCircle = new google.maps.Circle({
+    strokeColor: '#89273E',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#89273E',
+    fillOpacity: 0.35,
+    map: map,
+    center: center,
+    radius: geopoint.accuracy < 100 ? geopoint.accuracy * 2 : geopoint.accuracy
+  });
+
 
   const searchField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
-
+  console.log(searchField)
+  searchField.trailingIcon_.root_.addEventListener('click', function () {
+    searchField.value = ''
+    searchField.trailingIcon_.root_.classList.add('hidden')
+    document.getElementById('place-query-ul').innerHTML = ''
+    searchField.focus();
+  })
+  searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
     fields: ['name', 'geometry', 'place_id', 'plus_code', 'formatted_address']
   }
   searchField.input_.addEventListener('input', function (event) {
+    searchField.trailingIcon_.root_.classList.remove('hidden')
     var searchEvent = new CustomEvent('searchPlaces', {
       detail: {
         value: event.target.value,
@@ -1075,109 +1105,59 @@ var searchDebounde = debounce(function (event) {
   const service = new google.maps.places.PlacesService(map);
   const mapCont = document.getElementById('map-search')
   const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
+  var infowindow = new google.maps.InfoWindow();
   service.findPlaceFromQuery(placeRequesParam, function (results, status) {
+    ul.root_.innerHTML = ''
 
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       console.log(results)
-      ul.root_.innerHTML = ''
-      if (results.length > 0) {
-        // mapCont.classList.add('hidden')
-        for (var i = 0; i < results.length; i++) {
-          const li = createElement('li', {
-            className: 'mdc-list-item'
-          });
-          li.innerHTML = `<span class='mdc-list-item__graphic material-icons'>location_on</span>
-            <span class='mdc-list-item__text'>
-                <span class='mdc-list-item__primary-text'>${results[i].name}</span>
-                <span class='mdc-list-item__secondary-text'>${results[i].formatted_address}</span>
-            </span>`
-          li.addEventListener('click', function () {
-            
-          });
-          ul.root_.appendChild(li);
-        }
-      } else {
-        // mapCont.classList.('hidden')
+
+      for (var i = 0; i < results.length; i++) {
+        createMarker(results[i], map, infowindow)
+        const li = searchPlaceResultList(results[i].name, results[i].formatted_address);
+        li.addEventListener('click', function () {
+
+        });
+        ul.root_.appendChild(li);
       }
+      map.setCenter(results[0].geometry.location);
+
+    } else {
+      console.log(results)
+      console.log(status)
+      const supportLi = searchPlaceResultList(`No result found for "${value}"`,`Add "${value}" as a company`,'add');
+      ul.root_.appendChild(supportLi);
+  
     }
   })
-}, 2000, false)
+}, 1000, false)
 
 window.addEventListener('searchPlaces', searchDebounde)
 
 
-function newEmployeeView(geopoint) {
-  console.log("no office is found :/");
-  document.getElementById('app-header').classList.add('hidden')
-  const appEl = document.getElementById('app-current-panel');
-
-  appEl.innerHTML = `<div class='new-join'>
-      <div class='search-bar-container'>
-        ${textField({
-          id:'search-office',
-          type:'text',
-          label:'Search Office',
-          icon:'search'
-        })}
-      </div>
-      <div class='search-results-container'>
-          <ul class='mdc-list' id='search-result-list'>
-          </ul>
-      </div>
-      <div id='create-new-office-container' class='office-search-fail'>
-      
-      </div>
-    </div>
-    `
-  const searchBar = new mdc.textField.MDCTextField(document.getElementById('search-office'))
-  const searchResultList = new mdc.list.MDCList(document.getElementById('search-result-list'))
-  const createOfficeButtonContainer = document.getElementById('create-new-office-container');
-  const testOffices = ['Sonic Youth', 'Pink Floyd', 'Beatles', 'Metallica'];
-
-  searchBar.input_.addEventListener('input', function (evt) {
-    searchResultList.root_.innerHTML = ''
-    testOffices.forEach(function (office) {
-      const smallCase = office.toLowerCase()
-      if (smallCase.indexOf(evt.target.value.toLowerCase()) > -1) {
-        const li = createLi(office)
-        li.dataset.name = office;
-        searchResultList.root_.appendChild(li)
-      }
-    })
-    if (!searchResultList.listElements.length) {
-
-      if (createOfficeButtonContainer.querySelector('p')) {
-        createOfficeButtonContainer.querySelector('p').textContent = `"${evt.target.value}" did not match any results.`
-        return;
-      }
-
-      const p = createElement('p', {
-        className: 'mdc-typography--body1',
-        textContent: `"${evt.target.value}" did not match any results.`
-      })
-
-      const button = createButton('Create New Office', '', 'create-new-office-btn');
-      button.classList.add('mdc-button--raised');
-      createOfficeButtonContainer.appendChild(p)
-      if (document.getElementById('create-new-office-btn')) return;
-      createOfficeButtonContainer.appendChild(button);
-      button.addEventListener('click', function () {
-        newOfficeView();
-        return;
-      })
-    } else {
-      createOfficeButtonContainer.innerHTML = ''
-    }
+function searchPlaceResultList(primaryText, secondaryText, icon) {
+  const li = createElement('li', {
+    className: 'mdc-list-item'
   });
-  searchBar.input_.dispatchEvent(new Event('input'));
+  li.innerHTML = `<span class='mdc-list-item__graphic material-icons'>${icon ? icon :'location_on'}</span>
+    <span class='mdc-list-item__text'>
+        <span class='mdc-list-item__primary-text'>${primaryText}</span>
+        <span class='mdc-list-item__secondary-text'>${secondaryText}</span>
+    </span>`
+  return li;
 
-  searchResultList.listen('MDCList:action', function (evt) {
-    const selectedOffice = searchResultList.listElements[evt.detail.index].dataset.name;
-    console.log(selectedOffice)
-    searchBar.value = selectedOffice;
-    createNewEmployee(selectedOffice);
-  })
+}
 
+function createMarker(place, map, infowindow) {
+  var marker = new google.maps.Marker({
+    map: map,
+    position: place.geometry.location
+  });
+
+  google.maps.event.addListener(marker, 'click', function () {
+    infowindow.setContent(place.name);
+    infowindow.open(map, this);
+  });
 }
 
 function createNewEmployee(office) {

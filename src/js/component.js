@@ -199,9 +199,11 @@ function textFieldTelephone(attr) {
 }
 
 function textField(attr) {
-    return `<div class="mdc-text-field mdc-text-field--outlined full-width ${attr.icon ? 'mdc-text-field--with-leading-icon' :''} ${attr.disabled ? 'mdc-text-field--disabled' :''}" id='${attr.id}'>
-    ${attr.icon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.icon}</i>`:''}
-    <input type="text" class="mdc-text-field__input" value="${attr.value || ''}" type="${attr.type}" required="${attr.required}" ${attr.disabled ? 'disabled':''}>
+    return `<div class="mdc-text-field mdc-text-field--outlined full-width ${attr.leadingIcon ? 'mdc-text-field--with-leading-icon' :''} ${attr.trailingIcon ? 'mdc-text-field--with-trailing-icon' :''} ${attr.disabled ? 'mdc-text-field--disabled' :''}" id='${attr.id}'>
+    ${attr.leadingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.leadingIcon}</i>`:''}
+    <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="text" class="mdc-text-field__input" value="${attr.value || ''}" type="${attr.type}" required="${attr.required || 'false'}" ${attr.disabled ? 'disabled':''}>
+    ${attr.trailingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.trailingIcon}</i>` :''}
+    
     <div class="mdc-notched-outline">
       <div class="mdc-notched-outline__leading"></div>
       <div class="mdc-notched-outline__notch">

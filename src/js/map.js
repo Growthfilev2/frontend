@@ -151,7 +151,7 @@ function mapView(location) {
     fillOpacity: 0.35,
     map: map,
     center: latLng,
-    radius: location.accuracy
+    radius: geopoint.accuracy < 100 ?  geopoint.accuracy * 2 : geopoint.accuracy
   });
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
