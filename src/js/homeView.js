@@ -1083,17 +1083,17 @@ function searchOffice(geopoint) {
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
-    fields: ['name', 'geometry', 'place_id', 'plus_code', 'formatted_address']
+    fields: ['name', 'geometry', 'place_id', 'formatted_address','icon']
   }
   searchField.input_.addEventListener('input', function (event) {
-    if(!event.target.value.trim()) return
+    if (!event.target.value.trim()) return
     searchField.trailingIcon_.root_.classList.remove('hidden')
     var searchEvent = new CustomEvent('searchPlaces', {
       detail: {
         value: event.target.value,
         map: map,
         placeRequesParam: placeRequesParam,
-        geopoint:geopoint
+        geopoint: geopoint
       }
     });
 
@@ -1115,27 +1115,45 @@ var searchDebounde = debounce(function (event) {
     ul.root_.innerHTML = ''
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       console.log(results)
-      for (var i = 0; i < results.length; i++) {
-        createMarker(results[i], map, infowindow)
-        const li = searchPlaceResultList(results[i].name, results[i].formatted_address);
+      results.forEach(function (result) {
+        createMarker(result, map, infowindow)
+        const li = searchPlaceResultList(result.name, result.formatted_address);
         li.addEventListener('click', function () {
+          service.getDetails({
+            placeId: result.place_id,
+            fields: ['international_phone_number']
+          }, function (placeDetail, status) {
+            if (status == google.maps.places.PlacesServiceStatus.OK && placeDetail.international_phone_number) {
+              result.international_phone_number = placeDetail.international_phone_number
+            }
+            createOfficeInit(geopoint, result)
+          });
         });
         ul.root_.appendChild(li);
-      }
+
+      })
+
+
+
       map.setCenter(results[0].geometry.location);
     } else {
       createMarker()
       map.setCenter({
-        lat:geopoint.latitude,
-        lng:geopoint.longitude
+        lat: geopoint.latitude,
+        lng: geopoint.longitude
       })
-      const supportLi = searchPlaceResultList(`No result found for "${value}"`,`Add "${value}" as a company`,'add');
+      const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
+      supportLi.addEventListener('click', function () {
+        createOfficeInit(geopoint)
+      })
       ul.root_.appendChild(supportLi);
     }
   })
 }, 1000, false)
 
 window.addEventListener('searchPlaces', searchDebounde)
+
+
 
 
 function searchPlaceResultList(primaryText, secondaryText, icon) {
@@ -1154,11 +1172,11 @@ function searchPlaceResultList(primaryText, secondaryText, icon) {
 var searchPlaceMarkers = [];
 
 function createMarker(place, map, infowindow) {
-  searchPlaceMarkers.forEach(function(oldMarker){
+  searchPlaceMarkers.forEach(function (oldMarker) {
     oldMarker.setMap(null);
   })
   searchPlaceMarkers = [];
-  if(!place) return;
+  if (!place) return;
   var marker = new google.maps.Marker({
     map: map,
     position: place.geometry.location
@@ -1169,6 +1187,84 @@ function createMarker(place, map, infowindow) {
     infowindow.open(map, this);
   });
   searchPlaceMarkers.push(marker);
+}
+
+
+function createOfficeInit(geopoint, placeComponent) {
+  document.getElementById('app-header').classList.remove('hidden')
+  const appEl = document.getElementById('app-current-panel')
+  history.pushState(['addView'], null, null);
+  addView({
+    "schedule": [
+      "Date Of Establishment",
+      "Trial Period"
+    ],
+    "attachment": {
+      "Registered Office Address": {
+        "type": "string",
+        "value": placeComponent && placeComponent.formatted_address ? placeComponent.formatted_address : '' 
+      },
+      "Company Logo": {
+        "value": placeComponent && placeComponent.icon ? placeComponent.icon : '',
+        "type": "string"
+      },
+      "Youtube ID": {
+        "type": "string",
+        "value": ""
+      },
+      "Usage": {
+        "type": "string",
+        "value": ""
+      },
+      "Branch Place Supported Types": {
+        "type": "string",
+        "value": ""
+      },
+      "First Day Of Monthly Cycle": {
+        "type": "number",
+        "value": ""
+      },
+      "Timezone": {
+        "type": "string",
+        "value": ""
+      },
+      "Second Contact": {
+        "type": "phoneNumber",
+        "value": ""
+      },
+      "First Day Of Reimbursement Cycle": {
+        "type": "number",
+        "value": ""
+      },
+      "GST Number": {
+        "type": "string",
+        "value": ""
+      },
+      "Description": {
+        "type": "string",
+        "value": ""
+      },
+      "Short Description": {
+        "type": "string",
+        "value": ""
+      },
+      "First Contact": {
+        "type": "phoneNumber",
+        "value": placeComponent &&  placeComponent.international_phone_number ? placeComponent.international_phone_number : ''
+      },
+      "Name": {
+        "type": "string",
+        "value": placeComponent  && placeComponent.name ? placeComponent.name : ''
+      },
+      "Customer Place Supported Types": {
+        "value": "",
+        "type": "string"
+      }
+    },
+    "template": "office",
+    "venue": [],
+  })
+
 }
 
 function createNewEmployee(office) {
