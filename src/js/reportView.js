@@ -4,85 +4,108 @@ function reportView(attendanceRecord) {
   <span class="mdc-top-app-bar__title">My Reports</span>
   `
   const header = getHeader('app-header', backIcon, '');
-  const panel =  document.getElementById('app-current-panel')
-  panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
-  panel.innerHTML = `
-  ${showTabs()}
-  <div class='tabs-section'>
-  <div class='content'>
-  <div class='data-container mdc-layout-grid'>
-  </div>
-  </div>
-  </div>`
+  const panel = document.getElementById('app-current-panel');
 
-  const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-
-  tabList.listen('MDCTabBar:activated', function (evt) {
-    const sectionContent = document.querySelector('.tabs-section .data-container');
-    if (!sectionContent) return;
-
-    if (!evt.detail.index) {
-      document.getElementById('start-load').classList.remove('hidden')
-      attendenceView(sectionContent,attendanceRecord);
-      return;
-    }
-    if (evt.detail.index == 1) return expenseView(sectionContent)
-    if (evt.detail.index == 2) return paymentView(sectionContent);
+  getReportTabData().then(function (reportTabs) {
+    console.log(reportTabs);
+    
+    panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
+    panel.innerHTML = `
+    ${showTabs(reportTabs)}
+    <div class='tabs-section'>
+    <div class='content'>
+    <div class='data-container mdc-layout-grid'>
+    </div>
+    </div>
+    </div>`
+  
+    const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+  
+    tabList.listen('MDCTabBar:activated', function (evt) {
+      const sectionContent = document.querySelector('.tabs-section .data-container');
+      if (!sectionContent) return;
+  
+      if (!evt.detail.index) {
+        document.getElementById('start-load').classList.remove('hidden')
+        attendenceView(sectionContent, attendanceRecord);
+        return;
+      }
+      if (evt.detail.index == 1) return expenseView(sectionContent)
+      if (evt.detail.index == 2) return paymentView(sectionContent);
+  
+  
+    })
+  
+    tabList.activateTab(0)
 
 
   })
 
-  tabList.activateTab(0)
 }
 
 
+function getReportTabData() {
+  return new Promise(function (resolve, reject) {
+    const reportTabData = [{
+      icon:'fingerprint',
+      name:'Attendances',
+      store:'attendance'
+    },{
+      icon:'assignment',
+      name:'Reimbursements',
+      store:'reimbursement'
+    },{
+      icon:'payment',
+      name:'Payments',
+      store:'payment'
+    }]
+    const tx = db.transaction(['attendance','reimbursement','payment']);
+   
+    reportTabData.forEach(function (data) {
+     
+      if(!db.objectStoreNames.contains(data.store)) return;
+      const store = tx.objectStore(data.store);
+      const req = store.count()
+      req.onsuccess = function () {
+        data.count = req.result;
+      }
+    })
+    tx.oncomplete = function () {
+      return resolve(reportTabData)
+    }
+    tx.onerror = function () {
+      return reject(tx.error)
+    }
+  })
+}
 
-
-
-
-function showTabs() {
+function showTabs(reportTabs) {
 
   return `<div class="mdc-tab-bar" role="tablist" style='margin-top:5px;'>
     <div class="mdc-tab-scroller">
       <div class="mdc-tab-scroller__scroll-area">
         <div class="mdc-tab-scroller__scroll-content">
-          <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
-            <span class="mdc-tab__content">
-              <span class="mdc-tab__icon material-icons" aria-hidden="true">fingerprint</span>
-              <span class="mdc-tab__text-label">Attendance</span>
-            </span>
-            <span class="mdc-tab-indicator">
-              <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
-            </span>
-            <span class="mdc-tab__ripple"></span>
-          </button>
-          <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
-          <span class="mdc-tab__content">
-            <span class="mdc-tab__icon material-icons" aria-hidden="true">assignment</span>
-            <span class="mdc-tab__text-label">Reimbursement</span>
-          </span>
-          <span class="mdc-tab-indicator">
-            <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
-          </span>
-          <span class="mdc-tab__ripple"></span>
-        </button>
-        <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
-        <span class="mdc-tab__content">
-        <span class="mdc-tab__icon material-icons" aria-hidden="true">payment</span>
-          <span class="mdc-tab__text-label">Payments</span>
-        </span>
-        <span class="mdc-tab-indicator">
-          <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
-        </span>
-        <span class="mdc-tab__ripple"></span>
-      </button>
-
-      
+          ${reportTabs.map(function(report){
+              return `
+              ${report.count ? `<button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>
+                <span class="mdc-tab__text-label">${report.name}</span>
+              </span>
+              <span class="mdc-tab-indicator">
+                <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+              </span>
+              <span class="mdc-tab__ripple"></span>
+            </button>` :''}
+              `
+          }).join("")}
         </div>
       </div>
     </div>
   </div>`
 }
+
+
 
 function getReportSubs(reportName) {
   return new Promise(function (resolve, reject) {
@@ -129,22 +152,22 @@ function getReportSubs(reportName) {
 
 
 function toggleReportCard(selector) {
-  [].map.call(document.querySelectorAll(selector),function(el){
+  [].map.call(document.querySelectorAll(selector), function (el) {
     if (el) {
-        const icon = el.querySelector('.dropdown i')
-        if(!icon) return;
-        icon.addEventListener('click', function () {
-            const detailContainer = el.querySelector('.detail-container')
-            if (detailContainer.classList.contains('hidden')) {
-                icon.textContent = 'keyboard_arrow_up'
-                detailContainer.classList.remove('hidden')
-            } else {
-                icon.textContent = 'keyboard_arrow_down'
-                detailContainer.classList.add('hidden')
-            }
-        })
+      const icon = el.querySelector('.dropdown i')
+      if (!icon) return;
+      icon.addEventListener('click', function () {
+        const detailContainer = el.querySelector('.detail-container')
+        if (detailContainer.classList.contains('hidden')) {
+          icon.textContent = 'keyboard_arrow_up'
+          detailContainer.classList.remove('hidden')
+        } else {
+          icon.textContent = 'keyboard_arrow_down'
+          detailContainer.classList.add('hidden')
+        }
+      })
     }
-})
+  })
 }
 
 function createTemplateButton(subs) {
@@ -158,8 +181,8 @@ function createTemplateButton(subs) {
     const dialog = new Dialog('Choose Office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
     bottomDialog(dialog, ul)
-    
-    ul.listen('MDCList:action',function(evt){
+
+    ul.listen('MDCList:action', function (evt) {
       history.pushState(['addView'], null, null);
       addView(subs[evt.detail.index])
       dialog.close()
