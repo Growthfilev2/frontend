@@ -1,6 +1,8 @@
-function attendenceView(sectionContent, yesterdayAttendanceRecord) {
+function attendenceView(yesterdayAttendanceRecord) {
+  const sectionContent = document.querySelector('.tabs-section .data-container');
+  if (!sectionContent) return;
   sectionContent.innerHTML = attendanceDom();
-  sectionContent.dataset.view = 'attendence'
+  // sectionContent.dataset.view = 'attendence'
   document.getElementById('start-load').classList.add('hidden')
   const el = document.getElementById('attendance-view')
   getSubscription('', 'leave').then(function (subs) {

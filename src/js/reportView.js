@@ -23,8 +23,7 @@ function reportView(attendanceRecord) {
     const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
 
     tabList.listen('MDCTabBar:activated', function (evt) {
-      const sectionContent = document.querySelector('.tabs-section .data-container');
-      if (!sectionContent) return;
+    
 
       if (!evt.detail.index) {
         history.pushState(['chatView'], null, null);
@@ -61,23 +60,25 @@ function reportView(attendanceRecord) {
         })
         return;
       }
-      
-      if (evt.detail.index = 2) {
-        document.getElementById('start-load').classList.remove('hidden')
-        attendenceView(sectionContent, attendanceRecord);
+
+      document.getElementById('start-load').classList.remove('hidden')
+      if (evt.detail.index == 2) {
+        history.pushState(['attendanceView'], null, null);
+        attendenceView(attendanceRecord);
         return
       }
-      if (evt.detail.index == 3) return expenseView(sectionContent)
-      if (evt.detail.index == 4) return paymentView(sectionContent);
 
-
+      if (evt.detail.index == 3) {
+        history.pushState(['expenseView'], null, null);
+        return expenseView()
+      }
+      if (evt.detail.index == 4) {
+        history.pushState(['paymentView'], null, null);
+        return paymentView();
+      }
     })
-
     tabList.activateTab(2)
-
-
   })
-
 }
 
 

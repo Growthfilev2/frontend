@@ -1,6 +1,8 @@
-function paymentView(sectionContent) {
+function paymentView() {
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+    if (!sectionContent) return;
     sectionContent.innerHTML = paymentDom();
-    sectionContent.dataset.view = 'payments'
+    document.getElementById('start-load').classList.add('hidden')
     const parent = document.getElementById('payments');
     let month = ''
     let monthlyString = ''

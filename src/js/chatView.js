@@ -15,15 +15,18 @@ function chatView() {
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
-
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+    if (!sectionContent) return;
     const header = getHeader('app-header', backIcon, searchIcon);
-    header.root_.classList.remove('hidden')
+    // header.root_.classList.remove('hidden');
+
     if (!document.getElementById('search-btn')) return;
     document.getElementById('search-btn').addEventListener('click', function () {
         history.pushState(['searchChats'], null, null)
         search()
     })
-    document.getElementById('app-current-panel').innerHTML = chatDom()
+
+    sectionContent.innerHTML = chatDom()
 
     readLatestChats(true);
     getOtherContacts();
@@ -378,7 +381,9 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
- 
+    const sectionContent = document.querySelector('.tabs-section .data-container')
+    if(!sectionContent) return;
+
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
@@ -388,14 +393,11 @@ function enterChat(userRecord) {
     header.root_.classList.remove('hidden')
     console.log(header)
 
-
-    document.getElementById('app-current-panel').innerHTML = `
+    
+    sectionContent.innerHTML = `
     <div class="page">
     <div class="marvel-device nexus5">
-   
-      
-      
-      
+  
       <div class="screen">
         <div class="screen-container">
           
@@ -691,7 +693,8 @@ function createDynamicChips(text, id, leadingIcon) {
 }
 
 function share(activity) {
-
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+    if(!sectionContent) return;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add People</span>
     `
@@ -718,8 +721,9 @@ function share(activity) {
     activity.assignees.forEach(function (ass) {
         alreadySelected[ass.phoneNumber] = true
     });
+    
+    sectionContent.innerHTML = content;
 
-    document.getElementById('app-current-panel').innerHTML = content;
     const header = getHeader('app-header', backIcon, searchIcon);
     const chipSetEl = document.getElementById('share')
     const chipInit = new mdc.chips.MDCChipSet(chipSetEl)

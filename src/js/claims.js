@@ -1,6 +1,8 @@
-function expenseView(sectionContent) {
+function expenseView() {
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+    if (!sectionContent) return;
     sectionContent.innerHTML = reimDom();
-    sectionContent.dataset.view = 'reimbursements'
+    document.getElementById('start-load').classList.add('hidden')
     const el = document.getElementById('reim-view')
     getSubscription('', 'claim').then(function (subs) {
         if (!subs.length) return;

@@ -84,8 +84,8 @@ function appLocation(maxRetry) {
           }
         })
       }
-     ApplicationState.location = geopoint
-  
+      ApplicationState.location = geopoint
+
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
     }).catch(function (error) {
@@ -383,25 +383,12 @@ function handleComponentUpdation(readResponse) {
       if (!readResponse.response.addendum.length) return;
       readLatestChats(false);
       break;
+
+    case 'attendanceView':
+    case 'expenseView':
+    case 'paymentView':
     case 'reportView':
-      try {
-        const sectionContent = document.querySelector('.tabs-section .data-container');
-        if (!sectionContent) return;
-        if (sectionContent.dataset.view === 'attendence') {
-          attendenceView(sectionContent)
-          return
-        };
-        if (sectionContent.dataset.view === 'reimbursements') {
-          expenseView(sectionContent)
-          return
-        }
-        if (sectionContent.dataset.view === 'payments') {
-          paymentView(sectionContent)
-          return
-        }
-      } catch (e) {
-        console.log(e)
-      }
+      window[history.state[0]]()
       break;
     default:
       console.log("no refresh")
