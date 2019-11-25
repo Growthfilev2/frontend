@@ -13,42 +13,55 @@
 <body>
     <div class='forms mdc-card employee-form' id='form'>
         <div class="form-list">
-
-
-            <div class="form-component add-contact-comp">
-                <button class="mdc-fab mdc-theme--primary-bg  app-fab--absolute" aria-label="Favorite" id='add-people'>
-                    <div class="mdc-fab__ripple"></div>
-                    <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
-                </button>
-                <ul class="mdc-list mdc-list--two-line" id='contact-list'>
-                </ul>
-                <input type="submit" value="Give Check-in Subscription" style="display:block;margin:0 auto;"
-                    class="mdc-button submit-btn-emp mdc-theme--primary-bg mdc-theme--on-primary hidden">
+            <div class="form-component">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField"
+                    id='company-name'>
+                    <input class=" mdc-text-field__input" type="text" required>
+                    <label for="input" class="mdc-floating-label">Company Name</label>       
+                    <div class="mdc-line-ripple"></div>
+                </div>
             </div>
 
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='address'>
+                    <textarea class="mdc-text-field__input" rows="4" cols="100" required="true"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Address</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+             
+            </div>
         </div>
     </div>
-
     </div>
-
-
     <script src="../js/common.js"></script>
     <script>
         parent.window.mdc.autoInit();
-
-        const btn = document.getElementById('add-people')
-        const customerAuths = {}
-        const list = new parent.mdc.list.MDCList(document.getElementById('contact-list'))
-
+        const companyNameField = new parent.mdc.textField.MDCTextField(document.getElementById('company-name'))
+        const companyAddressField = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
+       
         function init(subscriptionTemplate) {
             console.log(subscriptionTemplate)
-            btn.addEventListener('click', function () {
-                if (parent.native.getName() === 'Android') {
-                    AndroidInterface.getContact("getContactForEmployee");
-                    return
-                }
+            
+            if(subscriptionTemplate.attachment['Name'].value) {
+                companyNameField.value = subscriptionTemplate.attachment['Name'].value
+            };
+
+            if(subscriptionTemplate.attachment['Registered Office Address'].value) {
+                companyAddressField.value = subscriptionTemplate.attachment['Registered Office Address'].value
+            };
+        
+            // btn.addEventListener('click', function () {
+            //     if (parent.native.getName() === 'Android') {
+            //         AndroidInterface.getContact("getContactForEmployee");
+            //         return
+            //     }
                 // webkit.messageHandlers.getContact.postMessage("setContactForCustomer");
-            });
+            // });
         }
 
         function setContact(contactObject) {
@@ -70,7 +83,8 @@
             } else {
                 document.querySelector('.submit-btn-emp').classList.add('hidden')
             }
-        }
+        };
+
     </script>
 </body>
 

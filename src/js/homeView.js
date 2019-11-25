@@ -1083,7 +1083,7 @@ function searchOffice(geopoint) {
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
-    fields: ['name', 'geometry', 'place_id', 'formatted_address','icon']
+    fields: ['name', 'geometry', 'place_id', 'formatted_address']
   }
   searchField.input_.addEventListener('input', function (event) {
     if (!event.target.value.trim()) return
@@ -1111,7 +1111,7 @@ var searchDebounde = debounce(function (event) {
   const mapCont = document.getElementById('map-search')
   const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
   var infowindow = new google.maps.InfoWindow();
-  service.findPlaceFromQuery(placeRequesParam, function (results, status) {
+  service.textSearch(placeRequesParam, function (results, status) {
     ul.root_.innerHTML = ''
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       console.log(results)
@@ -1149,7 +1149,7 @@ var searchDebounde = debounce(function (event) {
       ul.root_.appendChild(supportLi);
     }
   })
-}, 1000, false)
+}, 100, false)
 
 window.addEventListener('searchPlaces', searchDebounde)
 
@@ -1191,10 +1191,11 @@ function createMarker(place, map, infowindow) {
 
 
 function createOfficeInit(geopoint, placeComponent) {
+  
   document.getElementById('app-header').classList.remove('hidden')
   const appEl = document.getElementById('app-current-panel')
   history.pushState(['addView'], null, null);
-  addView({
+  const template = {
     "schedule": [
       "Date Of Establishment",
       "Trial Period"
@@ -1205,7 +1206,7 @@ function createOfficeInit(geopoint, placeComponent) {
         "value": placeComponent && placeComponent.formatted_address ? placeComponent.formatted_address : '' 
       },
       "Company Logo": {
-        "value": placeComponent && placeComponent.icon ? placeComponent.icon : '',
+        "value": '',
         "type": "string"
       },
       "Youtube ID": {
@@ -1263,14 +1264,21 @@ function createOfficeInit(geopoint, placeComponent) {
     },
     "template": "office",
     "venue": [],
-  })
+  };
+   // search api  => 
+   
+    addView(template);
+    
+  // }
 
 }
 
 function createNewEmployee(office) {
+  
   document.getElementById('app-header').classList.remove('hidden')
   const appEl = document.getElementById('app-current-panel')
   history.pushState(['addView'], null, null);
+  
   addView({
     "schedule": [],
     "template": 'employee',
@@ -1378,7 +1386,8 @@ function createNewEmployee(office) {
     },
     "venue": [],
 
-  })
+  });
+  
   // document.querySelector('#section-start .mdc-top-app-bar__navigation-icon').addEventListener('click',function(){
   //   history.back();
   // })
