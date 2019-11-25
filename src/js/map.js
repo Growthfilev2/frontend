@@ -192,7 +192,7 @@ function createUnkownCheckIn(cardProd, geopoint) {
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     initHeaderView()
-    history.pushState(['homeView'],null,null)
+    // history.pushState(['homeView'],null,null)
 
     history.pushState(['reportView'], null, null)
     reportView()
@@ -249,7 +249,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint) {
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     initHeaderView()
-    history.pushState(['homeView'],null,null)
+    // history.pushState(['homeView'],null,null)
     history.pushState(['reportView'], null, null)
     reportView();
   }).catch(function (error) {
@@ -426,7 +426,7 @@ function setFilePath(base64) {
 
     requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
       initHeaderView()
-      history.pushState(['homeView'],null,null)
+      // history.pushState(['homeView'],null,null)
       history.pushState(['reportView'], null, null)
       reportView()
       successDialog('Check-In Created')

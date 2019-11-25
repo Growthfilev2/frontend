@@ -32,7 +32,8 @@ function sendFormToParent(formData) {
             Promise.all(prom).then(function(response){
                 progressBar.close();
                 successDialog(`You Created a ${templateName}`);
-                getSuggestions();
+                // getSuggestions();
+                reportView()
             }).catch(function(error){
                 progressBar.close();
                 snacks(error.response.message,'Okay')
@@ -52,7 +53,8 @@ function sendFormToParent(formData) {
                         store.put(record)
                     }
                     tx.oncomplete = function() {
-                        getSuggestions();
+                        reportView()
+                        // getSuggestions();
                     }
                     return;
                 }
@@ -78,8 +80,8 @@ function sendFormToParent(formData) {
                         })
                     })
                 }
-                
-                getSuggestions();
+                reportView()
+                // getSuggestions();
                 return;
             }).catch(function (error) {
                 progressBar.close();

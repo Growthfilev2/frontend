@@ -116,7 +116,7 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-  if (history.state[0] === 'homeView') {
+  if (history.state[0] === 'reportView') {
     history.pushState(['profileView'], null, null)
     profileView();
     return;
@@ -163,11 +163,25 @@ function homeHeaderStartContent(name) {
 }
 
 
-function initHeaderView(title,icon) {
-  
-  const header = getHeader('app-header', title, icon);
+function initHeaderView() {
+
+  let clearIcon = ''
+  if (ApplicationState.nearByLocations.length > 1) {
+    clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
+  }
+  const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
   header.listen('MDCTopAppBar:nav', handleNav);
   header.root_.classList.remove('hidden');
+
+  if (!ApplicationState.venue) {
+    generateCheckInVenueName(header);
+  }
+  if (document.getElementById('change-location')) {
+    document.getElementById('change-location').addEventListener('click', function () {
+      progressBar.open();
+      manageLocation(3).then(mapView).catch(handleLocationError);
+    })
+  }
   return header;
 }
 
@@ -183,7 +197,7 @@ function homeView(suggestedTemplates) {
     if (ApplicationState.nearByLocations.length > 1) {
       clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
-    const header = initHeaderView(homeHeaderStartContent(ApplicationState.venue.location || ''),clearIcon);
+    const header = initHeaderView(homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
     if (!ApplicationState.venue) {
       generateCheckInVenueName(header);
     }
@@ -353,23 +367,17 @@ function generateCheckInVenueName(header) {
 function getCommonTasks() {
   const tasks = [{
     name: 'Chat',
-    id: 'open-chat-list'
+    id: 'open-chat-list',
+    icon: 'notifications'
   }];
 
-  // if (ApplicationState.nearByLocations.length) {
-  //   tasks.unshift({
-  //     name: 'Change Location',
-  //     id: 'change-location-list'
-  //   })
-  // };
 
-  if (ApplicationState.officeWithCheckInSubs) {
-    if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
-      tasks.push({
-        name: 'Photo Check-In',
-        id: 'photo-check-in'
-      })
-    }
+  if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
+    tasks.push({
+      name: 'Photo Check-In',
+      id: 'photo-check-in',
+      icon: 'add_a_photo'
+    })
   }
   return tasks
 }

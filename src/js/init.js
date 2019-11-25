@@ -74,10 +74,10 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'mapView' || event.state[0] === 'snapView') return;
-  if (event.state[0] === 'homeView') {
-    getSuggestions();
-    return
-  }
+  // if (event.state[0] === 'homeView') {
+  //   getSuggestions();
+  //   return
+  // }
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
     history.go(-1);
     return;
@@ -803,8 +803,8 @@ function openMap() {
    
       if (isOlder || hasChangedLocation) return mapView(geopoint);
       ApplicationState = oldApplicationState
-
-      return getSuggestions()
+      history.pushState(['reportView'], null, null)
+      return reportView()
     })
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');

@@ -372,9 +372,9 @@ function handleComponentUpdation(readResponse) {
   if (!history.state) return;
 
   switch (history.state[0]) {
-    case 'homeView':
-      getSuggestions()
-      break;
+    // case 'homeView':
+    //   getSuggestions()
+    //   break;
     case 'enterChat':
       if (!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
