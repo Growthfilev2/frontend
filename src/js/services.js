@@ -384,12 +384,34 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
 
-    case 'attendanceView':
-    case 'expenseView':
-    case 'paymentView':
-    case 'reportView':
-      window[history.state[0]]()
-      break;
+      case 'reportView':
+        try {
+          const sectionContent = document.querySelector('.tabs-section .data-container');
+          if (!sectionContent) return;
+          if (sectionContent.dataset.view === 'attendence') {
+            attendenceView(sectionContent)
+            return
+          };
+          if (sectionContent.dataset.view === 'reimbursements') {
+            expenseView(sectionContent)
+            return
+          }
+          if (sectionContent.dataset.view === 'payments') {
+            paymentView(sectionContent)
+            return
+          }
+          if (sectionContent.dataset.view === 'chatView') {
+            chatView()
+            return
+          }
+          if (sectionContent.dataset.view === 'snapView') {
+            snapView();
+            return
+          }
+        } catch (e) {
+          console.log(e)
+        }
+        break;
     default:
       console.log("no refresh")
   }

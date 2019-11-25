@@ -1,9 +1,5 @@
-function reportView(attendanceRecord) {
+function reportView(state,attendanceRecord) {
   progressBar.close()
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>
-  <span class="mdc-top-app-bar__title">My Reports</span>
-  `
-  initHeaderView();
 
   const panel = document.getElementById('app-current-panel');
 
@@ -23,21 +19,22 @@ function reportView(attendanceRecord) {
     const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
 
     tabList.listen('MDCTabBar:activated', function (evt) {
-    
 
+      initHeaderView();
       if (!evt.detail.index) {
-        // history.pushState(['chatView'], null, null);
+        history.replaceState(['reportView', 'chatView'], null, null)
+
         chatView();
         return;
       }
-      if(document.getElementById('search-btn')) {
+      if (document.getElementById('search-btn')) {
         document.getElementById('search-btn').remove();
       }
       if (evt.detail.index == 1) {
         const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
         if (offices.length == 1) {
           photoOffice = offices[0];
-          history.pushState(['snapView'], null, null)
+          history.replaceState(['reportView', 'snapView'], null, null)
           snapView()
           return
         }
@@ -56,8 +53,9 @@ function reportView(attendanceRecord) {
         const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
         bottomDialog(dialog, ul)
         ul.listen('MDCList:action', function (e) {
-          photoOffice = offices[e.detail.index]
-          history.pushState(['snapView'], null, null)
+          photoOffice = offices[e.detail.index];
+          history.replaceState(['reportView', 'snapView'], null, null)
+
           snapView()
           dialog.close();
         })
@@ -65,51 +63,41 @@ function reportView(attendanceRecord) {
       }
 
       document.getElementById('start-load').classList.remove('hidden')
-      if (evt.detail.index == 2) {
-        // history.pushState(['attendanceView'], null, null);
-        attendenceView(attendanceRecord);
-        return
-      }
-
-      if (evt.detail.index == 3) {
-        // history.pushState(['expenseView'], null, null);
-        return expenseView()
-      }
-      if (evt.detail.index == 4) {
-        // history.pushState(['paymentView'], null, null);
-        return paymentView();
-      }
+      const view = reportTabs[evt.detail.index].view
+      history.replaceState(['reportView', evt.detail.index], null, null)
+      window[view](attendanceRecord);
     })
-    tabList.activateTab(2)
+    if(!state) {
+      tabList.activateTab(2)
+    }
+    else {
+      tabList.activateTab(state)
+    } 
   })
 }
 
 
 function getReportTabData() {
   return new Promise(function (resolve, reject) {
-    const reportTabData = [{
-      icon: 'fingerprint',
-      name: 'Attendances',
-      store: 'attendance'
-    }, {
-      icon: 'assignment',
-      name: 'Reimbursements',
-      store: 'reimbursement'
-    }, {
-      icon: 'payment',
-      name: 'Payments',
-      store: 'payment'
-    }];
+    const reportTabData = [];
+    const names = ['attendance', 'reimbursement', 'payment']
+    const tx = db.transaction(names);
 
-    const tx = db.transaction(['attendance', 'reimbursement', 'payment']);
+    names.forEach(function (name) {
 
-    reportTabData.forEach(function (data) {
-
-      if (!db.objectStoreNames.contains(data.store)) return;
-      const store = tx.objectStore(data.store);
+      if (!db.objectStoreNames.contains(name)) return;
+      const store = tx.objectStore(name);
       const req = store.count()
       req.onsuccess = function () {
-        data.count = req.result;
+        const value = req.result;
+        if(!value) return;
+
+        if(name === 'attendance') {
+          reportTabData.push({
+            icon
+          })
+        }
+    
       }
     })
     tx.oncomplete = function () {

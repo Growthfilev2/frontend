@@ -73,15 +73,16 @@ function getAndroidDeviceInformation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
-  if (event.state[0] === 'mapView' || event.state[0] === 'snapView') return;
-  // if (event.state[0] === 'homeView') {
-  //   getSuggestions();
-  //   return
-  // }
+  if (event.state[0] === 'mapView') return;
+  
+  if(event.state[0] === 'reportView') {
+    this.reportView(event.state[1])
+    return;
+  }
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
     history.go(-1);
     return;
-  }
+  };
   window[event.state[0]](event.state[1]);
 }
 

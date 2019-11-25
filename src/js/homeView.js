@@ -116,7 +116,7 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-  if (history.state[0] === 'reportView') {
+  if (history.state[0] === 'reportView' || history.state[0] === 'chatView') {
     history.pushState(['profileView'], null, null)
     profileView();
     return;
