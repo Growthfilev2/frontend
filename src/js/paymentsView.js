@@ -158,6 +158,6 @@ function calculateTotalPayment(data) {
 }
 
 function paymentDom() {
-    return `<div class='payment-section' id='payments'>   
+    return `<div class='payment-section report-view' id='payments'>   
 </div>`
 }

@@ -192,7 +192,7 @@ function attendanceStatusType(data) {
 }
 
 function attendanceDom() {
-  return `<div class='attendance-section' id='attendance-view'>
+  return `<div class='attendance-section report-view' id='attendance-view'>
     <div class='monthly-stat  mdc-layout-grid__inner' id='attendance-cards'></div>
   </div>`
 }

@@ -26,9 +26,12 @@ function reportView(attendanceRecord) {
     
 
       if (!evt.detail.index) {
-        history.pushState(['chatView'], null, null);
+        // history.pushState(['chatView'], null, null);
         chatView();
         return;
+      }
+      if(document.getElementById('search-btn')) {
+        document.getElementById('search-btn').remove();
       }
       if (evt.detail.index == 1) {
         const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
@@ -63,17 +66,17 @@ function reportView(attendanceRecord) {
 
       document.getElementById('start-load').classList.remove('hidden')
       if (evt.detail.index == 2) {
-        history.pushState(['attendanceView'], null, null);
+        // history.pushState(['attendanceView'], null, null);
         attendenceView(attendanceRecord);
         return
       }
 
       if (evt.detail.index == 3) {
-        history.pushState(['expenseView'], null, null);
+        // history.pushState(['expenseView'], null, null);
         return expenseView()
       }
       if (evt.detail.index == 4) {
-        history.pushState(['paymentView'], null, null);
+        // history.pushState(['paymentView'], null, null);
         return paymentView();
       }
     })

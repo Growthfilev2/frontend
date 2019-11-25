@@ -9,23 +9,22 @@ const duration = 800;
 function chatView() {
 
     document.getElementById('start-load').classList.add('hidden');
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Chat</span>
-    `
-    const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
-        search
-    </a>`
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
-    const header = getHeader('app-header', backIcon, searchIcon);
-    // header.root_.classList.remove('hidden');
-
-    if (!document.getElementById('search-btn')) return;
-    document.getElementById('search-btn').addEventListener('click', function () {
-        history.pushState(['searchChats'], null, null)
-        search()
-    })
-
+    if(!document.getElementById('search-btn')) {
+        const searchIcon = createElement('button',{
+            className:'material-icons mdc-top-app-bar__action-item mdc-icon-button',
+            id:'search-btn',
+            textContent:'search'
+        });
+        document.getElementById('section-end').appendChild(searchIcon);
+        searchIcon.addEventListener('click', function () {
+            history.pushState(['searchChats'], null, null)
+            search()
+        })
+    }
+  
+    
     sectionContent.innerHTML = chatDom()
 
     readLatestChats(true);
@@ -721,7 +720,7 @@ function share(activity) {
     activity.assignees.forEach(function (ass) {
         alreadySelected[ass.phoneNumber] = true
     });
-    
+
     sectionContent.innerHTML = content;
 
     const header = getHeader('app-header', backIcon, searchIcon);
