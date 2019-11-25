@@ -1,4 +1,4 @@
-function attendenceView(yesterdayAttendanceRecord) {
+function attendanceView(yesterdayAttendanceRecord) {
   const sectionContent = document.querySelector('.tabs-section .data-container');
   sectionContent.dataset.view = 'attendence'
   if (!sectionContent) return;

@@ -1,4 +1,4 @@
-function reportView(state,attendanceRecord) {
+function reportView(state, attendanceRecord) {
   progressBar.close()
 
   const panel = document.getElementById('app-current-panel');
@@ -21,8 +21,8 @@ function reportView(state,attendanceRecord) {
     tabList.listen('MDCTabBar:activated', function (evt) {
 
       initHeaderView();
+      history.replaceState(['reportView', evt.detail.index], null, null)
       if (!evt.detail.index) {
-        history.replaceState(['reportView', 'chatView'], null, null)
 
         chatView();
         return;
@@ -34,7 +34,6 @@ function reportView(state,attendanceRecord) {
         const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
         if (offices.length == 1) {
           photoOffice = offices[0];
-          history.replaceState(['reportView', 'snapView'], null, null)
           snapView()
           return
         }
@@ -54,7 +53,7 @@ function reportView(state,attendanceRecord) {
         bottomDialog(dialog, ul)
         ul.listen('MDCList:action', function (e) {
           photoOffice = offices[e.detail.index];
-          history.replaceState(['reportView', 'snapView'], null, null)
+
 
           snapView()
           dialog.close();
@@ -63,41 +62,78 @@ function reportView(state,attendanceRecord) {
       }
 
       document.getElementById('start-load').classList.remove('hidden')
-      const view = reportTabs[evt.detail.index].view
-      history.replaceState(['reportView', evt.detail.index], null, null)
-      window[view](attendanceRecord);
+      const reportDataObject = reportTabs[evt.detail.index];
+
+      window[reportDataObject.view]();
     })
-    if(!state) {
-      tabList.activateTab(2)
+
+    if (state == null) {
+      if (reportTabs.length > 2) {
+        return tabList.activateTab(2)
+      }
+      return tabList.activateTab(0)
     }
-    else {
-      tabList.activateTab(state)
-    } 
+
+    tabList.activateTab(state)
+
   })
 }
 
 
 function getReportTabData() {
   return new Promise(function (resolve, reject) {
-    const reportTabData = [];
+    const reportTabData = [{
+      name: 'Chat',
+      id: 'open-chat-list',
+      icon: 'notifications',
+      view: 'chatView',
+      index: 0,
+    }, {
+      name: 'Photo Check-In',
+      id: 'photo-check-in',
+      icon: 'add_a_photo',
+      view: 'snapView',
+      index: 1
+    }];
+
     const names = ['attendance', 'reimbursement', 'payment']
     const tx = db.transaction(names);
 
-    names.forEach(function (name) {
+    names.forEach(function (name, index) {
 
       if (!db.objectStoreNames.contains(name)) return;
       const store = tx.objectStore(name);
       const req = store.count()
       req.onsuccess = function () {
         const value = req.result;
-        if(!value) return;
-
-        if(name === 'attendance') {
+        if (!value) return;
+        if (name === 'attendance') {
           reportTabData.push({
-            icon
+            icon: 'fingerprint',
+            name: 'Attendances',
+            store: 'attendance',
+            view: 'attendanceView',
+            index: index
           })
         }
-    
+        if (name === 'reimbursement') {
+          reportTabData.push({
+            icon: 'assignment',
+            name: 'Reimbursements',
+            store: 'reimbursement',
+            view: 'expenseView',
+            index: index
+          })
+        }
+        if (name === 'payment') {
+          reportTabData.push({
+            icon: 'payment',
+            name: 'Payments',
+            store: 'payment',
+            view: 'paymentView',
+            index: index
+          })
+        }
       }
     })
     tx.oncomplete = function () {
@@ -115,21 +151,10 @@ function showTabs(reportTabs) {
     <div class="mdc-tab-scroller">
       <div class="mdc-tab-scroller__scroll-area">
         <div class="mdc-tab-scroller__scroll-content">
-          ${getCommonTasks().map(function(commonTask){
-            return `<button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${commonTask.id}>
-            <span class="mdc-tab__content">
-              <span class="mdc-tab__icon material-icons" aria-hidden="true">${commonTask.icon}</span>
-              <span class="mdc-tab__text-label">${commonTask.name}</span>
-            </span>
-            <span class="mdc-tab-indicator">
-              <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
-            </span>
-            <span class="mdc-tab__ripple"></span>
-          </button>`
-          }).join("")}
+      
           ${reportTabs.map(function(report){
               return `
-              ${report.count ? `<button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
+              <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${report.id || ''}>
               <span class="mdc-tab__content">
                 <span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>
                 <span class="mdc-tab__text-label">${report.name}</span>
@@ -138,8 +163,7 @@ function showTabs(reportTabs) {
                 <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
               </span>
               <span class="mdc-tab__ripple"></span>
-            </button>` :''}
-              `
+            </button>`
           }).join("")}
         </div>
       </div>

@@ -386,28 +386,8 @@ function handleComponentUpdation(readResponse) {
 
       case 'reportView':
         try {
-          const sectionContent = document.querySelector('.tabs-section .data-container');
-          if (!sectionContent) return;
-          if (sectionContent.dataset.view === 'attendence') {
-            attendenceView(sectionContent)
-            return
-          };
-          if (sectionContent.dataset.view === 'reimbursements') {
-            expenseView(sectionContent)
-            return
-          }
-          if (sectionContent.dataset.view === 'payments') {
-            paymentView(sectionContent)
-            return
-          }
-          if (sectionContent.dataset.view === 'chatView') {
-            chatView()
-            return
-          }
-          if (sectionContent.dataset.view === 'snapView') {
-            snapView();
-            return
-          }
+         reportView(history.state[1]);
+
         } catch (e) {
           console.log(e)
         }

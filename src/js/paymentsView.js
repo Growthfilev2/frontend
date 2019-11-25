@@ -9,7 +9,7 @@ function paymentView() {
     let monthlyString = ''
     getPaymentData().then(function (paymentData) {
         const keys = Object.keys(paymentData);
-
+        
         if (!keys.length) {
             if(parent) {
                 parent.innerHTML = "<h5 class='mdc-typography--headline5 text-center'>No Payment Found</h5>"

@@ -372,13 +372,11 @@ function getCommonTasks() {
   }];
 
 
-  if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
     tasks.push({
       name: 'Photo Check-In',
       id: 'photo-check-in',
       icon: 'add_a_photo'
     })
-  }
   return tasks
 }
 
