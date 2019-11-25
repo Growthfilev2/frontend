@@ -2,7 +2,7 @@ var map;
 var globMark;
 let o;
 let selectedSubs;
-ApplicationState = {
+ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   location: '',
   knownLocation: false,
   venue: '',
@@ -151,7 +151,7 @@ function mapView(location) {
     fillOpacity: 0.35,
     map: map,
     center: latLng,
-    radius: geopoint.accuracy < 100 ?  geopoint.accuracy * 2 : geopoint.accuracy
+    radius: location.accuracy < 100 ?  location.accuracy * 2 : location.accuracy
   });
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
@@ -191,7 +191,11 @@ function createUnkownCheckIn(cardProd, geopoint) {
     successDialog('Check-In Created')
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    getSuggestions()
+    initHeaderView()
+    history.pushState(['homeView'],null,null)
+
+    history.pushState(['reportView'], null, null)
+    reportView()
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');
 
@@ -244,7 +248,10 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint) {
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    getSuggestions();
+    initHeaderView()
+    history.pushState(['homeView'],null,null)
+    history.pushState(['reportView'], null, null)
+    reportView();
   }).catch(function (error) {
     snacks(error.response.message);
     if (cardProd) {
@@ -418,7 +425,10 @@ function setFilePath(base64) {
     progressBar.open();
 
     requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
-      getSuggestions()
+      initHeaderView()
+      history.pushState(['homeView'],null,null)
+      history.pushState(['reportView'], null, null)
+      reportView()
       successDialog('Check-In Created')
       progressBar.close()
     }).catch(function (error) {

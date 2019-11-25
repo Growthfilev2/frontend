@@ -1,10 +1,10 @@
 function getSuggestions() {
-  // if (ApplicationState.knownLocation) {
-  //   getKnownLocationSubs().then(homeView);
-  //   return;
-  // }
-  // return getSubsWithVenue().then(homeView)
-  homeView();
+  if (ApplicationState.knownLocation) {
+    getKnownLocationSubs().then(homeView);
+    return;
+  }
+  return getSubsWithVenue().then(homeView)
+
 }
 
 function getKnownLocationSubs() {
@@ -163,8 +163,17 @@ function homeHeaderStartContent(name) {
 }
 
 
+function initHeaderView(title,icon) {
+  
+  const header = getHeader('app-header', title, icon);
+  header.listen('MDCTopAppBar:nav', handleNav);
+  header.root_.classList.remove('hidden');
+  return header;
+}
+
 function homeView(suggestedTemplates) {
-  document.getElementById('start-load').classList.add('hidden')
+
+  document.getElementById('start-load').classList.add('hidden');
 
   try {
     const commonTasks = getCommonTasks();
@@ -174,9 +183,7 @@ function homeView(suggestedTemplates) {
     if (ApplicationState.nearByLocations.length > 1) {
       clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
     }
-    const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
-
-
+    const header = initHeaderView(homeHeaderStartContent(ApplicationState.venue.location || ''),clearIcon);
     if (!ApplicationState.venue) {
       generateCheckInVenueName(header);
     }
@@ -187,9 +194,6 @@ function homeView(suggestedTemplates) {
       })
     }
 
-
-    header.listen('MDCTopAppBar:nav', handleNav);
-    header.root_.classList.remove('hidden')
 
     const panel = document.getElementById('app-current-panel')
     panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
@@ -980,8 +984,6 @@ ${reportString}
 `
 }
 
-
-
 function newUserLandingpage(geopoint) {
   const appEl = document.getElementById('app-current-panel');
   appEl.innerHTML = '';
@@ -1133,8 +1135,6 @@ var searchDebounde = debounce(function (event) {
 
       })
 
-
-
       map.setCenter(results[0].geometry.location);
     } else {
       createMarker()
@@ -1191,7 +1191,7 @@ function createMarker(place, map, infowindow) {
 
 
 function createOfficeInit(geopoint, placeComponent) {
-  
+
   document.getElementById('app-header').classList.remove('hidden')
   const appEl = document.getElementById('app-current-panel')
   history.pushState(['addView'], null, null);
@@ -1203,7 +1203,7 @@ function createOfficeInit(geopoint, placeComponent) {
     "attachment": {
       "Registered Office Address": {
         "type": "string",
-        "value": placeComponent && placeComponent.formatted_address ? placeComponent.formatted_address : '' 
+        "value": placeComponent && placeComponent.formatted_address ? placeComponent.formatted_address : ''
       },
       "Company Logo": {
         "value": '',
@@ -1251,11 +1251,11 @@ function createOfficeInit(geopoint, placeComponent) {
       },
       "First Contact": {
         "type": "phoneNumber",
-        "value": placeComponent &&  placeComponent.international_phone_number ? placeComponent.international_phone_number : ''
+        "value": placeComponent && placeComponent.international_phone_number ? placeComponent.international_phone_number : ''
       },
       "Name": {
         "type": "string",
-        "value": placeComponent  && placeComponent.name ? placeComponent.name : ''
+        "value": placeComponent && placeComponent.name ? placeComponent.name : ''
       },
       "Customer Place Supported Types": {
         "value": "",
@@ -1265,20 +1265,20 @@ function createOfficeInit(geopoint, placeComponent) {
     "template": "office",
     "venue": [],
   };
-   // search api  => 
-   
-    addView(template);
-    
+  // search api  => 
+
+  addView(template);
+
   // }
 
 }
 
 function createNewEmployee(office) {
-  
+
   document.getElementById('app-header').classList.remove('hidden')
   const appEl = document.getElementById('app-current-panel')
   history.pushState(['addView'], null, null);
-  
+
   addView({
     "schedule": [],
     "template": 'employee',
@@ -1387,7 +1387,7 @@ function createNewEmployee(office) {
     "venue": [],
 
   });
-  
+
   // document.querySelector('#section-start .mdc-top-app-bar__navigation-icon').addEventListener('click',function(){
   //   history.back();
   // })

@@ -78,7 +78,7 @@ function sendFormToParent(formData) {
                         })
                     })
                 }
-    
+                
                 getSuggestions();
                 return;
             }).catch(function (error) {

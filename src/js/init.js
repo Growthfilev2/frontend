@@ -782,31 +782,17 @@ function getCheckInSubs() {
 
 function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
-  // appLocation(3).then(function (geopoint) {
+  appLocation(3).then(function (geopoint) {
 
-    Promise.all([hasDataInDB(), getCheckInSubs()]).then(function (results) {
-      const isEmployeeWithData = results[0];
-      const checkInSubs = results[1];
+    getCheckInSubs().then(function (checkInSubs) {
       document.getElementById('start-load').classList.add('hidden');
-      if (isEmployeeWithData) {
-        history.pushState(['newUserLandingpage'], null, null)
-        newUserLandingpage({
-          latitude:28.5463559,
-          longitude:77.2520095,
-          lastLocationTime:Date.now(),
-          provider:'HTML5',
-          accuracy:30
-        });
-        return;
-      }
-
       if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        getSuggestions()
+        newUserLandingpage(geopoint);
         return
       };
-      
+
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       const oldState = localStorage.getItem('ApplicationState')
       if (!oldState) return mapView(geopoint);
@@ -814,15 +800,16 @@ function openMap() {
       if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
       const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
       const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
+   
       if (isOlder || hasChangedLocation) return mapView(geopoint);
       ApplicationState = oldApplicationState
+
       return getSuggestions()
-    });
-    
-  // }).catch(function (error) {
-  //   document.getElementById('start-load').classList.add('hidden');
-  //   handleLocationError(error, true)
-  // })
+    })
+  }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden');
+    handleLocationError(error, true)
+  })
 }
 
 

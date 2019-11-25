@@ -71,6 +71,7 @@ function appLocation(maxRetry) {
 
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
+
         ApplicationState.location = geopoint
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
         return resolve(geopoint);
@@ -83,7 +84,8 @@ function appLocation(maxRetry) {
           }
         })
       }
-      ApplicationState.location = geopoint
+     ApplicationState.location = geopoint
+  
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
     }).catch(function (error) {
@@ -371,7 +373,6 @@ function handleComponentUpdation(readResponse) {
 
   switch (history.state[0]) {
     case 'homeView':
-
       getSuggestions()
       break;
     case 'enterChat':
