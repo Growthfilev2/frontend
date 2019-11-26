@@ -96,7 +96,7 @@ function getReportTabData() {
       index: 1
     }];
 
-    const names = ['attendance', 'reimbursement', 'payment','subscription']
+    const names = ['attendance', 'reimbursement', 'payment']
     const tx = db.transaction(names);
 
     names.forEach(function (name, index) {
