@@ -372,9 +372,7 @@ function handleComponentUpdation(readResponse) {
   if (!history.state) return;
 
   switch (history.state[0]) {
-    // case 'homeView':
-    //   getSuggestions()
-    //   break;
+
     case 'enterChat':
       if (!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
@@ -384,14 +382,12 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
 
-      case 'reportView':
-        try {
-         reportView(history.state[1]);
+    case 'reportView':
 
-        } catch (e) {
-          console.log(e)
-        }
-        break;
+      reportView(history.state[1]);
+
+
+      break;
     default:
       console.log("no refresh")
   }
