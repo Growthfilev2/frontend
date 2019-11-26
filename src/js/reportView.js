@@ -85,7 +85,7 @@ function getReportTabData() {
     const reportTabData = [{
       name: 'Chat',
       id: 'open-chat-list',
-      icon: 'notifications',
+      icon: 'contacts',
       view: 'chatView',
       index: 0,
     }, {
@@ -96,7 +96,7 @@ function getReportTabData() {
       index: 1
     }];
 
-    const names = ['attendance', 'reimbursement', 'payment']
+    const names = ['attendance', 'reimbursement', 'payment','subscription']
     const tx = db.transaction(names);
 
     names.forEach(function (name, index) {
@@ -109,7 +109,7 @@ function getReportTabData() {
         if (!value) return;
         if (name === 'attendance') {
           reportTabData.push({
-            icon: 'fingerprint',
+            icon: 'room',
             name: 'Attendances',
             store: 'attendance',
             view: 'attendanceView',
@@ -118,7 +118,7 @@ function getReportTabData() {
         }
         if (name === 'reimbursement') {
           reportTabData.push({
-            icon: 'assignment',
+            icon: 'motorcycle',
             name: 'Reimbursements',
             store: 'reimbursement',
             view: 'expenseView',
@@ -134,6 +134,7 @@ function getReportTabData() {
             index: index
           })
         }
+        
       }
     })
     tx.oncomplete = function () {
