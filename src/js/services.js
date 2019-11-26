@@ -384,14 +384,10 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
 
-      case 'reportView':
-        try {
-         reportView(history.state[1]);
+    case 'reportView':
 
-        } catch (e) {
-          console.log(e)
-        }
-        break;
+      reportView(history.state[1]);
+      break;
     default:
       console.log("no refresh")
   }

@@ -97,7 +97,7 @@ function getReportTabData() {
     }];
 
     const names = ['attendance', 'reimbursement', 'payment']
-    const tx = db.transaction(names);
+    const reportTx = db.transaction(names);
 
     names.forEach(function (name, index) {
 
@@ -137,8 +137,18 @@ function getReportTabData() {
         
       }
     })
-    tx.oncomplete = function () {
-      return resolve(reportTabData)
+    reportTx.oncomplete = function () {
+      getSubscription('','customer').then(function(customerTemplates){
+        if(customerTemplates.length) {
+          reportTabData.push({
+            name: 'Incentives',
+            icon: 'money',
+            view: 'incentiveView',
+            index: reportTabData.length +1
+          })
+        }
+        return resolve(reportTabData)
+      })
     }
     tx.onerror = function () {
       return reject(tx.error)
