@@ -83,7 +83,7 @@ function reportView(state, attendanceRecord) {
 function getReportTabData() {
   return new Promise(function (resolve, reject) {
     const reportTabData = [{
-      name: 'Chat',
+      name: 'Contacts',
       id: 'open-chat-list',
       icon: 'contacts',
       view: 'chatView',
