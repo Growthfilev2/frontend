@@ -44,8 +44,8 @@ function handleLocationError(error, onAppOpen) {
   if (progressBar) {
     progressBar.close()
   }
-  if (document.getElementById('check-in-prog')) {
-    document.getElementById('check-in-prog').classList.add('mdc-linear-progress--closed')
+  if (document.getElementById('selection-box-prog')) {
+    document.getElementById('selection-box-prog').classList.add('mdc-linear-progress--closed')
   }
 
   switch (error.message) {
@@ -220,7 +220,7 @@ function loadCardData(venues, map, geopoint) {
   document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
   document.querySelector('#selection-box .content-body').innerHTML = venuesList;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
-  const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
+  const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('selection-box-prog'));
 
   const ul = new mdc.list.MDCList(document.getElementById('selected-venue'))
   ul.singleSelection = true;
@@ -301,7 +301,7 @@ function selectionBox() {
   </div>
   <div role="progressbar"
     class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-    id='check-in-prog'>
+    id='selection-box-prog'>
     <div class="mdc-linear-progress__buffering-dots"></div>
     <div class="mdc-linear-progress__buffer"></div>
     <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
@@ -315,8 +315,6 @@ function selectionBox() {
   <div class="content-body">
   </div>
   </div>
-
-
 `
 }
 

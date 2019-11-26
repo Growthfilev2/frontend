@@ -214,3 +214,37 @@
   display: block;
   margin: 0 auto;
 }
+.place-box {
+  position: relative;
+}
+
+
+@keyframes bottomToTop {
+  from {
+    bottom: -1000px;
+   
+  }
+
+  to {
+    bottom: 0px;
+   
+  }
+}
+
+.place-box {
+ 
+  animation-duration: 0.5s;
+  animation-name: bottomToTop;
+}
+
+
+.place-box .demo-card__primary {
+  padding-top: 0px;
+}
+
+.place-box.show {
+  transform: translateY(0);
+}
+.place-box .mdc-fab {
+  width: fit-content;
+}

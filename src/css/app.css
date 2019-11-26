@@ -97,7 +97,9 @@ body {
 .pt-20 {
   padding-top: 20px;
 }
-
+.pt-0 {
+  padding-top: 0px;
+}
 .pt-10 {
   padding-top: 10px;
 }

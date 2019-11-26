@@ -3,7 +3,7 @@ function getSuggestions() {
     getKnownLocationSubs().then(homeView);
     return;
   }
-  return getSubsWithVenue().then(homeView)
+  return getSubsWithVenue().then(homeView);
 
 }
 
@@ -895,7 +895,7 @@ function searchOffice(geopoint) {
     </div>
    </div>
   <div id='map-search'></div>
-  ${selectionBox()}
+   
   </div>`;
 
   const center = {
@@ -934,12 +934,14 @@ function searchOffice(geopoint) {
     document.getElementById('place-query-ul').innerHTML = ''
     searchField.focus();
     map.setCenter(center)
-    createMarker()
+    createMarker();
+    clearPlaceCustomControl(map);
+
   })
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
-    fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types', 'photos']
+    fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types']
   }
   searchField.input_.addEventListener('input', function (event) {
     if (!event.target.value.trim()) return
@@ -968,65 +970,172 @@ var searchDebounde = debounce(function (event) {
   const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
   var infowindow = new google.maps.InfoWindow();
   const searchProgress = new mdc.linearProgress.MDCLinearProgress(document.getElementById('search-progress-bar'))
-  searchProgress.open();
+  // searchProgress.open();
 
+  showPlaceBox(JSON.parse(localStorage.getItem('test')), map)
 
-  service.findPlaceFromQuery(placeRequesParam, function (results, status) {
-    ul.root_.innerHTML = ''
-    searchProgress.close();
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      console.log(results)
-      results.forEach(function (result) {
-        createMarker(result, map, infowindow)
-        const li = searchPlaceResultList(result.name, result.formatted_address);
-        li.addEventListener('click', function () {
-          service.getDetails({
-            placeId: result.place_id,
-            fields: ['international_phone_number']
-          }, function (placeDetail, status) {
-            if (status == google.maps.places.PlacesServiceStatus.OK && placeDetail.international_phone_number) {
-              result.international_phone_number = placeDetail.international_phone_number
-            }
-            requestCreator('search', {
-              query: `template=office&attachmentName=${value}`
-            }).then(function (searchResponse) {
-              console.log(searchResponse.response)
-              const offices = Object.keys(searchResponse.response);
-              
-              // if (offices.length) {
+  // service.findPlaceFromQuery(placeRequesParam, function (results, status) {
+  //   ul.root_.innerHTML = ''
+  //   searchProgress.close();
+  //   if (status === google.maps.places.PlacesServiceStatus.OK) {
+  //     console.log(results)
+  //     results.forEach(function (result) {
+  //       createMarker(result, map, infowindow)
+  //       const li = searchPlaceResultList(result.name, result.formatted_address);
+  //       li.addEventListener('click', function () {
+  //         service.getDetails({
+  //           placeId: result.place_id,
+  //           fields: ['international_phone_number', 'photos']
+  //         }, function (placeDetail, status) {
+  //           if (status == google.maps.places.PlacesServiceStatus.OK) {
+  //             result.international_phone_number = placeDetail.international_phone_number || ''
+  //             result.photos = placeDetail.photos || []
+  //           }
+  //           console.log(placeDetail)
+  //           requestCreator('search', {
+  //             query: `template=office&attachmentName=${value}`
+  //           }).then(function (searchResponse) {
+  //             console.log(searchResponse.response)
+  //             const offices = Object.keys(searchResponse.response);
+  //             localStorage.setItem('test',JSON.stringify(result))
+  //             showPlaceBox(result, map)
+  //             // if (offices.length) {
 
-              //   return;
-              // };
+  //             //   return;
+  //             // };
 
-            }).catch(console.error)
-          });
-        });
-        ul.root_.appendChild(li);
-      })
-      map.setCenter(results[0].geometry.location);
-    } else {
-      createMarker()
-      map.setCenter({
-        lat: geopoint.latitude,
-        lng: geopoint.longitude
-      })
-      const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
-      supportLi.addEventListener('click', function () {
-        createOfficeInit(geopoint)
-      })
-      ul.root_.appendChild(supportLi);
-    }
+  //           }).catch(console.error)
+  //         });
+  //       });
+  //       ul.root_.appendChild(li);
+  //     })
+  //     map.setCenter(results[0].geometry.location);
+  //   } else {
+  //     createMarker()
+  //     map.setCenter({
+  //       lat: geopoint.latitude,
+  //       lng: geopoint.longitude
+  //     })
+  //     const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
+  //     supportLi.addEventListener('click', function () {
+  //       createOfficeInit(geopoint)
+  //     })
+  //     ul.root_.appendChild(supportLi);
+  //   }
 
-    // createOfficeInit(geopoint, result)
-  }).catch(console.error)
-
-
+  // })
 }, 1000, false)
 
 window.addEventListener('searchPlaces', searchDebounde)
 
 
+function CenterControl(controlDiv, result) {
 
+  // Set CSS for the control border.
+  var controlUI = createElement('div', {
+    className: 'mdc-card place-box'
+  });
+
+  controlUI.innerHTML = `<div class='mdc-card__primary-action'>
+    <div class='demo-card__primary'>
+    <ul class='mdc-list'>
+      <li class='mdc-list-item pl-0 pr-0'>
+        <h2 class='demo-card__title mdc-typography mdc-typography--headline6'>${result.name}</h2>
+        <button class="mdc-button mdc-list-item__meta mdc-button--raised">
+            <div class="mdc-button__ripple"></div>
+            <i class="material-icons mdc-button__icon" aria-hidden="true">supervisor_account</i>
+            <span class="mdc-button__label">Add supervisor</span>
+        </button>
+      </li>
+    </ul>
+      <div class="mdc-chip-set" role="grid"> 
+        ${result.types.map(function(type){
+          return `<div class="mdc-chip" role="row">
+          <div class="mdc-chip__ripple"></div>
+          <span role="gridcell">
+            <span role="button" tabindex="0" class="mdc-chip__text">${type}</span>
+          </span>
+        </div>`
+        })} 
+      </div>
+
+      <div class='mdc-typography mdc-typography--body2 pt-10 pb-20'>
+          ${result.formatted_address}
+      </div>
+    </div>
+   
+  </div>`
+
+
+
+  // controlUI.innerHTML = `<div class='place-details'>
+  //    <div class='photo-cont'>
+  //      <ul class='mdc-image-list standard-image-list mdc-image-list--with-text-protection'>
+  //        ${result.photos.map(function(photo){
+  //         return `<li class='mdc-image-list__item'>
+  //           <div class='mdc-image-list__image-aspect-container'>
+  //             <img class='mdc-image-list__image' src='https://lh3.googleusercontent.com/p/AF1QipMAyFFzD03Hwtznnu4h3IHJnJya15qfEPMYgUxT=s1600-w1200'
+  //           </div>
+  //           <div class='mdc-image-list__supporting'>
+  //             <span class='mdc-image-list__label'>
+  //               ${photo.html_attributions[0]}
+  //             </span>
+  //           </div>
+  //         </li>`
+  //       }).join("")}
+  //     </div>
+  //   </div>
+  // </div>`
+
+  controlDiv.appendChild(controlUI);
+
+
+  // Setup the click event listeners: simply set the map to Chicago.
+
+
+}
+
+function clearPlaceCustomControl(map) {
+
+  if (map.controls[google.maps.ControlPosition.BOTTOM_CENTER].length) {
+    map.controls[google.maps.ControlPosition.BOTTOM_CENTER].clear();
+  }
+
+}
+
+
+function showPlaceBox(result, map) {
+
+  clearPlaceCustomControl(map)
+
+  var centerControlDiv = document.createElement('div');
+  console.log(result)
+  var centerControl = new CenterControl(centerControlDiv, result);
+
+  centerControlDiv.index = 1;
+  map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
+
+
+  // content.innerHTML = `<div class='place-details'>
+  //   <div class='photo-cont'>
+  //     <ul class='mdc-image-list standard-image-list mdc-image-list--with-text-protection'>
+  //       ${result.photos.map(function(photo){
+  //         return `<li class='mdc-image-list__item'>
+  //           <div class='mdc-image-list__image-aspect-container'>
+  //             <img class='mdc-image-list__image' src=${photo.getUrl()}>
+  //           </div>
+  //           <div class='mdc-image-list__supporting'>
+  //             <span class='mdc-image-list__label'>
+  //               ${photo.html_attributions[0]}
+  //             </span>
+  //           </div>
+  //         </li>`
+  //       }).join("")}
+  //     </div>
+  //   </div>
+  // </div>`
+
+}
 
 function searchPlaceResultList(primaryText, secondaryText, icon) {
   const li = createElement('li', {
