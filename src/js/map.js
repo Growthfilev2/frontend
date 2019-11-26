@@ -423,7 +423,7 @@ function setFilePath(base64) {
     sub.attachment.Comment.value = textValue;
     sub.share = []
     progressBar.open();
-
+    
     requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
       initHeaderView()
       // history.pushState(['homeView'],null,null)
@@ -434,7 +434,7 @@ function setFilePath(base64) {
     }).catch(function (error) {
       progressBar.close()
       snacks(error.response.message)
-    })
+    });
   })
 }
 

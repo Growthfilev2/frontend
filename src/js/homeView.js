@@ -211,11 +211,11 @@ function getCommonTasks() {
   }];
 
 
-    tasks.push({
-      name: 'Photo Check-In',
-      id: 'photo-check-in',
-      icon: 'add_a_photo'
-    })
+  tasks.push({
+    name: 'Photo Check-In',
+    id: 'photo-check-in',
+    icon: 'add_a_photo'
+  })
   return tasks
 }
 
@@ -878,19 +878,30 @@ function searchOffice(geopoint) {
       trailingIcon:'clear',
       autocomplete:'organization'
     })}
+
     <div class='search-result-container'>
+      <div role="progressbar" id='search-progress-bar' class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+        <div class="mdc-linear-progress__buffering-dots"></div>
+        <div class="mdc-linear-progress__buffer"></div>
+        <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+          <span class="mdc-linear-progress__bar-inner"></span>
+        </div>
+        <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+          <span class="mdc-linear-progress__bar-inner"></span>
+        </div>
+      </div>
        <ul class='mdc-list mdc-list--two-line mdc-list--avatar-list' id='place-query-ul'>
        </ul>
     </div>
    </div>
   <div id='map-search'></div>
+  ${selectionBox()}
   </div>`;
 
   const center = {
     lat: geopoint.latitude,
     lng: geopoint.longitude
   }
-
 
   const map = new google.maps.Map(document.getElementById('map-search'), {
     zoom: 15,
@@ -928,7 +939,7 @@ function searchOffice(geopoint) {
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
-    fields: ['name', 'geometry', 'place_id', 'formatted_address','types','photos']
+    fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types', 'photos']
   }
   searchField.input_.addEventListener('input', function (event) {
     if (!event.target.value.trim()) return
@@ -956,8 +967,13 @@ var searchDebounde = debounce(function (event) {
   const mapCont = document.getElementById('map-search')
   const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
   var infowindow = new google.maps.InfoWindow();
+  const searchProgress = new mdc.linearProgress.MDCLinearProgress(document.getElementById('search-progress-bar'))
+  searchProgress.open();
+
+
   service.findPlaceFromQuery(placeRequesParam, function (results, status) {
     ul.root_.innerHTML = ''
+    searchProgress.close();
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       console.log(results)
       results.forEach(function (result) {
@@ -971,18 +987,22 @@ var searchDebounde = debounce(function (event) {
             if (status == google.maps.places.PlacesServiceStatus.OK && placeDetail.international_phone_number) {
               result.international_phone_number = placeDetail.international_phone_number
             }
-            requestCreator('search',{
-              query: `template=office&attachmentName=${result.name}`
-            }).then(function(officeFound){
-              console.log(officeFound)
-              // createOfficeInit(geopoint, result)
+            requestCreator('search', {
+              query: `template=office&attachmentName=${value}`
+            }).then(function (searchResponse) {
+              console.log(searchResponse.response)
+              const offices = Object.keys(searchResponse.response);
+              
+              // if (offices.length) {
+
+              //   return;
+              // };
+
             }).catch(console.error)
           });
         });
         ul.root_.appendChild(li);
-
       })
-
       map.setCenter(results[0].geometry.location);
     } else {
       createMarker()
@@ -996,7 +1016,11 @@ var searchDebounde = debounce(function (event) {
       })
       ul.root_.appendChild(supportLi);
     }
-  })
+
+    // createOfficeInit(geopoint, result)
+  }).catch(console.error)
+
+
 }, 1000, false)
 
 window.addEventListener('searchPlaces', searchDebounde)
