@@ -242,20 +242,10 @@ function html5Geolocation() {
   })
 }
 
+let apiHandler = new Worker('js/apiHandler.js?version=56');
 
 function requestCreator(requestType, requestBody, geopoint) {
-  const nonLocationRequest = {
-    'instant': true,
-    'now': true,
-    'Null': true,
-    'backblaze': true,
-    'removeFromOffice': true,
-    'updateAuth': true,
-    'geolocationApi': true,
-    'paymentMethods': true,
-    'removeBankAccount': true,
-    'newBankAccount': true
-  }
+ 
   var auth = firebase.auth().currentUser;
 
 
@@ -276,11 +266,11 @@ function requestCreator(requestType, requestBody, geopoint) {
     }
   };
 
-  let apiHandler = new Worker('js/apiHandler.js?version=56');
+  // let apiHandler = new Worker('js/apiHandler.js?version=56');
 
   auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token
-    if (nonLocationRequest[requestType]) {
+    if (!geopoint) {
       requestGenerator.body = requestBody;
       apiHandler.postMessage(requestGenerator);
 
@@ -303,12 +293,12 @@ function requestCreator(requestType, requestBody, geopoint) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       return reject(event.data)
     };
   })

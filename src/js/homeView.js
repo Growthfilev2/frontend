@@ -116,7 +116,7 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-  if (history.state[0] === 'reportView' || history.state[0] === 'chatView') {
+  if (history.state[0] === 'reportView') {
     history.pushState(['profileView'], null, null)
     profileView();
     return;
@@ -124,43 +124,7 @@ function handleNav(evt) {
   return history.back();
 }
 
-function homePanel(commonTasks) {
-  return ` <div class="container home-container">
-  <div class='meta-work'>
-    <ul class='mdc-list subscription-list' id='common-task-list'>
-      ${commonTasks.map(function(task){
-          return `<li class='mdc-list-item' id="${task.id}">${task.name}
-          <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
-        </li>`
-      }).join("")}
 
-      <li class='mdc-list-divider'></li>
-    </ul>
-  </div>
-  <div class='work-tasks'>
-      <div id='text'>
-     
-      </div>
-      <div id ='ar-container'></div>
-      <div id='duty-container'></div>
-      <div id='suggestions-container'></div>
-      <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
-      </div>
-
-  </div>
-  <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id='reports'>
-    <span class="material-icons mdc-fab__icon">description</span>
-    <span class="mdc-fab__label">My Reports</span>
- </button>
-</div>`
-}
-
-function homeHeaderStartContent(name) {
-  return `
-  <img class="mdc-top-app-bar__navigation-icon mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
-  <span class="mdc-top-app-bar__title">${name}</span>
-`
-}
 
 
 function initHeaderView() {
@@ -185,132 +149,7 @@ function initHeaderView() {
   return header;
 }
 
-function homeView(suggestedTemplates) {
 
-  document.getElementById('start-load').classList.add('hidden');
-
-  try {
-    const commonTasks = getCommonTasks();
-    progressBar.close();
-    history.pushState(['homeView'], null, null);
-    let clearIcon = ''
-    if (ApplicationState.nearByLocations.length > 1) {
-      clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
-    }
-    const header = initHeaderView(homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
-    if (!ApplicationState.venue) {
-      generateCheckInVenueName(header);
-    }
-    if (document.getElementById('change-location')) {
-      document.getElementById('change-location').addEventListener('click', function () {
-        progressBar.open();
-        manageLocation(3).then(mapView).catch(handleLocationError);
-      })
-    }
-
-
-    const panel = document.getElementById('app-current-panel')
-    panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
-    let suggestionLength = suggestedTemplates.length;
-
-    panel.innerHTML = homePanel(commonTasks);
-
-
-    const commonListEl = document.getElementById('common-task-list');
-    if (commonListEl) {
-      const commonTaskList = new mdc.list.MDCList(commonListEl);
-      commonTaskList.singleSelection = true;
-
-      commonTaskList.listen('MDCList:action', function (commonListEvent) {
-        const selectedType = commonTasks[commonListEvent.detail.index];
-        if (selectedType.name === 'Change Location') {
-          progressBar.open();
-          manageLocation(3).then(mapView).catch(handleLocationError)
-          return;
-        }
-
-        if (selectedType.name === 'Chat') {
-          history.pushState(['chatView'], null, null);
-          chatView();
-          return;
-        }
-        const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
-        if (offices.length == 1) {
-          photoOffice = offices[0];
-          history.pushState(['snapView'], null, null)
-          snapView()
-          return
-        }
-        const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
-         ${offices.map(function(office){
-           return `<li class='mdc-list-item'>
-           ${office}
-           <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
-             keyboard_arrow_right
-           </span>
-           </li>`
-         }).join("")}
-         </ul>`
-
-        const dialog = new Dialog('Choose Office', officeList, 'choose-office-subscription').create('simple');
-        const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
-        bottomDialog(dialog, ul)
-        ul.listen('MDCList:action', function (e) {
-          photoOffice = offices[e.detail.index]
-          history.pushState(['snapView'], null, null)
-          snapView()
-          dialog.close();
-        })
-      })
-    }
-
-    const workTaskEl = document.querySelector('.work-tasks #text');
-    Promise.all([checkForUpdates(), getYesterdayAtt()]).then(function (results) {
-
-      const updates = results[0]
-      const ars = results[1];
-      if (!updates.length && !ars.length && !suggestedTemplates.length) {
-        if (workTaskEl) {
-          document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
-        }
-        return;
-      }
-      if (workTaskEl) {
-        workTaskEl.innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
-      }
-      createArSuggestion(ars)
-      createUpdatesuggestion(updates)
-    }).catch(handleError);
-
-    const auth = firebase.auth().currentUser
-    document.getElementById('reports').addEventListener('click', function () {
-      if (auth.email && auth.emailVerified) {
-        history.pushState(['reportView'], null, null)
-        reportView();
-        return
-      };
-
-      history.pushState(['emailUpdation'], null, null)
-      emailUpdation(reportView)
-    })
-
-    if (!suggestionLength) return;
-    console.log(suggestedTemplates)
-
-    if (document.querySelector('.work-tasks #text') && document.getElementById('suggestions-container')) {
-      document.querySelector('.work-tasks #text').innerHTML = `<h3 class="mdc-list-group__subheader mt-0 mb-0">Suggestions</h3>`
-      document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
-      const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-      handleTemplateListClick(suggestedInit);
-    }
-  } catch (e) {
-    console.log(e)
-    handleError({
-      message: e.message,
-      body: JSON.stringify(e.stack)
-    })
-  }
-}
 
 function generateCheckInVenueName(header) {
   const lastCheckInCreatedTimestamp = ApplicationState.lastCheckInCreated;
@@ -1059,7 +898,6 @@ function searchOffice(geopoint) {
     disableDefaultUI: true
   });
 
-
   var marker = new google.maps.Marker({
     position: center,
     icon: './img/bluecircle.png',
@@ -1077,7 +915,6 @@ function searchOffice(geopoint) {
     radius: geopoint.accuracy < 100 ? geopoint.accuracy * 2 : geopoint.accuracy
   });
 
-
   const searchField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
   console.log(searchField)
   searchField.trailingIcon_.root_.addEventListener('click', function () {
@@ -1091,7 +928,7 @@ function searchOffice(geopoint) {
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
-    fields: ['name', 'geometry', 'place_id', 'formatted_address']
+    fields: ['name', 'geometry', 'place_id', 'formatted_address','types','photos']
   }
   searchField.input_.addEventListener('input', function (event) {
     if (!event.target.value.trim()) return
@@ -1119,7 +956,7 @@ var searchDebounde = debounce(function (event) {
   const mapCont = document.getElementById('map-search')
   const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
   var infowindow = new google.maps.InfoWindow();
-  service.textSearch(placeRequesParam, function (results, status) {
+  service.findPlaceFromQuery(placeRequesParam, function (results, status) {
     ul.root_.innerHTML = ''
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       console.log(results)
@@ -1134,7 +971,12 @@ var searchDebounde = debounce(function (event) {
             if (status == google.maps.places.PlacesServiceStatus.OK && placeDetail.international_phone_number) {
               result.international_phone_number = placeDetail.international_phone_number
             }
-            createOfficeInit(geopoint, result)
+            requestCreator('search',{
+              query: `template=office&attachmentName=${result.name}`
+            }).then(function(officeFound){
+              console.log(officeFound)
+              // createOfficeInit(geopoint, result)
+            }).catch(console.error)
           });
         });
         ul.root_.appendChild(li);
@@ -1155,7 +997,7 @@ var searchDebounde = debounce(function (event) {
       ul.root_.appendChild(supportLi);
     }
   })
-}, 100, false)
+}, 1000, false)
 
 window.addEventListener('searchPlaces', searchDebounde)
 

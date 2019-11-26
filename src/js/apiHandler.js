@@ -12,6 +12,7 @@ const requestFunctionCaller = {
   share: share,
   update: update,
   create: create,
+  search:search,
   backblaze: backblaze,
   updateAuth: updateAuth,
   comment: comment,
@@ -411,6 +412,17 @@ function create(requestBody, meta) {
   }
   return http(req)
 
+}
+
+function search(requestBody,meta) {
+  console.log(requestBody);
+  const req = {
+    method: 'GET',
+    url: `${meta.apiUrl}search?${requestBody.query}`,
+    body: null,
+    token: meta.user.token,
+  }
+  return http(req)
 }
 
 function removeFromOffice(offices, meta, db) {
