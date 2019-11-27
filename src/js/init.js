@@ -787,12 +787,12 @@ function openMap() {
 
     getCheckInSubs().then(function (checkInSubs) {
       document.getElementById('start-load').classList.add('hidden');
-      // if (!Object.keys(checkInSubs).length) {
+      if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         newUserLandingpage(geopoint);
         return
-      // };
+      };
 
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       const oldState = localStorage.getItem('ApplicationState')

@@ -974,60 +974,60 @@ var searchDebounde = debounce(function (event) {
   const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
   var infowindow = new google.maps.InfoWindow();
   const searchProgress = new mdc.linearProgress.MDCLinearProgress(document.getElementById('search-progress-bar'))
-  // searchProgress.open();
+  searchProgress.open();
 
-  showPlaceBox(JSON.parse(localStorage.getItem('test')), map)
+  // showPlaceBox(JSON.parse(localStorage.getItem('test')), map);
 
-  // service.findPlaceFromQuery(placeRequesParam, function (results, status) {
-  //   ul.root_.innerHTML = ''
-  //   searchProgress.close();
-  //   if (status === google.maps.places.PlacesServiceStatus.OK) {
-  //     console.log(results)
-  //     results.forEach(function (result) {
-  //       createMarker(result, map, infowindow)
-  //       const li = searchPlaceResultList(result.name, result.formatted_address);
-  //       li.addEventListener('click', function () {
-  //         service.getDetails({
-  //           placeId: result.place_id,
-  //           fields: ['international_phone_number', 'photos']
-  //         }, function (placeDetail, status) {
-  //           if (status == google.maps.places.PlacesServiceStatus.OK) {
-  //             result.international_phone_number = placeDetail.international_phone_number || ''
-  //             result.photos = placeDetail.photos || []
-  //           }
-  //           console.log(placeDetail)
-  //           requestCreator('search', {
-  //             query: `template=office&attachmentName=${value}`
-  //           }).then(function (searchResponse) {
-  //             console.log(searchResponse.response)
-  //             const offices = Object.keys(searchResponse.response);
-  //             localStorage.setItem('test',JSON.stringify(result))
-  //             showPlaceBox(result, map)
-  //             // if (offices.length) {
+  service.findPlaceFromQuery(placeRequesParam, function (results, status) {
+    ul.root_.innerHTML = ''
+    searchProgress.close();
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      console.log(results)
+      results.forEach(function (result) {
+        createMarker(result, map, infowindow)
+        const li = searchPlaceResultList(result.name, result.formatted_address);
+        li.addEventListener('click', function () {
+          service.getDetails({
+            placeId: result.place_id,
+            fields: ['international_phone_number', 'photos']
+          }, function (placeDetail, status) {
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+              result.international_phone_number = placeDetail.international_phone_number || ''
+              result.photos = placeDetail.photos || []
+            }
+            console.log(placeDetail)
+            requestCreator('search', {
+              query: `template=office&attachmentName=${value}`
+            }).then(function (searchResponse) {
+              console.log(searchResponse.response)
+              const offices = Object.keys(searchResponse.response);
+              // localStorage.setItem('test',JSON.stringify(result))
+              showPlaceBox(result, map)
+              // if (offices.length) {
 
-  //             //   return;
-  //             // };
+              //   return;
+              // };
 
-  //           }).catch(console.error)
-  //         });
-  //       });
-  //       ul.root_.appendChild(li);
-  //     })
-  //     map.setCenter(results[0].geometry.location);
-  //   } else {
-  //     createMarker()
-  //     map.setCenter({
-  //       lat: geopoint.latitude,
-  //       lng: geopoint.longitude
-  //     })
-  //     const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
-  //     supportLi.addEventListener('click', function () {
-  //       createOfficeInit(geopoint)
-  //     })
-  //     ul.root_.appendChild(supportLi);
-  //   }
+            }).catch(console.error)
+          });
+        });
+        ul.root_.appendChild(li);
+      })
+      map.setCenter(results[0].geometry.location);
+    } else {
+      createMarker()
+      map.setCenter({
+        lat: geopoint.latitude,
+        lng: geopoint.longitude
+      })
+      const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
+      supportLi.addEventListener('click', function () {
+        createOfficeInit(geopoint)
+      })
+      ul.root_.appendChild(supportLi);
+    }
 
-  // })
+  })
 }, 1000, false)
 
 window.addEventListener('searchPlaces', searchDebounde)
