@@ -14,7 +14,7 @@ function isWifiRequired() {
 }
 
 
-var readStack = [];
+
 var readDebounce = debounce(function () {
   requestCreator('Null').then(handleComponentUpdation).catch(console.log)
 }, 1000, false)
@@ -384,15 +384,9 @@ function handleComponentUpdation(readResponse) {
   }
 }
 
-
-function backgroundTransition() {
-  if (!firebase.auth().currentUser) return
-  if (!history.state) return;
-  if (history.state[0] === 'profileCheck') return;
-  // appLocation(3).then(console.log).catch(handleLocationError)
+/** function call to be removed from apk */
+function backgroundTransition() { 
 }
-
-
 
 function runRead(type) {
   if (!firebase.auth().currentUser) return;
