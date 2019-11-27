@@ -102,7 +102,7 @@ function getReportTabData() {
     names.forEach(function (name, index) {
 
       if (!db.objectStoreNames.contains(name)) return;
-      const store = tx.objectStore(name);
+      const store = reportTx.objectStore(name);
       const req = store.count()
       req.onsuccess = function () {
         const value = req.result;
@@ -142,7 +142,7 @@ function getReportTabData() {
         if(customerTemplates.length) {
           reportTabData.push({
             name: 'Incentives',
-            icon: 'money',
+            icon: './img/currency.png',
             view: 'incentiveView',
             index: reportTabData.length +1
           })
@@ -150,7 +150,7 @@ function getReportTabData() {
         return resolve(reportTabData)
       })
     }
-    tx.onerror = function () {
+    reportTx.onerror = function () {
       return reject(tx.error)
     }
   })
@@ -167,7 +167,8 @@ function showTabs(reportTabs) {
               return `
               <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${report.id || ''}>
               <span class="mdc-tab__content">
-                <span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>
+                ${report.name === 'Incentives' ?`<img class='mdc-tab__icon' src=${report.icon}>`  : `<span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>`}
+                
                 <span class="mdc-tab__text-label">${report.name}</span>
               </span>
               <span class="mdc-tab-indicator">
