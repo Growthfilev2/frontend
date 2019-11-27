@@ -27,9 +27,19 @@ function chatView() {
   
     
     sectionContent.innerHTML = chatDom()
-
+    document.querySelector('.user-chats .mdc-fab').addEventListener('click',function() {
+        if (parent.native.getName() === 'Android') {
+            AndroidInterface.getContact("chooseContact");
+            return
+        }
+        webkit.messageHandlers.getContact.postMessage("chooseContact");
+    })
     readLatestChats(true);
-    getOtherContacts();
+}
+
+function chooseContact(contactString) {
+    const contactDetails = parseContact(contactString);
+    enterChat(contactDetails);
 }
 
 function chatDom() {
@@ -42,17 +52,18 @@ function chatDom() {
 <div class="mdc-list-group">
  <h3 id='no-result-found' style='text-align:center'></h3>   
 <div class='chats-container'>
-<h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Chats</h3>
+<h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6"></h3>
 <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
 
 </ul>
 </div>
 <div class='contacts-container'>
-  <h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Other Contacts</h3>
+  <h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6"></h3>
   <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='all-contacts'>
   </ul>
 </div>
   </div>
+  ${createFab('contacts')}
 </div>`
 }
 
@@ -115,16 +126,20 @@ function search() {
             }
             if (chatsEl) {
                 if (!currentChatsArray.length) {
+                    document.querySelector('.chats-container h3').textContent = ''
                     document.querySelector('.chats-container').classList.add("hidden")
                 } else {
+                    document.querySelector('.chats-container h3').textContent = 'Chats'
                     document.querySelector('.chats-container').classList.remove("hidden")
                 }
                 chatsEl.innerHTML = currentChats
             }
             if (contactsEl) {
                 if (!currentContacts) {
+                    document.querySelector('.contacts-container h3').textContent = ''
                     document.querySelector('.contacts-container').classList.add("hidden")
                 } else {
+                    document.querySelector('.contacts-container h3').textContent = 'Other Contacts'
                     document.querySelector('.contacts-container').classList.remove("hidden")
                 }
                 contactsEl.innerHTML = currentContacts;

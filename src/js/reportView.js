@@ -83,9 +83,9 @@ function reportView(state, attendanceRecord) {
 function getReportTabData() {
   return new Promise(function (resolve, reject) {
     const reportTabData = [{
-      name: 'Chat',
+      name: 'Contacts',
       id: 'open-chat-list',
-      icon: 'notifications',
+      icon: 'contacts',
       view: 'chatView',
       index: 0,
     }, {
@@ -97,19 +97,19 @@ function getReportTabData() {
     }];
 
     const names = ['attendance', 'reimbursement', 'payment']
-    const tx = db.transaction(names);
+    const reportTx = db.transaction(names);
 
     names.forEach(function (name, index) {
 
       if (!db.objectStoreNames.contains(name)) return;
-      const store = tx.objectStore(name);
+      const store = reportTx.objectStore(name);
       const req = store.count()
       req.onsuccess = function () {
         const value = req.result;
         if (!value) return;
         if (name === 'attendance') {
           reportTabData.push({
-            icon: 'fingerprint',
+            icon: 'room',
             name: 'Attendances',
             store: 'attendance',
             view: 'attendanceView',
@@ -118,7 +118,7 @@ function getReportTabData() {
         }
         if (name === 'reimbursement') {
           reportTabData.push({
-            icon: 'assignment',
+            icon: 'motorcycle',
             name: 'Reimbursements',
             store: 'reimbursement',
             view: 'expenseView',
@@ -134,12 +134,23 @@ function getReportTabData() {
             index: index
           })
         }
+        
       }
     })
-    tx.oncomplete = function () {
-      return resolve(reportTabData)
+    reportTx.oncomplete = function () {
+      getSubscription('','customer').then(function(customerTemplates){
+        if(customerTemplates.length) {
+          reportTabData.push({
+            name: 'Incentives',
+            icon: './img/currency.png',
+            view: 'incentiveView',
+            index: reportTabData.length +1
+          })
+        }
+        return resolve(reportTabData)
+      })
     }
-    tx.onerror = function () {
+    reportTx.onerror = function () {
       return reject(tx.error)
     }
   })
@@ -156,7 +167,8 @@ function showTabs(reportTabs) {
               return `
               <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${report.id || ''}>
               <span class="mdc-tab__content">
-                <span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>
+                ${report.name === 'Incentives' ?`<img class='mdc-tab__icon' src=${report.icon}>`  : `<span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>`}
+                
                 <span class="mdc-tab__text-label">${report.name}</span>
               </span>
               <span class="mdc-tab-indicator">

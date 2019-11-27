@@ -125,7 +125,11 @@ function handleNav(evt) {
 }
 
 
+function homeHeaderStartContent(name) {
+  return `<img class="mdc-top-app-bar__navigation-icon mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
+  <span class="mdc-top-app-bar__title">${name}</span>`;
 
+}
 
 function initHeaderView() {
 

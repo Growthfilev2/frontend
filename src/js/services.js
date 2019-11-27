@@ -363,6 +363,7 @@ function handleComponentUpdation(readResponse) {
 
   switch (history.state[0]) {
 
+  
     case 'enterChat':
       if (!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
