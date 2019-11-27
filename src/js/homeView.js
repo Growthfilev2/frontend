@@ -984,18 +984,18 @@ var searchDebounde = debounce(function (event) {
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       console.log(results);
 
-      if(results.length == 1) {
+      if (results.length == 1) {
         createMarker(results[0], map, infowindow);
-        showPlaceBox(results[0], map);
+        showPlaceBox(service, results[0], map);
         return;
       }
-      
+
       results.forEach(function (result) {
         createMarker(result, map, infowindow);
-        
+
         const li = searchPlaceResultList(result.name, result.formatted_address);
         li.addEventListener('click', function () {
-          showPlaceBox(result, map);
+          showPlaceBox(service, result, map);
           // service.getDetails({
           //   placeId: result.place_id,
           //   fields: ['international_phone_number', 'photos']
@@ -1051,7 +1051,7 @@ function CenterControl(controlDiv, result) {
 
   controlUI.innerHTML = `
   <div class='confimation-cont'>
-  <div role="progressbar" id='' class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+  <div role="progressbar" id='place-box-progress' class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
         <div class="mdc-linear-progress__buffering-dots"></div>
         <div class="mdc-linear-progress__buffer"></div>
         <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
@@ -1060,8 +1060,8 @@ function CenterControl(controlDiv, result) {
         <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
           <span class="mdc-linear-progress__bar-inner"></span>
         </div>
-      </div>
-    <ul class='mdc-list pb-0'>
+  </div>
+    <ul class='mdc-list pb-0' id='confirm-list'>
       <li class='mdc-list-item'>
         Is this your company ? 
         <div class="mdc-list-item__meta" aria-hidden="true">
@@ -1113,7 +1113,7 @@ function CenterControl(controlDiv, result) {
    
   </div>`
 
-  
+
 
   // controlUI.innerHTML = `<div class='place-details'>
   //    <div class='photo-cont'>
@@ -1135,26 +1135,60 @@ function CenterControl(controlDiv, result) {
   // </div>`
 
   controlDiv.appendChild(controlUI);
-  controlUI.addEventListener('click',function(result){
-      // history.pushState(['expandPlaceBox'],null,null)
-      // expandPlaceBox(result);
 
-  });
-  // const confirmChip = new mdc.chips.MDCChipSet(document.getElementById('confirm-chipset'));
-  // confirmChip.listen('MDCChip:selection',function(evt){
-  //     console.log(evt)
-  // })
 
   // Setup the click event listeners: simply set the map to Chicago.
 }
 
-function expandPlaceBox(result){
+function expandPlaceBox(service, result, map) {
+
+  service.getDetails({
+    placeId: result.place_id,
+    fields: ['international_phone_number', 'photos']
+  }, function (placeDetail, status) {
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+      result.international_phone_number = placeDetail.international_phone_number || ''
+      result.photos = placeDetail.photos || []
+    }
+    console.log(placeDetail)
     const parentEl = document.getElementById('app-current-panel');
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">${result.name}</span>
-    `
-    const header = getHeader('app-header',backIcon,'');
-    parentEl.innerHTML = ``
+      <span class="mdc-top-app-bar__title">${result.name}</span>
+      `
+    const header = getHeader('app-header', backIcon, '');
+    parentEl.innerHTML = `<div class='expand-box'>
+      <div class='mdc-card'>
+          <div class='mdc-card__primary-action'>
+              <div class='mdc-card__media mdc-card__media--16-9' style='${result.photos[0].getUrl()}'>
+                <a class="prev material-icons" id='prev-image'>navigate_before</a>
+                <a class="next material-icons" id='next-image'>navigate_next</a>
+              </div>
+              <div class='demo-card__primary'>
+                <h2 class='demo-card__title mdc-typography mdc-typography--headline6'>${result.name}</h2>
+              </div>
+              <ul class='mdc-list'>
+                <li class='mdc-list-item'>
+                  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">room</span>
+                  ${result.formatted_address}
+                </li>
+                ${result.international_phone_number ? ` <li class='mdc-list-item'>
+                  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
+                    ${result.international_phone_number}
+                  </li>` : ''}
+                  <li class='mdc-list-divier'></li>
+              </ul>
+              <div class='action-tab'>
+                    <
+              </div>
+          </div>
+      </div>
+    </div>`
+    
+  });
+
+
+
+
 }
 
 function clearPlaceCustomControl(map) {
@@ -1166,7 +1200,7 @@ function clearPlaceCustomControl(map) {
 }
 
 
-function showPlaceBox(result, map) {
+function showPlaceBox(service, result, map) {
 
   clearPlaceCustomControl(map)
 
@@ -1176,35 +1210,32 @@ function showPlaceBox(result, map) {
 
   centerControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
-
+  const placeBoxProgress = new mdc.linearProgress.MDCLinearProgress(document.getElementById('place-box-progress'));
   const confirmChip = new mdc.chips.MDCChipSet(document.getElementById('confirm-chipset'));
-  confirmChip.listen('MDCChip:interaction',function(evt){
-      console.log(evt);
-      if(evt.detail.chipId === 'yes') {
+  confirmChip.listen('MDCChip:interaction', function (evt) {
+    console.log(evt);
+    console.log(confirmChip);
+    if (evt.detail.chipId === 'yes') {
+      placeBoxProgress.open();
+      document.getElementById('confirm-list').classList.add('hidden');
 
-        return
-      }
+      // requestCreator('search', {
+      //   query: `template=office&attachmentName=${value}`
+      // }).then(function (searchResponse) {
 
+      history.pushState(['expandPlaceBox'], null, null);
+      expandPlaceBox(service, result, map);
+      // }).catch(function(error){
+      //   placeBoxProgress.close();
+      //   document.getElementById('confirm-list').classList.remove('hidden')
+      // })
+      return
+    }
+
+    clearPlaceCustomControl(map);
   })
 
-  // content.innerHTML = `<div class='place-details'>
-  //   <div class='photo-cont'>
-  //     <ul class='mdc-image-list standard-image-list mdc-image-list--with-text-protection'>
-  //       ${result.photos.map(function(photo){
-  //         return `<li class='mdc-image-list__item'>
-  //           <div class='mdc-image-list__image-aspect-container'>
-  //             <img class='mdc-image-list__image' src=${photo.getUrl()}>
-  //           </div>
-  //           <div class='mdc-image-list__supporting'>
-  //             <span class='mdc-image-list__label'>
-  //               ${photo.html_attributions[0]}
-  //             </span>
-  //           </div>
-  //         </li>`
-  //       }).join("")}
-  //     </div>
-  //   </div>
-  // </div>`
+
 
 }
 
