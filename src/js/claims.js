@@ -1,6 +1,5 @@
 function expenseView() {
     const sectionContent = document.querySelector('.tabs-section .data-container');
-    sectionContent.dataset.view = 'reimbursements'
 
     if (!sectionContent) return;
     sectionContent.innerHTML = reimDom();

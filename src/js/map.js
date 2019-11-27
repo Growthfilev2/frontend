@@ -151,7 +151,7 @@ function mapView(location) {
     fillOpacity: 0.35,
     map: map,
     center: latLng,
-    radius: location.accuracy < 100 ?  location.accuracy * 2 : location.accuracy
+    radius: location.accuracy < 100 ? location.accuracy * 2 : location.accuracy
   });
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
@@ -348,12 +348,33 @@ function mapDom() {
   `
 }
 
-function snapView() {
+function snapView(selector) {
+  document.querySelector(selector).innerHTML = `
+  <div class='snap-container'>
+  <h6 class='mdc-typography--headline5 text-center'>
+    Create a photo check-in
+  </h6>
+  <div class='landing-page-container text-center'>
+    <button class="mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary">
+      <div class="mdc-fab__ripple"></div>
+      <span class="material-icons mdc-fab__icon">camera</span>
+      <span class="mdc-fab__label">Take photo</span>
+    </button>
+  </div>
+  </div>
+  `;
+
+  document.querySelector('.snap-container .mdc-fab').addEventListener('click', openCamera)
+  openCamera();
+
+}
+
+function openCamera() {
   if (native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return
   }
-  webkit.messageHandlers.startCamera.postMessage("setFilePath")
+  webkit.messageHandlers.startCamera.postMessage("setFilePath");
 
 }
 
@@ -363,9 +384,9 @@ function setFilePathFailed(error) {
 
 function setFilePath(base64) {
 
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
-  const header = getHeader('app-header', backIcon, '');
-  header.root_.classList.remove('hidden')
+  // const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
+  // const header = getHeader('app-header', backIcon, '');
+  // header.root_.classList.remove('hidden')
 
   const url = `data:image/jpg;base64,${base64}`
   document.querySelector('.tabs-section .data-container').innerHTML = `
@@ -421,7 +442,7 @@ function setFilePath(base64) {
     sub.attachment.Comment.value = textValue;
     sub.share = []
     progressBar.open();
-    
+
     requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
       initHeaderView()
       // history.pushState(['homeView'],null,null)

@@ -1,9 +1,10 @@
 function attendanceView(yesterdayAttendanceRecord) {
   const sectionContent = document.querySelector('.tabs-section .data-container');
-  sectionContent.dataset.view = 'attendence'
+
   if (!sectionContent) return;
   sectionContent.innerHTML = attendanceDom();
   document.getElementById('start-load').classList.add('hidden')
+  
   const el = document.getElementById('attendance-view')
   getSubscription('', 'leave').then(function (subs) {
     if (!subs.length) return;
@@ -27,7 +28,6 @@ function attendanceView(yesterdayAttendanceRecord) {
   }).catch(function (error) {
     createAttendanceCard();
   });
-
 }
 
 

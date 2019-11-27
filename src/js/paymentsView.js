@@ -1,6 +1,5 @@
 function paymentView() {
     const sectionContent = document.querySelector('.tabs-section .data-container');
-    sectionContent.dataset.view = 'payments'
     if (!sectionContent) return;
     sectionContent.innerHTML = paymentDom();
     document.getElementById('start-load').classList.add('hidden')

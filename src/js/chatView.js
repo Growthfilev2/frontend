@@ -41,8 +41,11 @@ function chatView() {
 }
 
 function chooseContact(contactString) {
+    
     const contactDetails = parseContact(contactString);
+    history.pushState(['enterChat', contactDetails], null, null);
     enterChat(contactDetails);
+
 }
 
 function chatDom() {

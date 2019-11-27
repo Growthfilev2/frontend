@@ -1,6 +1,5 @@
 function incentiveView() {
     const sectionContent = document.querySelector('.tabs-section .data-container');
-    sectionContent.dataset.view = 'attendence'
     if (!sectionContent) return;
     sectionContent.innerHTML = incentiveDom();
     document.getElementById('start-load').classList.add('hidden')

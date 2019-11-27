@@ -17,13 +17,10 @@ function reportView(state, attendanceRecord) {
     </div>`
 
     const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-
     tabList.listen('MDCTabBar:activated', function (evt) {
-
       initHeaderView();
       history.replaceState(['reportView', evt.detail.index], null, null)
       if (!evt.detail.index) {
-
         chatView();
         return;
       }
@@ -34,7 +31,7 @@ function reportView(state, attendanceRecord) {
         const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
         if (offices.length == 1) {
           photoOffice = offices[0];
-          snapView()
+          snapView('.tabs-section .data-container')
           return
         }
         const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
@@ -53,9 +50,7 @@ function reportView(state, attendanceRecord) {
         bottomDialog(dialog, ul)
         ul.listen('MDCList:action', function (e) {
           photoOffice = offices[e.detail.index];
-
-
-          snapView()
+          snapView('.tabs-section .data-container')
           dialog.close();
         })
         return;
