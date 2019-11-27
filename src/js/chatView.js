@@ -26,14 +26,17 @@ function chatView() {
     }
   
     
-    sectionContent.innerHTML = chatDom()
-    document.querySelector('.user-chats .mdc-fab').addEventListener('click',function() {
+    sectionContent.innerHTML = chatDom();
+    const addContactBtn = createFab('contacts');
+
+    addContactBtn.addEventListener('click',function() {
         if (parent.native.getName() === 'Android') {
             AndroidInterface.getContact("chooseContact");
             return
         }
         webkit.messageHandlers.getContact.postMessage("chooseContact");
     })
+    document.querySelector('.user-chats').appendChild(addContactBtn);
     readLatestChats(true);
 }
 
@@ -63,7 +66,6 @@ function chatDom() {
   </ul>
 </div>
   </div>
-  ${createFab('contacts')}
 </div>`
 }
 

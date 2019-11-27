@@ -8,6 +8,7 @@ function createElement(tagName, attrs) {
     return el;
 }
 
+// to do make visible on scroll only
 function createFab(icon) {
     const button = createElement('button', {
         className: 'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited'
