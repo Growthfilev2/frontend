@@ -80,7 +80,7 @@ function getReportTabData() {
     const reportTabData = [{
       name: 'Contacts',
       id: 'open-chat-list',
-      icon: 'contacts',
+      icon: 'person_add',
       view: 'chatView',
       index: 0,
     }, {

@@ -982,49 +982,58 @@ var searchDebounde = debounce(function (event) {
     ul.root_.innerHTML = ''
     searchProgress.close();
     if (status === google.maps.places.PlacesServiceStatus.OK) {
-      console.log(results)
+      console.log(results);
+
+      if(results.length == 1) {
+        createMarker(results[0], map, infowindow);
+        showPlaceBox(results[0], map);
+        return;
+      }
+      
       results.forEach(function (result) {
-        createMarker(result, map, infowindow)
+        createMarker(result, map, infowindow);
+        
         const li = searchPlaceResultList(result.name, result.formatted_address);
         li.addEventListener('click', function () {
-          service.getDetails({
-            placeId: result.place_id,
-            fields: ['international_phone_number', 'photos']
-          }, function (placeDetail, status) {
-            if (status == google.maps.places.PlacesServiceStatus.OK) {
-              result.international_phone_number = placeDetail.international_phone_number || ''
-              result.photos = placeDetail.photos || []
-            }
-            console.log(placeDetail)
-            requestCreator('search', {
-              query: `template=office&attachmentName=${value}`
-            }).then(function (searchResponse) {
-              console.log(searchResponse.response)
-              const offices = Object.keys(searchResponse.response);
-              // localStorage.setItem('test',JSON.stringify(result))
-              showPlaceBox(result, map)
-              // if (offices.length) {
+          showPlaceBox(result, map);
+          // service.getDetails({
+          //   placeId: result.place_id,
+          //   fields: ['international_phone_number', 'photos']
+          // }, function (placeDetail, status) {
+          //   if (status == google.maps.places.PlacesServiceStatus.OK) {
+          //     result.international_phone_number = placeDetail.international_phone_number || ''
+          //     result.photos = placeDetail.photos || []
+          //   }
+          //   console.log(placeDetail)
+          //   requestCreator('search', {
+          //     query: `template=office&attachmentName=${value}`
+          //   }).then(function (searchResponse) {
+          //     console.log(searchResponse.response)
+          //     const offices = Object.keys(searchResponse.response);
+          //     // localStorage.setItem('test',JSON.stringify(result))
+          //     showPlaceBox(result, map)
+          //     // if (offices.length) {
 
-              //   return;
-              // };
+          //     //   return;
+          //     // };
 
-            }).catch(console.error)
-          });
+          //   }).catch(console.error)
+          // });
         });
         ul.root_.appendChild(li);
-      })
+      });
       map.setCenter(results[0].geometry.location);
     } else {
-      createMarker()
-      map.setCenter({
-        lat: geopoint.latitude,
-        lng: geopoint.longitude
-      })
-      const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
-      supportLi.addEventListener('click', function () {
-        createOfficeInit(geopoint)
-      })
-      ul.root_.appendChild(supportLi);
+      // createMarker()
+      // map.setCenter({
+      //   lat: geopoint.latitude,
+      //   lng: geopoint.longitude
+      // })
+      // const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
+      // supportLi.addEventListener('click', function () {
+      //   createOfficeInit(geopoint)
+      // })
+      // ul.root_.appendChild(supportLi);
     }
 
   })
@@ -1040,16 +1049,50 @@ function CenterControl(controlDiv, result) {
     className: 'mdc-card place-box'
   });
 
-  controlUI.innerHTML = `<div class='mdc-card__primary-action'>
+  controlUI.innerHTML = `
+  <div class='confimation-cont'>
+  <div role="progressbar" id='' class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+        <div class="mdc-linear-progress__buffering-dots"></div>
+        <div class="mdc-linear-progress__buffer"></div>
+        <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+          <span class="mdc-linear-progress__bar-inner"></span>
+        </div>
+        <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+          <span class="mdc-linear-progress__bar-inner"></span>
+        </div>
+      </div>
+    <ul class='mdc-list pb-0'>
+      <li class='mdc-list-item'>
+        Is this your company ? 
+        <div class="mdc-list-item__meta" aria-hidden="true">
+          <div class="mdc-chip-set" role="grid" id='confirm-chipset'> 
+            <div class="mdc-chip" role="row" id='yes'>
+              <div class="mdc-chip__ripple"></div>
+              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">check</i>
+              <span role="gridcell">
+                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__text">Yes</span>
+              </span>
+          </div>
+
+          <div class="mdc-chip" role="row" id='no'>
+              <div class="mdc-chip__ripple"></div>
+              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">clear</i>
+              
+              <span role="gridcell">
+                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__text">No</span>
+              </span>
+          </div>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+  
+  <div class='mdc-card__primary-action'>
     <div class='demo-card__primary'>
-    <ul class='mdc-list'>
+    <ul class='mdc-list pt-0'>
       <li class='mdc-list-item pl-0 pr-0'>
         <h2 class='demo-card__title mdc-typography mdc-typography--headline6'>${result.name}</h2>
-        <button class="mdc-button mdc-list-item__meta mdc-button--raised">
-            <div class="mdc-button__ripple"></div>
-            <i class="material-icons mdc-button__icon" aria-hidden="true">supervisor_account</i>
-            <span class="mdc-button__label">Add supervisor</span>
-        </button>
       </li>
     </ul>
       <div class="mdc-chip-set" role="grid"> 
@@ -1070,7 +1113,7 @@ function CenterControl(controlDiv, result) {
    
   </div>`
 
-
+  
 
   // controlUI.innerHTML = `<div class='place-details'>
   //    <div class='photo-cont'>
@@ -1092,11 +1135,26 @@ function CenterControl(controlDiv, result) {
   // </div>`
 
   controlDiv.appendChild(controlUI);
+  controlUI.addEventListener('click',function(result){
+      // history.pushState(['expandPlaceBox'],null,null)
+      // expandPlaceBox(result);
 
+  });
+  // const confirmChip = new mdc.chips.MDCChipSet(document.getElementById('confirm-chipset'));
+  // confirmChip.listen('MDCChip:selection',function(evt){
+  //     console.log(evt)
+  // })
 
   // Setup the click event listeners: simply set the map to Chicago.
+}
 
-
+function expandPlaceBox(result){
+    const parentEl = document.getElementById('app-current-panel');
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">${result.name}</span>
+    `
+    const header = getHeader('app-header',backIcon,'');
+    parentEl.innerHTML = ``
 }
 
 function clearPlaceCustomControl(map) {
@@ -1119,6 +1177,15 @@ function showPlaceBox(result, map) {
   centerControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
 
+  const confirmChip = new mdc.chips.MDCChipSet(document.getElementById('confirm-chipset'));
+  confirmChip.listen('MDCChip:interaction',function(evt){
+      console.log(evt);
+      if(evt.detail.chipId === 'yes') {
+
+        return
+      }
+
+  })
 
   // content.innerHTML = `<div class='place-details'>
   //   <div class='photo-cont'>

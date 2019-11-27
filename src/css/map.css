@@ -248,3 +248,7 @@
 .place-box .mdc-fab {
   width: fit-content;
 }
+.place-box .swipe-up-icon {
+  font-size: 30px;
+  
+}
