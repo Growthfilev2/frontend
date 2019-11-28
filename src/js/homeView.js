@@ -861,7 +861,7 @@ function newUserLandingpage(geopoint = history.state[1]) {
 </div>`
 
   card.addEventListener('click', function () {
-    history.pushState(['searchOffice',geopoint],null,null)
+    history.pushState(['searchOffice', geopoint], null, null)
     searchOffice(geopoint);
   });
 
@@ -947,7 +947,7 @@ function searchOffice(geopoint = history.state[1]) {
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
-    fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types','icon']
+    fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types', 'icon']
   }
   searchField.input_.addEventListener('input', function (event) {
     if (!event.target.value.trim()) return
@@ -1053,41 +1053,8 @@ function CenterControl(controlDiv, result) {
 
   controlUI.innerHTML = `
   <div class='confimation-cont'>
-  <div role="progressbar" id='place-box-progress' class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
-        <div class="mdc-linear-progress__buffering-dots"></div>
-        <div class="mdc-linear-progress__buffer"></div>
-        <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-          <span class="mdc-linear-progress__bar-inner"></span>
-        </div>
-        <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-          <span class="mdc-linear-progress__bar-inner"></span>
-        </div>
-  </div>
-    <ul class='mdc-list pb-0' id='confirm-list'>
-      <li class='mdc-list-item'>
-        Is this your company ? 
-        <div class="mdc-list-item__meta" aria-hidden="true">
-          <div class="mdc-chip-set" role="grid" id='confirm-chipset'> 
-            <div class="mdc-chip" role="row" id='yes'>
-              <div class="mdc-chip__ripple"></div>
-              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">check</i>
-              <span role="gridcell">
-                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__text">Yes</span>
-              </span>
-          </div>
-
-          <div class="mdc-chip" role="row" id='no'>
-              <div class="mdc-chip__ripple"></div>
-              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">clear</i>
-              
-              <span role="gridcell">
-                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__text">No</span>
-              </span>
-          </div>
-          </div>
-        </div>
-      </li>
-    </ul>
+  
+    
   </div>
   
   <div class='mdc-card__primary-action'>
@@ -1098,7 +1065,7 @@ function CenterControl(controlDiv, result) {
       </li>
     </ul>
     
-      <div class='mdc-typography mdc-typography--body2 pt-10 pb-20'>
+      <div class='mdc-typography mdc-typography--body2 pt-0 pb-20'>
           ${result.formatted_address}
       </div>
     </div>
@@ -1167,23 +1134,75 @@ function expandPlaceBox(service, result, map) {
               </ul>
               <div class='action-tab'>
 
+              <ul class='mdc-list pb-0' id='confirm-list'>
+      <li class='mdc-list-item'>
+        Is this your company ? 
+        <div class="mdc-list-item__meta" aria-hidden="true">
+          <div class="mdc-chip-set" role="grid" id='confirm-chipset'> 
+            <div class="mdc-chip" role="row" id='yes'>
+              <div class="mdc-chip__ripple"></div>
+              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">check</i>
+              <span role="gridcell">
+                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__text">Yes</span>
+              </span>
+          </div>
+
+         
+          </div>
+        </div>
+      </li>
+    </ul>
+
               </div>
           </div>
       </div>
     </div>`
-                
+
+
+    const confirmChip = new mdc.chips.MDCChipSet(document.getElementById('confirm-chipset'));
+    confirmChip.listen('MDCChip:interaction', function (evt) {
+      console.log(evt);
+      console.log(confirmChip);
+      if (evt.detail.chipId === 'yes') {
+
+
+        requestCreator('search', {
+          query: `template=office&attachmentName=${value}`
+        }).then(function (searchResponse) {
+          document.getElementById('confirm-list').remove();
+          const button = createElement('button', {
+            className: 'mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary'
+          })
+          button.innerHTML = `<div class="mdc-fab__ripple"></div>
+                       <span class="material-icons mdc-fab__icon">add</span>
+                       <span class="mdc-fab__label">Give Subscription (text)</span>`
+
+          button.addEventListener('click', function () {
+            handlePlaceBoxAction(searchResponse, result);
+          })
+          document.querySelector('.action-tab').appendChild(button)
+
+
+        }).catch(function (error) {
+          placeBoxProgress.close();
+          document.getElementById('confirm-list').classList.remove('hidden')
+        })
+        return
+      }
+    });
+
     const nextImageEl = document.getElementById('next-image')
     const prevImageEl = document.getElementById('prev-image');
-    if(nextImageEl && prevImageEl) {
+    if (nextImageEl && prevImageEl) {
       let index = 0;
-      nextImageEl.addEventListener('click',function(){
+      nextImageEl.addEventListener('click', function () {
         index++
-        if(index >= result.photos.length) {
+        if (index >= result.photos.length) {
           index = 0
         }
         loadImageInPlaceBox(result.photos[index].getUrl())
       })
-      prevImageEl.addEventListener('click',function(){
+      prevImageEl.addEventListener('click', function () {
         index--
         if (index < 0) {
           index = result.photos.length - 1
@@ -1196,9 +1215,32 @@ function expandPlaceBox(service, result, map) {
 
 }
 
-function loadImageInPlaceBox(src){
+function handlePlaceBoxAction(searchResponse, result) {
+  const template = {
+    "schedule": [],
+    "assigness":[],
+    "attachment": {
+      "Subscriber": {
+        "value": firebase.auth().currentUser.phoneNumber,
+        "type": "phoneNumber"
+      },
+      "Template": {
+        "value": "check-in",
+        "type": "string"
+      }
+    },
+    "template": "subscription",
+    "venue": [],
+  };
+
+  history.pushState(['addView'],null,null);
+  addView(template);
+
+}
+
+function loadImageInPlaceBox(src) {
   const el = document.querySelector('.expand-box .mdc-card__media');
-  if(el) {
+  if (el) {
     el.style.backgroundImage = `url("${src}")`
   }
 }
@@ -1222,33 +1264,11 @@ function showPlaceBox(service, result, map) {
 
   centerControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
-  const placeBoxProgress = new mdc.linearProgress.MDCLinearProgress(document.getElementById('place-box-progress'));
-  const confirmChip = new mdc.chips.MDCChipSet(document.getElementById('confirm-chipset'));
-  confirmChip.listen('MDCChip:interaction', function (evt) {
-    console.log(evt);
-    console.log(confirmChip);
-    if (evt.detail.chipId === 'yes') {
-      placeBoxProgress.open();
-      document.getElementById('confirm-list').classList.add('hidden');
 
-      // requestCreator('search', {
-      //   query: `template=office&attachmentName=${value}`
-      // }).then(function (searchResponse) {
-        
-          history.pushState(['expandPlaceBox'], null, null);
-          expandPlaceBox(service, result, map);
-
-      // }).catch(function(error){
-      //   placeBoxProgress.close();
-      //   document.getElementById('confirm-list').classList.remove('hidden')
-      // })
-      return
-    }
-
-    clearPlaceCustomControl(map);
+  controlDiv.addEventListener('click', function () {
+    history.pushState(['expandPlaceBox'], null, null);
+    expandPlaceBox(service, result, map);
   })
-
-
 
 }
 

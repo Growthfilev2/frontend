@@ -284,3 +284,10 @@
   .expand-box .mdc-card .demo-card__primary {
     padding-bottom: 0px;
   }
+  .expand-box .mdc-card .action-tab {
+    display: block;
+    margin: 0 auto;
+   
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
