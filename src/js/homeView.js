@@ -965,19 +965,22 @@ function searchOffice(geopoint = history.state[1]) {
   })
 }
 
+var service;
+var result;
+
+
 var searchDebounde = debounce(function (event) {
   const map = event.detail.map;
   const placeRequesParam = event.detail.placeRequesParam;
   const value = event.detail.value;
   const geopoint = event.detail.geopoint
   placeRequesParam.query = value;
-  const service = new google.maps.places.PlacesService(map);
   const mapCont = document.getElementById('map-search')
   const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
   var infowindow = new google.maps.InfoWindow();
   const searchProgress = new mdc.linearProgress.MDCLinearProgress(document.getElementById('search-progress-bar'))
   searchProgress.open();
-
+  service = new google.maps.places.PlacesService(map)
   // showPlaceBox(JSON.parse(localStorage.getItem('test')), map);
 
   service.findPlaceFromQuery(placeRequesParam, function (results, status) {
@@ -987,55 +990,32 @@ var searchDebounde = debounce(function (event) {
       console.log(results);
 
       if (results.length == 1) {
-        createMarker(results[0], map, infowindow);
-        showPlaceBox(service, results[0], map);
+        result = results[0]
+        createMarker(result, map, infowindow);
+        showPlaceBox(map);
         return;
       }
 
-      results.forEach(function (result) {
-        createMarker(result, map, infowindow);
+      results.forEach(function (resultVal) {
+        createMarker(resultVal, map, infowindow);
 
-        const li = searchPlaceResultList(result.name, result.formatted_address);
+        const li = searchPlaceResultList(resultVal.name, resultVal.formatted_address);
         li.addEventListener('click', function () {
-          showPlaceBox(service, result, map);
-          // service.getDetails({
-          //   placeId: result.place_id,
-          //   fields: ['international_phone_number', 'photos']
-          // }, function (placeDetail, status) {
-          //   if (status == google.maps.places.PlacesServiceStatus.OK) {
-          //     result.international_phone_number = placeDetail.international_phone_number || ''
-          //     result.photos = placeDetail.photos || []
-          //   }
-          //   console.log(placeDetail)
-          //   requestCreator('search', {
-          //     query: `template=office&attachmentName=${value}`
-          //   }).then(function (searchResponse) {
-          //     console.log(searchResponse.response)
-          //     const offices = Object.keys(searchResponse.response);
-          //     // localStorage.setItem('test',JSON.stringify(result))
-          //     showPlaceBox(result, map)
-          //     // if (offices.length) {
-
-          //     //   return;
-          //     // };
-
-          //   }).catch(console.error)
-          // });
+          result = resultVal
+          showPlaceBox(map);
+          
         });
         ul.root_.appendChild(li);
       });
       map.setCenter(results[0].geometry.location);
     } else {
-      // createMarker()
-      // map.setCenter({
-      //   lat: geopoint.latitude,
-      //   lng: geopoint.longitude
-      // })
-      // const supportLi = searchPlaceResultList(`No result found for "${value}"`, `Add "${value}" as a company`, 'add');
-      // supportLi.addEventListener('click', function () {
-      //   createOfficeInit(geopoint)
-      // })
-      // ul.root_.appendChild(supportLi);
+      createMarker()
+      map.setCenter({
+        lat: geopoint.latitude,
+        lng: geopoint.longitude
+      })
+      const supportLi = searchPlaceResultList(`No result found for "${value}"`, ``, 'search');
+      ul.root_.appendChild(supportLi);
     }
 
   })
@@ -1050,22 +1030,18 @@ function CenterControl(controlDiv, result) {
   var controlUI = createElement('div', {
     className: 'mdc-card place-box'
   });
-
   controlUI.innerHTML = `
-  <div class='confimation-cont'>
-  
-    
-  </div>
   
   <div class='mdc-card__primary-action'>
     <div class='demo-card__primary'>
-    <ul class='mdc-list pt-0'>
+    <ul class='mdc-list'>
       <li class='mdc-list-item pl-0 pr-0'>
         <h2 class='demo-card__title mdc-typography mdc-typography--headline6'>${result.name}</h2>
+        <span class='mdc-list-item__meta material-icons'>keyboard_arrow_up</span
       </li>
     </ul>
     
-      <div class='mdc-typography mdc-typography--body2 pt-0 pb-20'>
+      <div class='mdc-typography mdc-typography--body2 pt-0 pb-20 mb-10'>
           ${result.formatted_address}
       </div>
     </div>
@@ -1081,7 +1057,7 @@ function CenterControl(controlDiv, result) {
   // Setup the click event listeners: simply set the map to Chicago.
 }
 
-function expandPlaceBox(service, result, map) {
+function expandPlaceBox() {
   console.log(result);
   service.getDetails({
     placeId: result.place_id,
@@ -1119,10 +1095,10 @@ function expandPlaceBox(service, result, map) {
                     <span role="button" tabindex="0" class="mdc-chip__text">${type}</span>
                   </span>
                 </div>`
-                })} 
+                }).join("")} 
               </div>
               <ul class='mdc-list'>
-                <li class='mdc-list-item' style='min-height:100px'>
+                <li class='mdc-list-item address-list'>
                   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">room</span>
                   ${result.formatted_address}
                 </li>
@@ -1133,63 +1109,50 @@ function expandPlaceBox(service, result, map) {
                   <li class='mdc-list-divider'></li>
               </ul>
               <div class='action-tab'>
-
-              <ul class='mdc-list pb-0' id='confirm-list'>
-      <li class='mdc-list-item'>
-        Is this your company ? 
-        <div class="mdc-list-item__meta" aria-hidden="true">
-          <div class="mdc-chip-set" role="grid" id='confirm-chipset'> 
-            <div class="mdc-chip" role="row" id='yes'>
-              <div class="mdc-chip__ripple"></div>
-              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">check</i>
-              <span role="gridcell">
-                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__text">Yes</span>
-              </span>
-          </div>
-
-         
-          </div>
-        </div>
-      </li>
-    </ul>
-
+                <div class='confirm-cont mt-10 mb-10'>
+                  <p class='mdc-typography--headline6 text-center mt-0 mb-10'>  Is this your company ? </p>
+                  <div class='fab-button-cont'>
+                    ${createExtendedFab('check','CONFIRM','confirm-btn').outerHTML}
+                  </div>
+                 
+                </div>
+            
               </div>
           </div>
       </div>
     </div>`
 
 
-    const confirmChip = new mdc.chips.MDCChipSet(document.getElementById('confirm-chipset'));
-    confirmChip.listen('MDCChip:interaction', function (evt) {
-      console.log(evt);
-      console.log(confirmChip);
-      if (evt.detail.chipId === 'yes') {
+    const confirmFab = document.getElementById('confirm-btn');
+    confirmFab.addEventListener('click', function () {
+      progressBar.open();
+      setTimeout(() => {
+        
+    
+      // requestCreator('search', {
+      //   query: `template=office&attachmentName=${result.name}`
+      // }).then(function (searchResponse) {
+        progressBar.close();
+        const confirmCont = document.querySelector('.confirm-cont');
+        if (!confirmCont) return;
+        confirmCont.querySelector('.confirm-cont p').textContent = 'Lorem ipum something something ....';
+        confirmCont.querySelector('.fab-button-cont').innerHTML =  '';
 
-
-        requestCreator('search', {
-          query: `template=office&attachmentName=${value}`
-        }).then(function (searchResponse) {
-          document.getElementById('confirm-list').remove();
-          const button = createElement('button', {
-            className: 'mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary'
-          })
-          button.innerHTML = `<div class="mdc-fab__ripple"></div>
-                       <span class="material-icons mdc-fab__icon">add</span>
-                       <span class="mdc-fab__label">Give Subscription (text)</span>`
-
-          button.addEventListener('click', function () {
-            handlePlaceBoxAction(searchResponse, result);
-          })
-          document.querySelector('.action-tab').appendChild(button)
-
-
-        }).catch(function (error) {
-          placeBoxProgress.close();
-          document.getElementById('confirm-list').classList.remove('hidden')
+        // confirmCont.remove();
+        
+        const button = createExtendedFab('add', 'Give Subscription (Text)');
+        
+        button.addEventListener('click', function () {
+          handlePlaceBoxAction('', result);
         })
-        return
-      }
-    });
+        confirmCont.querySelector('.fab-button-cont').appendChild(button)
+      }, 1200);
+      // }).catch(function (error) {
+      //   console.log(error)
+      //   progressBar.close();
+      // })
+    })
+
 
     const nextImageEl = document.getElementById('next-image')
     const prevImageEl = document.getElementById('prev-image');
@@ -1216,9 +1179,10 @@ function expandPlaceBox(service, result, map) {
 }
 
 function handlePlaceBoxAction(searchResponse, result) {
+
   const template = {
     "schedule": [],
-    "assigness":[],
+    "assigness": [],
     "attachment": {
       "Subscriber": {
         "value": firebase.auth().currentUser.phoneNumber,
@@ -1231,9 +1195,16 @@ function handlePlaceBoxAction(searchResponse, result) {
     },
     "template": "subscription",
     "venue": [],
+    "meta":{
+      "subscriberDetails" :{
+        photoURL:firebase.auth().currentUser.photoURL,
+        displayName:firebase.auth().currentUser.displayName,
+        phoneNumber:firebase.auth().currentUser.phoneNumber
+      }
+    }
   };
 
-  history.pushState(['addView'],null,null);
+  history.pushState(['addView'], null, null);
   addView(template);
 
 }
@@ -1254,7 +1225,7 @@ function clearPlaceCustomControl(map) {
 }
 
 
-function showPlaceBox(service, result, map) {
+function showPlaceBox(map) {
 
   clearPlaceCustomControl(map)
 
@@ -1264,10 +1235,10 @@ function showPlaceBox(service, result, map) {
 
   centerControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
-
-  controlDiv.addEventListener('click', function () {
+  document.querySelector('.mdc-text-field input').blur()
+  centerControlDiv.addEventListener('click', function () {
     history.pushState(['expandPlaceBox'], null, null);
-    expandPlaceBox(service, result, map);
+    expandPlaceBox();
   })
 
 }

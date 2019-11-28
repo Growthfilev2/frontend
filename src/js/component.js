@@ -25,6 +25,18 @@ function createFab(icon) {
     return button;
 }
 
+function createExtendedFab(icon, name, id) {
+    const button = createElement('button', {
+        className: 'mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary',
+        id: id
+    })
+    button.innerHTML = `<div class="mdc-fab__ripple"></div>
+                   <span class="material-icons mdc-fab__icon">${icon}</span>
+                   <span class="mdc-fab__label">${name}</span>`
+    new mdc.ripple.MDCRipple(button);        
+    return button
+}
+
 function createButton(name, icon, id) {
     const button = createElement('button', {
         className: 'mdc-button',
@@ -227,5 +239,3 @@ function textArea(attr) {
     </div>
   </div>`
 }
-
-

@@ -222,11 +222,7 @@ body {
   }
 }
 
-.employee-form .form-list {
-  /* min-height: 600px; */
-  height: calc(100vh - 18vh);
-  position: relative;
-}
+
 
 .app-fab--absolute {
   position: absolute;
@@ -239,4 +235,22 @@ body {
     bottom: 1.5rem;
     right: 1.5rem;
   }
+}
+.inline-flex {
+  display: inline-flex;
+    align-items: center;
+    width: 100%;
+}
+.inline-flex button {
+  margin-left: auto;
+
+}
+
+.mdc-fab--mini .material-icons {
+  font-size: 20px;
+}
+
+.people-add-more {
+  float: right;
+
 }

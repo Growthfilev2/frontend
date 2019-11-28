@@ -152,3 +152,4 @@ function createPhoneNumberLi(contactObject) {
     `
     return li
 }
+

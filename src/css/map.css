@@ -239,9 +239,11 @@
 
 
 .place-box .demo-card__primary {
-  padding-top: 0px;
+  padding-top: 10px;
 }
-
+.place-box .mdc-list-item {
+  height: auto;
+}
 .place-box.show {
   transform: translateY(0);
 }
@@ -284,10 +286,20 @@
   .expand-box .mdc-card .demo-card__primary {
     padding-bottom: 0px;
   }
-  .expand-box .mdc-card .action-tab {
+ 
+ 
+  .confirm-cont .fab-button-cont {
+    margin-left: auto;
+    margin-top: 10px;
+  }
+  .confirm-cont .fab-button-cont {
     display: block;
     margin: 0 auto;
-   
-    margin-top: 10px;
-    margin-bottom: 10px;
+    text-align: center;
+  }
+  @media (max-width:480px) {
+    .expand-box .address-list {
+        min-height: 100px;
+    }
+
   }

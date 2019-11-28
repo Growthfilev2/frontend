@@ -1,0 +1,23 @@
+[debug] [2019-11-28T14:02:35.247Z] ----------------------------------------------------------------------
+[debug] [2019-11-28T14:02:35.252Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy
+[debug] [2019-11-28T14:02:35.252Z] CLI Version:   6.0.1
+[debug] [2019-11-28T14:02:35.253Z] Platform:      darwin
+[debug] [2019-11-28T14:02:35.253Z] Node Version:  v10.13.0
+[debug] [2019-11-28T14:02:35.255Z] Time:          Thu Nov 28 2019 19:32:35 GMT+0530 (India Standard Time)
+[debug] [2019-11-28T14:02:35.256Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2019-11-28T14:02:35.272Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2019-11-28T14:02:35.273Z] > authorizing via signed-in user
+[debug] [2019-11-28T14:02:35.273Z] [iam] checking project growthfile-testing for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2019-11-28T14:02:35.276Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/growthfile-testing:testIamPermissions  
+
+[debug] [2019-11-28T14:02:37.068Z] <<< HTTP RESPONSE 200
+[debug] [2019-11-28T14:02:37.070Z] >>> HTTP REQUEST GET https://firebase.googleapis.com/v1beta1/projects/growthfile-testing  
+ 
+[debug] [2019-11-28T14:02:37.573Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'growthfile-testing'...
+[info] 
+[info] i  deploying hosting
+[debug] [2019-11-28T14:02:37.581Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/growthfile-testing/versions  
+

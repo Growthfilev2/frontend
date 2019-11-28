@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div class='forms mdc-card employee-form' id='form'>
+        <div class="form-list">
+
+            <div class="form-component">
+                <div class="inline-flex">
+                    <h1 class="mdc-typography--headline6 mdc-theme--primary">
+                        Subscriber
+                    </h1>
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini hidden" aria-label="Favorite" id='add-sub'>
+                        <div class="mdc-fab__ripple"></div>
+                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
+                    </button>
+                </div>
+                <div class="subscriber-cont">
+                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='subscriber-list'>
+                        <li class="mdc-list-item">
+                            <img src="" class="mdc-list-item__graphic" aria-hidden="true">
+                            <span class="mdc-list-item__text">
+                                <span class="mdc-list-item__primary-text"></span>
+                                <span class="mdc-list-item__secondary-text"></span>
+                            </span>
+                            <span class="mdc-list-item__meta material-icons mdc-theme--error"
+                                aria-hidden="true">clear</span>
+                        </li>
+
+                    </ul>
+
+                </div>
+             
+            </div>
+
+
+            <div class="form-component">
+                <div class="inline-flex assingee-area">
+                    <h1 class="mdc-typography--headline6 mdc-theme--primary mt-0 mb-0">
+                        Add Other People
+                    </h1>
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite"
+                        id='add-people-init'>
+                        <div class="mdc-fab__ripple"></div>
+                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
+                    </button>
+
+                </div>
+
+                <ul class="mdc-list mdc-list--two-line" id='contact-list'>
+                </ul>
+                <div style='margin-right:7px'>
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini hidden people-add-more"
+                        aria-label="Favorite" id='add-people'>
+                        <div class="mdc-fab__ripple"></div>
+                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
+                    </button>
+                </div>
+                <input type="submit" value="Give Check-in Subscription" 
+                    class="mdc-button submit-btn-emp mdc-theme--primary-bg mdc-theme--on-primary hidden">
+            </div>
+
+
+
+        </div>
+    </div>
+
+    </div>
+
+    <script src="../js/common.js"></script>
+
+    <script>
+        parent.window.mdc.autoInit();
+
+        const shareBtnInit = document.getElementById('add-people-init');
+        const shareBtn = document.getElementById('add-people');
+        const addSub = document.getElementById('add-sub')
+        
+
+
+        const subscriberList = new parent.mdc.list.MDCList(document.getElementById('subscriber-list'))
+        const assigneeList = new parent.mdc.list.MDCList(document.getElementById('contact-list'))
+        console.log(subscriberList)
+
+        function init(subscriptionTemplate) {
+            subscriberList.root_.querySelector('img').src = subscriptionTemplate.meta.subscriberDetails.photoURL;
+            subscriberList.root_.querySelector('.mdc-list-item__primary-text').textContent = subscriptionTemplate.meta
+                .subscriberDetails.displayName;
+            subscriberList.root_.querySelector('.mdc-list-item__secondary-text').textContent = subscriptionTemplate
+                .attachment['Subscriber'].value;
+            subscriberList.root_.querySelector('.mdc-list-item__meta').addEventListener('click', function () {
+
+
+                subscriberList.root_.classList.add('hidden');
+
+                addSub.classList.remove('hidden');
+                addSub.addEventListener('click', function () {
+                    callContact("getContactForSubscriber")
+                })
+               
+            })
+
+            shareBtnInit.addEventListener('click', function () {
+                callContact('getContactForEmployee')
+            });
+            shareBtn.addEventListener('click', function () {
+
+                callContact('getContactForEmployee')
+            });
+        }
+
+        function callContact(functionName) {
+            if (parent.native.getName() === 'Android') {
+                AndroidInterface.getContact(functionName);
+                return
+            }
+            webkit.messageHandlers.getContact.postMessage(functionName);
+        }
+
+        function setContactForSubscriber(contactObject) {
+            subscriberList.root_.classList.remove('hidden');
+            subscriberList.root_.querySelector('img').src = '../../img/empty-user.jpg';
+            subscriberList.root_.querySelector('.mdc-list-item__primary-text').textContent = contactObject.displayName;
+            subscriberList.root_.querySelector('.mdc-list-item__secondary-text').textContent = contactObject
+                .phoneNumber;
+           addSub.classList.add('hidden')
+
+        }
+
+        function setContactForAssignee(contactObject) {
+            console.log(contactObject);
+            if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
+            const li = createPhoneNumberLi(contactObject);
+            li.querySelector('.mdc-list-item__meta').addEventListener('click', function () {
+                li.remove();
+                if (!assigneeList.listElements.length) {
+                    shareBtnInit.classList.remove('hidden');
+                    document.getElementById('add-people').classList.add('hidden');
+                }
+            });
+
+            assigneeList.root_.appendChild(li);
+            if (assigneeList.listElements.length) {
+                shareBtnInit.classList.add('hidden');
+                document.getElementById('add-people').classList.remove('hidden');
+            }
+
+
+
+        }
+    </script>
+</body>
+
+</html>

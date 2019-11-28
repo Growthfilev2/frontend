@@ -117,12 +117,13 @@ function setContactForCustomerFailed(exceptionMessage){
 
 function getContactForEmployee(contactString){
     const contactDetails = parseContact(contactString);
-    console.log(contactDetails)
-    // setTimeout(() => {
-        document.getElementById('form-iframe').contentWindow.setContact(contactDetails);
-    // }, 100);
+    document.getElementById('form-iframe').contentWindow.setContactForAssignee(contactDetails);
 }
 
+function getContactForSubscriber(contactString) {
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContactForSubscriber(contactDetails);
+}
 
 
 function setContactForSecondCustomer(contactString){
