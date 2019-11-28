@@ -90,6 +90,9 @@ body {
   margin-left: 10px;
 }
 
+.pb-0 {
+  padding-bottom: 0px;
+}
 .pb-20 {
   padding-bottom: 20px;
 }

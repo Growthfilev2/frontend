@@ -861,6 +861,7 @@ function newUserLandingpage(geopoint) {
 </div>`
 
   card.addEventListener('click', function () {
+    history.pushState(['searchOffice'],null,null)
     searchOffice(geopoint);
   });
 
@@ -945,7 +946,7 @@ function searchOffice(geopoint) {
   searchField.trailingIcon_.root_.classList.add('hidden')
   const placeRequesParam = {
     query: '',
-    fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types']
+    fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types','icon']
   }
   searchField.input_.addEventListener('input', function (event) {
     if (!event.target.value.trim()) return
@@ -1095,17 +1096,7 @@ function CenterControl(controlDiv, result) {
         <h2 class='demo-card__title mdc-typography mdc-typography--headline6'>${result.name}</h2>
       </li>
     </ul>
-      <div class="mdc-chip-set" role="grid"> 
-        ${result.types.map(function(type){
-          return `<div class="mdc-chip" role="row">
-          <div class="mdc-chip__ripple"></div>
-          <span role="gridcell">
-            <span role="button" tabindex="0" class="mdc-chip__text">${type}</span>
-          </span>
-        </div>`
-        })} 
-      </div>
-
+    
       <div class='mdc-typography mdc-typography--body2 pt-10 pb-20'>
           ${result.formatted_address}
       </div>
@@ -1115,24 +1106,6 @@ function CenterControl(controlDiv, result) {
 
 
 
-  // controlUI.innerHTML = `<div class='place-details'>
-  //    <div class='photo-cont'>
-  //      <ul class='mdc-image-list standard-image-list mdc-image-list--with-text-protection'>
-  //        ${result.photos.map(function(photo){
-  //         return `<li class='mdc-image-list__item'>
-  //           <div class='mdc-image-list__image-aspect-container'>
-  //             <img class='mdc-image-list__image' src='https://lh3.googleusercontent.com/p/AF1QipMAyFFzD03Hwtznnu4h3IHJnJya15qfEPMYgUxT=s1600-w1200'
-  //           </div>
-  //           <div class='mdc-image-list__supporting'>
-  //             <span class='mdc-image-list__label'>
-  //               ${photo.html_attributions[0]}
-  //             </span>
-  //           </div>
-  //         </li>`
-  //       }).join("")}
-  //     </div>
-  //   </div>
-  // </div>`
 
   controlDiv.appendChild(controlUI);
 
@@ -1141,7 +1114,7 @@ function CenterControl(controlDiv, result) {
 }
 
 function expandPlaceBox(service, result, map) {
-
+  console.log(result);
   service.getDetails({
     placeId: result.place_id,
     fields: ['international_phone_number', 'photos']
@@ -1153,21 +1126,34 @@ function expandPlaceBox(service, result, map) {
     console.log(placeDetail)
     const parentEl = document.getElementById('app-current-panel');
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-      <span class="mdc-top-app-bar__title">${result.name}</span>
+     
       `
     const header = getHeader('app-header', backIcon, '');
-    parentEl.innerHTML = `<div class='expand-box'>
+    header.root_.classList.remove('hidden')
+
+    parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust'>
       <div class='mdc-card'>
           <div class='mdc-card__primary-action'>
-              <div class='mdc-card__media mdc-card__media--16-9' style='${result.photos[0].getUrl()}'>
-                <a class="prev material-icons" id='prev-image'>navigate_before</a>
-                <a class="next material-icons" id='next-image'>navigate_next</a>
-              </div>
+             <div class='mdc-card__media mdc-card__media--16-9' style='background-image:url("${result.photos.length ? result.photos[0].getUrl() : './img/business.svg'}")'>
+              ${result.photos.length > 1 ? ` <span class="prev material-icons" id='prev-image'>navigate_before</span>
+              <span class="next material-icons" id='next-image'>navigate_next</span>` :'' }
+          </div>
+              
               <div class='demo-card__primary'>
                 <h2 class='demo-card__title mdc-typography mdc-typography--headline6'>${result.name}</h2>
               </div>
+              <div class="mdc-chip-set" role="grid"> 
+                ${result.types.map(function(type){
+                  return `<div class="mdc-chip" role="row">
+                  <div class="mdc-chip__ripple"></div>
+                  <span role="gridcell">
+                    <span role="button" tabindex="0" class="mdc-chip__text">${type}</span>
+                  </span>
+                </div>`
+                })} 
+              </div>
               <ul class='mdc-list'>
-                <li class='mdc-list-item'>
+                <li class='mdc-list-item' style='min-height:100px'>
                   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">room</span>
                   ${result.formatted_address}
                 </li>
@@ -1175,20 +1161,44 @@ function expandPlaceBox(service, result, map) {
                   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
                     ${result.international_phone_number}
                   </li>` : ''}
-                  <li class='mdc-list-divier'></li>
+                  <li class='mdc-list-divider'></li>
               </ul>
               <div class='action-tab'>
-                    <
+
               </div>
           </div>
       </div>
     </div>`
-    
+                
+    const nextImageEl = document.getElementById('next-image')
+    const prevImageEl = document.getElementById('prev-image');
+    if(nextImageEl && prevImageEl) {
+      let index = 0;
+      nextImageEl.addEventListener('click',function(){
+        index++
+        if(index >= result.photos.length) {
+          index = 0
+        }
+        loadImageInPlaceBox(result.photos[index].getUrl())
+      })
+      prevImageEl.addEventListener('click',function(){
+        index--
+        if (index < 0) {
+          index = result.photos.length - 1
+        }
+        loadImageInPlaceBox(result.photos[index].getUrl())
+      })
+    }
+
   });
 
+}
 
-
-
+function loadImageInPlaceBox(src){
+  const el = document.querySelector('.expand-box .mdc-card__media');
+  if(el) {
+    el.style.backgroundImage = `url("${src}")`
+  }
 }
 
 function clearPlaceCustomControl(map) {
@@ -1222,9 +1232,10 @@ function showPlaceBox(service, result, map) {
       // requestCreator('search', {
       //   query: `template=office&attachmentName=${value}`
       // }).then(function (searchResponse) {
+        
+          history.pushState(['expandPlaceBox'], null, null);
+          expandPlaceBox(service, result, map);
 
-      history.pushState(['expandPlaceBox'], null, null);
-      expandPlaceBox(service, result, map);
       // }).catch(function(error){
       //   placeBoxProgress.close();
       //   document.getElementById('confirm-list').classList.remove('hidden')
