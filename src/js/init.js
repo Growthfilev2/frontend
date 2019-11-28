@@ -796,6 +796,7 @@ function openMap() {
         }
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+        history.pushState(['newUserLandingpage',geopoint],null,null)
         newUserLandingpage(geopoint);
         return
       // };

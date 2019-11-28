@@ -833,7 +833,7 @@ ${reportString}
 `
 }
 
-function newUserLandingpage(geopoint) {
+function newUserLandingpage(geopoint = history.state[1]) {
   const appEl = document.getElementById('app-current-panel');
   appEl.innerHTML = '';
 
@@ -861,7 +861,7 @@ function newUserLandingpage(geopoint) {
 </div>`
 
   card.addEventListener('click', function () {
-    history.pushState(['searchOffice'],null,null)
+    history.pushState(['searchOffice',geopoint],null,null)
     searchOffice(geopoint);
   });
 
@@ -872,7 +872,8 @@ function newUserLandingpage(geopoint) {
 }
 
 
-function searchOffice(geopoint) {
+function searchOffice(geopoint = history.state[1]) {
+  document.getElementById('app-header').classList.add('hidden')
   const appEl = document.getElementById('app-current-panel');
   appEl.innerHTML = `<div class='search-map-cont'>
    <div class='search-container'>
@@ -1129,7 +1130,8 @@ function expandPlaceBox(service, result, map) {
      
       `
     const header = getHeader('app-header', backIcon, '');
-    header.root_.classList.remove('hidden')
+    header.root_.classList.remove('hidden');
+    header.listen('MDCTopAppBar:nav', handleNav);
 
     parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust'>
       <div class='mdc-card'>
