@@ -786,14 +786,17 @@ function openMap() {
   appLocation(3).then(function (geopoint) {
 
     getCheckInSubs().then(function (checkInSubs) {
+      console.log(checkInSubs)
       document.getElementById('start-load').classList.add('hidden');
       if (!Object.keys(checkInSubs).length) {
+         
         // const geopoint = {
         //   latitude:22,
         //   longitude:77,
         //   accuracy:30,
         //   lastLocationTime:Date.now()
         // }
+
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         history.pushState(['newUserLandingpage',geopoint],null,null)

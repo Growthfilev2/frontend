@@ -1,6 +1,4 @@
 function profileView() {
-
-
   const lastSignInTime = moment(firebase.auth().currentUser.metadata.lastSignInTime).format("dddd, MMMM Do YYYY, h:mm:ss a");
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -639,3 +637,6 @@ function isEmailValid(newEmail, currentEmail) {
   return !(newEmail === currentEmail)
 
 }
+
+
+

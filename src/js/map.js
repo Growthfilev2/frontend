@@ -50,8 +50,10 @@ function handleLocationError(error, onAppOpen) {
 
   switch (error.message) {
     case 'THRESHOLD EXCEED':
-      mapView(error.body.geopoint)
-      break;
+      if(history.state)
+      mapView(error.body.geopoint);
+    break;
+    
     case 'BROKEN INTERNET CONNECTION':
       if (onAppOpen) {
         failureScreen({
@@ -63,7 +65,7 @@ function handleLocationError(error, onAppOpen) {
       }
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
-      break;
+    break;
 
     case 'TURN ON YOUR WIFI':
       if (onAppOpen) {
@@ -76,7 +78,8 @@ function handleLocationError(error, onAppOpen) {
       }
       alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
-      break;
+    break;
+    
     default:
       handleError({
         message: error.message,

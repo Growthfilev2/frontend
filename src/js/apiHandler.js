@@ -883,7 +883,7 @@ function updateIDB(config) {
         })
     } 
   })
-}
+};
 
 function formatTextToTitleCase(string) {
   const arr = [];
@@ -898,5 +898,5 @@ function formatTextToTitleCase(string) {
       }
     }
   }
-  return arr.join('')
+  return arr.join('');
 }
