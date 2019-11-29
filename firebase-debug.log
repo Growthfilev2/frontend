@@ -1,23 +1,31 @@
-[debug] [2019-11-28T14:02:35.247Z] ----------------------------------------------------------------------
-[debug] [2019-11-28T14:02:35.252Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy
-[debug] [2019-11-28T14:02:35.252Z] CLI Version:   6.0.1
-[debug] [2019-11-28T14:02:35.253Z] Platform:      darwin
-[debug] [2019-11-28T14:02:35.253Z] Node Version:  v10.13.0
-[debug] [2019-11-28T14:02:35.255Z] Time:          Thu Nov 28 2019 19:32:35 GMT+0530 (India Standard Time)
-[debug] [2019-11-28T14:02:35.256Z] ----------------------------------------------------------------------
+[debug] [2019-11-29T12:58:52.954Z] ----------------------------------------------------------------------
+[debug] [2019-11-29T12:58:52.957Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy
+[debug] [2019-11-29T12:58:52.957Z] CLI Version:   6.0.1
+[debug] [2019-11-29T12:58:52.957Z] Platform:      darwin
+[debug] [2019-11-29T12:58:52.957Z] Node Version:  v10.13.0
+[debug] [2019-11-29T12:58:52.958Z] Time:          Fri Nov 29 2019 18:28:52 GMT+0530 (India Standard Time)
+[debug] [2019-11-29T12:58:52.958Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2019-11-28T14:02:35.272Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2019-11-28T14:02:35.273Z] > authorizing via signed-in user
-[debug] [2019-11-28T14:02:35.273Z] [iam] checking project growthfile-testing for permissions ["firebase.projects.get","firebasehosting.sites.update"]
-[debug] [2019-11-28T14:02:35.276Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/growthfile-testing:testIamPermissions  
+[debug] [2019-11-29T12:58:52.970Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2019-11-29T12:58:52.971Z] > authorizing via signed-in user
+[debug] [2019-11-29T12:58:52.971Z] [iam] checking project growthfile-testing for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2019-11-29T12:58:52.973Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/growthfile-testing:testIamPermissions  
 
-[debug] [2019-11-28T14:02:37.068Z] <<< HTTP RESPONSE 200
-[debug] [2019-11-28T14:02:37.070Z] >>> HTTP REQUEST GET https://firebase.googleapis.com/v1beta1/projects/growthfile-testing  
+[debug] [2019-11-29T12:58:54.842Z] <<< HTTP RESPONSE 200
+[debug] [2019-11-29T12:58:54.844Z] >>> HTTP REQUEST GET https://firebase.googleapis.com/v1beta1/projects/growthfile-testing  
  
-[debug] [2019-11-28T14:02:37.573Z] <<< HTTP RESPONSE 200
+[debug] [2019-11-29T12:58:55.346Z] <<< HTTP RESPONSE 200
 [info] 
 [info] === Deploying to 'growthfile-testing'...
 [info] 
 [info] i  deploying hosting
-[debug] [2019-11-28T14:02:37.581Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/growthfile-testing/versions  
+[debug] [2019-11-29T12:58:55.356Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/growthfile-testing/versions  
 
+[debug] [2019-11-29T12:58:57.803Z] <<< HTTP RESPONSE 200
+[info] i  hosting[growthfile-testing]: beginning deploy...
+[info] i  hosting[growthfile-testing]: found 50 files in dist
+[debug] [2019-11-29T12:58:57.827Z] [hosting] hash cache [ZGlzdA] load error: lines is not defined
+[debug] [2019-11-29T12:58:57.939Z] [hosting] hash cache [ZGlzdA] stored for 50 files
+[debug] [2019-11-29T12:58:57.940Z] [hosting][hash queue][FINAL]
+[debug] [2019-11-29T12:58:57.941Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/growthfile-testing/versions/ee66906cf4992c43:populateFiles  
+ <request body omitted>

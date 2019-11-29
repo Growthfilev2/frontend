@@ -47,7 +47,12 @@
 .ml-0 {
   margin-left: 0px;
 }
-
+.pt-0 {
+  padding-top: 0px;
+}
+.pb-0 {
+  padding-bottom: 0px;
+}
 .pb-20 {
   padding-bottom: 20px;
 }
