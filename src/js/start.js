@@ -119,7 +119,7 @@ function searchOffice(geopoint = history.state[1]) {
         query: '',
         fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types', 'icon']
     }
-    
+
     placeSearchField.input_.addEventListener('input', function (event) {
         if (!event.target.value.trim()) return
         placeSearchField.trailingIcon_.root_.classList.remove('hidden')
@@ -159,7 +159,7 @@ var searchDebounde = debounce(function (event) {
             }
 
             results.forEach(function (resultVal) {
-               
+
                 const li = searchPlaceResultList(resultVal.name, resultVal.formatted_address);
                 li.addEventListener('click', function () {
                     placeResult = resultVal
@@ -211,7 +211,7 @@ function CenterControl(controlDiv) {
 }
 
 function expandPlaceBox() {
-   
+
     placeService.getDetails({
         placeId: placeResult.place_id,
         fields: ['international_phone_number', 'photos']
@@ -249,11 +249,11 @@ function expandPlaceBox() {
                   </div>`
                   }).join("")} 
                 </div>
+                <li class='mdc-list-item address-list'>
+                  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">room</span>
+                  ${placeResult.formatted_address}
+                </li>
                 <ul class='mdc-list'>
-                  <li class='mdc-list-item address-list'>
-                    <span class="mdc-list-item__graphic material-icons" aria-hidden="true">room</span>
-                    ${placeResult.formatted_address}
-                  </li>
                   ${placeResult.international_phone_number ? ` <li class='mdc-list-item'>
                     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
                       ${placeResult.international_phone_number}
@@ -262,11 +262,7 @@ function expandPlaceBox() {
                 </ul>
                 <div class='action-tab'>
                   <div class='confirm-cont mt-10 mb-10'>
-                    <p class='mdc-typography--headline6 text-center mt-0 mb-10'>  Is this your company ? </p>
-                    <div class='fab-button-cont'>
-                      ${createExtendedFab('check','CONFIRM','confirm-btn').outerHTML}
-                    </div>
-                   
+                      ${createExtendedFab('check','CONFIRM','confirm-btn',true).outerHTML}             
                   </div>
               
                 </div>
@@ -278,30 +274,20 @@ function expandPlaceBox() {
         const confirmFab = document.getElementById('confirm-btn');
         confirmFab.addEventListener('click', function () {
             progressBar.open();
-            setTimeout(() => {
 
-
-                // requestCreator('search', {
-                //   query: `template=office&attachmentName=${placeResult.name}`
-                // }).then(function (searchResponse) {
+            // requestCreator('search', {
+            //     query: `template=office&attachmentName=${placeResult.name}`
+            // }).then(function (searchResponse) {
                 progressBar.close();
-                const confirmCont = document.querySelector('.confirm-cont');
-                if (!confirmCont) return;
-                confirmCont.querySelector('.confirm-cont p').textContent = 'Lorem ipum something something ....';
-                confirmCont.querySelector('.fab-button-cont').innerHTML = '';
-
-                // confirmCont.remove();
-
-                const button = createExtendedFab('add', 'Give Subscription (Text)');
-
-                button.addEventListener('click', function () {
+                if(searchResponse) {
                     giveSubscriptionInit();
-                });
-                confirmCont.querySelector('.fab-button-cont').appendChild(button)
-            }, 1200);
+                    return;
+                }
+                return;
+
             // }).catch(function (error) {
-            //   console.log(error)
-            //   progressBar.close();
+            //     console.log(error)
+            //     progressBar.close();
             // })
         })
 
@@ -410,9 +396,9 @@ function createPlaceMarker(infowindow) {
     var marker = new google.maps.Marker({
         map: map,
         position: placeResult.geometry.location
-    }); 
-    
-    map.setCenter(new google.maps.LatLng(placeResult.geometry.location.lat(),placeResult.geometry.location.lng()))
+    });
+
+    map.setCenter(new google.maps.LatLng(placeResult.geometry.location.lat(), placeResult.geometry.location.lng()))
     google.maps.event.addListener(marker, 'click', function () {
         infowindow.setContent(placeResult.name);
         infowindow.open(map, this);

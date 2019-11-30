@@ -25,11 +25,14 @@ function createFab(icon) {
     return button;
 }
 
-function createExtendedFab(icon, name, id) {
+function createExtendedFab(icon, name, id,absolute) {
     const button = createElement('button', {
         className: 'mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary',
         id: id
     })
+    if(absolute) {
+        button.classList.add('app-fab--absolute')
+    }
     button.innerHTML = `<div class="mdc-fab__ripple"></div>
                    <span class="material-icons mdc-fab__icon">${icon}</span>
                    <span class="mdc-fab__label">${name}</span>`
