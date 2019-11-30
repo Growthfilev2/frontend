@@ -242,3 +242,20 @@ function textArea(attr) {
     </div>
   </div>`
 }
+
+
+function createRadio(radioId,inputId) {
+    const div  = createElement('div',{
+        className:'mdc-radio',
+        id:radioId
+    })
+    div.innerHTML = `<input class="mdc-radio__native-control" type="radio" id="${inputId}" name="radios">
+    <div class="mdc-radio__background">
+        <div class="mdc-radio__outer-circle"></div>
+        <div class="mdc-radio__inner-circle"></div>
+    </div>
+    <div class="mdc-radio__ripple"></div>
+    `
+    new mdc.radio.MDCRadio(div);
+    return div;
+}

@@ -1,3 +1,2 @@
-confirmation btn always visible inside expandPlaceBox card
 top app bar always 
 

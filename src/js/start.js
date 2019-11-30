@@ -5,6 +5,10 @@ var placeSearchField;
 var map;
 
 function newUserLandingpage(geopoint = history.state[1]) {
+ 
+    const header = getHeader('app-header', '', '');
+    header.root_.classList.remove('hidden');
+    header.listen('MDCTopAppBar:nav', handleNav);
     const appEl = document.getElementById('app-current-panel');
     appEl.innerHTML = '';
 
@@ -43,9 +47,9 @@ function newUserLandingpage(geopoint = history.state[1]) {
 }
 
 function searchOffice(geopoint = history.state[1]) {
-    document.getElementById('app-header').classList.add('hidden')
     const appEl = document.getElementById('app-current-panel');
-    appEl.innerHTML = `<div class='search-map-cont'>
+    appEl.innerHTML = `<div class='search-map-cont mdc-top-app-bar--fixed-adjust'>
+
      <div class='search-container'>
         ${textField({
             id: 'search-address',
@@ -73,6 +77,13 @@ function searchOffice(geopoint = history.state[1]) {
     <div id='map-search'></div>
      
     </div>`;
+
+
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">Search Office</span>
+    `
+    const header = getHeader('app-header', backIcon, '');
+    header.root_.classList.remove('hidden');
 
     const center = {
         lat: geopoint.latitude,
@@ -222,11 +233,11 @@ function expandPlaceBox() {
         }
         const parentEl = document.getElementById('app-current-panel');
         const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-       
+        <span class="mdc-top-app-bar__title">${placeResult.name}</span>
         `
         const header = getHeader('app-header', backIcon, '');
         header.root_.classList.remove('hidden');
-        header.listen('MDCTopAppBar:nav', handleNav);
+        // header.listen('MDCTopAppBar:nav', handleNav);
 
         parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust'>
         <div class='mdc-card'>
@@ -260,33 +271,57 @@ function expandPlaceBox() {
                     </li>` : ''}
                     <li class='mdc-list-divider'></li>
                 </ul>
-                <div class='action-tab'>
-                  <div class='confirm-cont mb-10'>
-                    <p class='mdc-typography--headline6 text-center mt-0 mb-10'>  Is this your company ? </p>
-                    <div class='fab-button-cont'>
-                        ${createExtendedFab('check','CONFIRM','confirm-btn').outerHTML}
-                    </div>
+                  <div class='owner-confirm' id='owner-action-cont'>
+
+
                   </div>
-                </div>
-            </div>
-        </div>
+                  </div>
+                  </div>
+                  ${createExtendedFab('check','CONFIRM','confirm-btn',true).outerHTML}
       </div>`
 
 
         const confirmFab = document.getElementById('confirm-btn');
         confirmFab.addEventListener('click', function () {
             progressBar.open();
-
+            confirmFab.classList.add('mdc-fab--exited')
             // requestCreator('search', {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
-                progressBar.close();
-                if(searchResponse) {
-                    giveSubscriptionInit();
-                    return;
-                }
-                return;
+            progressBar.close();
+            // if (true) {
+            //     giveSubscriptionInit();
+            //     return;
+            // }
+            
+            const ownerCont = document.getElementById("owner-action-cont");
+            ownerCont.innerHTML = `
+            <div class='text-center'>
+                <h3 class='mdc-typography--headline6 mt-0 mb-0'>Are you an owner ? </h3>
+                <div class='mdc-form-field text-center owner-check-form'>
+                    ${createRadio('radio-1','yes').outerHTML}
+                    <label for='radio-1'>Yes</label>
+                    ${createRadio('radio-2','no').outerHTML}
+                    <label for='radio-2'>No</label>
+                </div>
+              
+            </div>
+            `
+            ownerCont.classList.add('pb-20')
+            const acceptRadio = new mdc.radio.MDCRadio(document.getElementById('radio-1'));
+            const noRadio = new mdc.radio.MDCRadio(document.getElementById('radio-2'));
+            const formField = new mdc.formField.MDCFormField(document.querySelector('.mdc-form-field'));
 
+            acceptRadio.root_.addListener('click',function(){
+                
+            });
+            noRadio.root_.addEventListener('click',function(){
+
+            });
+
+            window.scrollTo(0,document.body.scrollHeight);
+
+            console.log(formField)
             // }).catch(function (error) {
             //     console.log(error)
             //     progressBar.close();

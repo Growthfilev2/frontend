@@ -281,7 +281,7 @@
 
 
   .expand-box  .mdc-card{
-    height: 100vh;
+    /* height: 100vh; */
   }
   .expand-box .mdc-card .demo-card__primary {
     padding-bottom: 0px;
@@ -302,4 +302,8 @@
         min-height: 100px;
     }
 
+  }
+
+  .owner-check-form {
+    min-width: 200px;
   }
