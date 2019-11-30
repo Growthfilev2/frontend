@@ -261,10 +261,12 @@ function expandPlaceBox() {
                     <li class='mdc-list-divider'></li>
                 </ul>
                 <div class='action-tab'>
-                  <div class='confirm-cont mt-10 mb-10'>
-                      ${createExtendedFab('check','CONFIRM','confirm-btn',true).outerHTML}             
+                  <div class='confirm-cont mb-10'>
+                    <p class='mdc-typography--headline6 text-center mt-0 mb-10'>  Is this your company ? </p>
+                    <div class='fab-button-cont'>
+                        ${createExtendedFab('check','CONFIRM','confirm-btn').outerHTML}
+                    </div>
                   </div>
-              
                 </div>
             </div>
         </div>
