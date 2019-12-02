@@ -568,7 +568,7 @@ function profileCheck() {
   const auth = firebase.auth().currentUser;
   document.getElementById("app-header").classList.remove('hidden');
   document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust')
-  if (auth.displayName) {
+  if (!auth.displayName) {
     updateName(checkForPhoto);
     return
   }

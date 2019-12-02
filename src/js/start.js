@@ -9,6 +9,7 @@ function newUserLandingpage(geopoint = history.state[1]) {
     const header = getHeader('app-header', '', '');
     header.root_.classList.remove('hidden');
     header.listen('MDCTopAppBar:nav', handleNav);
+    progressBar.close();
     const appEl = document.getElementById('app-current-panel');
     appEl.innerHTML = '';
 
@@ -289,10 +290,10 @@ function expandPlaceBox() {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
             progressBar.close();
-            // if (true) {
-            //     giveSubscriptionInit();
-            //     return;
-            // }
+            if (true) {
+                giveSubscriptionInit();
+                return;
+            }
             
             const ownerCont = document.getElementById("owner-action-cont");
             ownerCont.innerHTML = `

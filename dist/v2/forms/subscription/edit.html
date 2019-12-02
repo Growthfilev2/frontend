@@ -67,7 +67,7 @@
             </div>
 
             <div class="form-component" style="margin-top: 50px;">
-                <button class="mdc-button mdc-button--raised submit-btn"  data-mdc-auto-init="MDCRipple">
+                <button class="mdc-button mdc-button--raised submit-btn"  data-mdc-auto-init="MDCRipple" id='submit-btn'>
                     <div class="mdc-button__ripple"></div>
                     <i class="material-icons mdc-button__icon" aria-hidden="true">play_arrow</i>
                     <span class="mdc-button__label">Check-in</span>
@@ -89,7 +89,7 @@
         const shareBtn = document.getElementById('add-people');
         const addSub = document.getElementById('add-sub')
         
-
+        const supervisorObject = {};
 
         const subscriberList = new parent.mdc.list.MDCList(document.getElementById('subscriber-list'))
         const assigneeList = new parent.mdc.list.MDCList(document.getElementById('contact-list'))
@@ -120,6 +120,15 @@
 
                 callContact('getContactForEmployee')
             });
+            document.getElementById('submit-btn').addEventListener('click',function(){
+                subscriptionTemplate.attachment.Subscriber = subscriptionTemplate.meta.subscriberDetails.phoneNumber;
+                const array = []
+                Object.keys(supervisorObject).forEach(function(number){
+                    array.push(supervisorObject[number]);
+                })
+                subscriptionTemplate.attachment.assignees = array
+                parent.sendSubscriptionData(subscriptionTemplate);
+            })
         }
 
         function callContact(functionName) {
@@ -149,9 +158,10 @@
                 if (!assigneeList.listElements.length) {
                     shareBtnInit.classList.remove('hidden');
                     document.getElementById('add-people').classList.add('hidden');
+                    delete supervisorObject.phoneNumber
                 }
             });
-
+            supervisorObject[contactObject.phoneNumber] = contactObject;
             assigneeList.root_.appendChild(li);
             window.scrollTo(0,document.body.scrollHeight);
             parent.window.scrollTo(0,parent.document.body.scrollHeight);
@@ -159,6 +169,8 @@
                 shareBtnInit.classList.add('hidden');
                 document.getElementById('add-people').classList.remove('hidden');
             }
+
+          
 
         }
     </script>

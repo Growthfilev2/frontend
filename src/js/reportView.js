@@ -2,7 +2,7 @@ function reportView(state, attendanceRecord) {
   progressBar.close()
 
   const panel = document.getElementById('app-current-panel');
-
+  panel.classList.remove('mdc-theme--primary-bg')
   getReportTabData().then(function (reportTabs) {
     console.log(reportTabs);
 
