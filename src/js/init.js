@@ -443,7 +443,7 @@ function checkForPhoto() {
           }).then(function () {
             progCard.close();
             checkForEmail();
-           
+
           }).catch(function (error) {
             progCard.close();
             snacks(error.response.message)
@@ -457,23 +457,36 @@ function checkForPhoto() {
 
 
 
- checkForEmail()
+  checkForEmail()
 
 }
 
 function checkForEmail() {
   const auth = firebase.auth().currentUser;
-  if(!auth.email || !auth.emailVerified) {
+  if (auth.email && auth.emailVerified) {
+    checkForBankAccount();
+    return;
+  }
+
+  getRootRecord().then(function (record) {
+    if (record.skipEmail) {
+      checkForBankAccount();
+      return
+    }
     history.pushState(['emailUpdation'], null, null)
     emailUpdation(addNewBankAccount, true);
-    return
-  }
-  checkForBankAccount();
+  })
 }
 
 function checkForBankAccount() {
-  history.pushState(['addNewBankAccount'],null,null);
-  addNewBankAccount(openMap);
+  getRootRecord().then(function(record){
+    if(record.skipBankAccountAdd) {
+      openMap();
+      return;
+    }
+    history.pushState(['addNewBankAccount'], null, null);
+    addNewBankAccount(openMap);
+  })
 }
 
 

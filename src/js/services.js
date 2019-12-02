@@ -71,13 +71,13 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    manageLocation(maxRetry).then(function (geopoint) {  
+    manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
         return resolve(geopoint);
       }
-      
+
       if (history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
@@ -245,7 +245,7 @@ function html5Geolocation() {
 // let apiHandler = new Worker('js/apiHandler.js?version=56');
 
 function requestCreator(requestType, requestBody, geopoint) {
- 
+
   var auth = firebase.auth().currentUser;
 
 
@@ -361,7 +361,7 @@ function handleComponentUpdation(readResponse) {
 
   switch (history.state[0]) {
 
-  
+
     case 'enterChat':
       if (!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
@@ -383,8 +383,7 @@ function handleComponentUpdation(readResponse) {
 }
 
 /** function call to be removed from apk */
-function backgroundTransition() { 
-}
+function backgroundTransition() {}
 
 function runRead(type) {
   if (!firebase.auth().currentUser) return;
@@ -1062,12 +1061,11 @@ function updateName(callback) {
 
   const auth = firebase.auth().currentUser;
   let backIcon = ''
-  if(!callback) {
+  if (!callback) {
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Update Name</span>
     `
-  }
-  else {
+  } else {
     backIcon = `<span class="mdc-top-app-bar__title">Add Name</span>`
   }
   const header = getHeader('app-header', backIcon, '');
@@ -1115,11 +1113,10 @@ function updateName(callback) {
     }).then(function () {
       progressBar.close();
       snacks('Name Updated Successfully')
-      if(callback) {
-        history.pushState([`${callback.name}`],null,null);
+      if (callback) {
+        history.pushState([`${callback.name}`], null, null);
         callback()
-      }
-      else {
+      } else {
         history.back();
       }
     })
@@ -1199,14 +1196,28 @@ function emailUpdation(callback, updateOnly) {
       return
     });
 
-    // if (!result.length && !updateOnly) {
-      const skipbtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
-      skipbtn.root_.classList.remove('hidden')
-      skipbtn.root_.addEventListener('click', function () {
-        history.pushState([`${callback}`], null, null);
-        callback();
-      })
-    // }
+    const skipbtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
+    skipbtn.root_.classList.remove('hidden')
+    skipbtn.root_.addEventListener('click', function () {
+      if (!updateOnly) {
+        const rootTx =  db.transaction('root','readwrite');
+        const rootStore = rootTx.objectStore('root');
+
+        rootStore.get(auth.uid).onsuccess = function(event){
+          const record = event.target.result;
+          record.skipEmail = true
+          rootStore.put(record);
+        }
+        rootTx.oncomplete =  function() {
+          history.pushState([`${callback}`], null, null);
+          callback();
+        }
+        return
+      }
+      history.pushState([`${callback}`], null, null);
+      callback();
+    })
+
   })
 }
 

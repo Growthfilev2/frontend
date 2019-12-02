@@ -105,7 +105,7 @@ function createBaseDetails() {
 function bankAccount() {
   progressBar.open();
   requestCreator('paymentMethods').then(function (accounts) {
-    history.pushState(['bankAccount'],null,null);
+    history.pushState(['bankAccount'], null, null);
     console.log(accounts);
     const auth = firebase.auth().currentUser;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -158,7 +158,7 @@ function bankAccount() {
     })
     document.getElementById('app-current-panel').appendChild(addNewBtn);
 
-  }).catch(function(error){
+  }).catch(function (error) {
     progressBar.close();
     snacks(error.response.message)
   })
@@ -244,8 +244,8 @@ function addNewBankAccount(callback) {
   const fields = {};
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);
-    if(el.id === 'account-number-re') {
-      field.input_.addEventListener('paste',function(e){
+    if (el.id === 'account-number-re') {
+      field.input_.addEventListener('paste', function (e) {
         e.preventDefault();
       })
     }
@@ -280,10 +280,9 @@ function addNewBankAccount(callback) {
       type: 'bankTransfer'
     }).then(function () {
       snacks('New Bank Account Added');
-      if(callback) {
+      if (callback) {
         callback()
-      }
-      else {
+      } else {
         history.back();
       }
     }).catch(function (error) {
@@ -292,15 +291,23 @@ function addNewBankAccount(callback) {
     })
   });
   const skipBtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
-  skipBtn.root_.addEventListener('click',function(){
+  skipBtn.root_.addEventListener('click', function () {
     progressBar.open();
-    if(callback) {
-      callback();
-    }
-    else {
-      history.back();
-    }
+    if (callback) {
+      const rootTx = db.transaction('root', 'readwrite');
+      const rootStore = rootTx.objectStore('root');
 
+      rootStore.get(auth.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        record.skipBankAccountAdd = true
+        rootStore.put(record);
+      }
+      rootTx.oncomplete = function () {
+        callback();
+      }
+      return
+    }
+    history.back();
   });
 }
 
@@ -388,10 +395,10 @@ function changePhoneNumber() {
       submitDialog.open();
       console.log(submitDialog)
       submitDialog.scrimClickAction = '';
-      appLocation(3).then(function(geopoint){
+      appLocation(3).then(function (geopoint) {
         requestCreator('changePhoneNumber', {
           newPhoneNumber: newNumberValue
-        },geopoint).then(function (response) {
+        }, geopoint).then(function (response) {
           setTimeout(function () {
             window.location.reload();
           }, 5000)
@@ -646,6 +653,3 @@ function isEmailValid(newEmail, currentEmail) {
   return !(newEmail === currentEmail)
 
 }
-
-
-
