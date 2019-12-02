@@ -165,3 +165,7 @@
     text-align: center;
     
 }
+
+.add-bank-container #submit-btn {
+    float: right;
+}

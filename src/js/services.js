@@ -1058,15 +1058,26 @@ function templateList(suggestedTemplates) {
   return ul.outerHTML;
 }
 
-function updateName() {
+function updateName(callback) {
 
   const auth = firebase.auth().currentUser;
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Update Name</span>
-  `
+  let backIcon = ''
+  if(!callback) {
+    backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">Update Name</span>
+    `
+  }
+  else {
+    backIcon = `<span class="mdc-top-app-bar__title">Add Name</span>`
+  }
   const header = getHeader('app-header', backIcon, '');
-  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-name'>
-
+  document.getElementById('app-current-panel').innerHTML = `
+  
+  <div class='mdc-layout-grid change-name'>
+  <p class='mdc-typography--body1 mdc-theme--primary'>
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras ornare dictum lacus eget eleifend. Donec in tempor neque. Ut purus dui, maximus sed convallis ac, facilisis ac sem.
+  
+  </p>
 <div class="mdc-text-field mdc-text-field--outlined mt-10" id='name'>
   <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName}' type='text' >
  <div class="mdc-notched-outline">
@@ -1103,8 +1114,14 @@ function updateName() {
       displayName: nameField.value.trim()
     }).then(function () {
       progressBar.close();
-      history.back();
       snacks('Name Updated Successfully')
+      if(callback) {
+        history.pushState([`${callback.name}`],null,null);
+        callback()
+      }
+      else {
+        history.back();
+      }
     })
   })
 }
@@ -1182,14 +1199,14 @@ function emailUpdation(callback, updateOnly) {
       return
     });
 
-    if (!result.length && !updateOnly) {
+    // if (!result.length && !updateOnly) {
       const skipbtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
       skipbtn.root_.classList.remove('hidden')
       skipbtn.root_.addEventListener('click', function () {
         history.pushState([`${callback}`], null, null);
         callback();
       })
-    }
+    // }
   })
 }
 
@@ -1227,11 +1244,8 @@ function emailVerificationWait(callback) {
         progressBar.close()
         return;
       }
-      progressBar.close()
-      // if (updateOnly) {
-      //   history.go(-2);
-      //   return;
-      // }
+      progressBar.close();
+
       history.pushState([`${callback}`], null, null)
       callback();
     }, 2000)
@@ -1261,9 +1275,11 @@ function getReportOffices(result) {
     offices.push(report.office);
   })
   if (offices.length) {
-    return `You Are A Recipient In Reports for ${offices.join(', ').replace(/,(?!.*,)/gmi, ' &')}`
+    return `
+    Email is required to add bank account.
+    You Are A Recipient In Reports for ${offices.join(', ').replace(/,(?!.*,)/gmi, ' &')}`
   }
-  return ''
+  return 'Email is required to add bank account.'
 }
 
 
@@ -1296,8 +1312,8 @@ ${reportString}
 <span class='mdc-button__label mdc-theme--on-primary'>${headings.btnText}<span>
 </button>
 
-<button class='mdc-button mt-10 hidden' id='skip-btn'>
-<span class='mdc-button__label'>SKIP<span>
+<button class='mdc-button mt-10' id='skip-btn'>
+  <span class='mdc-button__label'>SKIP<span>
 </button>
 
 </div>

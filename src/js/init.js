@@ -74,8 +74,8 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
-  
-  if(event.state[0] === 'reportView') {
+
+  if (event.state[0] === 'reportView') {
     this.reportView(event.state[1])
     return;
   }
@@ -182,7 +182,7 @@ function userSignedOut() {
 
 
 function splashScreen() {
-  const panel  = document.getElementById('app-current-panel');
+  const panel = document.getElementById('app-current-panel');
   panel.classList.add('mdc-theme--primary-bg');
   const startLoad = document.getElementById('start-load')
   startLoad.classList.remove('hidden');
@@ -275,8 +275,8 @@ function startApp() {
     db = req.result;
 
     console.log("run app")
-   
-   
+
+
     splashScreen();
 
 
@@ -388,6 +388,12 @@ function miniProfileCard(content, headerTitle, action) {
 function checkForPhoto() {
   const auth = firebase.auth().currentUser;
   if (!auth.photoURL) {
+
+    backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+      <span class="mdc-top-app-bar__title">Add photo</span>
+      `
+
+    const header = getHeader('app-header', backIcon, '');
     const content = `
 
       <div class='photo-container'>
@@ -436,7 +442,8 @@ function checkForPhoto() {
             'imageBase64': newDataUrl
           }).then(function () {
             progCard.close();
-            openMap();
+            checkForEmail();
+           
           }).catch(function (error) {
             progCard.close();
             snacks(error.response.message)
@@ -446,9 +453,27 @@ function checkForPhoto() {
       fileReader.readAsDataURL(file);
     })
     return
-  }
-  openMap();
+  };
 
+
+
+ checkForEmail()
+
+}
+
+function checkForEmail() {
+  const auth = firebase.auth().currentUser;
+  if(!auth.email || !auth.emailVerified) {
+    history.pushState(['emailUpdation'], null, null)
+    emailUpdation(addNewBankAccount, true);
+    return
+  }
+  checkForBankAccount();
+}
+
+function checkForBankAccount() {
+  history.pushState(['addNewBankAccount'],null,null);
+  addNewBankAccount(openMap);
 }
 
 
@@ -528,41 +553,47 @@ function showReLoginDialog(heading, contentText) {
 
 function profileCheck() {
   const auth = firebase.auth().currentUser;
-  if (!auth.displayName) {
-
-    const content = `
-    <div class="mdc-text-field mdc-text-field--outlined" id='name'>
-    <input class="mdc-text-field__input" required>
-    <div class="mdc-notched-outline">
-      <div class="mdc-notched-outline__leading"></div>
-      <div class="mdc-notched-outline__notch">
-        <label class="mdc-floating-label">Name</label>
-      </div>
-      <div class="mdc-notched-outline__trailing"></div>
-    </div>
-  </div>
-  `
-    const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
-  <span class="mdc-button__label">NEXT</span>
-  <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-  </button></div></div>`
-
-    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
-    const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-    const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
-    console.log(nameInput)
-    new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
-      if (!nameInput.value) {
-        nameInput.focus();
-        return;
-      }
-      progCard.open();
-      auth.updateProfile({
-        displayName: nameInput.value
-      }).then(checkForPhoto).catch(console.log)
-    })
+  document.getElementById("app-header").classList.remove('hidden');
+  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust')
+  if (auth.displayName) {
+    updateName(checkForPhoto);
     return
   }
+  // if (!auth.displayName) {
+
+  //   const content = `
+  //   <div class="mdc-text-field mdc-text-field--outlined" id='name'>
+  //   <input class="mdc-text-field__input" required>
+  //   <div class="mdc-notched-outline">
+  //     <div class="mdc-notched-outline__leading"></div>
+  //     <div class="mdc-notched-outline__notch">
+  //       <label class="mdc-floating-label">Name</label>
+  //     </div>
+  //     <div class="mdc-notched-outline__trailing"></div>
+  //   </div>
+  // </div>
+  // `
+  //   const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
+  // <span class="mdc-button__label">NEXT</span>
+  // <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
+  // </button></div></div>`
+
+  //   document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
+  //   const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+  //   const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
+  //   console.log(nameInput)
+  //   new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
+  //     if (!nameInput.value) {
+  //       nameInput.focus();
+  //       return;
+  //     }
+  //     progCard.open();
+  //     auth.updateProfile({
+  //       displayName: nameInput.value
+  //     }).then(checkForPhoto).catch(console.log)
+  //   })
+  //   return
+  // }
   checkForPhoto()
 
 
@@ -840,7 +871,7 @@ function openMap() {
       console.log(checkInSubs)
       document.getElementById('start-load').classList.add('hidden');
       if (!Object.keys(checkInSubs).length) {
-         
+
         // const geopoint = {
         //   latitude:22,
         //   longitude:77,
@@ -850,7 +881,7 @@ function openMap() {
 
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        history.pushState(['newUserLandingpage',geopoint],null,null)
+        history.pushState(['newUserLandingpage', geopoint], null, null)
         newUserLandingpage(geopoint);
         return
       };

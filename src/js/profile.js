@@ -24,10 +24,10 @@ function profileView() {
 <div id='base-details'></div>
 <div id='user-details'></div>  
 
-`
+`;
+
   document.getElementById('app-current-panel').innerHTML = root;
   setDetails()
-
 }
 
 
@@ -93,7 +93,7 @@ function createBaseDetails() {
     ${auth.phoneNumber}
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['changePhoneNumber'],null,null);changePhoneNumber()">edit</span>
   </li>
-  <li class='mdc-list-item hidden'>
+  <li class='mdc-list-item'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
     Bank Accounts
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="bankAccount()">edit</span>
@@ -168,7 +168,7 @@ function getLast4digitsOfAccount(accountNumber) {
   return accountNumber.substr(accountNumber.length - 4)
 }
 
-function addNewBankAccount() {
+function addNewBankAccount(callback) {
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Add New Bank Account</span>
@@ -177,42 +177,25 @@ function addNewBankAccount() {
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
   <div class='add-bank-container mt-20'>
-    <div class='text-field-container  mt-10 mb-10'>
-      ${textField({
-        id:'name',
-        label:'Name',
-        type:'text',
-        disabled:true,
-        value:auth.displayName
-      })}
-     
-    </div>
-    <div class='text-field-container mt-10 mb-10'>
-      ${textFieldTelephone({
-        id:'phone',
-        label:'Phonenumber',
-        disabled:true,
-        value:auth.phoneNumber
-      })}
-      
-    </div>
-    <div class='text-field-container mt-20'>
-        ${textField({
-          id:'email',
-          label:'Email',
-          disabled:true,
-          value:auth.email && auth.emailVerified ? auth.email : '',
-          type:'email'
-        })}
-        <div class="mdc-text-field-helper-line">
-          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
-        </div>
-    </div>
 
     <div class='text-field-container mb-10'>
       ${textField({
         id:'account-number',
-        label:'Bank Account',
+        label:'Bank Account Number',
+        disabled:false,
+        value:'',
+        type:'text',
+        required:true
+      })}
+      <div class="mdc-text-field-helper-line">
+        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+      </div>
+    </div>
+
+    <div class='text-field-container mb-10'>
+      ${textField({
+        id:'account-number-re',
+        label:'Re-enter Bank Account Number',
         disabled:false,
         value:'',
         type:'text',
@@ -247,7 +230,11 @@ function addNewBankAccount() {
         <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
       </div>
     </div>
-    <button class='mdc-button mdc-button--raised full-width' id='submit-btn'>SUBMIT</button>
+    <div class='button-cont'>
+    <button class='mdc-button' id='skip-btn'>SKIP</button>
+
+    <button class='mdc-button mdc-button--raised' id='submit-btn'>SUBMIT</button>
+    </div>
   </div>
   </div>
   `;
@@ -257,15 +244,21 @@ function addNewBankAccount() {
   const fields = {};
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);
+    if(el.id === 'account-number-re') {
+      field.input_.addEventListener('paste',function(e){
+        e.preventDefault();
+      })
+    }
+
     field.root_.classList.add('full-width')
     fields[field.label_.root_.textContent] = field;
   });
 
-
   const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
   submitBtn.root_.addEventListener('click', function () {
     console.log(fields)
-    const labels = Object.keys(fields)
+    const labels = Object.keys(fields);
+
     for (let index = 0; index < labels.length; index++) {
       const label = labels[index]
       const field = fields[label];
@@ -287,12 +280,28 @@ function addNewBankAccount() {
       type: 'bankTransfer'
     }).then(function () {
       snacks('New Bank Account Added');
-      history.back();
+      if(callback) {
+        callback()
+      }
+      else {
+        history.back();
+      }
     }).catch(function (error) {
       snacks(error.response.message)
       progressBar.close();
     })
-  })
+  });
+  const skipBtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
+  skipBtn.root_.addEventListener('click',function(){
+    progressBar.open();
+    if(callback) {
+      callback();
+    }
+    else {
+      history.back();
+    }
+
+  });
 }
 
 
