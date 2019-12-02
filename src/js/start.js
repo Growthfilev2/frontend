@@ -291,10 +291,10 @@ function expandPlaceBox() {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
             progressBar.close();
-            if (true) {
-                giveSubscriptionInit();
-                return;
-            }
+            // if (true) {
+            //     giveSubscriptionInit();
+            //     return;
+            // }
             
             const ownerCont = document.getElementById("owner-action-cont");
             ownerCont.innerHTML = `
@@ -314,11 +314,11 @@ function expandPlaceBox() {
             const noRadio = new mdc.radio.MDCRadio(document.getElementById('radio-2'));
             const formField = new mdc.formField.MDCFormField(document.querySelector('.mdc-form-field'));
 
-            acceptRadio.root_.addListener('click',function(){
-                
+            acceptRadio.root_.addEventListener('click',function(){
+                createOfficeInit(true)
             });
             noRadio.root_.addEventListener('click',function(){
-
+                createOfficeInit(false)
             });
 
             window.scrollTo(0,document.body.scrollHeight);
@@ -350,6 +350,98 @@ function expandPlaceBox() {
             })
         };
     });
+}
+
+
+
+
+function createOfficeInit(isOwner) {
+    const template = {
+        "owner": {
+            isOwner:isOwner,
+          
+            details:{
+                photoURL: firebase.auth().currentUser.photoURL,
+                displayName: firebase.auth().currentUser.displayName,
+                phoneNumber: firebase.auth().currentUser.phoneNumber
+            }
+        },
+        "hidden": 0,
+        "canEditRule": "NONE",
+        "schedule": [
+            "Date Of Establishment",
+            "Trial Period"
+        ],
+        "attachment": {
+            "Registered Office Address": {
+                "type": "string",
+                "value": placeResult.formatted_address
+            },
+            "Company Logo": {
+                "value": "",
+                "type": "string"
+            },
+            "Youtube ID": {
+                "type": "string",
+                "value": ""
+            },
+            "Usage": {
+                "type": "string",
+                "value": ""
+            },
+            "Branch Place Supported Types": {
+                "type": "string",
+                "value": ""
+            },
+            "First Day Of Monthly Cycle": {
+                "type": "number",
+                "value": ""
+            },
+            "Timezone": {
+                "type": "string",
+                "value": ""
+            },
+            "Second Contact": {
+                "type": "phoneNumber",
+                "value": ""
+            },
+            "First Day Of Reimbursement Cycle": {
+                "type": "number",
+                "value": ""
+            },
+            "GST Number": {
+                "type": "string",
+                "value": ""
+            },
+            "Description": {
+                "type": "string",
+                "value": ""
+            },
+            "Short Description": {
+                "type": "string",
+                "value": ""
+            },
+            "First Contact": {
+                "type": "phoneNumber",
+                "value": ""
+            },
+            "Name": {
+                "type": "string",
+                "value": placeResult.name
+            },
+            "Customer Place Supported Types": {
+                "value": "",
+                "type": "string"
+            }
+        },
+        "template": "office",
+        "comment": "Template used by support to create a new paid account of a company.",
+        "statusOnCreate": "PENDING",
+        "timestamp": 1561975667937,
+        "venue": []
+    }
+    history.pushState(['addView'], null, null);
+    addView(template);
 }
 
 function giveSubscriptionInit() {

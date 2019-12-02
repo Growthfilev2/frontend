@@ -120,6 +120,7 @@
 
                 callContact('getContactForEmployee')
             });
+           
             document.getElementById('submit-btn').addEventListener('click',function(){
                 subscriptionTemplate.attachment.Subscriber = subscriptionTemplate.meta.subscriberDetails.phoneNumber;
                 const array = []
@@ -145,6 +146,7 @@
             subscriberList.root_.querySelector('.mdc-list-item__primary-text').textContent = contactObject.displayName;
             subscriberList.root_.querySelector('.mdc-list-item__secondary-text').textContent = contactObject
                 .phoneNumber;
+            
            addSub.classList.add('hidden')
 
         }
@@ -173,7 +175,8 @@
           
 
         }
-    </script>
+   
+   </script>
 </body>
 
 </html>

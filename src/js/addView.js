@@ -7,7 +7,7 @@ function addView(sub) {
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
     `;
 
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -16,6 +16,17 @@ function addView(sub) {
 
 }
 
+
+function sendOfficeData() {
+    progressBar.open();
+    setTimeout(() => {
+        successDialog(`Office created successfully`);
+        progressBar.close();
+        setTimeout(function(){
+            giveSubscriptionInit();
+        },200)
+    },1000);
+}
 
 function sendSubscriptionData(formData) {
     progressBar.open();
@@ -142,6 +153,21 @@ function setContactForCustomerFailed(exceptionMessage) {
         message: exceptionMessage,
         body: ''
     })
+}
+
+function getContactPeople(contactString) {
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContactForPeople(contactDetails);
+}
+
+function getContactSupervisor(contactString) {
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContactForSupervisor(contactDetails);
+}
+
+function getContactOwner(contactString) {
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContactForOwner(contactDetails);
 }
 
 function getContactForEmployee(contactString) {

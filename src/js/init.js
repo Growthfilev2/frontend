@@ -303,7 +303,7 @@ function startApp() {
             document.getElementById('app-current-panel').classList.remove('mdc-theme--primary-bg')
             document.getElementById('app-current-panel').innerHTML = '';
             document.getElementById('start-load').classList.add('hidden')
-
+            
             history.pushState(['profileCheck'], null, null)
             profileCheck();
           }).catch(function (error) {
@@ -321,8 +321,9 @@ function startApp() {
         document.getElementById('app-current-panel').innerHTML = '';
         document.getElementById('start-load').classList.add('hidden')
         history.pushState(['profileCheck'], null, null)
-        profileCheck();
 
+        profileCheck();
+      
         runRead({
           read: '1'
         })
