@@ -155,7 +155,7 @@ function getHeader(parentSelector, sectionStart, sectionEnd) {
     el.querySelector('#section-end').innerHTML = sectionEnd;
 
     topAppBar = new mdc.topAppBar.MDCTopAppBar(el)
-
+    
     // topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
     return topAppBar;
 

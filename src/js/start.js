@@ -8,6 +8,7 @@ function newUserLandingpage(geopoint = history.state[1]) {
  
     const header = getHeader('app-header', '', '');
     header.root_.classList.remove('hidden');
+    document.getElementById('step-ui').innerHTML = ''
     header.listen('MDCTopAppBar:nav', handleNav);
     progressBar.close();
     const appEl = document.getElementById('app-current-panel');
