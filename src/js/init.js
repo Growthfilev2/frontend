@@ -281,61 +281,63 @@ function startApp() {
 
 
 
-    // requestCreator('now', {
-    //   device: native.getInfo(),
-    //   from: '',
-    //   registerToken: native.getFCMToken()
-    // }).then(function (res) {
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: '',
+      registerToken: native.getFCMToken()
+    }).then(function (res) {
 
-    //   if (res.response.updateClient) {
-    //     updateApp()
-    //     return
-    //   }
-    //   if (res.response.revokeSession) {
-    //     revokeSession(true);
-    //     return
-    //   };
+      if (res.response.updateClient) {
+        updateApp()
+        return
+      }
+      if (res.response.revokeSession) {
+        revokeSession(true);
+        return
+      };
 
-    //   getRootRecord().then(function (rootRecord) {
-    //     if (!rootRecord.fromTime) {
-    //       requestCreator('Null').then(function () {
-    //         document.getElementById('start-load').classList.add('hidden')
-    //         history.pushState(['profileCheck'], null, null)
-    //         profileCheck();
-    //       }).catch(function (error) {
-    //         if (error.response.apiRejection) {
-    //           snacks(error.response.message, 'Okay')
-    //         }
-    //         handleError({
-    //           message: error.message,
-    //           body: error,
-    //         })
-    //       })
-    //       return;
-    //     }
-    //     document.getElementById('start-load').classList.add('hidden')
-    //     history.pushState(['profileCheck'], null, null)
-    //     profileCheck();
+      getRootRecord().then(function (rootRecord) {
+        document.getElementById('app-current-panel').classList.remove('mdc-theme--primary-bg')
+        document.getElementById('app-current-panel').innerHTML = '';
+        if (!rootRecord.fromTime) {
+          requestCreator('Null').then(function () {
+            document.getElementById('start-load').classList.add('hidden')
+            history.pushState(['profileCheck'], null, null)
+            profileCheck();
+          }).catch(function (error) {
+            if (error.response.apiRejection) {
+              snacks(error.response.message, 'Okay')
+            }
+            handleError({
+              message: error.message,
+              body: error,
+            })
+          })
+          return;
+        }
+        document.getElementById('start-load').classList.add('hidden')
+        history.pushState(['profileCheck'], null, null)
+        profileCheck();
 
-    //     runRead({
-    //       read: '1'
-    //     })
-    //   }).catch(function (error) {
-    //     handleError({
-    //       message: error.message,
-    //       body: JSON.stringify(error)
-    //     })
-    //   })
-    // }).catch(function (error) {
-    //   if (error.response.apiRejection) {
-    //     snacks(error.response.message, 'Okay')
-    //     return;
-    //   }
-    //   handleError({
-    //     message: error.message,
-    //     body: JSON.stringify(error)
-    //   })
-    // })
+        runRead({
+          read: '1'
+        })
+      }).catch(function (error) {
+        handleError({
+          message: error.message,
+          body: JSON.stringify(error)
+        })
+      })
+    }).catch(function (error) {
+      if (error.response.apiRejection) {
+        snacks(error.response.message, 'Okay')
+        return;
+      }
+      handleError({
+        message: error.message,
+        body: JSON.stringify(error)
+      })
+    })
   }
   req.onerror = function () {
 
