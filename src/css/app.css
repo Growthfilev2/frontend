@@ -240,6 +240,22 @@ body {
   font-size: 50px !important
 }
 
+.splash-content .text {
+ 
+  padding: 10px;
+  margin:  0 auto;
+}
+@media (min-width:480px) {
+  .splash-content .text {
+     max-width: 80%;
+  }
+}
+.splash-content .icon-cont {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
 /** roller **/
 #start-load {
   position: absolute;
@@ -249,6 +265,11 @@ body {
   right: 0;
   margin: auto;
   height: 64px;
+  z-index: 9;
+}
+
+#start-load p {
+  color: white;
 }
 
 #start-load {
@@ -274,7 +295,7 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--mdc-theme-primary);
+  background: white;
   margin: -3px 0 0 -3px;
 }
 

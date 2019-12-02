@@ -181,6 +181,65 @@ function userSignedOut() {
 }
 
 
+function splashScreen() {
+  const panel  = document.getElementById('app-current-panel');
+  panel.classList.add('mdc-theme--primary-bg');
+  const startLoad = document.getElementById('start-load')
+  startLoad.classList.remove('hidden');
+  const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
+
+
+  let index = 0;
+  var interval = setInterval(function () {
+    if (index == texts.length - 1) {
+      clearInterval(interval)
+    };
+    startLoad.querySelector('p').textContent = texts[index]
+    index++;
+  }, index + 1 * 1000);
+
+  panel.innerHTML = `
+  <div class='splash-content  mdc-theme--on-primary'>
+    <div class='text'>
+        <p class='mdc-typography--body1'>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras ornare dictum lacus eget eleifend.
+        Donec in tempor neque. Ut purus dui, maximus sed convallis ac, facilisis ac sem
+        </p>
+    </div>
+    <div class='icon-cont mdc-layout-grid__inner mt-20'>
+        <div class='mdc-layout-grid__cell--span-2'>
+          <div class='icon text-center'>
+            <i class='material-icons'>room</i>
+            <p class='mt-10 mdc-typography--subtitle1'>Check-in</p>
+          </div>
+        </div>
+       
+        <div class='mdc-layout-grid__cell--span-2'>
+          <div class='icon text-center'>
+            <i class='material-icons'>payment</i>
+            <p class='mt-10 mdc-typography--subtitle1'>Payments</p>
+          </div>
+        </div>
+        <div class='mdc-layout-grid__cell--span-2'>
+          <div class='icon text-center'>
+              <i class='material-icons'>motorcycle</i>
+              <p class='mt-10 mdc-typography--subtitle1'>Reimbursements</p>
+          </div>
+        </div>
+        <div class='mdc-layout-grid__cell--span-2'>
+          <div class='icon text-center'>
+            <img src='./img/currency.png'>
+            <p class='mt-10 mdc-typography--subtitle1'>Incentives</p>
+          </div>
+        </div>
+
+      </div>
+  </div>
+  `
+
+
+}
+
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName, DB_VERSION);
@@ -216,77 +275,67 @@ function startApp() {
     db = req.result;
 
     console.log("run app")
-    const startLoad = document.querySelector('#start-load')
-    startLoad.classList.remove('hidden');
-
-    const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
-
-    let index = 0;
-    var interval = setInterval(function () {
-      if (index == texts.length - 1) {
-        clearInterval(interval)
-      };
-      startLoad.querySelector('p').textContent = texts[index]
-      index++;
-    }, index + 1 * 1000);
+   
+   
+    splashScreen();
 
 
 
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: '',
-      registerToken: native.getFCMToken()
-    }).then(function (res) {
+    // requestCreator('now', {
+    //   device: native.getInfo(),
+    //   from: '',
+    //   registerToken: native.getFCMToken()
+    // }).then(function (res) {
 
-      if (res.response.updateClient) {
-        updateApp()
-        return
-      }
-      if (res.response.revokeSession) {
-        revokeSession(true);
-        return
-      };
+    //   if (res.response.updateClient) {
+    //     updateApp()
+    //     return
+    //   }
+    //   if (res.response.revokeSession) {
+    //     revokeSession(true);
+    //     return
+    //   };
 
-      getRootRecord().then(function (rootRecord) {
-        if (!rootRecord.fromTime) {
-          requestCreator('Null').then(function () {
-            document.getElementById('start-load').classList.add('hidden')
-            history.pushState(['profileCheck'], null, null)
-            profileCheck();
-          }).catch(function (error) {
-            if (error.response.apiRejection) {
-              snacks(error.response.message, 'Okay')
-            }
-            handleError({
-              message: error.message,
-              body: error,
-            })
-          })
-          return;
-        }
-        document.getElementById('start-load').classList.add('hidden')
-        history.pushState(['profileCheck'], null, null)
-        profileCheck();
+    //   getRootRecord().then(function (rootRecord) {
+    //     if (!rootRecord.fromTime) {
+    //       requestCreator('Null').then(function () {
+    //         document.getElementById('start-load').classList.add('hidden')
+    //         history.pushState(['profileCheck'], null, null)
+    //         profileCheck();
+    //       }).catch(function (error) {
+    //         if (error.response.apiRejection) {
+    //           snacks(error.response.message, 'Okay')
+    //         }
+    //         handleError({
+    //           message: error.message,
+    //           body: error,
+    //         })
+    //       })
+    //       return;
+    //     }
+    //     document.getElementById('start-load').classList.add('hidden')
+    //     history.pushState(['profileCheck'], null, null)
+    //     profileCheck();
 
-        runRead({
-          read: '1'
-        })
-      }).catch(function (error) {
-        handleError({
-          message: error.message,
-          body: JSON.stringify(error)
-        })
-      })
-    }).catch(function (error) {
-      if (error.response.apiRejection) {
-        snacks(error.response.message, 'Okay')
-        return;
-      }
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error)
-      })
-    })
+    //     runRead({
+    //       read: '1'
+    //     })
+    //   }).catch(function (error) {
+    //     handleError({
+    //       message: error.message,
+    //       body: JSON.stringify(error)
+    //     })
+    //   })
+    // }).catch(function (error) {
+    //   if (error.response.apiRejection) {
+    //     snacks(error.response.message, 'Okay')
+    //     return;
+    //   }
+    //   handleError({
+    //     message: error.message,
+    //     body: JSON.stringify(error)
+    //   })
+    // })
   }
   req.onerror = function () {
 

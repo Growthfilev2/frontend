@@ -321,7 +321,7 @@ function expandPlaceBox() {
 
             window.scrollTo(0,document.body.scrollHeight);
 
-            console.log(formField)
+            console.log(formField);
             // }).catch(function (error) {
             //     console.log(error)
             //     progressBar.close();
