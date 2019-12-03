@@ -5,7 +5,6 @@ let snackBar;
 let DB_VERSION = 30;
 let initApp = true;
 
-
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -303,7 +302,7 @@ function startApp() {
             document.getElementById('app-current-panel').classList.remove('mdc-theme--primary-bg')
             document.getElementById('app-current-panel').innerHTML = '';
             document.getElementById('start-load').classList.add('hidden')
-            
+
             history.pushState(['profileCheck'], null, null)
             profileCheck();
           }).catch(function (error) {
@@ -323,7 +322,7 @@ function startApp() {
         history.pushState(['profileCheck'], null, null)
 
         profileCheck();
-      
+        // openMap()
         runRead({
           read: '1'
         })
@@ -372,17 +371,25 @@ function miniProfileCard(content, headerTitle, action) {
 }
 
 
+function increaseStep(stepNumber) {
 
+  const prevNumber = stepNumber - 1;
+  document.getElementById(`step${prevNumber}`).classList.remove('is-active');
+  document.getElementById(`step${prevNumber}`).classList.add('is-complete');
+  document.getElementById(`step${stepNumber}`).classList.add('is-active');
+
+}
 
 function checkForPhoto() {
   const auth = firebase.auth().currentUser;
   if (auth.photoURL) {
-    [...document.querySelectorAll('.is-active')].forEach(function(el){
-      el.classList.remove('is-active');
-    })
-    document.getElementById('photo-step').classList.add('is-active')
-   
-    const content = `
+    increaseStep(3)
+    checkForEmail();
+    return;
+  }
+
+  increaseStep(2)
+  const content = `
 
       <div class='photo-container'>
       <img src="./img/empty-user.jpg" id="image-update">
@@ -390,100 +397,73 @@ function checkForPhoto() {
         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">camera</span>
         <input type='file' accept='image/jpeg;capture=camera' id='choose'>
       </button>
-
       </div>
-      <div class="view-container">
-      <div class="mdc-text-field mdc-text-field--with-leading-icon mb-10 mt-20">
-    <i class="material-icons mdc-text-field__icon mdc-theme--primary">account_circle</i>
-    <input class="mdc-text-field__input" value="${auth.displayName}" disabled>
-    <div class="mdc-line-ripple"></div>
-    <label class="mdc-floating-label mdc-floating-label--float-above">Name</label>
-  </div>
-
-  <div class="mdc-text-field mdc-text-field--with-leading-icon mt-0">
-    <i class="material-icons mdc-text-field__icon mdc-theme--primary">phone</i>
-    <input class="mdc-text-field__input" value="${auth.phoneNumber}" disabled>
-    <div class="mdc-line-ripple"></div>
-    <label class="mdc-floating-label mdc-floating-label--float-above">Phone</label>
-  </div>
-      </div>
-      </div>
+  
       `
-    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
-    // const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-    progCard = progressBar;
-    document.getElementById('choose').addEventListener('change', function (evt) {
+  document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
+  // const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+  progCard = progressBar;
+  document.getElementById('choose').addEventListener('change', function (evt) {
 
-      const files = document.getElementById('choose').files
-      if (!files.length) return;
-      const file = files[0];
-      var fileReader = new FileReader();
-      fileReader.onload = function (fileLoadEvt) {
-        const srcData = fileLoadEvt.target.result;
-        const image = new Image();
-        image.src = srcData;
-        image.onload = function () {
-          const newDataUrl = resizeAndCompressImage(image);
-          document.getElementById('image-update').src = newDataUrl;
-          progCard.open();
-          requestCreator('backblaze', {
-            'imageBase64': newDataUrl
-          }).then(function () {
-            progCard.close();
-            checkForEmail();
+    const files = document.getElementById('choose').files
+    if (!files.length) return;
+    const file = files[0];
+    var fileReader = new FileReader();
+    fileReader.onload = function (fileLoadEvt) {
+      const srcData = fileLoadEvt.target.result;
+      const image = new Image();
+      image.src = srcData;
+      image.onload = function () {
+        const newDataUrl = resizeAndCompressImage(image);
+        document.getElementById('image-update').src = newDataUrl;
+        progCard.open();
+        requestCreator('backblaze', {
+          'imageBase64': newDataUrl
+        }).then(function () {
+          progCard.close();
+          checkForEmail();
 
-          }).catch(function (error) {
-            progCard.close();
-            snacks(error.response.message)
-          })
-        }
+        }).catch(function (error) {
+          progCard.close();
+          snacks(error.response.message)
+        })
       }
-      fileReader.readAsDataURL(file);
-    })
-    return
-  };
-
-
-
-  checkForEmail()
+    }
+    fileReader.readAsDataURL(file);
+  })
 
 }
 
 function checkForEmail() {
-  [...document.querySelectorAll('.is-active')].forEach(function(el){
-    el.classList.remove('is-active');
-  })
-  document.getElementById('email-step').classList.add('is-active')
+
   const auth = firebase.auth().currentUser;
-  // if (auth.email && auth.emailVerified) {
+  if (auth.email && auth.emailVerified) {
+    increaseStep(4);
+    checkForBankAccount();
+    return
+  }
+  // if (!auth.email && !auth.emailVerified) {
   //   checkForBankAccount();
   //   return;
   // }
 
+
   getRootRecord().then(function (record) {
     if (record.skipEmail) {
+      increaseStep(4);
       checkForBankAccount();
       return
     }
-    emailUpdation(checkForBankAccount,true);
-    // email
-    // checkForBankAccount()
-    // [...document.querySelectorAll('.is-active')].forEach(function(el){
-    //   el.classList.remove('is-active');
-    // })
-    // document.getElementById('account-step').classList.add('is-active')
-    // history.pushState(['emailUpdation'], null, null)
-    // emailUpdation(addNewBankAccount, true);
+    increaseStep(3)
+    emailUpdation(checkForBankAccount, true);
+    
   })
 }
 
 function checkForBankAccount() {
-  [...document.querySelectorAll('.is-active')].forEach(function(el){
-    el.classList.remove('is-active');
-  })
-  document.getElementById('account-step').classList.add('is-active')
-  getRootRecord().then(function(record){
-    if(record.skipBankAccountAdd) {
+  
+  getRootRecord().then(function (record) {
+    if (record.skipBankAccountAdd) {
       openMap();
       return;
     }
@@ -567,15 +547,23 @@ function showReLoginDialog(heading, contentText) {
 
 function getProfileCompletionTabs() {
   const auth = firebase.auth().currentUser;
-  const dom = `<div class="container-fluid mdc-top-app-bar--fixed-adjust">
-  <br /><br />
-  <ul class="list-unstyled multi-steps">
-      <li id='name-step' class="is-active">${auth.displayName ? 'Name' :''}</li>
-      <li id='photo-step'>${auth.photoURL ? 'Photo' :''}</li>
-      <li id='email-step'>${auth.email || !auth.emailVerified ? 'Email' :''}</li>
-      <li id='account-step'>${auth.bankAccount ? 'Bank account' : 'Bank account'}</li>
+  const dom = `<div class="step-container mdc-top-app-bar--fixed-adjust">
+  <div class="progress">
+    <div class="progress-track"></div>
+    <div id="step1" class="progress-step">
+      <i class='material-icons'>person</i>
+    </div>
+    <div id="step2" class="progress-step">
+      <i class='material-icons'>camera</i>
+    </div>
+    <div id="step3" class="progress-step">
+      <i class='material-icons'>email</i>
+    </div>
+    <div id="step4" class="progress-step">
+      <i class='material-icons'>payment</i>
+    </div>
+  </div>
 
-  </ul>
 </div>`
   return dom
 }
@@ -583,50 +571,13 @@ function getProfileCompletionTabs() {
 function profileCheck() {
   const auth = firebase.auth().currentUser;
   document.getElementById("app-header").classList.remove('hidden');
-  // document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust')
-  if (auth.displayName) {
-    document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
+  document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
+  if (!auth.displayName) {
     updateName(checkForPhoto);
     return
   }
-  // if (!auth.displayName) {
-
-  //   const content = `
-  //   <div class="mdc-text-field mdc-text-field--outlined" id='name'>
-  //   <input class="mdc-text-field__input" required>
-  //   <div class="mdc-notched-outline">
-  //     <div class="mdc-notched-outline__leading"></div>
-  //     <div class="mdc-notched-outline__notch">
-  //       <label class="mdc-floating-label">Name</label>
-  //     </div>
-  //     <div class="mdc-notched-outline__trailing"></div>
-  //   </div>
-  // </div>
-  // `
-  //   const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
-  // <span class="mdc-button__label">NEXT</span>
-  // <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-  // </button></div></div>`
-
-  //   document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
-  //   const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-  //   const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
-  //   console.log(nameInput)
-  //   new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
-  //     if (!nameInput.value) {
-  //       nameInput.focus();
-  //       return;
-  //     }
-  //     progCard.open();
-  //     auth.updateProfile({
-  //       displayName: nameInput.value
-  //     }).then(checkForPhoto).catch(console.log)
-  //   })
-  //   return
-  // }
-  checkForPhoto()
-
-
+  increaseStep(2)
+  checkForPhoto();
 }
 
 function areObjectStoreValid(names) {
@@ -895,8 +846,10 @@ function getCheckInSubs() {
 
 function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
+  document.getElementById('step-ui').innerHTML = ''
+  progressBar.open();
   appLocation(3).then(function (geopoint) {
-
+    progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
       console.log(checkInSubs)
       document.getElementById('start-load').classList.add('hidden');
@@ -929,12 +882,11 @@ function openMap() {
       return reportView()
     })
   }).catch(function (error) {
+    progressBar.close();
     document.getElementById('start-load').classList.add('hidden');
     handleLocationError(error, true)
   })
 }
-
-
 
 function fillVenueInCheckInSub(sub, venue) {
   const vd = sub.venue[0];

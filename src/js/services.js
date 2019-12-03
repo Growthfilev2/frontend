@@ -1228,6 +1228,7 @@ function emailUpdate(email, callback) {
 }
 
 function emailVerification(callback) {
+
   firebase.auth().currentUser.sendEmailVerification().then(function () {
     snacks('Email Verification Has Been Sent.')
     progressBar.close();
