@@ -27,7 +27,7 @@
                 </div>
                 <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='supervisor-list'
                     data-mdc-auto-init="MDCList">
-                    
+
                 </ul>
             </div>
 
@@ -59,7 +59,7 @@
         function init(subscriptionTemplate) {
           
             addSupervisorBtn.addEventListener('click', function () {
-               
+                
                 callContact("getContactSupervisors")
             })
 
@@ -81,6 +81,7 @@
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
             const li = createPhoneNumberLi(contactObject, false, function () {
                 delete supervisorObject[contactObject.phoneNumber];
+                addSupervisorBtn.classList.remove('hidden')
                 if (!supervisorList.listElements.length) {
                     document.querySelector('#supervisor-cont .inline-flex').appendChild(addSupervisorBtn);
                     return;
@@ -91,6 +92,10 @@
             window.scrollTo(0, document.body.scrollHeight);
             parent.window.scrollTo(0, parent.document.body.scrollHeight);
             document.getElementById("supervisor-cont").appendChild(addSupervisorBtn);
+            if (supervisorList.listElements.length == 3) {
+                addSupervisorBtn.classList.add('hidden')
+                return;
+            }
         }
     </script>
 </body>

@@ -103,6 +103,7 @@ function initializeApp() {
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
         document.getElementById("app-current-panel").classList.add('hidden')
+        document.getElementById('start-load').classList.add('hidden')
         userSignedOut()
         return;
       }
@@ -855,7 +856,7 @@ function openMap() {
     getCheckInSubs().then(function (checkInSubs) {
       console.log(checkInSubs)
       document.getElementById('start-load').classList.add('hidden');
-      if (Object.keys(checkInSubs).length) {
+      if (!Object.keys(checkInSubs).length) {
 
         // const geopoint = {
         //   latitude:22,
