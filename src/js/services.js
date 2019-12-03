@@ -71,6 +71,14 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
+    return resolve({
+      accuracy: 657586,
+      isLocationOld: true,
+      lastLocationTime: 1575395053660,
+      latitude: 28.482764799999998,
+      longitude: 77.0678784,
+      provider: "HTML5",
+    })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -236,7 +244,7 @@ function html5Geolocation() {
       })
     }, {
       maximumAge: 0,
-      timeout: 5000,
+      timeout: true,
       enableHighAccuracy: false
     })
   })

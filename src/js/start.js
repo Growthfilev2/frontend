@@ -184,7 +184,7 @@ var searchDebounde = debounce(function (event) {
                 });
                 ul.root_.appendChild(li);
             });
-            // map.setCenter(results[0].geometry.location);
+         
             return;
         }
 
