@@ -1065,7 +1065,7 @@ function templateList(suggestedTemplates) {
   return ul.outerHTML;
 }
 
-// image-update
+
 function getImageBase64(evt, id) {
   return new Promise(function (resolve, reject) {
 
@@ -1174,7 +1174,7 @@ function getEmailViewHeading(auth) {
   return text;
 }
 
-function emailUpdation(callback, updateOnly) {
+function emailUpdation(skip, callback) {
   const auth = firebase.auth().currentUser;
   const headings = getEmailViewHeading(auth)
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -1187,7 +1187,7 @@ function emailUpdation(callback, updateOnly) {
 
     document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid update-email'>
         
-    ${updateEmailDom(auth.email, getReportOffices(result), headings)}
+    ${updateEmailDom(skip, getReportOffices(result), headings)}
     </div>`
     const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
     emailField.focus();
@@ -1223,26 +1223,26 @@ function emailUpdation(callback, updateOnly) {
       return
     });
 
-    const skipbtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
-    skipbtn.root_.classList.remove('hidden')
-    skipbtn.root_.addEventListener('click', function () {
-      if (!updateOnly) {
-        const rootTx = db.transaction('root', 'readwrite');
-        const rootStore = rootTx.objectStore('root');
+    const skipbtn = document.getElementById('skip-btn')
+    if (!skipbtn) return;
 
-        rootStore.get(auth.uid).onsuccess = function (event) {
-          const record = event.target.result;
-          record.skipEmail = true
-          rootStore.put(record);
-        }
-        rootTx.oncomplete = function () {
-          history.pushState([`${callback}`], null, null);
-          callback();
-        }
-        return
+    new mdc.ripple.MDCRipple(skipbtn)
+    skipbtn.classList.remove('hidden')
+    skipbtn.addEventListener('click', function () {
+
+
+      const rootTx = db.transaction('root', 'readwrite');
+      const rootStore = rootTx.objectStore('root');
+
+      rootStore.get(auth.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        record.skipEmail = true
+        rootStore.put(record);
       }
-      history.pushState([`${callback}`], null, null);
-      callback();
+      rootTx.oncomplete = function () {
+       
+        callback();
+      }
     })
 
   })
@@ -1259,7 +1259,7 @@ function emailVerification(callback) {
   firebase.auth().currentUser.sendEmailVerification().then(function () {
     snacks('Email Verification Has Been Sent.')
     progressBar.close();
-    history.pushState(['emailVerificationWait'], null, null)
+   
     emailVerificationWait(callback)
   }).catch(handleEmailError)
 }
@@ -1284,8 +1284,7 @@ function emailVerificationWait(callback) {
         return;
       }
       progressBar.close();
-
-      history.pushState([`${callback}`], null, null)
+      
       callback();
     }, 2000)
   })
@@ -1322,8 +1321,8 @@ function getReportOffices(result) {
 }
 
 
-function updateEmailDom(email, reportString, headings) {
-
+function updateEmailDom(skipbtn, reportString, headings) {
+  const email = firebase.auth().currentUser.email
   return `
 
 <h3 class='mdc-typography--headline6'>${headings.heading}</h3>
@@ -1350,10 +1349,9 @@ ${reportString}
 <button class='mdc-button mdc-theme--primary-bg' id='email-btn'>
 <span class='mdc-button__label mdc-theme--on-primary'>${headings.btnText}<span>
 </button>
-
-<button class='mdc-button mt-10' id='skip-btn'>
-  <span class='mdc-button__label'>SKIP<span>
-</button>
+${skipbtn ? `<button class='mdc-button mt-10' id='skip-btn'>
+<span class='mdc-button__label'>SKIP<span>
+</button>` :''}
 
 </div>
 `

@@ -444,7 +444,10 @@ function checkForEmail() {
       return
     }
     increaseStep(3)
-    emailUpdation(checkForBankAccount, true);
+    emailUpdation(true,function(){
+     
+      checkForBankAccount()
+    });
 
   })
 }
