@@ -362,7 +362,7 @@ function createOfficeInit(isAdmin) {
                 displayName: firebase.auth().currentUser.displayName,
                 phoneNumber: firebase.auth().currentUser.phoneNumber
             },
-            isAdmin:true
+            isAdmin:isAdmin
         },
         "hidden": 0,
         "canEditRule": "NONE",
