@@ -14,60 +14,27 @@
     <div class='forms mdc-card employee-form' id='form'>
         <div class="form-list">
 
-            <div class="form-component pb-0">
+            <div class="form-component pb-0" id='supervisor-cont'>
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
                         Supervisor
                     </h1>
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini hidden" aria-label="Favorite" id='add-sub' data-mdc-auto-init="MDCRipple">
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more" aria-label="Favorite"
+                        id='add-supervisor' data-mdc-auto-init="MDCRipple">
                         <div class="mdc-fab__ripple"></div>
                         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
                     </button>
                 </div>
-                <div class="subscriber-cont">
-                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='subscriber-list'  data-mdc-auto-init="MDCList">
-                        <li class="mdc-list-item">
-                            <img src="" class="mdc-list-item__graphic" aria-hidden="true">
-                            <span class="mdc-list-item__text">
-                                <span class="mdc-list-item__primary-text"></span>
-                                <span class="mdc-list-item__secondary-text"></span>
-                            </span>
-                            <span class="mdc-list-item__meta material-icons mdc-theme--error"
-                                aria-hidden="true">clear</span>
-                        </li>
-
-                    </ul>
-
-                </div>
-             
-            </div>
-
-
-            <div class="form-component pt-0">
-                <div class="inline-flex assingee-area">
-                   
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite"
-                        id='add-people-init'  data-mdc-auto-init="MDCRipple">
-                        <div class="mdc-fab__ripple"></div>
-                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
-                    </button>
-
-                </div>
-
-                <ul class="mdc-list mdc-list--two-line pt-0" id='contact-list'  data-mdc-auto-init="MDCList">
+                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='supervisor-list'
+                    data-mdc-auto-init="MDCList">
+                    
                 </ul>
-                <div style='margin-right:7px'>
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini hidden people-add-more"
-                        aria-label="Favorite" id='add-people'  data-mdc-auto-init="MDCRipple">
-                        <div class="mdc-fab__ripple"></div>
-                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
-                    </button>
-                </div>
-                
             </div>
+
+
 
             <div class="form-component" style="margin-top: 50px;">
-                <button class="mdc-button mdc-button--raised submit-btn"  data-mdc-auto-init="MDCRipple" id='submit-btn'>
+                <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple" id='submit-btn'>
                     <div class="mdc-button__ripple"></div>
                     <i class="material-icons mdc-button__icon" aria-hidden="true">play_arrow</i>
                     <span class="mdc-button__label">Check-in</span>
@@ -85,98 +52,47 @@
     <script>
         parent.window.mdc.autoInit();
 
-        const shareBtnInit = document.getElementById('add-people-init');
-        const shareBtn = document.getElementById('add-people');
-        const addSub = document.getElementById('add-sub')
-        
+        const addSupervisorBtn = document.getElementById('add-supervisor')
         const supervisorObject = {};
-
-        const subscriberList = new parent.mdc.list.MDCList(document.getElementById('subscriber-list'))
-        const assigneeList = new parent.mdc.list.MDCList(document.getElementById('contact-list'))
-        console.log(subscriberList)
+        const supervisorList = new parent.mdc.list.MDCList(document.getElementById('supervisor-list'))
 
         function init(subscriptionTemplate) {
-            subscriberList.root_.querySelector('img').src = subscriptionTemplate.meta.subscriberDetails.photoURL;
-            subscriberList.root_.querySelector('.mdc-list-item__primary-text').textContent = subscriptionTemplate.meta
-                .subscriberDetails.displayName;
-            subscriberList.root_.querySelector('.mdc-list-item__secondary-text').textContent = subscriptionTemplate
-                .attachment['Subscriber'].value;
-            subscriberList.root_.querySelector('.mdc-list-item__meta').addEventListener('click', function () {
-
-
-                subscriberList.root_.classList.add('hidden');
-
-                addSub.classList.remove('hidden');
-                addSub.addEventListener('click', function () {
-                    callContact("getContactForSubscriber")
-                })
+          
+            addSupervisorBtn.addEventListener('click', function () {
                
+                callContact("getContactSupervisors")
             })
 
-            shareBtnInit.addEventListener('click', function () {
-                callContact('getContactForEmployee')
-            });
-            shareBtn.addEventListener('click', function () {
 
-                callContact('getContactForEmployee')
-            });
-           
-            document.getElementById('submit-btn').addEventListener('click',function(){
-                subscriptionTemplate.attachment.Subscriber = subscriptionTemplate.meta.subscriberDetails.phoneNumber;
+            document.getElementById('submit-btn').addEventListener('click', function () {
                 const array = []
-                Object.keys(supervisorObject).forEach(function(number){
+                Object.keys(supervisorObject).forEach(function (number) {
                     array.push(supervisorObject[number]);
                 })
-                subscriptionTemplate.attachment.assignees = array
+                subscriptionTemplate.assignees = array
+                delete subscriptionTemplate.user
                 parent.sendSubscriptionData(subscriptionTemplate);
             })
         }
 
-        function callContact(functionName) {
-            if (parent.native.getName() === 'Android') {
-                AndroidInterface.getContact(functionName);
-                return
-            }
-            webkit.messageHandlers.getContact.postMessage(functionName);
-        }
 
-        function setContactForSubscriber(contactObject) {
-            subscriberList.root_.classList.remove('hidden');
-            subscriberList.root_.querySelector('img').src = '../../img/empty-user.jpg';
-            subscriberList.root_.querySelector('.mdc-list-item__primary-text').textContent = contactObject.displayName;
-            subscriberList.root_.querySelector('.mdc-list-item__secondary-text').textContent = contactObject
-                .phoneNumber;
-            
-           addSub.classList.add('hidden')
 
-        }
-
-        function setContactForAssignee(contactObject) {
-            console.log(contactObject);
+        function setContactForSupervisors(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
-            const li = createPhoneNumberLi(contactObject);
-            li.querySelector('.mdc-list-item__meta').addEventListener('click', function () {
-                li.remove();
-                if (!assigneeList.listElements.length) {
-                    shareBtnInit.classList.remove('hidden');
-                    document.getElementById('add-people').classList.add('hidden');
-                    delete supervisorObject.phoneNumber
+            const li = createPhoneNumberLi(contactObject, false, function () {
+                delete supervisorObject[contactObject.phoneNumber];
+                if (!supervisorList.listElements.length) {
+                    document.querySelector('#supervisor-cont .inline-flex').appendChild(addSupervisorBtn);
+                    return;
                 }
             });
-            supervisorObject[contactObject.phoneNumber] = contactObject;
-            assigneeList.root_.appendChild(li);
-            window.scrollTo(0,document.body.scrollHeight);
-            parent.window.scrollTo(0,parent.document.body.scrollHeight);
-            if (assigneeList.listElements.length) {
-                shareBtnInit.classList.add('hidden');
-                document.getElementById('add-people').classList.remove('hidden');
-            }
-
-          
-
+            supervisorList.root_.appendChild(li)
+            supervisorObject[contactObject.phoneNumber] = contactObject
+            window.scrollTo(0, document.body.scrollHeight);
+            parent.window.scrollTo(0, parent.document.body.scrollHeight);
+            document.getElementById("supervisor-cont").appendChild(addSupervisorBtn);
         }
-   
-   </script>
+    </script>
 </body>
 
 </html>

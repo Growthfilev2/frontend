@@ -170,16 +170,10 @@ function getContactOwner(contactString) {
     document.getElementById('form-iframe').contentWindow.setContactForOwner(contactDetails);
 }
 
-function getContactForEmployee(contactString) {
+function getContactSupervisors(contactString) {
     const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContactForAssignee(contactDetails);
+    document.getElementById('form-iframe').contentWindow.setContactForSupervisors(contactDetails);
 }
-
-function getContactForSubscriber(contactString) {
-    const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContactForSubscriber(contactDetails);
-}
-
 
 function setContactForSecondCustomer(contactString) {
     const contactDetails = parseContact(contactString);

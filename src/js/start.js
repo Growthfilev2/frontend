@@ -291,10 +291,10 @@ function expandPlaceBox() {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
             progressBar.close();
-            // if (true) {
-            //     giveSubscriptionInit();
-            //     return;
-            // }
+            if (true) {
+                giveSubscriptionInit();
+                return;
+            }
             
             const ownerCont = document.getElementById("owner-action-cont");
             ownerCont.innerHTML = `
@@ -457,8 +457,8 @@ function giveSubscriptionInit() {
         },
         "template": "subscription",
         "venue": [],
-        "meta": {
-            "subscriberDetails": {
+        "user": {
+            "details": {
                 photoURL: firebase.auth().currentUser.photoURL,
                 displayName: firebase.auth().currentUser.displayName,
                 phoneNumber: firebase.auth().currentUser.phoneNumber
