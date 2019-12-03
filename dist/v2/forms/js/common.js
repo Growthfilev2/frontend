@@ -1,3 +1,11 @@
+function callContact(functionName) {
+    if (parent.native.getName() === 'Android') {
+        AndroidInterface.getContact(functionName);
+        return
+    }
+    webkit.messageHandlers.getContact.postMessage(functionName);
+}
+
 function createDate(dateObject) {
     console.log(dateObject)
     let month = dateObject.getMonth() + 1;
@@ -137,7 +145,7 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function createPhoneNumberLi(contactObject) {
+function createPhoneNumberLi(contactObject,withoutIcon,callback) {
 
     const li = createElement('li', {
         className: 'mdc-list-item',
@@ -147,9 +155,21 @@ function createPhoneNumberLi(contactObject) {
     li.innerHTML = `<span class="mdc-list-item__text">
         <span class="mdc-list-item__primary-text">${contactObject.displayName}</span>
         <span class="mdc-list-item__secondary-text">${contactObject.phoneNumber}</span>
-    </span>
-    <span class="mdc-list-item__meta material-icons mdc-theme--error" aria-hidden="true">clear</span>
-    `
+    </span>`
+    if(withoutIcon) {
+        return li;
+    }
+    const clearIcon = createElement('span',{
+        className:'mdc-list-item__meta material-icons mdc-theme--error',
+        textContent:'clear'
+    })
+    clearIcon.addEventListener('click',function(){
+        li.remove();
+        if(callback) {
+            callback();
+        }
+    })
+    li.appendChild(clearIcon);    
     return li
 }
 

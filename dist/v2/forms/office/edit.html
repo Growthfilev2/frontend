@@ -14,35 +14,40 @@
     <div class='forms mdc-card employee-form' id='form'>
         <div class="form-list">
             <div class="form-component">
+                <div class="mdc-form-field owner-checkbox-form">
+                    <div class="mdc-checkbox">
+                        <input type="checkbox" class="mdc-checkbox__native-control" id="owner-checkbox" />
+                        <div class="mdc-checkbox__background">
+                            <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                                <path class="mdc-checkbox__checkmark-path" fill="none"
+                                    d="M1.73,12.91 8.1,19.28 22.79,4.59"></path>
+                            </svg>
+                            <div class="mdc-checkbox__mixedmark"></div>
+                        </div>
+                        <div class="mdc-checkbox__ripple"></div>
+                    </div>
+                    <label for="owner-checkbox">Yes, I am owner</label>
+                </div>
+            </div>
+            <div class="form-component owner-container hidden">
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
-                        Add owner
+                        Owner
                     </h1>
-
                     <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite" id='add-owner'
                         data-mdc-auto-init="MDCRipple">
                         <div class="mdc-fab__ripple"></div>
                         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
                     </button>
-
                 </div>
-                <div class="subscriber-cont">
-                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list hidden" id='owner-list'
-                        data-mdc-auto-init="MDCList">
-                        <li class="mdc-list-item">
-                            <img src="" class="mdc-list-item__graphic" aria-hidden="true">
-                            <span class="mdc-list-item__text">
-                                <span class="mdc-list-item__primary-text"></span>
-                                <span class="mdc-list-item__secondary-text"></span>
-                            </span>
-                            <span class="mdc-list-item__meta material-icons mdc-theme--error"
-                                aria-hidden="true">clear</span>
-                        </li>
 
-                    </ul>
+                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='owner-list'
+                    data-mdc-auto-init="MDCList">
 
-                </div>
+                </ul>
+
             </div>
+
             <div class="form-component">
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
@@ -55,172 +60,124 @@
                     </button>
                 </div>
                 <div class="subscriber-cont">
-                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list hidden" id='super-list'
+                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list " id='super-list'
                         data-mdc-auto-init="MDCList">
-                        <li class="mdc-list-item">
-                            <img src="" class="mdc-list-item__graphic" aria-hidden="true">
-                            <span class="mdc-list-item__text">
-                                <span class="mdc-list-item__primary-text"></span>
-                                <span class="mdc-list-item__secondary-text"></span>
-                            </span>
-                            <span class="mdc-list-item__meta material-icons mdc-theme--error"
-                                aria-hidden="true">clear</span>
-                        </li>
 
                     </ul>
 
                 </div>
             </div>
-
-
-
             <div class="form-component pt-0 hidden" id='people-cont'>
-                    <div class="inline-flex assingee-area">
-                            <h1 class="mdc-typography--headline6 mdc-theme--primary">
-                                    Add People
-                                </h1>
-            
-                        <!-- <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite"
-                            id='add-people-init'  data-mdc-auto-init="MDCRipple">
-                            <div class="mdc-fab__ripple"></div>
-                            <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
-                        </button> -->
-    
-                    </div>
-    
-                    <ul class="mdc-list mdc-list--two-line pt-0" id='contact-list'  data-mdc-auto-init="MDCList">
-                    </ul>
-                    <div style='margin-right:7px'>
-                        <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more"
-                            aria-label="Favorite" id='add-people'  data-mdc-auto-init="MDCRipple">
-                            <div class="mdc-fab__ripple"></div>
-                            <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
-                        </button>
-                    </div>
-                    
+                <div class="inline-flex">
+                    <h1 class="mdc-typography--headline6 mdc-theme--primary">
+                        People
+                    </h1>
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more" aria-label="Favorite"
+                        id='add-people' data-mdc-auto-init="MDCRipple">
+                        <div class="mdc-fab__ripple"></div>
+                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
+                    </button>
+
                 </div>
-    
+
+                <ul class="mdc-list mdc-list--two-line pt-0" id='contact-list' data-mdc-auto-init="MDCList">
+                </ul>
 
 
+            </div>
 
             <div class="form-component" style="margin-top: 50px;">
-                    <button class="mdc-button mdc-button--raised submit-btn"  data-mdc-auto-init="MDCRipple" id='submit-btn'>
-                        <div class="mdc-button__ripple"></div>
-                        <i class="material-icons mdc-button__icon" aria-hidden="true">business</i>
-                        <span class="mdc-button__label">Create Office</span>
-                    </button>
-                </div>
-
-
-
+                <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple" id='submit-btn'>
+                    <div class="mdc-button__ripple"></div>
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">business</i>
+                    <span class="mdc-button__label">Create Office</span>
+                </button>
+            </div>
         </div>
     </div>
     </div>
     <script src="../js/common.js"></script>
     <script>
         parent.window.mdc.autoInit();
-
-        const ownerBtn = document.getElementById('add-owner')
-        const supervisorBtn = document.getElementById('add-supervisor')
+        const ownerCheckBox = new parent.mdc.checkbox.MDCCheckbox(document.querySelector('.owner-checkbox-form'))
+        const ownerBtn = document.getElementById('add-owner');
         const ownerList = new parent.mdc.list.MDCList(document.getElementById('owner-list'))
+
+        const supervisorBtn = document.getElementById('add-supervisor');
         const superList = new parent.mdc.list.MDCList(document.getElementById('super-list'))
         const list = new parent.mdc.list.MDCList(document.getElementById('contact-list'));
 
+
         ownerBtn.addEventListener('click', function () {
-            callContact('getContactOwner')
-           
+
+            callContact('getContactOwner');
         });
+
         supervisorBtn.addEventListener('click', function () {
 
             callContact('getContactSupervisor')
         });
 
 
-        function callContact(functionName) {
-            if (parent.native.getName() === 'Android') {
-                AndroidInterface.getContact(functionName);
-                return
-            }
-            webkit.messageHandlers.getContact.postMessage(functionName);
-        }
-
-
         function init(subscriptionTemplate) {
-            if(subscriptionTemplate.owner.isOwner) {
-                setContactForOwner(subscriptionTemplate.owner.details);
-                ownerBtn.classList.add('hidden');
-                ownerList.root_.querySelector('.mdc-list-item__meta').classList.add('hidden')
-                document.getElementById('people-cont').classList.remove('hidden')
+            ownerCheckBox.listen('change', function (evt) {
+                if (ownerCheckBox.checked) {
+                    document.querySelector('.owner-container').classList.add('hidden')
+                    ownerList.root_.innerHTML = '';
+                    return
+                }
+
+                ownerBtn.classList.remove('hidden')
+                document.querySelector('.owner-container').classList.remove('hidden')
+            });
+
+            ownerCheckBox.checked = true;
+
+            if (subscriptionTemplate.user.isAdmin) {
+                document.getElementById('people-cont').classList.remove('hidden');
+                document.getElementById('add-people').addEventListener('click', function () {
+
+                    callContact('getContactPeople');
+                })
 
             }
-            
-
-
-
-            document.getElementById('add-people').addEventListener('click',function(){
-                callContact('getContactPeople');
-            })
-            
-            
-
-
-            console.log(subscriptionTemplate)
-            document.getElementById('submit-btn').addEventListener('click',function() {
+            document.getElementById('submit-btn').addEventListener('click', function () {
                 parent.sendOfficeData();
             })
-
-          
         }
 
-
         function setContactForOwner(contactObject) {
+            ownerBtn.classList.add('hidden');
+            const li = createPhoneNumberLi(contactObject, false, function () {
+                ownerBtn.classList.remove('hidden');
 
-            ownerList.root_.classList.remove('hidden');
-            ownerList.root_.querySelector('img').src = '../../img/empty-user.jpg';
-            ownerList.root_.querySelector('.mdc-list-item__primary-text').textContent = contactObject.displayName;
-            ownerList.root_.querySelector('.mdc-list-item__secondary-text').textContent = contactObject
-                .phoneNumber;
-            ownerList.root_.querySelector('.mdc-list-item__meta').addEventListener('click', function () {
-                ownerList.root_.classList.add('hidden');
             })
-            //    addSub.classList.add('hidden')
-
+            ownerList.root_.appendChild(li);
         }
 
         function setContactForSupervisor(contactObject) {
-            superList.root_.classList.remove('hidden');
-            superList.root_.querySelector('img').src = '../../img/empty-user.jpg';
-            superList.root_.querySelector('.mdc-list-item__primary-text').textContent = contactObject.displayName;
-            superList.root_.querySelector('.mdc-list-item__secondary-text').textContent = contactObject
-                .phoneNumber;
-            superList.root_.querySelector('.mdc-list-item__meta').addEventListener('click', function () {
-                superList.root_.classList.add('hidden');
-            })
-            //    addSub.classList.add('hidden')
+            supervisorBtn.classList.add('hidden');
+            const li = createPhoneNumberLi(contactObject, false, function () {
+                supervisorBtn.classList.remove('hidden');
 
+            })
+            superList.root_.appendChild(li);
         }
 
         function setContactForPeople(contactObject) {
-            console.log(contactObject);
-            if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
-            const li = createPhoneNumberLi(contactObject);
-            li.querySelector('.mdc-list-item__meta').addEventListener('click', function () {
-                li.remove();
-                // if (list.listElements.length) {
-                //     document.querySelector('.submit-btn-emp').classList.remove('hidden')
-                // } else {
-                //     document.querySelector('.submit-btn-emp').classList.add('hidden')
-                // }
-            });
+            const btn = document.getElementById('add-people');
 
+            if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
+            const li = createPhoneNumberLi(contactObject, false, function () {
+                if (!list.listElements.length) {
+                    document.querySelector('#people-cont .inline-flex').appendChild(btn);
+                    return;
+                }
+            });
             list.root_.appendChild(li)
-            window.scrollTo(0,document.body.scrollHeight);
-            parent.window.scrollTo(0,parent.document.body.scrollHeight);
-            // if (list.listElements.length) {
-            //     document.querySelector('.submit-btn-emp').classList.remove('hidden')
-            // } else {
-            //     document.querySelector('.submit-btn-emp').classList.add('hidden')
-            // }
+            window.scrollTo(0, document.body.scrollHeight);
+            parent.window.scrollTo(0, parent.document.body.scrollHeight);
+            document.getElementById("people-cont").appendChild(btn);
         };
     </script>
 </body>

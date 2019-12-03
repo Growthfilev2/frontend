@@ -149,8 +149,12 @@ body {
   width: 100%
 }
 
+
 .forms .form-list .product-container .form-component {
   width: auto;
+}
+.owner-checkbox-form {
+  float: right;
 }
 
 @media (max-width:660px) {

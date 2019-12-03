@@ -1077,7 +1077,7 @@ function updateName(callback) {
   
   </p>
 <div class="mdc-text-field mdc-text-field--outlined mt-10" id='name'>
-  <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName}' type='text' >
+  <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName || ''}' type='text' >
  <div class="mdc-notched-outline">
      <div class="mdc-notched-outline__leading"></div>
      <div class="mdc-notched-outline__notch">

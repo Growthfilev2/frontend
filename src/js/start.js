@@ -299,31 +299,23 @@ function expandPlaceBox() {
             const ownerCont = document.getElementById("owner-action-cont");
             ownerCont.innerHTML = `
             <div class='text-center'>
-                <h3 class='mdc-typography--headline6 mt-0 mb-0'>Are you an owner ? </h3>
-                <div class='mdc-form-field text-center owner-check-form'>
-                    ${createRadio('radio-1','yes').outerHTML}
-                    <label for='radio-1'>Yes</label>
-                    ${createRadio('radio-2','no').outerHTML}
-                    <label for='radio-2'>No</label>
-                </div>
-              
+                <h3 class='mdc-typography--headline6 mt-0'>Do you want to create a company ? </h3>
+                    ${createButton('Create office','business','create-office-btn').outerHTML}
             </div>
             `
             ownerCont.classList.add('pb-20')
-            const acceptRadio = new mdc.radio.MDCRadio(document.getElementById('radio-1'));
-            const noRadio = new mdc.radio.MDCRadio(document.getElementById('radio-2'));
-            const formField = new mdc.formField.MDCFormField(document.querySelector('.mdc-form-field'));
-
-            acceptRadio.root_.addEventListener('click',function(){
-                createOfficeInit(true)
-            });
-            noRadio.root_.addEventListener('click',function(){
-                createOfficeInit(false)
-            });
-
+            document.getElementById('create-office-btn').classList.add('mdc-button--raised')
+            document.getElementById('create-office-btn').addEventListener('click',function(){
+                firebase.auth().currentUser.getIdTokenResult().then(function(idTokenResult){
+                    console.log(idTokenResult);
+                    const isUserAdminOfOffice = isAdmin(idTokenResult,placeResult.name);
+                    createOfficeInit(isUserAdminOfOffice);
+                }).catch(function(error){
+                    createOfficeInit();
+                })
+            })
             window.scrollTo(0,document.body.scrollHeight);
-
-            console.log(formField);
+            
             // }).catch(function (error) {
             //     console.log(error)
             //     progressBar.close();
@@ -352,19 +344,25 @@ function expandPlaceBox() {
     });
 }
 
+function isAdmin(idTokenResult,officeName){
+    if(!idTokenResult.claims.hasOwnProperty('admin')) return;
+    if(!Array.isArray(idTokenResult.claims.admin)) return;
+    if(!idTokenResult.claims.admin.length) return;
+    if(idTokenResult.claims.admin.indexOf(officeName) == -1) return;
+    return true;
+}
 
 
+function createOfficeInit(isAdmin) {
 
-function createOfficeInit(isOwner) {
     const template = {
-        "owner": {
-            isOwner:isOwner,
-          
+        "user": {
             details:{
                 photoURL: firebase.auth().currentUser.photoURL,
                 displayName: firebase.auth().currentUser.displayName,
                 phoneNumber: firebase.auth().currentUser.phoneNumber
-            }
+            },
+            isAdmin:true
         },
         "hidden": 0,
         "canEditRule": "NONE",
@@ -435,9 +433,7 @@ function createOfficeInit(isOwner) {
             }
         },
         "template": "office",
-        "comment": "Template used by support to create a new paid account of a company.",
-        "statusOnCreate": "PENDING",
-        "timestamp": 1561975667937,
+     
         "venue": []
     }
     history.pushState(['addView'], null, null);

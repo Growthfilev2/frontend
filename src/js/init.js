@@ -374,6 +374,10 @@ function miniProfileCard(content, headerTitle, action) {
 function increaseStep(stepNumber) {
 
   const prevNumber = stepNumber - 1;
+  if(prevNumber == 0) {
+    document.getElementById(`step${stepNumber}`).classList.add('is-active');
+    return;
+  }
   document.getElementById(`step${prevNumber}`).classList.remove('is-active');
   document.getElementById(`step${prevNumber}`).classList.add('is-complete');
   document.getElementById(`step${stepNumber}`).classList.add('is-active');
@@ -442,10 +446,6 @@ function checkForEmail() {
     checkForBankAccount();
     return
   }
-  // if (!auth.email && !auth.emailVerified) {
-  //   checkForBankAccount();
-  //   return;
-  // }
 
 
   getRootRecord().then(function (record) {
@@ -467,6 +467,7 @@ function checkForBankAccount() {
       openMap();
       return;
     }
+    increaseStep(4)
     history.pushState(['addNewBankAccount'], null, null);
     addNewBankAccount(openMap);
   })
@@ -573,6 +574,7 @@ function profileCheck() {
   document.getElementById("app-header").classList.remove('hidden');
   document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
   if (!auth.displayName) {
+    increaseStep(1)
     updateName(checkForPhoto);
     return
   }
@@ -853,7 +855,7 @@ function openMap() {
     getCheckInSubs().then(function (checkInSubs) {
       console.log(checkInSubs)
       document.getElementById('start-load').classList.add('hidden');
-      if (!Object.keys(checkInSubs).length) {
+      if (Object.keys(checkInSubs).length) {
 
         // const geopoint = {
         //   latitude:22,
