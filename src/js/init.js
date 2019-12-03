@@ -375,7 +375,7 @@ function miniProfileCard(content, headerTitle, action) {
 function increaseStep(stepNumber) {
 
   const prevNumber = stepNumber - 1;
-  if(prevNumber == 0) {
+  if (prevNumber == 0) {
     document.getElementById(`step${stepNumber}`).classList.add('is-active');
     return;
   }
@@ -406,35 +406,23 @@ function checkForPhoto() {
   
       `
   document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
-  // const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-  progCard = progressBar;
   document.getElementById('choose').addEventListener('change', function (evt) {
+    getImageBase64(evt).then(function (dataURL) {
+      document.getElementById('image-update').src = dataURL;
+      progressBar.open()
+      return requestCreator('backblaze', {
+        'imageBase64': dataURL
+      })
+    }).then(function () {
+      progressBar.close();
+      checkForEmail();
 
-    const files = document.getElementById('choose').files
-    if (!files.length) return;
-    const file = files[0];
-    var fileReader = new FileReader();
-    fileReader.onload = function (fileLoadEvt) {
-      const srcData = fileLoadEvt.target.result;
-      const image = new Image();
-      image.src = srcData;
-      image.onload = function () {
-        const newDataUrl = resizeAndCompressImage(image);
-        document.getElementById('image-update').src = newDataUrl;
-        progCard.open();
-        requestCreator('backblaze', {
-          'imageBase64': newDataUrl
-        }).then(function () {
-          progCard.close();
-          checkForEmail();
+    }).catch(function (error) {
+      progressBar.close();
+      snacks(error.response.message)
+      
+    })
 
-        }).catch(function (error) {
-          progCard.close();
-          snacks(error.response.message)
-        })
-      }
-    }
-    fileReader.readAsDataURL(file);
   })
 
 }
@@ -457,12 +445,12 @@ function checkForEmail() {
     }
     increaseStep(3)
     emailUpdation(checkForBankAccount, true);
-    
+
   })
 }
 
 function checkForBankAccount() {
-  
+
   getRootRecord().then(function (record) {
     if (record.skipBankAccountAdd) {
       openMap();
@@ -576,9 +564,13 @@ function profileCheck() {
   document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
   if (!auth.displayName) {
     increaseStep(1)
-    updateName(checkForPhoto);
+    updateName(function () {
+      history.pushState(['checkForPhoto'], null, null);
+      checkForPhoto();
+    });
     return
-  }
+  };
+
   increaseStep(2)
   checkForPhoto();
 }

@@ -1065,6 +1065,28 @@ function templateList(suggestedTemplates) {
   return ul.outerHTML;
 }
 
+// image-update
+function getImageBase64(evt, id) {
+  return new Promise(function (resolve, reject) {
+
+    const files = evt.target.files
+    if (!files.length) return;
+    const file = files[0];
+    var fileReader = new FileReader();
+    fileReader.onload = function (fileLoadEvt) {
+      const srcData = fileLoadEvt.target.result;
+      const image = new Image();
+      image.src = srcData;
+      image.onload = function () {
+        const newDataUrl = resizeAndCompressImage(image);
+        return resolve(newDataUrl)
+      }
+    }
+    fileReader.readAsDataURL(file);
+  })
+}
+
+
 function updateName(callback) {
 
   const auth = firebase.auth().currentUser;
@@ -1121,12 +1143,9 @@ function updateName(callback) {
     }).then(function () {
       progressBar.close();
       snacks('Name Updated Successfully')
-      if (callback) {
-        history.pushState([`${callback.name}`], null, null);
-        callback()
-      } else {
-        history.back();
-      }
+      callback();
+
+
     })
   })
 }
@@ -1208,15 +1227,15 @@ function emailUpdation(callback, updateOnly) {
     skipbtn.root_.classList.remove('hidden')
     skipbtn.root_.addEventListener('click', function () {
       if (!updateOnly) {
-        const rootTx =  db.transaction('root','readwrite');
+        const rootTx = db.transaction('root', 'readwrite');
         const rootStore = rootTx.objectStore('root');
 
-        rootStore.get(auth.uid).onsuccess = function(event){
+        rootStore.get(auth.uid).onsuccess = function (event) {
           const record = event.target.result;
           record.skipEmail = true
           rootStore.put(record);
         }
-        rootTx.oncomplete =  function() {
+        rootTx.oncomplete = function () {
           history.pushState([`${callback}`], null, null);
           callback();
         }

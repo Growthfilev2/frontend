@@ -44,30 +44,23 @@ function setDetails() {
   const input = document.getElementById('choose-profile-image')
   input.addEventListener('change', function (evt) {
 
-    const files = input.files
-    if (!files.length) return;
-    const file = files[0];
-    var fileReader = new FileReader();
-    fileReader.onload = function (fileLoadEvt) {
+
+    getImageBase64(evt).then(function (dataURL) {
+      document.querySelector('.mdc-card__media.mdc-card__media--16-9').style.backgroundImage = `url(${dataURL})`
       progressBar.open()
-      const image = new Image();
-      image.src = fileLoadEvt.target.result;
-      image.onload = function () {
-        const newSrc = resizeAndCompressImage(image);
-        document.querySelector('.mdc-card__media.mdc-card__media--16-9').style.backgroundImage = `url(${newSrc})`
-        requestCreator('backblaze', {
-          imageBase64: newSrc
-        }).then(function () {
-          progressBar.close()
-          snacks('Profile Picture Update Successfully')
-          firebase.auth().currentUser.reload();
-        }).catch(function (error) {
-          progressBar.close()
-          snacks(error.response.message)
-        });
-      }
-    }
-    fileReader.readAsDataURL(file);
+      return requestCreator('backblaze', {
+        'imageBase64': dataURL
+      })
+    }).then(function () {
+      progressBar.close();
+      snacks('Profile Picture Update Successfully')
+      firebase.auth().currentUser.reload();
+    }).catch(function (error) {
+      progressBar.close();
+      snacks(error.response.message)
+     
+    })
+
   })
   createViewProfile()
 
@@ -81,7 +74,7 @@ function createBaseDetails() {
   <li class='mdc-list-item'>
   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_box</span>
   ${auth.displayName}
-  <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['updateName'],null,null);updateName()">edit</span>
+  <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['updateName'],null,null);updateName(function(){history.back()})">edit</span>
   </li>
   <li class='mdc-list-item'>
   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">email</span>
