@@ -57,13 +57,10 @@
         const supervisorList = new parent.mdc.list.MDCList(document.getElementById('supervisor-list'))
 
         function init(subscriptionTemplate) {
-          
-            addSupervisorBtn.addEventListener('click', function () {
-                
+            addSupervisorBtn.addEventListener('click', function () {  
                 callContact("getContactSupervisors")
-            })
-
-
+            });
+            
             document.getElementById('submit-btn').addEventListener('click', function () {
                 const array = []
                 Object.keys(supervisorObject).forEach(function (number) {

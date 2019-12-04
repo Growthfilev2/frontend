@@ -25,18 +25,18 @@ function createFab(icon) {
     return button;
 }
 
-function createExtendedFab(icon, name, id,absolute) {
+function createExtendedFab(icon, name, id, absolute) {
     const button = createElement('button', {
         className: 'mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary',
         id: id
     })
-    if(absolute) {
+    if (absolute) {
         button.classList.add('app-fab--absolute')
     }
     button.innerHTML = `<div class="mdc-fab__ripple"></div>
                    <span class="material-icons mdc-fab__icon">${icon}</span>
                    <span class="mdc-fab__label">${name}</span>`
-    new mdc.ripple.MDCRipple(button);        
+    new mdc.ripple.MDCRipple(button);
     return button
 }
 
@@ -155,7 +155,7 @@ function getHeader(parentSelector, sectionStart, sectionEnd) {
     el.querySelector('#section-end').innerHTML = sectionEnd;
 
     topAppBar = new mdc.topAppBar.MDCTopAppBar(el)
-    
+
     // topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
     return topAppBar;
 
@@ -244,10 +244,10 @@ function textArea(attr) {
 }
 
 
-function createRadio(radioId,inputId) {
-    const div  = createElement('div',{
-        className:'mdc-radio',
-        id:radioId
+function createRadio(radioId, inputId) {
+    const div = createElement('div', {
+        className: 'mdc-radio',
+        id: radioId
     })
     div.innerHTML = `<input class="mdc-radio__native-control" type="radio" id="${inputId}" name="radios">
     <div class="mdc-radio__background">
@@ -258,4 +258,68 @@ function createRadio(radioId,inputId) {
     `
     new mdc.radio.MDCRadio(div);
     return div;
+}
+
+
+
+
+
+
+var xStart = null;
+var yStart = null;
+
+function swipe(el) {
+    if (!el) return;
+    el.addEventListener('touchstart', handleTouchStart, false);
+    el.addEventListener('touchmove', function(evt){
+        handleTouchMove(evt,el)
+    }, false);
+}
+
+function handleTouchStart(evt) {
+
+    const firstTouch = evt.touches[0];
+    xStart = firstTouch.clientX
+    yStart = firstTouch.clientY
+}
+
+function handleTouchMove(evt,el) {
+    if (!xStart) return
+
+    const xEnd = evt.touches[0].clientX;
+    const yEnd = evt.touches[0].clientY;
+
+    const xAxisDiff = xEnd - xStart;
+    const yAxisDiff = yEnd - yStart;
+
+    const listenerDetail =  {
+        direction:''
+    }
+    
+   
+    if (Math.abs(xAxisDiff) > Math.abs(yAxisDiff)) {
+        if (xAxisDiff > 0) {
+            console.log('left')
+            listenerDetail.direction = 'left'
+            // left
+        } else {
+            console.log('right')
+            listenerDetail.direction = 'right'
+            //right
+        }
+    } else {
+        if (yAxisDiff > 0) {
+            console.log("up")
+            listenerDetail.direction = 'up'
+        } else {
+            console.log("down");
+            listenerDetail.direction = 'down'
+        }
+    }
+    xStart = null;
+    yStart = null;
+    var swipeEvent = new CustomEvent('siwpe', {
+        detail: listenerDetail
+    });
+    el.dispatchEvent(swipeEvent);
 }

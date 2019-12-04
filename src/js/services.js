@@ -72,12 +72,12 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     return resolve({
-      accuracy: 657586,
-      isLocationOld: true,
-      lastLocationTime: 1575395053660,
-      latitude: 28.482764799999998,
-      longitude: 77.0678784,
-      provider: "HTML5",
+      accuracy: 20,
+      isLocationOld: false,
+      lastLocationTime: 1575379983275,
+      latitude: 28.54741,
+      longitude: 77.2504974,
+      provider: "HTML5"
     })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
@@ -1240,7 +1240,7 @@ function emailUpdation(skip, callback) {
         rootStore.put(record);
       }
       rootTx.oncomplete = function () {
-       
+
         callback();
       }
     })
@@ -1259,7 +1259,7 @@ function emailVerification(callback) {
   firebase.auth().currentUser.sendEmailVerification().then(function () {
     snacks('Email Verification Has Been Sent.')
     progressBar.close();
-   
+
     emailVerificationWait(callback)
   }).catch(handleEmailError)
 }
@@ -1284,7 +1284,7 @@ function emailVerificationWait(callback) {
         return;
       }
       progressBar.close();
-      
+
       callback();
     }, 2000)
   })

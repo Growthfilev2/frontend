@@ -43,9 +43,10 @@ function chatView() {
 function chooseContact(contactString) {
     
     const contactDetails = parseContact(contactString);
+    contactDetails.mobile = contactDetails.phoneNumber;
+    delete contactDetails.phoneNumber;
     history.pushState(['enterChat', contactDetails], null, null);
     enterChat(contactDetails);
-
 }
 
 function chatDom() {

@@ -69,10 +69,25 @@ function reportView(state, attendanceRecord) {
       return tabList.activateTab(0)
     }
 
-    tabList.activateTab(state)
+    tabList.activateTab(state);
 
+    // const swipeCont = document.querySelector('.tabs-section .data-container')
+    // swipeCont.addEventListener('siwpe',function(swipeEvent){
+    //   console.log(event);
+    //   if(swipeEvent.detail.direction === 'left') {
+    //     // tabList.activateTab()
+    //   }
+    //   if(swipeEvent.detail.direction === 'right') {
+        
+    //   }
+    // });
+
+    // swipe(swipeCont)
+   
   })
 }
+
+
 
 
 function getReportTabData() {
@@ -129,17 +144,17 @@ function getReportTabData() {
             index: index
           })
         }
-        
+
       }
     })
     reportTx.oncomplete = function () {
-      getSubscription('','customer').then(function(customerTemplates){
-        if(customerTemplates.length) {
+      getSubscription('', 'customer').then(function (customerTemplates) {
+        if (customerTemplates.length) {
           reportTabData.push({
             name: 'Incentives',
             icon: './img/currency.png',
             view: 'incentiveView',
-            index: reportTabData.length +1
+            index: reportTabData.length + 1
           })
         }
         return resolve(reportTabData)
