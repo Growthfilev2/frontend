@@ -24,11 +24,11 @@ window.addEventListener('callRead', readDebounce);
 function handleError(error) {
   console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
-  if (errorInStorage.hasOwnProperty(error.message)) return;
+  if (errorInStorage.hasOwnProperty(error.message))
   error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
   localStorage.setItem('error', JSON.stringify(errorInStorage));
-  requestCreator('instant', JSON.stringify(error))
+  return requestCreator('instant', JSON.stringify(error))
 }
 
 
@@ -68,15 +68,7 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      accuracy: 20,
-      isLocationOld: true,
-      lastLocationTime: 1575611587927,
-      latitude: 28.547486,
-      longitude: 77.25042890000002,
-      provider: "HTML5"
-    });
-    
+
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -218,10 +210,7 @@ function iosLocationError(iosError) {
       "detail": geopoint
     });
     window.dispatchEvent(iosLocation)
-  }).catch(function (error) {
-
-    reject(error);
-  })
+  }).catch(console.error);
   handleError(iosError)
 }
 
