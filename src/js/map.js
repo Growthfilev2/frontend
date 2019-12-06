@@ -285,7 +285,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     cardProd.open();
   }
 
-  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
+  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue),geopoint).then(function () {
 
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
