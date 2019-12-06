@@ -103,10 +103,12 @@ function initializeApp() {
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
 
-        document.getElementById('start-load').classList.add('hidden')
+        document.getElementById('start-load').classList.add('hidden');
+        history.pushState(['userSignedOut'],null,null);
         userSignedOut()
         return;
       }
+      document.getElementById('app-header').classList.add("hidden");
       if (appKey.getMode() === 'production') {
         if (!native.getInfo()) {
           redirect();
@@ -115,6 +117,7 @@ function initializeApp() {
       }
 
       panel.classList.remove('hidden');
+    
       if (!initApp) {
         document.getElementById('app-header').classList.remove('hidden')
         return
@@ -170,6 +173,11 @@ function firebaseUiConfig() {
 }
 
 function initializeFirebaseUI() {
+  document.getElementById("app-header").classList.remove("hidden");
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons' onclick="window.location.reload()">arrow_back</a>
+  <span class="mdc-top-app-bar__title">Login</span>
+  `;
+  const header = getHeader('app-header', backIcon, '');
   var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
@@ -177,6 +185,7 @@ function initializeFirebaseUI() {
 
 function userSignedOut() {
   progressBar.close();
+  // document.getElementById('login-container').innerHTML = '';
   document.getElementById("dialog-container").innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
   const panel = document.getElementById('app-current-panel');
@@ -205,7 +214,13 @@ function userSignedOut() {
       </div>
     </div>
   `;
+  const btn = new mdc.ripple.MDCRipple(document.querySelector('.login-button-container .mdc-button'));
+  btn.root_.addEventListener('click',function(){
+    panel.innerHTML = '';
+    history.pushState(['login'],null,null);
+    initializeFirebaseUI();
 
+  })
   const sliderEl = document.getElementById('app-slider');
 
   swipe(sliderEl);
