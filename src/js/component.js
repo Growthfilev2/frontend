@@ -299,20 +299,20 @@ function handleTouchMove(evt,el) {
    
     if (Math.abs(xAxisDiff) > Math.abs(yAxisDiff)) {
         if (xAxisDiff > 0) {
-            console.log('left')
+           
             listenerDetail.direction = 'left'
             // left
         } else {
-            console.log('right')
+           
             listenerDetail.direction = 'right'
             //right
         }
     } else {
         if (yAxisDiff > 0) {
-            console.log("up")
+           
             listenerDetail.direction = 'up'
         } else {
-            console.log("down");
+            
             listenerDetail.direction = 'down'
         }
     }

@@ -102,7 +102,7 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
-        document.getElementById("app-current-panel").classList.add('hidden')
+
         document.getElementById('start-load').classList.add('hidden')
         userSignedOut()
         return;
@@ -169,15 +169,82 @@ function firebaseUiConfig() {
   };
 }
 
+function initializeFirebaseUI() {
+  var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
+  ui.start(document.getElementById('login-container'), firebaseUiConfig());
+}
 
 
 function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
+  const panel = document.getElementById('app-current-panel');
+  panel.innerHTML = `
+    <div class='slider' id='app-slider'>
+      <div class='slider-container'>
+        <div class='slider-content'>
+          <div class='icon-container'>
+              <i class='material-icons'>room</i>
+          </div>
+          <div class='text-container mdc-typography--headline6'>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel erat pellentesque, dapibus quam ac, semper tortor. Suspendisse eu felis laoreet, tempus mi ac, venenatis justo.</p>
+          </div>
+        </div>
+        <div class='dot-container'>
+          <span class='dot active'></span>
+          <span class='dot'></span>
+         
+        </div>
+        <div class='login-button-container'>
+          <div class='mdc-button mdc-button--raised full-width'>
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">LOGIN</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 
-  var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
-  ui.start(document.getElementById('login-container'), firebaseUiConfig());
+  const sliderEl = document.getElementById('app-slider');
+
+  swipe(sliderEl);
+  sliderEl.addEventListener('siwpe', function (swipeEvent) {
+    console.log(event);
+
+    if (swipeEvent.detail.direction === 'left') {
+      // tabList.activateTab()
+      console.log('left');
+      loadPrevSlider(sliderEl);
+      [...document.querySelectorAll('.dot')].forEach(function(el,index){
+        el.classList.remove('active');
+        if(index == 0) {
+          el.classList.add('active')
+        }
+      })
+    }
+    if (swipeEvent.detail.direction === 'right') {
+      console.log('right')
+      loadNextSlider(sliderEl);
+      [...document.querySelectorAll('.dot')].forEach(function(el,index){
+        el.classList.remove('active');
+        if(index == 1) {
+          el.classList.add('active')
+        }
+      })
+    }
+  });
+
+}
+
+
+function loadPrevSlider(sliderEl) {
+  sliderEl.querySelector('.icon-container i').textContent = 'room'
+  sliderEl.querySelector('.text-container p').textContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel erat pellentesque, dapibus quam ac, semper tortor. Suspendisse eu felis laoreet, tempus mi ac, venenatis justo.'
+}
+function loadNextSlider(sliderEl) {
+  sliderEl.querySelector('.icon-container i').textContent = 'motorcycle'
+  sliderEl.querySelector('.text-container p').textContent = 'Ut ut pharetra neque. Pellentesque pellentesque sem neque,'
 }
 
 
@@ -420,7 +487,7 @@ function checkForPhoto() {
     }).catch(function (error) {
       progressBar.close();
       snacks(error.response.message)
-      
+
     })
 
   })
@@ -444,8 +511,8 @@ function checkForEmail() {
       return
     }
     increaseStep(3)
-    emailUpdation(true,function(){
-     
+    emailUpdation(true, function () {
+
       checkForBankAccount()
     });
 
