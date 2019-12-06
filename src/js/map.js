@@ -292,7 +292,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions();
   }).catch(function (error) {
-    snacks(error.response.message);
+   
 
     if (error.response.message === 'Invalid check-in') {
 
@@ -302,6 +302,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
       });
       return
     };
+    snacks(error.response.message);
     if (cardProd) {
       cardProd.close()
     };
