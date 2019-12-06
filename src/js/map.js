@@ -182,6 +182,7 @@ function createUnkownCheckIn(cardProd,geopoint) {
     cardProd.open()
   }
   Promise.all(prom).then(function () {
+   
     if (cardProd) {
       cardProd.close()
     }
