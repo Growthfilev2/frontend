@@ -57,7 +57,7 @@ function setDetails() {
       firebase.auth().currentUser.reload();
     }).catch(function (error) {
       progressBar.close();
-      snacks(error.response.message)
+      snacks(error.message)
      
     })
 
@@ -133,7 +133,7 @@ function bankAccount() {
             snacks(`Account ${number} removed`)
           }).catch(function (error) {
             progressBar.close()
-            snacks(error.response.message);
+            snacks(error.message);
           })
         })
       })
@@ -153,7 +153,7 @@ function bankAccount() {
 
   }).catch(function (error) {
     progressBar.close();
-    snacks(error.response.message)
+    snacks(error.message)
   })
 }
 
@@ -279,7 +279,7 @@ function addNewBankAccount(callback) {
         history.back();
       }
     }).catch(function (error) {
-      snacks(error.response.message)
+      snacks(error.message)
       progressBar.close();
     })
   });
@@ -401,7 +401,7 @@ function changePhoneNumber() {
           submitDialog.close();
           document.getElementById('app-current-panel').classList.remove('freeze')
           console.log(error)
-          snacks(error.response.message);
+          snacks(error.message);
         })
       }).catch(handleLocationError)
     })

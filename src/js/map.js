@@ -206,14 +206,14 @@ function createUnkownCheckIn(cardProd, geopoint,retry) {
     if (cardProd) {
       cardProd.close()
     }
-    if(error.response.message === 'Invalid check-in' && !retry) {
+    if(error.message === 'Invalid check-in' && !retry) {
       handleGeoLocationApi().then(function(cellTowerGeopoint){
         createUnkownCheckIn(cardProd,cellTowerGeopoint,1)
       })
       return;
     }
     
-    snacks(error.response.message);
+    snacks(error.message);
   })
 }
 
@@ -264,11 +264,11 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint,retry) {
     history.pushState(['reportView'], null, null)
     reportView();
   }).catch(function (error) {
-    snacks(error.response.message);
+    snacks(error.message);
     if (cardProd) {
       cardProd.close()
     }
-    if(error.response.message === 'Invalid check-in' && !retry) {
+    if(error.message === 'Invalid check-in' && !retry) {
       handleGeoLocationApi().then(function(cellTowerGeopoint){
         createUnkownCheckIn(selectedVenue, cardProd,cellTowerGeopoint,1)
       })
@@ -469,7 +469,7 @@ function setFilePath(base64) {
       progressBar.close()
     }).catch(function (error) {
       progressBar.close()
-      snacks(error.response.message)
+      snacks(error.message)
     });
   })
 }

@@ -74,7 +74,7 @@ function sendFormToParent(formData) {
                 reportView()
             }).catch(function (error) {
                 progressBar.close();
-                snacks(error.response.message, 'Okay')
+                snacks(error.message, 'Okay')
             })
             return;
         }
@@ -114,7 +114,7 @@ function sendFormToParent(formData) {
                     requestCreator('updateAuth', customerAuths[customerNumber], geopoint).then(function (response) {
                         console.log(response)
                     }).catch(function (error) {
-                        console.log(error.response.message)
+                        console.log(error.message)
                     })
                 })
             }
@@ -124,7 +124,7 @@ function sendFormToParent(formData) {
             return;
         }).catch(function (error) {
             progressBar.close();
-            snacks(error.response.message, 'Okay')
+            snacks(error.message, 'Okay')
         })
 
     }).catch(handleLocationError)

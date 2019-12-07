@@ -306,7 +306,8 @@ function executeRequest(requestGenerator) {
       if (!event.data.success) {
         const reject = workerRejects[event.data.id];
         if (reject) {
-          reject(event.data.response);
+          
+          reject(event.data);
         }
       } else {
         const resolve = workerResolves[event.data.id];

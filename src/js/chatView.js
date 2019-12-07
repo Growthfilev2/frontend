@@ -937,7 +937,7 @@ function addAssignee(record, userArray) {
             snacks(`You Added ${userArray.length} People`)
             history.back();
         }).catch(function (error) {
-            snacks(error.response.message)
+            snacks(error.message)
             progressBar.close();
         })
 
@@ -957,7 +957,7 @@ function setActivityStatus(record, status) {
             progressBar.close();
     
         }).catch(function (error) {
-            snacks(error.response.message);
+            snacks(error.message);
             progressBar.close();
         })
     }).catch(handleLocationError)
@@ -1229,7 +1229,7 @@ function getUserChats(userRecord) {
                 }).catch(function (error) {
                     input.value = ''
                     progressBar.close()
-                    snacks(error.response.message);
+                    snacks(error.message);
                 })
             }).catch(handleLocationError)
         });

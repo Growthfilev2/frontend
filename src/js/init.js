@@ -104,7 +104,7 @@ function initializeApp() {
       if (!auth) {
 
         document.getElementById('start-load').classList.add('hidden');
-        history.pushState(['userSignedOut'],null,null);
+        history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
       }
@@ -117,7 +117,7 @@ function initializeApp() {
       }
 
       panel.classList.remove('hidden');
-    
+
       if (!initApp) {
         document.getElementById('app-header').classList.remove('hidden')
         return
@@ -178,6 +178,7 @@ function initializeFirebaseUI() {
   <span class="mdc-top-app-bar__title">Login</span>
   `;
   const header = getHeader('app-header', backIcon, '');
+
   var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
@@ -185,7 +186,6 @@ function initializeFirebaseUI() {
 
 function userSignedOut() {
   progressBar.close();
-  // document.getElementById('login-container').innerHTML = '';
   document.getElementById("dialog-container").innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
   const panel = document.getElementById('app-current-panel');
@@ -215,9 +215,9 @@ function userSignedOut() {
     </div>
   `;
   const btn = new mdc.ripple.MDCRipple(document.querySelector('.login-button-container .mdc-button'));
-  btn.root_.addEventListener('click',function(){
+  btn.root_.addEventListener('click', function () {
     panel.innerHTML = '';
-    history.pushState(['login'],null,null);
+    history.pushState(['login'], null, null);
     initializeFirebaseUI();
 
   })
@@ -231,9 +231,9 @@ function userSignedOut() {
       // tabList.activateTab()
       console.log('left');
       loadPrevSlider(sliderEl);
-      [...document.querySelectorAll('.dot')].forEach(function(el,index){
+      [...document.querySelectorAll('.dot')].forEach(function (el, index) {
         el.classList.remove('active');
-        if(index == 0) {
+        if (index == 0) {
           el.classList.add('active')
         }
       })
@@ -241,9 +241,9 @@ function userSignedOut() {
     if (swipeEvent.detail.direction === 'right') {
       console.log('right')
       loadNextSlider(sliderEl);
-      [...document.querySelectorAll('.dot')].forEach(function(el,index){
+      [...document.querySelectorAll('.dot')].forEach(function (el, index) {
         el.classList.remove('active');
-        if(index == 1) {
+        if (index == 1) {
           el.classList.add('active')
         }
       })
@@ -257,6 +257,7 @@ function loadPrevSlider(sliderEl) {
   sliderEl.querySelector('.icon-container i').textContent = 'room'
   sliderEl.querySelector('.text-container p').textContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel erat pellentesque, dapibus quam ac, semper tortor. Suspendisse eu felis laoreet, tempus mi ac, venenatis justo.'
 }
+
 function loadNextSlider(sliderEl) {
   sliderEl.querySelector('.icon-container i').textContent = 'motorcycle'
   sliderEl.querySelector('.text-container p').textContent = 'Ut ut pharetra neque. Pellentesque pellentesque sem neque,'
@@ -389,8 +390,8 @@ function startApp() {
             history.pushState(['profileCheck'], null, null)
             profileCheck();
           }).catch(function (error) {
-            if (error.response.apiRejection) {
-              snacks(error.response.message, 'Okay')
+            if (error.apiRejection) {
+              snacks(error.message, 'Okay')
             }
             handleError({
               message: error.message,
@@ -409,15 +410,12 @@ function startApp() {
         runRead({
           read: '1'
         })
-      }).catch(function (error) {
-        handleError({
-          message: error.message,
-          body: JSON.stringify(error)
-        })
       })
     }).catch(function (error) {
-      if (error.response.apiRejection) {
-        snacks(error.response.message, 'Okay')
+      
+      snacks(error.message)
+      if (error.apiRejection) {
+        snacks(error.message, 'Okay')
         return;
       }
       handleError({
@@ -501,7 +499,7 @@ function checkForPhoto() {
 
     }).catch(function (error) {
       progressBar.close();
-      snacks(error.response.message)
+      snacks(error.message)
 
     })
 
