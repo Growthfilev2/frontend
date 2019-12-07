@@ -254,60 +254,84 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=56');
+const apiHandler = new Worker('js/apiHandler.js?version=57');
 
 
 
 
 function requestCreator(requestType, requestBody, geopoint) {
 
-  auth.getIdToken().then(function (token) {
-    var auth = firebase.auth().currentUser;
-    var requestGenerator = {
-      type: requestType,
-      body: requestBody,
-      meta: {
-        user: {
-          token: token,
-          uid: auth.uid,
-          displayName: auth.displayName,
-          photoURL: auth.photoURL,
-          phoneNumber: auth.phoneNumber,
-        },
-        key: appKey.getMapKey(),
-        apiUrl: appKey.getBaseUrl(),
-      }
-    };
+  var auth = firebase.auth().currentUser;
+
+  var requestGenerator = {
+    type: requestType,
+    body: requestBody,
+    meta: {
+      user: {
+        token: '',
+        uid: auth.uid,
+        displayName: auth.displayName,
+        photoURL: auth.photoURL,
+        phoneNumber: auth.phoneNumber,
+      },
+      key: appKey.getMapKey(),
+      apiUrl: appKey.getBaseUrl(),
+    },
+  };
 
 
-    if (!geopoint) return executeRequest(requestGenerator);
+  if (!geopoint) return executeRequest(requestGenerator);
 
-    getRootRecord().then(function (rootRecord) {
-      const time = fetchCurrentTime(rootRecord.serverTime);
-      requestGenerator.body['timestamp'] = time
-      requestGenerator.body['geopoint'] = geopoint;
-      if (requestBody.template === 'check-in') {
-        ApplicationState.lastCheckInCreated = time
-      }
-      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
-      console.log('sending', requestGenerator);
-      return executeRequest(requestGenerator);
-    });
+  getRootRecord().then(function (rootRecord) {
+    const time = fetchCurrentTime(rootRecord.serverTime);
+    requestGenerator.body['timestamp'] = time
+    requestGenerator.body['geopoint'] = geopoint;
+    if (requestBody.template === 'check-in') {
+      ApplicationState.lastCheckInCreated = time
+    }
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
+    console.log('sending', requestGenerator);
+    return executeRequest(requestGenerator);
   });
+
 }
 
 
 function executeRequest(requestGenerator) {
-  apiHandler.postMessage(requestGenerator);
-  return new Promise(function (resolve, reject) {
+  const auth = firebase.auth().currentUser;
+ return auth.getIdToken().then(function (token) {
+    requestGenerator.meta.user.token = token;
     apiHandler.onmessage = function (event) {
-      if (!event.data.success) return reject(event.data)
-      return resolve(event.data)
+      console.log(event);
+      if (!event.data.success) {
+        const reject = workerRejects[event.data.id];
+        if (reject) {
+          reject(event.data.response);
+        }
+      } else {
+        const resolve = workerResolves[event.data.id];
+        if (resolve) {
+          resolve(event.data.message);
+        }
+      }
+      delete workerResolves[event.data.id]
+      delete workerRejects[event.data.id]
     }
+
     apiHandler.onerror = function (event) {
-      return reject(event.data)
+      console.log(event);
+
     };
-  })
+
+    return new Promise(function (resolve, reject) {
+      const id = workerMessageIds++;
+      requestGenerator.id = id;
+      workerResolves[id] = resolve;
+      workerRejects[id] = reject;
+
+      apiHandler.postMessage(requestGenerator);
+    })
+  });
 }
 
 

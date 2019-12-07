@@ -36,7 +36,8 @@ function sendErrorRequestToMainThread(error) {
       message: error.message,
       apiRejection: false
     },
-    success: false
+    success: false,
+    id:error.id
   }
   if (error.stack) {
     errorObject.response.stack = error.stack
@@ -82,10 +83,14 @@ self.onmessage = function (event) {
           };
           self.postMessage({
             response: response,
-            success: true
+            success: true,
+            id:event.data.id
           })
         }
-      }).catch(sendErrorRequestToMainThread)
+      }).catch(function(error){
+        error.id = event.data.id
+        sendErrorRequestToMainThread(error)
+      })
       return
     }
 
