@@ -1,9 +1,23 @@
 function getSuggestions() {
   if (ApplicationState.knownLocation) {
-    getKnownLocationSubs().then(homeView);
+    getKnownLocationSubs().then(homeView).catch(function(error){
+      handleError({
+        message:error.message,
+        body: {
+          stack:error.stack || ''
+        }
+      })
+    })
     return;
   }
-  return getSubsWithVenue().then(homeView)
+  return getSubsWithVenue().then(homeView).catch(function(error){
+    handleError({
+      message:error.message,
+      body: {
+        stack:error.stack || ''
+      }
+    })
+  })
 }
 
 function getKnownLocationSubs() {
@@ -21,7 +35,10 @@ function getKnownLocationSubs() {
         cursor.continue();
         return;
       };
-
+      if(!cursor.value.attachment) {
+        cursor.continue();
+        return;
+      }
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {
           result.push(cursor.value)
@@ -95,6 +112,10 @@ function getSubsWithVenue() {
       }
       if (cursor.value.status === 'CANCELLED') {
         cursor.delete()
+        cursor.continue();
+        return;
+      }
+      if(!cursor.value.venue || !Array.isArray(cursor.value.venue)) {
         cursor.continue();
         return;
       }
