@@ -75,14 +75,7 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      accuracy: 20,
-      isLocationOld: false,
-      lastLocationTime: 1575379983275,
-      latitude: 28.54741,
-      longitude: 77.2504974,
-      provider: "HTML5"
-    })
+    
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -299,14 +292,17 @@ function requestCreator(requestType, requestBody, geopoint) {
 
 function executeRequest(requestGenerator) {
   const auth = firebase.auth().currentUser;
+  progressBar.open();
+
  return auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token;
     apiHandler.onmessage = function (event) {
+    progressBar.close()
+
       console.log(event);
       if (!event.data.success) {
         const reject = workerRejects[event.data.id];
         if (reject) {
-          
           reject(event.data);
         }
       } else {
@@ -1297,16 +1293,16 @@ function emailVerificationWait(callback) {
   </button>
 </div>`
   document.getElementById('continue').addEventListener('click', function (evt) {
-    progressBar.open()
+    
     firebase.auth().currentUser.reload();
     setTimeout(function () {
       firebase.auth().currentUser.reload();
       if (!auth.emailVerified) {
         snacks('Email Not Verified. Try Again');
-        progressBar.close()
+      
         return;
       }
-      progressBar.close();
+     
 
       callback();
     }, 2000)

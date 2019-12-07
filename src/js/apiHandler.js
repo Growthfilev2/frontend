@@ -33,7 +33,6 @@ function sendSuccessRequestToMainThread(response, id) {
 function sendErrorRequestToMainThread(error) {
 
   const errorObject = {
-
     message: error.message,
     body: error,
     apiRejection: false,

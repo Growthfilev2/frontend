@@ -356,14 +356,8 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
-
     console.log("run app")
-
-
     splashScreen();
-
-
-
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
@@ -381,18 +375,12 @@ function startApp() {
 
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
-          requestCreator('Null').then(function () {
-            // document.getElementById('start-load').classList.add('hidden')
-            document.getElementById('app-current-panel').classList.remove('mdc-theme--primary-bg')
-            document.getElementById('app-current-panel').innerHTML = '';
-            document.getElementById('start-load').classList.add('hidden')
-
-            history.pushState(['profileCheck'], null, null)
-            profileCheck();
-          }).catch(function (error) {
+          requestCreator('Null').then(initProfileView).catch(function (error) {
             if (error.apiRejection) {
-              snacks(error.message, 'Okay')
+              snacks(error.message, 'Okay');
+              return;
             }
+
             handleError({
               message: error.message,
               body: error,
@@ -400,19 +388,13 @@ function startApp() {
           })
           return;
         }
-        document.getElementById('app-current-panel').classList.remove('mdc-theme--primary-bg')
-        document.getElementById('app-current-panel').innerHTML = '';
-        document.getElementById('start-load').classList.add('hidden')
-        history.pushState(['profileCheck'], null, null)
-
-        profileCheck();
-        // openMap()
+        initProfileView()
         runRead({
           read: '1'
-        })
+        });
       })
     }).catch(function (error) {
-      
+
       snacks(error.message)
       if (error.apiRejection) {
         snacks(error.message, 'Okay')
@@ -431,6 +413,14 @@ function startApp() {
       body: JSON.stringify(req.error.message)
     })
   }
+}
+
+function initProfileView() {
+  document.getElementById('app-current-panel').classList.remove('mdc-theme--primary-bg')
+  document.getElementById('app-current-panel').innerHTML = '';
+  document.getElementById('start-load').classList.add('hidden')
+  history.pushState(['profileCheck'], null, null)
+  profileCheck();
 }
 
 
@@ -489,20 +479,12 @@ function checkForPhoto() {
   document.getElementById('choose').addEventListener('change', function (evt) {
     getImageBase64(evt).then(function (dataURL) {
       document.getElementById('image-update').src = dataURL;
-      progressBar.open()
       return requestCreator('backblaze', {
         'imageBase64': dataURL
       })
-    }).then(function () {
-      progressBar.close();
-      checkForEmail();
-
-    }).catch(function (error) {
-      progressBar.close();
+    }).then(checkForEmail).catch(function (error) {
       snacks(error.message)
-
     })
-
   })
 
 }
@@ -592,20 +574,6 @@ CanvasDimension.prototype.getNewDimension = function () {
   }
 }
 
-
-
-function updateEmailButton() {
-  return `<div class="mdc-card__actions">
-<div class="mdc-card__action-icons"></div>
-<div class="mdc-card__action-buttons">
-
-<button class="mdc-button mdc-card__action mdc-card__action--button" id='addEmail'>
- <span class="mdc-button__label">UPDATE</span>
- <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-</button>
-</div>
-</div>`
-}
 
 
 function showReLoginDialog(heading, contentText) {
@@ -932,14 +900,6 @@ function openMap() {
       console.log(checkInSubs)
       document.getElementById('start-load').classList.add('hidden');
       if (!Object.keys(checkInSubs).length) {
-
-        // const geopoint = {
-        //   latitude:22,
-        //   longitude:77,
-        //   accuracy:30,
-        //   lastLocationTime:Date.now()
-        // }
-
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         history.pushState(['newUserLandingpage', geopoint], null, null)

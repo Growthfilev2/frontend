@@ -285,12 +285,12 @@ function expandPlaceBox() {
 
         const confirmFab = document.getElementById('confirm-btn');
         confirmFab.addEventListener('click', function () {
-            progressBar.open();
+         
             confirmFab.classList.add('mdc-fab--exited')
             // requestCreator('search', {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
-            progressBar.close();
+          
             if (true) {
                 giveSubscriptionInit();
                 return;
@@ -318,7 +318,7 @@ function expandPlaceBox() {
             
             // }).catch(function (error) {
             //     console.log(error)
-            //     progressBar.close();
+           
             // })
         })
 

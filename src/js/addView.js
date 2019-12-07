@@ -68,18 +68,18 @@ function sendFormToParent(formData) {
             })
 
             Promise.all(prom).then(function (response) {
-                progressBar.close();
+              
                 successDialog(`You Created a ${templateName}`);
                 // getSuggestions();
                 reportView()
             }).catch(function (error) {
-                progressBar.close();
+               
                 snacks(error.message, 'Okay')
             })
             return;
         }
         requestCreator('create', formData, geopoint).then(function () {
-            progressBar.close();
+            
             if (formData.template === 'attendance regularization') {
                 successDialog(`You Applied for an AR`);
                 const tx = db.transaction('attendance', 'readwrite');
@@ -123,7 +123,7 @@ function sendFormToParent(formData) {
 
             return;
         }).catch(function (error) {
-            progressBar.close();
+           
             snacks(error.message, 'Okay')
         })
 

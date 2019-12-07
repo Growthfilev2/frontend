@@ -458,17 +458,16 @@ function setFilePath(base64) {
     sub.attachment.Photo.value = url
     sub.attachment.Comment.value = textValue;
     sub.share = []
-    progressBar.open();
-
+   
     requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
       initHeaderView()
       // history.pushState(['homeView'],null,null)
       history.pushState(['reportView'], null, null)
       reportView()
       successDialog('Check-In Created')
-      progressBar.close()
+      
     }).catch(function (error) {
-      progressBar.close()
+      
       snacks(error.message)
     });
   })

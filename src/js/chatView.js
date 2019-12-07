@@ -926,19 +926,19 @@ function activityDomCustomer(activityRecord) {
 }
 
 function addAssignee(record, userArray) {
-    progressBar.open();
+  
     closeSearchBar();
     appLocation(3).then(function(geopoint){
         requestCreator('share', {
             activityId: record.activityId,
             share: userArray
         },geopoint).then(function () {
-            progressBar.close();
+            
             snacks(`You Added ${userArray.length} People`)
             history.back();
         }).catch(function (error) {
             snacks(error.message)
-            progressBar.close();
+           
         })
 
     }).catch(handleLocationError)
@@ -946,7 +946,7 @@ function addAssignee(record, userArray) {
 
 
 function setActivityStatus(record, status) {
-    progressBar.open();
+  
     appLocation(3).then(function(geopoint){
 
         requestCreator('statusChange', {
@@ -954,11 +954,11 @@ function setActivityStatus(record, status) {
             status: status
         },geopoint).then(function () {
             snacks(`${record.activityName} is ${status}`)
-            progressBar.close();
+           
     
         }).catch(function (error) {
             snacks(error.message);
-            progressBar.close();
+           
         })
     }).catch(handleLocationError)
 }
@@ -1208,7 +1208,7 @@ function getUserChats(userRecord) {
             const val = input.value;
             if (!val) return;
 
-            progressBar.open()
+          
             const param = input.dataset.param
             const paramValue = input.dataset.paramValue
             const requestBody = {
@@ -1221,14 +1221,14 @@ function getUserChats(userRecord) {
                     parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                     setBottomScroll();
                     input.value = ''
-                    progressBar.close()
+                  
                     input.dataset.name = 'dm';
                     input.dataset.param = 'assignee'
                     input.dataset.paramValue = userRecord.mobile
                     input.placeholder = 'Type a message'
                 }).catch(function (error) {
                     input.value = ''
-                    progressBar.close()
+                   
                     snacks(error.message);
                 })
             }).catch(handleLocationError)

@@ -37,7 +37,7 @@ function profileView() {
 
 
 function setDetails() {
-  progressBar.foundation_.close();
+  progressBar.close();
   document.getElementById('base-details').innerHTML = createBaseDetails()
   document.getElementById('user-details').innerHTML = createUserDetails();
   new mdc.list.MDCList(document.getElementById('basic-info-edit'));
@@ -47,16 +47,16 @@ function setDetails() {
 
     getImageBase64(evt).then(function (dataURL) {
       document.querySelector('.mdc-card__media.mdc-card__media--16-9').style.backgroundImage = `url(${dataURL})`
-      progressBar.open()
+     
       return requestCreator('backblaze', {
         'imageBase64': dataURL
       })
     }).then(function () {
-      progressBar.close();
+      
       snacks('Profile Picture Update Successfully')
       firebase.auth().currentUser.reload();
     }).catch(function (error) {
-      progressBar.close();
+      
       snacks(error.message)
      
     })
@@ -96,7 +96,7 @@ function createBaseDetails() {
 }
 
 function bankAccount() {
-  progressBar.open();
+  
   requestCreator('paymentMethods').then(function (accounts) {
     history.pushState(['bankAccount'], null, null);
     console.log(accounts);
@@ -124,18 +124,18 @@ function bankAccount() {
     [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
       if (!el) return;
       el.addEventListener('click', function () {
-        progressBar.open()
-        el.addEventListener('click', function () {
+       
+        
           const number = el.dataset.account;
           requestCreator('removeBankAccount', {
             bankAccount: number
           }).then(function () {
             snacks(`Account ${number} removed`)
           }).catch(function (error) {
-            progressBar.close()
+           
             snacks(error.message);
           })
-        })
+        
       })
     })
 
@@ -152,7 +152,7 @@ function bankAccount() {
     document.getElementById('app-current-panel').appendChild(addNewBtn);
 
   }).catch(function (error) {
-    progressBar.close();
+   
     snacks(error.message)
   })
 }
@@ -262,7 +262,7 @@ function addNewBankAccount(callback) {
       }
       field.helperTextContent = ''
     }
-    progressBar.open();
+   
     requestCreator('newBankAccount', {
       name: auth.displayName,
       email: auth.email,
@@ -280,12 +280,12 @@ function addNewBankAccount(callback) {
       }
     }).catch(function (error) {
       snacks(error.message)
-      progressBar.close();
+     
     })
   });
   const skipBtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
   skipBtn.root_.addEventListener('click', function () {
-    progressBar.open();
+   
     if (callback) {
       const rootTx = db.transaction('root', 'readwrite');
       const rootStore = rootTx.objectStore('root');
@@ -383,7 +383,7 @@ function changePhoneNumber() {
     const dialog = showReLoginDialog('Change Phone Number', `On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value} to change your phone number`);
     dialog.listen('MDCDialog:closed', function (evt) {
       if (evt.detail.action !== 'accept') return;
-      progressBar.open();
+     ;
       const submitDialog = new Dialog('Please Wait', `<h3 class='mdc-typography--body1 mdc-theme--primary'>Do not close the app while transition is taking place.</h3>`).create('simple');
       submitDialog.open();
       console.log(submitDialog)
@@ -397,7 +397,7 @@ function changePhoneNumber() {
           }, 5000)
           console.log(response)
         }).catch(function (error) {
-          progressBar.close();
+        
           submitDialog.close();
           document.getElementById('app-current-panel').classList.remove('freeze')
           console.log(error)
