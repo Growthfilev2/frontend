@@ -1,3 +1,7 @@
+const workerResolves = {};
+const workerRejects = {};
+let workerMessageIds = 0;
+
 function isWifiRequired() {
   if (native.getName() !== 'Android') return false;
   if (AndroidInterface.isWifiOn()) return false;
@@ -250,63 +254,57 @@ function html5Geolocation() {
   })
 }
 
-// let apiHandler = new Worker('js/apiHandler.js?version=56');
+const apiHandler = new Worker('js/apiHandler.js?version=56');
+
+
+
 
 function requestCreator(requestType, requestBody, geopoint) {
 
-  var auth = firebase.auth().currentUser;
-
-
-  var requestGenerator = {
-    type: requestType,
-    body: '',
-    meta: {
-      user: {
-        token: '',
-        uid: auth.uid,
-        displayName: auth.displayName,
-        photoURL: auth.photoURL,
-        phoneNumber: auth.phoneNumber,
-      },
-      key: appKey.getMapKey(),
-      apiUrl: appKey.getBaseUrl(),
-
-    }
-  };
-
-  let apiHandler = new Worker('js/apiHandler.js?version=56');
-
   auth.getIdToken().then(function (token) {
-    requestGenerator.meta.user.token = token
-    if (!geopoint) {
-      requestGenerator.body = requestBody;
-      apiHandler.postMessage(requestGenerator);
+    var auth = firebase.auth().currentUser;
+    var requestGenerator = {
+      type: requestType,
+      body: requestBody,
+      meta: {
+        user: {
+          token: token,
+          uid: auth.uid,
+          displayName: auth.displayName,
+          photoURL: auth.photoURL,
+          phoneNumber: auth.phoneNumber,
+        },
+        key: appKey.getMapKey(),
+        apiUrl: appKey.getBaseUrl(),
+      }
+    };
 
-    } else {
-      getRootRecord().then(function (rootRecord) {
-        const time = fetchCurrentTime(rootRecord.serverTime);
-        requestBody['timestamp'] = time
-        requestBody['geopoint'] = geopoint;
-        requestGenerator.body = requestBody;
-        if (requestBody.template === 'check-in') {
-          ApplicationState.lastCheckInCreated = time
-        }
-        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
-        console.log('sending', requestGenerator);
-        apiHandler.postMessage(requestGenerator);
 
-        return;
-      });
-    }
+    if (!geopoint) return executeRequest(requestGenerator);
+
+    getRootRecord().then(function (rootRecord) {
+      const time = fetchCurrentTime(rootRecord.serverTime);
+      requestGenerator.body['timestamp'] = time
+      requestGenerator.body['geopoint'] = geopoint;
+      if (requestBody.template === 'check-in') {
+        ApplicationState.lastCheckInCreated = time
+      }
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
+      console.log('sending', requestGenerator);
+      return executeRequest(requestGenerator);
+    });
   });
+}
+
+
+function executeRequest(requestGenerator) {
+  apiHandler.postMessage(requestGenerator);
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      apiHandler.terminate()
       return reject(event.data)
     };
   })
