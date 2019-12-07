@@ -76,10 +76,6 @@
       margin-right: 0;
     }
   }
-/* .selection-box-auto ul li {
-    padding-right: 0px;
-    padding-left: 0px;
-} */
 
 #select-venue li {
     background-color: lightgray;
@@ -280,9 +276,6 @@
   }
 
 
-  .expand-box  .mdc-card{
-    /* height: 100vh; */
-  }
   .expand-box .mdc-card .demo-card__primary {
     padding-bottom: 0px;
   }

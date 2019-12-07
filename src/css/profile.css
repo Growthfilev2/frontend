@@ -45,11 +45,6 @@
     width: 100%;
 }
 
-#base-details {
-    /* padding-right: 10px;
-    padding-left: 10px; */
-    /* padding-top: 10px; */
-}
 
 #user-details {
     padding-right: 10px;
@@ -62,13 +57,6 @@
     background-color: var(--mdc-theme-background)
 }
 
-#edit-profile {
-
-    /* border-radius: 50%;
-    right: 1rem;
-    top: 1rem;
-    float: right; */
-}
 
 #edit-profile.without-tabs-des {
     bottom: 54.5rem;
