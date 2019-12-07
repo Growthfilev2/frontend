@@ -3,6 +3,7 @@
   height: 100%;
   padding: 0px;
 }
+
 .snap-bckg {
   -webkit-background-size: cover;
   -moz-background-size: cover;
@@ -13,34 +14,19 @@
   background-attachment: fixed;
   width: 100%;
   height: calc(100vh - 56px);
- 
+
 }
-  
-  .snap-form {
-    background-color: rgba(0, 0, 0, 0.6);
-    width: 100%;
-    position: fixed;
-    bottom: 0;
-  
-  }
-  .snap-form .snap-text {
-    font-size: 20px;
-  
-    max-height: 300px;
-  }
-  
-  
-  
-  .app-fab--absolute.snap-fab {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-  }
-  
-  @media(min-width: 1024px) {
-     .app-fab--absolute.snap-fab {
-      bottom: 1.5rem;
-      right: 1.5rem;
-    }
-  }
-  
+
+.snap-form {
+  background-color: rgba(0, 0, 0, 0.6);
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+
+}
+
+.snap-form .snap-text {
+  font-size: 20px;
+
+  max-height: 300px;
+}

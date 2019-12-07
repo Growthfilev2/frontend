@@ -218,33 +218,7 @@ body {
 
 }
 
-.app-fab--absolute {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-}
 
-@media(min-width: 1024px) {
-   .app-fab--absolute {
-    bottom: 1.5rem;
-    right: 1.5rem;
-  }
-}
-
-
-
-.app-fab--absolute {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-}
-
-@media(min-width: 1024px) {
-   .app-fab--absolute {
-    bottom: 1.5rem;
-    right: 1.5rem;
-  }
-}
 .inline-flex {
   display: inline-flex;
     align-items: center;
