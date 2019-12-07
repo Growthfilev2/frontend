@@ -36,6 +36,10 @@ function getKnownLocationSubs() {
         return;
       };
       if(!cursor.value.attachment) {
+        handleError({
+          message:'field attachment value is null',
+          body: JSON.stringify(cursor.value)
+        })
         cursor.continue();
         return;
       }
@@ -116,6 +120,10 @@ function getSubsWithVenue() {
         return;
       }
       if(!cursor.value.venue || !Array.isArray(cursor.value.venue)) {
+        handleError({
+          message:'field venue value is null',
+          body: JSON.stringify(cursor.value)
+        })
         cursor.continue();
         return;
       }

@@ -484,6 +484,22 @@ function getSubscription(office, template) {
       range = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])
     }
     index.getAll(range).onsuccess = function (event) {
+      const results = event.target.result;
+      var corruptTempalte;
+      results.forEach(function(result){
+        const keys = Object.keys(result);
+        keys.forEach(function(key){
+          if(!result[key]) {
+            corruptTempalte = result
+          }
+        })
+      });
+      if(corruptTempalte) {
+        handleError({
+          message:'Template field having null values',
+          body:JSON.stringify(corruptTempalte)
+        })
+      }
       return resolve(event.target.result)
     }
   })

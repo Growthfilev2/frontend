@@ -149,6 +149,7 @@ function createTemplateButton(subs) {
   button.addEventListener('click', function () {
     if (subs.length == 1) {
       history.pushState(['addView'], null, null);
+      
       addView(subs[0])
       return
     }

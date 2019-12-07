@@ -6,6 +6,7 @@ function attendenceView(sectionContent, yesterdayAttendanceRecord) {
   getSubscription('', 'leave').then(function (subs) {
     if (!subs.length) return;
     if (!el) return;
+    
     el.appendChild(createTemplateButton(subs))
   }).catch(function (error) {
     handleError({
