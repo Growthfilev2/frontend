@@ -939,3 +939,8 @@ function fillVenueInCheckInSub(sub, venue) {
   }];
   return sub;
 }
+
+
+function reloadPage() {
+  window.location.reload(true);
+}
