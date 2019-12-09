@@ -202,7 +202,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
   }).catch(function (error) {
 
 
-    if (error.response.message === 'Invalid check-in') {
+    if (error.message === 'Invalid check-in') {
 
       handleInvalidCheckinLocation(retry, function (newGeopoint) {
         ApplicationState.location = newGeopoint;
@@ -248,6 +248,13 @@ function handleInvalidCheckinLocation(retry, callback) {
       window.removeEventListener('iosLocation', _iosLocation, true);
     }, true);
   } catch (e) {
+    return callback({
+      latitude: 28,
+      longitude: 77,
+      lastLocationTime:Date.now(),
+      provider:'HTML5',
+      accuracy:30
+    })
     failureScreen({
       message: 'There was a problem in detecting your location.',
       icon: 'location_off',
@@ -304,7 +311,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     history.pushState(['reportView'], null, null)
     reportView();
   }).catch(function (error) {
-    if (error.response.message === 'Invalid check-in') {
+    if (error.message === 'Invalid check-in') {
 
       handleInvalidCheckinLocation(retry, function (newGeopoint) {
         ApplicationState.location = newGeopoint;
