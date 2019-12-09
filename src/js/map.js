@@ -50,10 +50,10 @@ function handleLocationError(error, onAppOpen) {
 
   switch (error.message) {
     case 'THRESHOLD EXCEED':
-      if(history.state)
-      mapView(error.body.geopoint);
-    break;
-    
+      if (history.state)
+        mapView(error.body.geopoint);
+      break;
+
     case 'BROKEN INTERNET CONNECTION':
       if (onAppOpen) {
         failureScreen({
@@ -65,7 +65,7 @@ function handleLocationError(error, onAppOpen) {
       }
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
-    break;
+      break;
 
     case 'TURN ON YOUR WIFI':
       if (onAppOpen) {
@@ -78,8 +78,8 @@ function handleLocationError(error, onAppOpen) {
       }
       alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
-    break;
-    
+      break;
+
     default:
       handleError({
         message: error.message,
@@ -169,7 +169,7 @@ function mapView(location) {
   });
 }
 
-function createUnkownCheckIn(cardProd, geopoint,retry) {
+function createUnkownCheckIn(cardProd, geopoint, retry) {
   document.getElementById('start-load').classList.remove('hidden');
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
@@ -200,22 +200,63 @@ function createUnkownCheckIn(cardProd, geopoint,retry) {
     history.pushState(['reportView'], null, null)
     reportView()
   }).catch(function (error) {
-    console.log(error);
+
+
+    if (error.response.message === 'Invalid check-in') {
+
+      handleInvalidCheckinLocation(retry, function (newGeopoint) {
+        ApplicationState.location = newGeopoint;
+        createUnkownCheckIn(selectedVenue, newGeopoint, true);
+      });
+      return
+    };
+
 
     document.getElementById('start-load').classList.add('hidden');
     if (cardProd) {
       cardProd.close()
     }
-    if(error.message === 'Invalid check-in' && !retry) {
-      handleGeoLocationApi().then(function(cellTowerGeopoint){
-        createUnkownCheckIn(cardProd,cellTowerGeopoint,1)
-      })
-      return;
-    }
-    
+
     snacks(error.message);
   })
 }
+
+
+function handleInvalidCheckinLocation(retry, callback) {
+  if (retry) return reloadPage();
+
+  if (native.getName() === 'Android') {
+    handleGeoLocationApi().then(callback).catch(function (error) {
+      handleError({
+        message: 'Geolocation failed to get data for retry attempt at invalid checkin',
+        body: error
+      });
+      failureScreen({
+        message: 'There was a problem in detecting your location.',
+        icon: 'location_off',
+        title: 'Failed To Detect Location'
+      }, reloadPage);
+
+    })
+    return;
+  }
+  try {
+
+    webkit.messageHandlers.locationService.postMessage('start');
+    window.addEventListener('iosLocation', function _iosLocation(e) {
+      callback(e.detail)
+      window.removeEventListener('iosLocation', _iosLocation, true);
+    }, true);
+  } catch (e) {
+    failureScreen({
+      message: 'There was a problem in detecting your location.',
+      icon: 'location_off',
+      title: 'Failed To Detect Location'
+    }, reloadPage);
+  }
+}
+
+
 
 function loadCardData(venues, map, geopoint) {
   document.getElementById('start-load').classList.add('hidden');
@@ -246,7 +287,7 @@ function loadCardData(venues, map, geopoint) {
   })
 };
 
-function createKnownCheckIn(selectedVenue, cardProd, geopoint,retry) {
+function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
 
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
@@ -254,7 +295,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint,retry) {
     cardProd.open();
   }
 
-  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue), geopoint).then(function() {
+  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue), geopoint).then(function () {
 
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
@@ -263,15 +304,17 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint,retry) {
     history.pushState(['reportView'], null, null)
     reportView();
   }).catch(function (error) {
+    if (error.response.message === 'Invalid check-in') {
+
+      handleInvalidCheckinLocation(retry, function (newGeopoint) {
+        ApplicationState.location = newGeopoint;
+        createKnownCheckIn(selectedVenue, cardProd, newGeopoint, true);
+      });
+      return
+    };
     snacks(error.message);
     if (cardProd) {
       cardProd.close()
-    }
-    if(error.message === 'Invalid check-in' && !retry) {
-      handleGeoLocationApi().then(function(cellTowerGeopoint){
-        createUnkownCheckIn(selectedVenue, cardProd,cellTowerGeopoint,1)
-      })
-      return;
     }
   })
 }
@@ -457,16 +500,16 @@ function setFilePath(base64) {
     sub.attachment.Photo.value = url
     sub.attachment.Comment.value = textValue;
     sub.share = []
-   
+
     requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
       initHeaderView()
       // history.pushState(['homeView'],null,null)
       history.pushState(['reportView'], null, null)
       reportView()
       successDialog('Check-In Created')
-      
+
     }).catch(function (error) {
-      
+
       snacks(error.message)
     });
   })
