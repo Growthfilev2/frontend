@@ -63,11 +63,11 @@ function handleLocationError(error, onAppOpen) {
           title: 'BROKEN INTERNET CONNECTION'
         }, openMap);
         return;
-      }
+      };
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
-
+      
     case 'TURN ON YOUR WIFI':
       if (onAppOpen) {
         failureScreen({
