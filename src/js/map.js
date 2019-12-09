@@ -2,6 +2,7 @@ var map;
 var globMark;
 let o;
 let selectedSubs;
+
 ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   location: '',
   knownLocation: false,
@@ -13,7 +14,7 @@ var markersObject = {
   markers: [],
   infowindow: []
 }
-var geocodeVenue = '';
+
 
 function failureScreen(error, callback) {
 
@@ -178,7 +179,6 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
   offices.forEach(function (office) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
-
     prom.push(requestCreator('create', fillVenueInCheckInSub(copy, ''), geopoint))
   })
 
