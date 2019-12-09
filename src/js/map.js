@@ -254,13 +254,12 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint,retry) {
     cardProd.open();
   }
 
-  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue), geopoint).then(function () {
+  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue), geopoint).then(function() {
 
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     initHeaderView()
-
     history.pushState(['reportView'], null, null)
     reportView();
   }).catch(function (error) {

@@ -56,8 +56,7 @@ self.onmessage = function (event) {
   const workerId = event.data.id
   if (event.data.type === 'geolocationApi') {
     geolocationApi(event.data.body, event.data.meta, 3).then(function (response) {
-      response.id = workerId
-      sendSuccessRequestToMainThread(response)
+      sendSuccessRequestToMainThread(response,workerId)
     }).catch(function (error) {
       error.id = workerId;
       self.postMessage(error);
@@ -77,8 +76,7 @@ self.onmessage = function (event) {
         payload: event.data,
         db: db
       }).then(function (response) {
-        response.id = workerId
-        sendSuccessRequestToMainThread(response)
+        sendSuccessRequestToMainThread(response,workerId)
       }).catch(function (error) {
         error.id = workerId
         sendErrorRequestToMainThread(error)
@@ -87,8 +85,7 @@ self.onmessage = function (event) {
     }
 
     requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (response) {
-      response.id = workerId
-      sendSuccessRequestToMainThread(response)
+      sendSuccessRequestToMainThread(response,workerId)
     }).catch(function (error) {
       error.id = workerId;
       sendErrorRequestToMainThread(error)
@@ -116,8 +113,7 @@ function handleNow(eventData, db) {
 
       if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
         removeFromOffice(response.removeFromOffice, eventData.meta, db).then(function (response) {
-          response.id = workerId;
-          sendSuccessRequestToMainThread(response)
+          sendSuccessRequestToMainThread(response,workerId)
         }).catch(function (error) {
           error.id = eventData.id;
           sendErrorRequestToMainThread(error)
@@ -756,7 +752,7 @@ function successResponse(read, param, db, resolve, reject) {
 
     const currentAddendums = userTimestamp[number]
     currentAddendums.forEach(function (addendum) {
-      if (addendum.isComment && addendum.assignee) return updateUserStore(userStore, number, addendum);
+      if (addendum.isComment && addendum.assignee) return updateUserStore(userStore, number, addendum,counter);
       const activityId = addendum.activityId
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
@@ -767,18 +763,15 @@ function successResponse(read, param, db, resolve, reject) {
 
           addendumObjectStore.put(addendum);
           if (number === param.user.phoneNumber) {
-            updateUserStore(userStore, user.phoneNumber, addendum)
+            updateUserStore(userStore, user.phoneNumber, addendum,counter)
           }
           if (number === user.phoneNumber) {
-            updateUserStore(userStore, number, addendum)
+            updateUserStore(userStore, number, addendum,counter)
           }
         })
       }
     })
   })
-
-
-
 
   read.templates.forEach(function (subscription) {
     if (subscription.status !== 'CANCELLED') {
@@ -796,7 +789,7 @@ function successResponse(read, param, db, resolve, reject) {
   }
 }
 
-function updateUserStore(userStore, phoneNumber, currentAddendum) {
+function updateUserStore(userStore, phoneNumber, currentAddendum,counter) {
   userStore.get(phoneNumber).onsuccess = function (event) {
     let userRecord = event.target.result
     if (!userRecord) {
