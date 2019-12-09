@@ -308,7 +308,7 @@ function executeRequest(requestGenerator) {
       } else {
         const resolve = workerResolves[event.data.id];
         if (resolve) {
-          resolve(event.data.message);
+          resolve(event.data);
         }
       }
       delete workerResolves[event.data.id]

@@ -26,7 +26,7 @@ function sendSuccessRequestToMainThread(response, id) {
   self.postMessage({
     response: response,
     success: true,
-    id:id
+    id: id
   })
 }
 
@@ -55,7 +55,7 @@ self.onmessage = function (event) {
   meta = event.data.meta;
   const workerId = event.data.id
   if (event.data.type === 'geolocationApi') {
-    geolocationApi(event.data.body, event.data.meta, 3).then(function(response){
+    geolocationApi(event.data.body, event.data.meta, 3).then(function (response) {
       response.id = workerId
       sendSuccessRequestToMainThread(response)
     }).catch(function (error) {
@@ -69,23 +69,24 @@ self.onmessage = function (event) {
   req.onsuccess = function () {
     const db = req.result
 
-    if (event.data.type === 'now') return handleNow(event.data,db)
+    if (event.data.type === 'now') return handleNow(event.data, db)
     if (event.data.type === 'instant') return instant(event.data.body, event.data.meta)
 
     if (event.data.type === 'Null') {
       updateIDB({
         payload: event.data,
         db: db
-      }).then(function(response){}).catch(function (error) {
+      }).then(function (response) {
         response.id = workerId
         sendSuccessRequestToMainThread(response)
+      }).catch(function (error) {
         error.id = workerId
         sendErrorRequestToMainThread(error)
       })
       return;
     }
 
-    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function(response){
+    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (response) {
       response.id = workerId
       sendSuccessRequestToMainThread(response)
     }).catch(function (error) {
@@ -96,8 +97,8 @@ self.onmessage = function (event) {
 
 }
 
-function handleNow(eventData,db) {
-  fetchServerTime(eventData.body,eventData.meta, db).then(function (response) {
+function handleNow(eventData, db) {
+  fetchServerTime(eventData.body, eventData.meta, db).then(function (response) {
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(eventData.meta.user.uid).onsuccess = function (event) {
@@ -114,7 +115,7 @@ function handleNow(eventData,db) {
 
 
       if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-        removeFromOffice(response.removeFromOffice, eventData.meta, db).then(function(response){
+        removeFromOffice(response.removeFromOffice, eventData.meta, db).then(function (response) {
           response.id = workerId;
           sendSuccessRequestToMainThread(response)
         }).catch(function (error) {
@@ -463,11 +464,11 @@ function removeFromOffice(offices, meta, db) {
 }
 
 function removeActivity(offices, tx) {
-  const names = ['activity','children','map','calendar','subscriptions'];
-  names.forEach(function(name){
+  const names = ['activity', 'children', 'map', 'calendar', 'subscriptions'];
+  names.forEach(function (name) {
     const index = tx.objectStore(name).index('office');
-    offices.forEach(function(office){
-        removeByIndex(index,office)
+    offices.forEach(function (office) {
+      removeByIndex(index, office)
     })
   })
 
@@ -622,7 +623,7 @@ function removeActivityFromDB(id, updateTx) {
   activityObjectStore.delete(id);
   chidlrenObjectStore.delete(id);
 
-  ['calendar','map','addendum'].forEach(function(name){
+  ['calendar', 'map', 'addendum'].forEach(function (name) {
     const index = updateTx.objectStore(name).index('activityId')
     removeByIndex(index, id)
   })
@@ -776,30 +777,7 @@ function successResponse(read, param, db, resolve, reject) {
     })
   })
 
-  function updateUserStore(userStore, phoneNumber, currentAddendum) {
-    userStore.get(phoneNumber).onsuccess = function (event) {
-      let userRecord = event.target.result
-      if (!userRecord) {
-        userRecord = {
-          count: 0,
-          displayName: '',
-          photoURL: '',
-          mobile: phoneNumber
-        }
-      }
-      userRecord.comment = currentAddendum.comment
-      userRecord.timestamp = currentAddendum.timestamp
-      if (currentAddendum.isComment) {
-        if (!counter[phoneNumber]) return userStore.put(userRecord);
-      }
-      if (userRecord.count) {
-        userRecord.count += counter[phoneNumber];
-      } else {
-        userRecord.count = counter[phoneNumber];
-      }
-      userStore.put(userRecord)
-    }
-  }
+
 
 
   read.templates.forEach(function (subscription) {
@@ -815,6 +793,31 @@ function successResponse(read, param, db, resolve, reject) {
   }
   updateTx.onerror = function () {
     return reject(updateTx.error)
+  }
+}
+
+function updateUserStore(userStore, phoneNumber, currentAddendum) {
+  userStore.get(phoneNumber).onsuccess = function (event) {
+    let userRecord = event.target.result
+    if (!userRecord) {
+      userRecord = {
+        count: 0,
+        displayName: '',
+        photoURL: '',
+        mobile: phoneNumber
+      }
+    }
+    userRecord.comment = currentAddendum.comment
+    userRecord.timestamp = currentAddendum.timestamp
+    if (currentAddendum.isComment) {
+      if (!counter[phoneNumber]) return userStore.put(userRecord);
+    }
+    if (userRecord.count) {
+      userRecord.count += counter[phoneNumber];
+    } else {
+      userRecord.count = counter[phoneNumber];
+    }
+    userStore.put(userRecord)
   }
 }
 
@@ -862,7 +865,7 @@ function updateIDB(config) {
         .then(function (response) {
           return successResponse(response, config.payload.meta, config.db, resolve, reject);
         }).catch(function (error) {
-        
+
           return reject(error)
         })
     }
