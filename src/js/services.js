@@ -429,6 +429,7 @@ function runRead(type) {
   return
 }
 
+
 function debounce(func, wait, immeditate) {
   var timeout;
   return function () {
@@ -1128,11 +1129,11 @@ function updateName(callback) {
   
   <div class='mdc-layout-grid change-name'>
   <p class='mdc-typography--body1 mdc-theme--primary'>
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras ornare dictum lacus eget eleifend. Donec in tempor neque. Ut purus dui, maximus sed convallis ac, facilisis ac sem.
+  Please provide your name
   
   </p>
 <div class="mdc-text-field mdc-text-field--outlined mt-10" id='name'>
-  <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName || ''}' type='text' >
+  <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName || ''}' type='text'  placeholder='Type your name here'>
  <div class="mdc-notched-outline">
      <div class="mdc-notched-outline__leading"></div>
      <div class="mdc-notched-outline__notch">
@@ -1352,7 +1353,7 @@ function updateEmailDom(skipbtn, reportString, headings) {
 
 <h3 class='mdc-typography--headline6'>${headings.heading}</h3>
 <p class='report-rec mt-10 mdc-typography--body1'>
-${reportString}
+Verify your email to receive  offer letter, salary slip, tax forms & other documents
 </p>
 
 <div class="mdc-text-field mdc-text-field--outlined mt-10" id='email'>

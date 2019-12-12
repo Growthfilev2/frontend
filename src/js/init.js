@@ -183,6 +183,7 @@ function initializeFirebaseUI() {
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
+var sliderIndex = 1;
 
 function userSignedOut() {
   progressBar.close();
@@ -193,22 +194,32 @@ function userSignedOut() {
     <div class='slider' id='app-slider'>
       <div class='slider-container'>
         <div class='slider-content'>
-          <div class='icon-container'>
-              <i class='material-icons'>room</i>
+          <div class='heading'>
+            <h3 class='mdc-typography--headline4'>Welcome to Growthfile</h3>
+            <p class='mdc-typography--body1'>Mark attendance on Growthfile to avoid deductions in salary and expenses</p>
           </div>
-          <div class='text-container mdc-typography--headline6'>
-              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel erat pellentesque, dapibus quam ac, semper tortor. Suspendisse eu felis laoreet, tempus mi ac, venenatis justo.</p>
+
+          <div class='image-container'>
+              <img src='./img/ic_launcher.png'>
           </div>
+          
         </div>
-        <div class='dot-container'>
-          <span class='dot active'></span>
-          <span class='dot'></span>
-         
-        </div>
+       
         <div class='login-button-container'>
-          <div class='mdc-button mdc-button--raised full-width'>
+        <div class='dot-container'>
+            <span class='dot active'></span>
+            <span class='dot'></span>
+            <span class='dot'></span>
+      </div>
+        <div class='mdc-typography--body1 mb-10'>
+          <span class='text-center'>
+            <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
+            <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
+           </span>
+        </div>
+        <div class='mdc-button mdc-button--raised full-width'>
             <div class="mdc-button__ripple"></div>
-            <span class="mdc-button__label">LOGIN</span>
+            <span class="mdc-button__label">Agree & Continue</span>
           </div>
         </div>
       </div>
@@ -229,25 +240,23 @@ function userSignedOut() {
 
     if (swipeEvent.detail.direction === 'left') {
       // tabList.activateTab()
-      console.log('left');
-      loadPrevSlider(sliderEl);
-      [...document.querySelectorAll('.dot')].forEach(function (el, index) {
-        el.classList.remove('active');
-        if (index == 0) {
-          el.classList.add('active')
-        }
-      })
+      if (sliderIndex <= 1) return;
+      sliderIndex--
     }
+
     if (swipeEvent.detail.direction === 'right') {
-      console.log('right')
-      loadNextSlider(sliderEl);
-      [...document.querySelectorAll('.dot')].forEach(function (el, index) {
-        el.classList.remove('active');
-        if (index == 1) {
-          el.classList.add('active')
-        }
-      })
+      if (sliderIndex >= 3) return;
+      sliderIndex++
     }
+
+    loadSlider(sliderEl);
+    [...document.querySelectorAll('.dot')].forEach(function (el, index) {
+      el.classList.remove('active');
+      if (index == sliderIndex -1) {
+        el.classList.add('active')
+      }
+    })
+
   });
 
 }
@@ -258,9 +267,59 @@ function loadPrevSlider(sliderEl) {
   sliderEl.querySelector('.text-container p').textContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel erat pellentesque, dapibus quam ac, semper tortor. Suspendisse eu felis laoreet, tempus mi ac, venenatis justo.'
 }
 
-function loadNextSlider(sliderEl) {
-  sliderEl.querySelector('.icon-container i').textContent = 'motorcycle'
-  sliderEl.querySelector('.text-container p').textContent = 'Ut ut pharetra neque. Pellentesque pellentesque sem neque,'
+function loadSlider(sliderEl) {
+
+  let sliderContent = '';
+
+  switch (sliderIndex) {
+    case 1:
+      sliderContent = `<div class='heading'>
+       <h3 class='mdc-typography--headline4'>Welcome to Growthfile</h3>
+       <p class='mdc-typography--body1'>Mark attendance on Growthfile to avoid deductions in salary and expenses</p>
+     </div>
+     <div class='image-container'>
+         <img src='./img/ic_launcher.png'>
+     </div>`
+      break;
+    case 2:
+      sliderContent = `
+        <div class='icon-container'>
+          <i class='material-icons'>room</i>
+
+        </div>
+        <div class='text-container'>
+          <ul class='mdc-list'>
+            <li class='mdc-list-item'>Mark attendance on your phone</li>
+            <li class='mdc-list-item'>From any location</li>
+            <li class='mdc-list-item'>Branch / Customer / Unknown</li>
+            <li class='mdc-list-item'>Calculate travel km</li>
+            <li class='mdc-list-item'>Manage leave & claims</li>
+          </ul>
+        </div>
+        `
+
+      break;
+    case 3:
+
+      sliderContent = `
+        <div class='image-container'>
+            <img src='./img/currency_large.png'>
+        </div>
+        <div class='text-container'>
+        <ul class='mdc-list'>
+            <li class='mdc-list-item'>Offer letter</li>
+            <li class='mdc-list-item'>Payslip & Form 16</li>
+            <li class='mdc-list-item'>Submit rent receipts</li>
+            <li class='mdc-list-item'>Invest to save tax</li>
+            <li class='mdc-list-item'>File tax returns</li>
+        </ul>
+        </div>
+        `
+      break;
+  }
+
+
+  sliderEl.querySelector('.slider-content').innerHTML = sliderContent;
 }
 
 
