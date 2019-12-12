@@ -585,7 +585,12 @@ function putAttachment(activity, tx, param) {
   const myNumber = param.user.phoneNumber
 
   if (activity.template === 'employee') {
-    commonSet.employee = activity.attachment['Employee Contact'].value
+    if(activity.attachment.hasOwnProperty('Employee Contact')) {
+      commonSet.employee = activity.attachment['Employee Contact'].value
+    }
+    if(activity.attachment.hasOwnProperty('Phone Number')) {
+      commonSet.employee = activity.attachment['Phone Number'].value
+    }
     if (activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
       commonSet.team = 1
     }

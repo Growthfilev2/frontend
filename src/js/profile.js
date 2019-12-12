@@ -483,7 +483,7 @@ function createViewProfile() {
 
         if (myTeam.length) {
           myTeam.forEach(function (member) {
-            store.get(member.attachment['Employee Contact'].value).onsuccess = function (event) {
+            store.get(member.attachment['Phone Number'].value).onsuccess = function (event) {
               const record = event.target.result;
               if (!record) return;
               team += addUserChips(record)
@@ -586,7 +586,7 @@ function fillUserDetails(user) {
   const notAllowedFields = {
     'First Supervisor': true,
     'Second Supervisor': true,
-    'Employee Contact': true,
+    'Phone Number': true,
     'Name': true
   }
   const template = `<div class="office-info">

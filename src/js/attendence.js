@@ -114,7 +114,7 @@ function attendaceCard(data, employeeRecord) {
         </div>
       <div class='time-container'>
           ${data.addendum.map(ad => {
-              return `<a class='time addendum-value mdc-typography--headline6 mdc-theme--primary' href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'>
+              return ` <a class='time addendum-value mdc-typography--headline6 ${ad.latitude && ad.longitude ? 'mdc-theme--primary' :''}' ${ad.latitude && ad.longitude ? `href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'` : ''}>
                   ${getAttendanceTime(ad)}
                   <div class='mdc-typography--caption'>Check-in</div>
               </a>`
@@ -138,6 +138,7 @@ function getMinimumDalyCount(data, employeeRecord) {
   if (!employeeRecord[data.office]) {
     return ` Count : ${data.addendum.length}`
   }
+  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Daily Activity Count')) return;
   if (!employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value) {
     return ` Count : ${data.addendum.length}`
   }
