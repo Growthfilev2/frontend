@@ -265,8 +265,19 @@ body {
   font-size: 50px !important
 }
 
-.splash-content .text {
+.splash-content {
+  padding: 20px;
+  height: 100%;
+  width: 100%;
+}
 
+.graphic-container img {
+  display: block;
+  margin: 0 auto; 
+  max-width: 100px;
+}
+.splash-content .text {
+  text-align: center;
   padding: 10px;
   margin: 0 auto;
 }
@@ -283,25 +294,22 @@ body {
   width: 100%;
 }
 
-/** roller **/
-#start-load {
+
+
+/* 
+ #start-load {
   position: absolute;
   top: 0px;
-  bottom: 6rem;
+  bottom: 0rem;
   left: 0;
   right: 0;
   margin: auto;
   height: 64px;
   z-index: 9;
-}
-
-#start-load p {
-  color: white;
-}
-
-#start-load {
   text-align: center;
 }
+
+
 
 .lds-roller {
 
@@ -322,7 +330,7 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: white;
+  background: var(--mdc-theme-primary);
   margin: -3px 0 0 -3px;
 }
 
@@ -405,6 +413,76 @@ body {
 
   100% {
     transform: rotate(360deg);
+  }
+} */
+
+.loader {
+  position: relative;
+  margin: 0 auto;
+  width: 65px;
+}
+.loader:before {
+  content: '';
+  display: block;
+  padding-top: 100%;
+}
+.circular {
+  animation: rotate 2s linear infinite;
+  height: 100%;
+  transform-origin: center center;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+.path {
+  stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  animation: dash 1.5s ease-in-out infinite;
+  stroke-linecap: round;
+  stroke: var(--mdc-theme-primary);
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+ }
+}
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+ }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+ }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+ }
+}
+
+
+.showbox {
+  position: absolute;
+   top: 6rem;
+   bottom: 0rem;
+   left: 0;
+   right: 0;
+   margin: auto;
+   height: 64px;
+   z-index: 9;
+   text-align: center;
+}
+
+@media (max-width:360px) {
+  .showbox {
+    position: relative;
+    top: 0rem;
   }
 }
 
@@ -552,21 +630,6 @@ body {
 
 .location-header-title.mdc-top-app-bar__title {
   font-size: 1.25rem;
-}
-
-.mdc-top-app-bar__title:not(.header-two-line) {
-  /* font-size: 24px;
-  padding-left: 10px; */
-}
-
-.showbox {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 5%;
-  background-color: rgba(255, 255, 255, .7);
 }
 
 
@@ -920,3 +983,13 @@ iframe {
   color: var(--mdc-theme-primary);
   background-color: var(--mdc-theme-primary);
 }
+
+
+
+
+
+
+
+
+
+

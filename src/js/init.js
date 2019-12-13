@@ -103,7 +103,7 @@ function initializeApp() {
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
 
-        document.getElementById('start-load').classList.add('hidden');
+        // document.getElementById('start-load').classList.add('hidden');
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
@@ -323,52 +323,49 @@ function loadSlider(sliderEl) {
 }
 
 
-function splashScreen() {
+function  loadingScreen() {
   const panel = document.getElementById('app-current-panel');
-  panel.classList.add('mdc-theme--primary-bg');
-  const startLoad = document.getElementById('start-load')
-  startLoad.classList.remove('hidden');
+
   const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
 
-
-  let index = 0;
-  var interval = setInterval(function () {
-    if (index == texts.length - 1) {
-      clearInterval(interval)
-    };
-    startLoad.querySelector('p').textContent = texts[index]
-    index++;
-  }, index + 1 * 1000);
-
   panel.innerHTML = `
-  <div class='splash-content  mdc-theme--on-primary'>
-    <div class='text'>
-        <p class='mdc-typography--body1'>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras ornare dictum lacus eget eleifend.
-        Donec in tempor neque. Ut purus dui, maximus sed convallis ac, facilisis ac sem
+  <div class='splash-content'>
+
+      <div class='graphic-container'>
+        <img src='./img/ic_launcher.png'>
+      </div>
+  
+      <div class='text'>
+
+        <p class='mdc-typography--headline6 text-center mb-0'>
+            Growthfile is free to use for any employee of any company
+        </p>
+        <p class='mdc-typography--subtitle2 text-center'>
+          No more queries, disputes, delays or deductions from your monthly salary & other payments
         </p>
     </div>
+
+    <div class="showbox" id='start-load'>
+    <div class="loader">
+      <svg class="circular" viewBox="25 25 50 50">
+        <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
+      </svg>
+    </div>
+    <p class="mdc-typography--subtitle2 mdc-theme--primary"></p>
+  </div>
+
+
+
+
     <div class='icon-cont mdc-layout-grid__inner mt-20'>
-        <div class='mdc-layout-grid__cell--span-2'>
+        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
           <div class='icon text-center'>
             <i class='material-icons'>room</i>
             <p class='mt-10 mdc-typography--subtitle1'>Check-in</p>
           </div>
         </div>
        
-        <div class='mdc-layout-grid__cell--span-2'>
-          <div class='icon text-center'>
-            <i class='material-icons'>payment</i>
-            <p class='mt-10 mdc-typography--subtitle1'>Payments</p>
-          </div>
-        </div>
-        <div class='mdc-layout-grid__cell--span-2'>
-          <div class='icon text-center'>
-              <i class='material-icons'>motorcycle</i>
-              <p class='mt-10 mdc-typography--subtitle1'>Reimbursements</p>
-          </div>
-        </div>
-        <div class='mdc-layout-grid__cell--span-2'>
+        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
           <div class='icon text-center'>
             <img src='./img/currency.png'>
             <p class='mt-10 mdc-typography--subtitle1'>Incentives</p>
@@ -378,7 +375,15 @@ function splashScreen() {
       </div>
   </div>
   `
-
+ const startLoad = document.getElementById('start-load')
+  let index = 0;
+  var interval = setInterval(function () {
+    if (index == texts.length - 1) {
+      clearInterval(interval)
+    };
+    startLoad.querySelector('p').textContent = texts[index]
+    index++;
+  }, index + 1 * 1000);
 
 }
 
@@ -417,67 +422,67 @@ function startApp() {
     db = req.result;
     console.log("run app")
     splashScreen();
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: '',
-      registerToken: native.getFCMToken()
-    }).then(function (res) {
-
-      if (res.response.updateClient) {
-        updateApp()
-        return
-      }
-      if (res.response.revokeSession) {
-        revokeSession(true);
-        return
-      };
-
-      getRootRecord().then(function (rootRecord) {
-        if (!rootRecord.fromTime) {
-          requestCreator('Null').then(initProfileView).catch(function (error) {
-            if (error.apiRejection) {
-              snacks(error.message, 'Okay');
-              return;
-            }
-
-            handleError({
-              message: error.message,
-              body: error,
-            })
-          })
-          return;
-        }
-        initProfileView()
-        runRead({
-          read: '1'
-        });
-      })
-    }).catch(function (error) {
-
-      snacks(error.message)
-      if (error.apiRejection) {
-        snacks(error.message, 'Okay')
-        return;
-      }
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error)
-      })
-    })
   }
-  req.onerror = function () {
+  //   requestCreator('now', {
+  //     device: native.getInfo(),
+  //     from: '',
+  //     registerToken: native.getFCMToken()
+  //   }).then(function (res) {
 
-    handleError({
-      message: `${req.error.name}`,
-      body: JSON.stringify(req.error.message)
-    })
-  }
+  //     if (res.response.updateClient) {
+  //       updateApp()
+  //       return
+  //     }
+  //     if (res.response.revokeSession) {
+  //       revokeSession(true);
+  //       return
+  //     };
+
+  //     getRootRecord().then(function (rootRecord) {
+  //       if (!rootRecord.fromTime) {
+  //         requestCreator('Null').then(initProfileView).catch(function (error) {
+  //           if (error.apiRejection) {
+  //             snacks(error.message, 'Okay');
+  //             return;
+  //           }
+
+  //           handleError({
+  //             message: error.message,
+  //             body: error,
+  //           })
+  //         })
+  //         return;
+  //       }
+  //       initProfileView()
+  //       runRead({
+  //         read: '1'
+  //       });
+  //     })
+  //   }).catch(function (error) {
+
+  //     snacks(error.message)
+  //     if (error.apiRejection) {
+  //       snacks(error.message, 'Okay')
+  //       return;
+  //     }
+  //     handleError({
+  //       message: error.message,
+  //       body: JSON.stringify(error)
+  //     })
+  //   })
+  // }
+  // req.onerror = function () {
+
+  //   handleError({
+  //     message: `${req.error.name}`,
+  //     body: JSON.stringify(req.error.message)
+  //   })
+  // }
 }
 
 function initProfileView() {
-  document.getElementById('app-current-panel').classList.remove('mdc-theme--primary-bg')
   document.getElementById('app-current-panel').innerHTML = '';
-  document.getElementById('start-load').classList.add('hidden')
+  // document.getElementById('start-load').classList.add('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
 }
@@ -950,14 +955,14 @@ function getCheckInSubs() {
 }
 
 function openMap() {
-  document.getElementById('start-load').classList.remove('hidden');
+  // document.getElementById('start-load').classList.remove('hidden');
   document.getElementById('step-ui').innerHTML = ''
   progressBar.open();
   appLocation(3).then(function (geopoint) {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
       console.log(checkInSubs)
-      document.getElementById('start-load').classList.add('hidden');
+      // document.getElementById('start-load').classList.add('hidden');
       if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
@@ -980,7 +985,7 @@ function openMap() {
     })
   }).catch(function (error) {
     progressBar.close();
-    document.getElementById('start-load').classList.add('hidden');
+    // document.getElementById('start-load').classList.add('hidden');
     handleLocationError(error, true)
   })
 }
