@@ -18,14 +18,12 @@ function addView(sub) {
 
 
 function sendOfficeData() {
-    progressBar.open();
-    setTimeout(() => {
-        successDialog(`Office created successfully`);
-        progressBar.close();
-        setTimeout(function(){
+    appLocation(3).then(function(geopoint) {
+        requestCreator('createOffice','',geopoint).then(function(){
+            successDialog(`Office created successfully`);
             giveSubscriptionInit();
-        },200)
-    },1000);
+        }).catch(console.error)
+    }).catch(handleLocationError);
 }
 
 function sendSubscriptionData(formData) {
@@ -155,20 +153,13 @@ function setContactForCustomerFailed(exceptionMessage) {
     })
 }
 
-function getContactPeople(contactString) {
+
+function getContactManager(contactString) {
     const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContactForPeople(contactDetails);
+    document.getElementById('form-iframe').contentWindow.setContactForManager(contactDetails);
 }
 
-function getContactSupervisor(contactString) {
-    const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContactForSupervisor(contactDetails);
-}
 
-function getContactOwner(contactString) {
-    const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContactForOwner(contactDetails);
-}
 
 function getContactSupervisors(contactString) {
     const contactDetails = parseContact(contactString);

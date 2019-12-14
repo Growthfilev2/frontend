@@ -254,15 +254,15 @@ function expandPlaceBox() {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
 
-                if (true) return giveSubscriptionInit();
-                createOfficeInit();
+            if (true) return giveSubscriptionInit();
+            createOfficeInit();
 
-                // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
-                //     console.log(idTokenResult);
-                //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
-                // }).catch(function (error) {
-                //     createOfficeInit();
-                // })
+            // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
+            //     console.log(idTokenResult);
+            //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
+            // }).catch(function (error) {
+            //     createOfficeInit();
+            // })
 
 
 
@@ -305,17 +305,11 @@ function isAdmin(idTokenResult, officeName) {
 
 function createOfficeInit() {
     const template = {
-        'template':'office',
-        'attachment':{
-            'First Contact':{
-                'type':'phoneNumber',
-                'value':''
-            },
-            'Second Contact':{
-                'type':'phoneNumber',
-                'value':''
-            }
-        }
+        'template': 'office',
+        'First Contact': '',
+        'Second Contact': '',
+        'name': placeResult.name,
+        'placeId': placeResult.place_id
     }
     history.pushState(['addView'], null, null);
     addView(template);
@@ -324,7 +318,7 @@ function createOfficeInit() {
 function giveSubscriptionInit() {
 
     const template = {
-        
+
         "assigness": [],
         "attachment": {
             "Subscriber": {
@@ -337,7 +331,7 @@ function giveSubscriptionInit() {
             }
         },
         "template": "subscription",
-     
+
     };
 
     history.pushState(['addView'], null, null);

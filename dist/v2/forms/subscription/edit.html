@@ -14,21 +14,22 @@
     <div class='forms mdc-card employee-form' id='form'>
         <div class="form-list">
 
-            <div class="form-component pb-0" id='supervisor-cont'>
+            <div class="form-component pb-0">
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
                         Supervisor
                     </h1>
                     <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more" aria-label="Favorite"
-                        id='add-supervisor' data-mdc-auto-init="MDCRipple">
+                        id='add-manager' data-mdc-auto-init="MDCRipple">
                         <div class="mdc-fab__ripple"></div>
                         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
                     </button>
                 </div>
-                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='supervisor-list'
-                    data-mdc-auto-init="MDCList">
-
-                </ul>
+                <div  id='manager-cont'>
+                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='manager-list'
+                        data-mdc-auto-init="MDCList">
+                    </ul>
+                </div>
             </div>
 
 
@@ -52,19 +53,19 @@
     <script>
         parent.window.mdc.autoInit();
 
-        const addSupervisorBtn = document.getElementById('add-supervisor')
-        const supervisorObject = {};
-        const supervisorList = new parent.mdc.list.MDCList(document.getElementById('supervisor-list'))
-
+        const addManagerBtn = document.getElementById('add-manager')
+        const managerObject = {};
+        const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
+        
         function init(subscriptionTemplate) {
-            addSupervisorBtn.addEventListener('click', function () {  
-                callContact("getContactSupervisors")
+            addManagerBtn.addEventListener('click', function () {  
+                callContact("getContactManager")
             });
             
             document.getElementById('submit-btn').addEventListener('click', function () {
                 const array = []
-                Object.keys(supervisorObject).forEach(function (number) {
-                    array.push(supervisorObject[number]);
+                Object.keys(managerObject).forEach(function (number) {
+                    array.push(managerObject[number]);
                 })
                 subscriptionTemplate.assignees = array
                 delete subscriptionTemplate.user
@@ -74,23 +75,23 @@
 
 
 
-        function setContactForSupervisors(contactObject) {
+        function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
             const li = createPhoneNumberLi(contactObject, false, function () {
-                delete supervisorObject[contactObject.phoneNumber];
-                addSupervisorBtn.classList.remove('hidden')
-                if (!supervisorList.listElements.length) {
-                    document.querySelector('#supervisor-cont .inline-flex').appendChild(addSupervisorBtn);
+                delete managerObject[contactObject.phoneNumber];
+                addManagerBtn.classList.remove('hidden')
+                if (!managerList.listElements.length) {
+                    document.getElementById('manager-cont').appendChild(addManagerBtn);
                     return;
                 }
             });
-            supervisorList.root_.appendChild(li)
-            supervisorObject[contactObject.phoneNumber] = contactObject
+            managerList.root_.appendChild(li)
+            managerObject[contactObject.phoneNumber] = contactObject
             window.scrollTo(0, document.body.scrollHeight);
             parent.window.scrollTo(0, parent.document.body.scrollHeight);
-            document.getElementById("supervisor-cont").appendChild(addSupervisorBtn);
-            if (supervisorList.listElements.length == 3) {
-                addSupervisorBtn.classList.add('hidden')
+            document.getElementById("manager-cont").appendChild(addManagerBtn);
+            if (managerList.listElements.length == 3) {
+                addManagerBtn.classList.add('hidden')
                 return;
             }
         }

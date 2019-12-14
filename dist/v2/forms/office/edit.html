@@ -13,77 +13,26 @@
 <body>
     <div class='forms mdc-card employee-form' id='form'>
         <div class="form-list">
+
+
+
             <div class="form-component">
-                <div class="mdc-form-field owner-checkbox-form">
-                    <div class="mdc-checkbox">
-                        <input type="checkbox" class="mdc-checkbox__native-control" id="owner-checkbox" />
-                        <div class="mdc-checkbox__background">
-                            <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                                <path class="mdc-checkbox__checkmark-path" fill="none"
-                                    d="M1.73,12.91 8.1,19.28 22.79,4.59"></path>
-                            </svg>
-                            <div class="mdc-checkbox__mixedmark"></div>
-                        </div>
-                        <div class="mdc-checkbox__ripple"></div>
-                    </div>
-                    <label for="owner-checkbox">Yes, I am owner</label>
-                </div>
-            </div>
-            <div class="form-component owner-container hidden">
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
-                        Owner
+                        Add Managers
                     </h1>
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite" id='add-owner'
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite" id='add-manager'
                         data-mdc-auto-init="MDCRipple">
                         <div class="mdc-fab__ripple"></div>
                         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
                     </button>
                 </div>
-
-                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='owner-list'
-                    data-mdc-auto-init="MDCList">
-
-                </ul>
-
-            </div>
-
-            <div class="form-component">
-                <div class="inline-flex">
-                    <h1 class="mdc-typography--headline6 mdc-theme--primary">
-                        Add Supervisor
-                    </h1>
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite"
-                        id='add-supervisor' data-mdc-auto-init="MDCRipple">
-                        <div class="mdc-fab__ripple"></div>
-                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
-                    </button>
-                </div>
-                <div class="subscriber-cont">
-                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list " id='super-list'
+                <div id="managers-cont">
+                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list " id='manager-list'
                         data-mdc-auto-init="MDCList">
-
                     </ul>
 
                 </div>
-            </div>
-            <div class="form-component pt-0 hidden" id='people-cont'>
-                <div class="inline-flex">
-                    <h1 class="mdc-typography--headline6 mdc-theme--primary">
-                        People
-                    </h1>
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more" aria-label="Favorite"
-                        id='add-people' data-mdc-auto-init="MDCRipple">
-                        <div class="mdc-fab__ripple"></div>
-                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
-                    </button>
-
-                </div>
-
-                <ul class="mdc-list mdc-list--two-line pt-0" id='contact-list' data-mdc-auto-init="MDCList">
-                </ul>
-
-
             </div>
 
             <div class="form-component" style="margin-top: 50px;">
@@ -99,86 +48,52 @@
     <script src="../js/common.js"></script>
     <script>
         parent.window.mdc.autoInit();
-        const ownerCheckBox = new parent.mdc.checkbox.MDCCheckbox(document.querySelector('.owner-checkbox-form'))
-        const ownerBtn = document.getElementById('add-owner');
-        const ownerList = new parent.mdc.list.MDCList(document.getElementById('owner-list'))
 
-        const supervisorBtn = document.getElementById('add-supervisor');
-        const superList = new parent.mdc.list.MDCList(document.getElementById('super-list'))
-        const list = new parent.mdc.list.MDCList(document.getElementById('contact-list'));
+        const managerBtn = document.getElementById('add-manager');
+        const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
+        let officeTemplate;
+        managerBtn.addEventListener('click', function () {
 
-
-        ownerBtn.addEventListener('click', function () {
-
-            callContact('getContactOwner');
-        });
-
-        supervisorBtn.addEventListener('click', function () {
-
-            callContact('getContactSupervisor')
+            callContact('getContactManager')
         });
 
 
         function init(subscriptionTemplate) {
-            ownerCheckBox.listen('change', function (evt) {
-                if (ownerCheckBox.checked) {
-                    document.querySelector('.owner-container').classList.add('hidden')
-                    ownerList.root_.innerHTML = '';
-                    return
-                }
-
-                ownerBtn.classList.remove('hidden')
-                document.querySelector('.owner-container').classList.remove('hidden')
-            });
-
-            ownerCheckBox.checked = true;
-
-            if (subscriptionTemplate.user.isAdmin) {
-                document.getElementById('people-cont').classList.remove('hidden');
-                document.getElementById('add-people').addEventListener('click', function () {
-
-                    callContact('getContactPeople');
-                })
-
-            }
+            officeTemplate = subscriptionTemplate;
             document.getElementById('submit-btn').addEventListener('click', function () {
                 parent.sendOfficeData();
+
             })
         }
 
-        function setContactForOwner(contactObject) {
-            ownerBtn.classList.add('hidden');
-            const li = createPhoneNumberLi(contactObject, false, function () {
-                ownerBtn.classList.remove('hidden');
 
-            })
-            ownerList.root_.appendChild(li);
-        }
-
-        function setContactForSupervisor(contactObject) {
-            supervisorBtn.classList.add('hidden');
-            const li = createPhoneNumberLi(contactObject, false, function () {
-                supervisorBtn.classList.remove('hidden');
-
-            })
-            superList.root_.appendChild(li);
-        }
-
-        function setContactForPeople(contactObject) {
-            const btn = document.getElementById('add-people');
-
+        function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
             const li = createPhoneNumberLi(contactObject, false, function () {
-                if (!list.listElements.length) {
-                    document.querySelector('#people-cont .inline-flex').appendChild(btn);
+                delete managerObject[contactObject.phoneNumber];
+                addManagerBtn.classList.remove('hidden')
+                if (!managerList.listElements.length) {
+                    document.getElementById('managers-cont').appendChild(addManagerBtn);
                     return;
                 }
             });
-            list.root_.appendChild(li)
+            if(!officeTemplate['First Contact']) {
+                officeTemplate['First Contact'] = contactObject
+            }
+            else {
+                officeTemplate['Second Contact'] = contactObject
+            }
+            managerList.root_.appendChild(li)
             window.scrollTo(0, document.body.scrollHeight);
             parent.window.scrollTo(0, parent.document.body.scrollHeight);
-            document.getElementById("people-cont").appendChild(btn);
-        };
+            document.getElementById("managers-cont").appendChild(addManagerBtn);
+            if (managerList.listElements.length == 2) {
+                addManagerBtn.classList.add('hidden')
+                return;
+            }
+        }
+
+
     </script>
 </body>
 

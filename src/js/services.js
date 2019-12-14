@@ -261,7 +261,6 @@ const apiHandler = new Worker('js/apiHandler.js?version=57');
 function requestCreator(requestType, requestBody, geopoint) {
 
   var auth = firebase.auth().currentUser;
-
   var requestGenerator = {
     type: requestType,
     body: requestBody,
