@@ -195,6 +195,7 @@ function userSignedOut() {
   if(firebaseUI) {
     firebaseUI.delete();
   }
+  
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
     <div class='slider' id='app-slider'>
