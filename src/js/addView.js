@@ -6,8 +6,8 @@ function addView(sub) {
      setHeader( backIcon, '');
 
     document.getElementById('app-current-panel').innerHTML = `
-    <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
+    
+    <iframe class='mdc-top-app-bar--fixed-adjust' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
     `;
 
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -17,9 +17,9 @@ function addView(sub) {
 }
 
 
-function sendOfficeData() {
+function sendOfficeData(requestBody) {
     appLocation(3).then(function(geopoint) {
-        requestCreator('createOffice','',geopoint).then(function(){
+        requestCreator('createOffice',requestBody,geopoint).then(function(){
             successDialog(`Office created successfully`);
             giveSubscriptionInit();
         }).catch(console.error)

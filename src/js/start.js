@@ -18,16 +18,7 @@ function searchOffice(geopoint = history.state[1]) {
             autocomplete:'organization'
         })}
       <div class='search-result-container'>
-        <div role="progressbar" id='search-progress-bar' class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
-          <div class="mdc-linear-progress__buffering-dots"></div>
-          <div class="mdc-linear-progress__buffer"></div>
-          <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-            <span class="mdc-linear-progress__bar-inner"></span>
-          </div>
-          <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-            <span class="mdc-linear-progress__bar-inner"></span>
-          </div>
-        </div>
+        
         
          <ul class='mdc-list mdc-list--two-line mdc-list--avatar-list' id='place-query-ul'>
          </ul>
@@ -84,7 +75,7 @@ function searchOffice(geopoint = history.state[1]) {
     placeSearchField.trailingIcon_.root_.classList.add('hidden')
     const placeRequesParam = {
         query: '',
-        fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types', 'icon']
+        fields: ['name', 'geometry', 'place_id', 'formatted_address', 'types']
     }
 
     placeSearchField.input_.addEventListener('input', function (event) {
@@ -109,13 +100,12 @@ var searchDebounde = debounce(function (event) {
     placeRequesParam.query = value;
     const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
     var infowindow = new google.maps.InfoWindow();
-    const searchProgress = new mdc.linearProgress.MDCLinearProgress(document.getElementById('search-progress-bar'))
-    searchProgress.open();
+    progressBar.open();
 
     placeService = new google.maps.places.PlacesService(map)
     placeService.findPlaceFromQuery(placeRequesParam, function (results, status) {
         ul.root_.innerHTML = ''
-        searchProgress.close();
+        progressBar.close();
         if (status === google.maps.places.PlacesServiceStatus.OK) {
 
             if (results.length == 1) {
@@ -187,6 +177,7 @@ function expandPlaceBox() {
             placeResult.international_phone_number = placeDetail.international_phone_number || ''
             placeResult.photos = placeDetail.photos || []
         }
+        console.log(placeDetail)
         const parentEl = document.getElementById('app-current-panel');
         const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <span class="mdc-top-app-bar__title">${placeResult.name}</span>
@@ -222,17 +213,14 @@ function expandPlaceBox() {
                   <span class="mdc-list-item__graphic material-icons" aria-hidden="true">room</span>
                   ${placeResult.formatted_address}
                 </li>
+                
                 <ul class='mdc-list'>
                   ${placeResult.international_phone_number ? ` <li class='mdc-list-item'>
                     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
                       ${placeResult.international_phone_number}
                     </li>` : ''}
-                    <li class='mdc-list-divider'></li>
                 </ul>
-                  <div class='owner-confirm' id='owner-action-cont'>
-
-
-                  </div>
+                 
                   </div>
                   </div>
                   ${createExtendedFab('check','CONFIRM','confirm-btn',true).outerHTML}
@@ -254,7 +242,7 @@ function expandPlaceBox() {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
 
-            if (true) return giveSubscriptionInit();
+            // if (true) return giveSubscriptionInit();
             createOfficeInit();
 
             // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
@@ -354,6 +342,7 @@ function clearPlaceCustomControl() {
 
 
 function showPlaceBox() {
+    console.log(placeResult)
     clearPlaceCustomControl()
     var centerControlDiv = document.createElement('div');
     var centerControl = new CenterControl(centerControlDiv, placeResult);

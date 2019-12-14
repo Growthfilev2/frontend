@@ -625,10 +625,6 @@ body {
 
 
 /** override **/
-.banner {
-  background-color: rgba(0, 0, 0, .1);
-  height: calc(50vh - 56px);
-}
 
 .header-photo {
   border-radius: 50%;
@@ -717,12 +713,7 @@ iframe {
 #form-iframe {
   width: 100%;
   height: 100%;
-  position: absolute;
-  top: 15%;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
+  position: relative;
 }
 
 
@@ -964,14 +955,7 @@ iframe {
 
 
 
-@media (max-width:480px) {
-  /* .slider .login-button-container {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-  } */
 
-}
 
 .slider .login-button-container .mdc-button {
   border-radius: 0px;

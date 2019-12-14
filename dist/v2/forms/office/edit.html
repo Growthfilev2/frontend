@@ -11,37 +11,37 @@
 </head>
 
 <body>
-    <div class='forms mdc-card employee-form' id='form'>
+    <div class='forms' id='form'>
         <div class="form-list">
 
 
 
-            <div class="form-component">
+            <div class="form-component" id='managers-cont'>
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
                         Add Managers
                     </h1>
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" aria-label="Favorite" id='add-manager'
-                        data-mdc-auto-init="MDCRipple">
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini add-phone-fab" aria-label="Favorite"
+                        id='add-manager' data-mdc-auto-init="MDCRipple">
                         <div class="mdc-fab__ripple"></div>
                         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
                     </button>
                 </div>
-                <div id="managers-cont">
-                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list " id='manager-list'
-                        data-mdc-auto-init="MDCList">
-                    </ul>
-
-                </div>
+                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list " id='manager-list'
+                    data-mdc-auto-init="MDCList">
+                </ul>
             </div>
 
-            <div class="form-component" style="margin-top: 50px;">
-                <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple" id='submit-btn'>
+            <div class="submit-button-cont mdc-elevation--z24">
+                <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple" id='submit-btn'
+                    disabled>
                     <div class="mdc-button__ripple"></div>
-                    <i class="material-icons mdc-button__icon" aria-hidden="true">business</i>
+
                     <span class="mdc-button__label">Create Office</span>
                 </button>
+
             </div>
+
         </div>
     </div>
     </div>
@@ -52,8 +52,9 @@
         const managerBtn = document.getElementById('add-manager');
         const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
         let officeTemplate;
+      
         managerBtn.addEventListener('click', function () {
-
+           
             callContact('getContactManager')
         });
 
@@ -61,7 +62,7 @@
         function init(subscriptionTemplate) {
             officeTemplate = subscriptionTemplate;
             document.getElementById('submit-btn').addEventListener('click', function () {
-                parent.sendOfficeData();
+                parent.sendOfficeData(officeTemplate);
 
             })
         }
@@ -69,31 +70,34 @@
 
         function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
+
             const li = createPhoneNumberLi(contactObject, false, function () {
-                delete managerObject[contactObject.phoneNumber];
-                addManagerBtn.classList.remove('hidden')
+                officeTemplate[li.dataset.type] = '';
+                managerBtn.classList.remove('hidden')
                 if (!managerList.listElements.length) {
-                    document.getElementById('managers-cont').appendChild(addManagerBtn);
+                    document.querySelector('#managers-cont .inline-flex').appendChild(managerBtn);
+                    document.getElementById('submit-btn').setAttribute('disabled', 'true')
                     return;
                 }
             });
-            if(!officeTemplate['First Contact']) {
+            if (!officeTemplate['First Contact']) {
                 officeTemplate['First Contact'] = contactObject
-            }
-            else {
+                li.dataset.type = 'First Contact'
+            } else {
                 officeTemplate['Second Contact'] = contactObject
+                li.dataset.type = 'Second Contact'
+
             }
+
             managerList.root_.appendChild(li)
-            window.scrollTo(0, document.body.scrollHeight);
-            parent.window.scrollTo(0, parent.document.body.scrollHeight);
-            document.getElementById("managers-cont").appendChild(addManagerBtn);
+
+            document.getElementById("managers-cont").appendChild(managerBtn);
+            document.getElementById('submit-btn').removeAttribute('disabled')
             if (managerList.listElements.length == 2) {
-                addManagerBtn.classList.add('hidden')
+                managerBtn.classList.add('hidden')
                 return;
             }
         }
-
-
     </script>
 </body>
 
