@@ -298,12 +298,12 @@ function loadSlider(sliderEl) {
 
         </div>
         <div class='text-container'>
-          <ul class='mdc-list'>
-            <li class='mdc-list-item'>Mark attendance on your phone</li>
-            <li class='mdc-list-item'>From any location</li>
-            <li class='mdc-list-item'>Branch / Customer / Unknown</li>
-            <li class='mdc-list-item'>Calculate travel km</li>
-            <li class='mdc-list-item'>Manage leave & claims</li>
+          <ul class='slider-list mdc-typography--headline6'>
+            <li>Mark attendance on your phone</li>
+            <li>From any location</li>
+            <li>Branch / Customer / Unknown</li>
+            <li>Calculate travel km</li>
+            <li>Manage leave & claims</li>
           </ul>
         </div>
         `
@@ -316,12 +316,12 @@ function loadSlider(sliderEl) {
             <img src='./img/currency_large.png'>
         </div>
         <div class='text-container'>
-        <ul class='mdc-list'>
-            <li class='mdc-list-item'>Offer letter</li>
-            <li class='mdc-list-item'>Payslip & Form 16</li>
-            <li class='mdc-list-item'>Submit rent receipts</li>
-            <li class='mdc-list-item'>Invest to save tax</li>
-            <li class='mdc-list-item'>File tax returns</li>
+        <ul class='slider-list mdc-typography--headline6'>
+            <li>Offer letter</li>
+            <li>Payslip & Form 16</li>
+            <li>Submit rent receipts</li>
+            <li>Invest to save tax</li>
+            <li>File tax returns</li>
         </ul>
         </div>
         `
