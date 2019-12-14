@@ -38,7 +38,7 @@ function searchOffice(geopoint = history.state[1]) {
     </div>`;
 
 
-    const header = getHeader('app-header', '<span class="mdc-top-app-bar__title">Search Office</span>', '');
+     setHeader( '<span class="mdc-top-app-bar__title">Search Office</span>', '');
     header.root_.classList.remove('hidden');
 
     const center = {
@@ -192,13 +192,13 @@ function expandPlaceBox() {
         <span class="mdc-top-app-bar__title">${placeResult.name}</span>
         `
         const clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='close-placebox'>clear</button>`
-        const header = getHeader('app-header', backIcon, clearIcon);
+         setHeader( backIcon, clearIcon);
         header.root_.classList.remove('hidden');
 
         document.getElementById('close-placebox').addEventListener('click',function(){
             history.back();
         })
-        // header.listen('MDCTopAppBar:nav', handleNav);
+
 
         parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust'>
         <div class='mdc-card'>

@@ -3,7 +3,7 @@ function addView(sub) {
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template === 'employee' ? 'Check-in subscribers' : formatTextToTitleCase(sub.template)}</span>
     `
-    const header = getHeader('app-header', backIcon, '');
+     setHeader( backIcon, '');
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>

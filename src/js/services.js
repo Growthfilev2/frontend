@@ -656,7 +656,7 @@ function initHeaderView() {
   if (ApplicationState.nearByLocations.length > 1) {
     clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
   }
-  const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
+   setHeader( homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
   header.listen('MDCTopAppBar:nav', handleNav);
   header.root_.classList.remove('hidden');
 
@@ -1124,7 +1124,7 @@ function updateName(callback) {
   } else {
     backIcon = `<span class="mdc-top-app-bar__title">Add Name</span>`
   }
-  const header = getHeader('app-header', backIcon, '');
+   setHeader( backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   
   <div class='mdc-layout-grid change-name'>
@@ -1206,7 +1206,7 @@ function emailUpdation(skip, callback) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
   `
-  const header = getHeader('app-header', backIcon, '');
+   setHeader( backIcon, '');
   header.root_.classList.remove('hidden');
 
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
@@ -1389,7 +1389,7 @@ function idProofView(callback) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Add ID Proof</span>
   `
-  getHeader('app-header',backIcon,'');
+  setHeader(backIcon,'');
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
   <div class='id-container app-padding'>

@@ -4,7 +4,7 @@ var db;
 let snackBar;
 let DB_VERSION = 30;
 let initApp = true;
-
+var firebaseUI;
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -92,8 +92,8 @@ function initializeApp() {
     progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-    header =  new mdc.topAppBar.MDCTopAppBar(this.document.getElementById('app-header'))
-    header.listen('MDCTopAppBar:nav', handleNav);
+    // header =  new mdc.topAppBar.MDCTopAppBar(this.document.getElementById('app-header'))
+   
     
     const panel = this.document.getElementById('app-current-panel');
 
@@ -177,13 +177,13 @@ function firebaseUiConfig() {
 
 function initializeFirebaseUI() {
   document.getElementById("app-header").classList.remove("hidden");
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons' onclick="window.location.reload()">arrow_back</a>
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Login</span>
   `;
-  const header = getHeader('app-header', backIcon, '');
-
-  var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
-  ui.start(document.getElementById('login-container'), firebaseUiConfig());
+  header = setHeader(backIcon, '');
+  header.listen('MDCTopAppBar:nav', handleNav);
+  firebaseUI = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
+  firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
 var sliderIndex = 1;
@@ -192,6 +192,9 @@ function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
+  if(firebaseUI) {
+    firebaseUI.delete();
+  }
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
     <div class='slider' id='app-slider'>
@@ -484,8 +487,7 @@ function startApp() {
 }
 
 function initProfileView() {
-  // document.getElementById('app-current-panel').innerHTML = '';
-  // document.getElementById('start-load').classList.add('hidden')
+ 
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();

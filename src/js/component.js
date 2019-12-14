@@ -149,17 +149,11 @@ Dialog.prototype.create = function (type) {
 
 
 
-function getHeader(sectionStart, sectionEnd) {
+function setHeader(sectionStart, sectionEnd) {
     const el = document.getElementById('app-header');
-    
     el.querySelector('#section-start').innerHTML = sectionStart;
     el.querySelector('#section-end').innerHTML = sectionEnd;
-
-    topAppBar = new mdc.topAppBar.MDCTopAppBar(el)
-
-    // topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
-    return topAppBar;
-
+    return new mdc.topAppBar.MDCTopAppBar(el);
 }
 
 

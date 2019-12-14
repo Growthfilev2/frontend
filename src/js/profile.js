@@ -4,7 +4,7 @@ function profileView() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
 
-  const header = getHeader('app-header', backIcon, '');
+   setHeader( backIcon, '');
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
@@ -104,7 +104,7 @@ function bankAccount() {
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Bank accounts</span>
     `
-    const header = getHeader('app-header', backIcon, '');
+     setHeader( backIcon, '');
     document.getElementById('app-current-panel').innerHTML = `
     <ul class='mdc-list mdc-list--two-line' id='bank-list'>
     ${accounts.map(function(account){
@@ -166,7 +166,7 @@ function addNewBankAccount(callback) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Add New Bank Account</span>
   `
-  const header = getHeader('app-header', backIcon, '');
+   setHeader( backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
   <div class='add-bank-container mt-20'>
@@ -310,7 +310,7 @@ function changePhoneNumber() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Change Phone Number</span>
   `
-  const header = getHeader('app-header', backIcon, '');
+   setHeader( backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number'>
   
   <div class='change-number-form full-width'>

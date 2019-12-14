@@ -408,7 +408,7 @@ function enterChat(userRecord) {
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
 
-    const header = getHeader('app-header', backIcon, '');
+     setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
     console.log(header)
 
@@ -743,7 +743,7 @@ function share(activity) {
 
     sectionContent.innerHTML = content;
 
-    const header = getHeader('app-header', backIcon, searchIcon);
+     setHeader( backIcon, searchIcon);
     const chipSetEl = document.getElementById('share')
     const chipInit = new mdc.chips.MDCChipSet(chipSetEl)
     const ulSelector = document.getElementById('users-list')
