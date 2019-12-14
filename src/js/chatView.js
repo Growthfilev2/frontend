@@ -10,7 +10,6 @@ function chatView() {
 
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
-    // initHeaderView();
     if(!document.getElementById('search-btn')) {
         const searchIcon = createElement('button',{
             className:'material-icons mdc-top-app-bar__action-item mdc-icon-button',

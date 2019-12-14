@@ -149,8 +149,9 @@ Dialog.prototype.create = function (type) {
 
 
 
-function getHeader(parentSelector, sectionStart, sectionEnd) {
-    const el = document.getElementById(parentSelector);
+function getHeader(sectionStart, sectionEnd) {
+    const el = document.getElementById('app-header');
+    
     el.querySelector('#section-start').innerHTML = sectionStart;
     el.querySelector('#section-end').innerHTML = sectionEnd;
 

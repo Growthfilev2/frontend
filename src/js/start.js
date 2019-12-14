@@ -4,49 +4,6 @@ var searchPlaceMarkers = [];
 var placeSearchField;
 var map;
 
-function newUserLandingpage(geopoint = history.state[1]) {
- 
-    const header = getHeader('app-header', '', '');
-    header.root_.classList.remove('hidden');
-    document.getElementById('step-ui').innerHTML = ''
-    header.listen('MDCTopAppBar:nav', handleNav);
-    progressBar.close();
-    const appEl = document.getElementById('app-current-panel');
-    appEl.innerHTML = '';
-
-    const container = createElement('div', {
-        className: 'landing-page-container text-center'
-    })
-    container.innerHTML = `<div class='text-box'>
-    <p class='mdc-typography--headline5 mt-0'>Welcome to GROWTHFILE, Lorem ipsum</p>
-  </div>`
-
-    const cardBoxCont = createElement('div', {
-        className: 'card-box-container'
-    })
-
-    const card = createElement('div', {
-        className: 'selection-box mdc-card  mdc-card--outlined'
-    })
-    card.innerHTML = `<div class='content'>
-    <div class='icon-container'>
-      <i class='material-icons mdc-theme--primary'>search</i>
-    </div>
-    <div class='text'>
-      <p class='mdc-typography--body1 mt-10 mb-0'>Search Office</p>
-    </div>
-  </div>`
-
-    card.addEventListener('click', function () {
-        history.pushState(['searchOffice', geopoint], null, null)
-        searchOffice(geopoint);
-    });
-
-    cardBoxCont.appendChild(card)
-    container.appendChild(cardBoxCont)
-    appEl.appendChild(container);
-
-}
 
 function searchOffice(geopoint = history.state[1]) {
     const appEl = document.getElementById('app-current-panel');
@@ -55,7 +12,7 @@ function searchOffice(geopoint = history.state[1]) {
      <div class='search-container'>
         ${textField({
             id: 'search-address',
-            label: 'Search',
+            label: 'Search for your office location',
             leadingIcon:'search',
             trailingIcon:'clear',
             autocomplete:'organization'
@@ -81,10 +38,7 @@ function searchOffice(geopoint = history.state[1]) {
     </div>`;
 
 
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Search Office</span>
-    `
-    const header = getHeader('app-header', backIcon, '');
+    const header = getHeader('app-header', '<span class="mdc-top-app-bar__title">Search Office</span>', '');
     header.root_.classList.remove('hidden');
 
     const center = {
@@ -237,8 +191,13 @@ function expandPlaceBox() {
         const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <span class="mdc-top-app-bar__title">${placeResult.name}</span>
         `
-        const header = getHeader('app-header', backIcon, '');
+        const clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='close-placebox'>clear</button>`
+        const header = getHeader('app-header', backIcon, clearIcon);
         header.root_.classList.remove('hidden');
+
+        document.getElementById('close-placebox').addEventListener('click',function(){
+            history.back();
+        })
         // header.listen('MDCTopAppBar:nav', handleNav);
 
         parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust'>

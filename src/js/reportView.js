@@ -18,7 +18,6 @@ function reportView(state, attendanceRecord) {
 
     const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
     tabList.listen('MDCTabBar:activated', function (evt) {
-      initHeaderView();
       history.replaceState(['reportView', evt.detail.index], null, null)
       if (!evt.detail.index) {
         chatView();
