@@ -254,30 +254,17 @@ function expandPlaceBox() {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
 
-            if (true) {
-                giveSubscriptionInit();
-                return;
-            }
+                if (true) return giveSubscriptionInit();
+                createOfficeInit();
 
-            const ownerCont = document.getElementById("owner-action-cont");
-            ownerCont.innerHTML = `
-            <div class='text-center'>
-                <h3 class='mdc-typography--headline6 mt-0'>Do you want to create a company ? </h3>
-                    ${createButton('Create office','business','create-office-btn').outerHTML}
-            </div>
-            `
-            ownerCont.classList.add('pb-20')
-            document.getElementById('create-office-btn').classList.add('mdc-button--raised')
-            document.getElementById('create-office-btn').addEventListener('click', function () {
-                firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
-                    console.log(idTokenResult);
-                    const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
-                    createOfficeInit(isUserAdminOfOffice);
-                }).catch(function (error) {
-                    createOfficeInit();
-                })
-            })
-            window.scrollTo(0, document.body.scrollHeight);
+                // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
+                //     console.log(idTokenResult);
+                //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
+                // }).catch(function (error) {
+                //     createOfficeInit();
+                // })
+
+
 
             // }).catch(function (error) {
             //     console.log(error)
@@ -316,88 +303,19 @@ function isAdmin(idTokenResult, officeName) {
 }
 
 
-function createOfficeInit(isAdmin) {
-
+function createOfficeInit() {
     const template = {
-        "user": {
-            details: {
-                photoURL: firebase.auth().currentUser.photoURL,
-                displayName: firebase.auth().currentUser.displayName,
-                phoneNumber: firebase.auth().currentUser.phoneNumber
+        'template':'office',
+        'attachment':{
+            'First Contact':{
+                'type':'phoneNumber',
+                'value':''
             },
-            isAdmin: isAdmin
-        },
-        "hidden": 0,
-        "canEditRule": "NONE",
-        "schedule": [
-            "Date Of Establishment",
-            "Trial Period"
-        ],
-        "attachment": {
-            "Registered Office Address": {
-                "type": "string",
-                "value": placeResult.formatted_address
-            },
-            "Company Logo": {
-                "value": "",
-                "type": "string"
-            },
-            "Youtube ID": {
-                "type": "string",
-                "value": ""
-            },
-            "Usage": {
-                "type": "string",
-                "value": ""
-            },
-            "Branch Place Supported Types": {
-                "type": "string",
-                "value": ""
-            },
-            "First Day Of Monthly Cycle": {
-                "type": "number",
-                "value": ""
-            },
-            "Timezone": {
-                "type": "string",
-                "value": ""
-            },
-            "Second Contact": {
-                "type": "phoneNumber",
-                "value": ""
-            },
-            "First Day Of Reimbursement Cycle": {
-                "type": "number",
-                "value": ""
-            },
-            "GST Number": {
-                "type": "string",
-                "value": ""
-            },
-            "Description": {
-                "type": "string",
-                "value": ""
-            },
-            "Short Description": {
-                "type": "string",
-                "value": ""
-            },
-            "First Contact": {
-                "type": "phoneNumber",
-                "value": ""
-            },
-            "Name": {
-                "type": "string",
-                "value": placeResult.name
-            },
-            "Customer Place Supported Types": {
-                "value": "",
-                "type": "string"
+            'Second Contact':{
+                'type':'phoneNumber',
+                'value':''
             }
-        },
-        "template": "office",
-
-        "venue": []
+        }
     }
     history.pushState(['addView'], null, null);
     addView(template);
@@ -406,7 +324,7 @@ function createOfficeInit(isAdmin) {
 function giveSubscriptionInit() {
 
     const template = {
-        "schedule": [],
+        
         "assigness": [],
         "attachment": {
             "Subscriber": {
@@ -419,14 +337,7 @@ function giveSubscriptionInit() {
             }
         },
         "template": "subscription",
-        "venue": [],
-        "user": {
-            "details": {
-                photoURL: firebase.auth().currentUser.photoURL,
-                displayName: firebase.auth().currentUser.displayName,
-                phoneNumber: firebase.auth().currentUser.phoneNumber
-            }
-        }
+     
     };
 
     history.pushState(['addView'], null, null);
