@@ -985,7 +985,9 @@ iframe {
 }
 
 
-
+.id-container .button-cont .mdc-button:nth-child(2) {
+  float: right;
+}
 
 
 

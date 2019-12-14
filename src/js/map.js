@@ -18,7 +18,7 @@ var markersObject = {
 
 function failureScreen(error, callback) {
 
-  document.getElementById('start-load').classList.add('hidden');
+  // document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.add('hidden')
 
   document.getElementById('app-current-panel').innerHTML = `
@@ -138,7 +138,6 @@ function mapView(location) {
       latLngBounds: o,
       strictBounds: true,
     },
-
   })
 
   var marker = new google.maps.Marker({
@@ -164,6 +163,7 @@ function mapView(location) {
       ApplicationState.nearByLocations = nearByLocations;
       if (!nearByLocations.length) return createUnkownCheckIn('', location)
       if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], '', location);
+
       document.getElementById('map').style.display = 'block'
       loadCardData(nearByLocations, map, location)
     })
@@ -171,7 +171,7 @@ function mapView(location) {
 }
 
 function createUnkownCheckIn(cardProd, geopoint, retry) {
-  document.getElementById('start-load').classList.remove('hidden');
+  // document.getElementById('start-load').classList.remove('hidden');
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
@@ -189,7 +189,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
     if (cardProd) {
       cardProd.close()
     }
-    document.getElementById('start-load').classList.add('hidden');
+    // document.getElementById('start-load').classList.add('hidden');
 
     successDialog('Check-In Created')
     ApplicationState.venue = ''
@@ -210,13 +210,10 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
       });
       return
     };
-
-
-    document.getElementById('start-load').classList.add('hidden');
+    // document.getElementById('start-load').classList.add('hidden');
     if (cardProd) {
       cardProd.close()
     }
-
     snacks(error.message);
   })
 }
@@ -266,7 +263,7 @@ function handleInvalidCheckinLocation(retry, callback) {
 
 
 function loadCardData(venues, map, geopoint) {
-  document.getElementById('start-load').classList.add('hidden');
+  // document.getElementById('start-load').classList.add('hidden');
   ApplicationState.knownLocation = true;
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${venues.map(function(venue) {

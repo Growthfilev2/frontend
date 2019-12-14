@@ -329,7 +329,7 @@ function  loadingScreen() {
   const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
 
   panel.innerHTML = `
-  <div class='splash-content'>
+  <div class='splash-content' id='loading-screen'>
 
       <div class='graphic-container'>
         <img src='./img/ic_launcher.png'>
@@ -421,68 +421,69 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    splashScreen();
+    loadingScreen();
+  
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: '',
+      registerToken: native.getFCMToken()
+    }).then(function (res) {
+
+      if (res.response.updateClient) {
+        updateApp()
+        return
+      }
+      if (res.response.revokeSession) {
+        revokeSession(true);
+        return
+      };
+
+      getRootRecord().then(function (rootRecord) {
+        if (!rootRecord.fromTime) {
+          requestCreator('Null').then(initProfileView).catch(function (error) {
+            if (error.apiRejection) {
+              snacks(error.message, 'Okay');
+              return;
+            }
+
+            handleError({
+              message: error.message,
+              body: error,
+            })
+          })
+          return;
+        }
+        initProfileView()
+        runRead({
+          read: '1'
+        });
+      })
+    }).catch(function (error) {
+
+      snacks(error.message)
+      if (error.apiRejection) {
+        snacks(error.message, 'Okay')
+        return;
+      }
+      handleError({
+        message: error.message,
+        body: JSON.stringify(error)
+      })
+    })
   }
-  //   requestCreator('now', {
-  //     device: native.getInfo(),
-  //     from: '',
-  //     registerToken: native.getFCMToken()
-  //   }).then(function (res) {
+  req.onerror = function () {
 
-  //     if (res.response.updateClient) {
-  //       updateApp()
-  //       return
-  //     }
-  //     if (res.response.revokeSession) {
-  //       revokeSession(true);
-  //       return
-  //     };
-
-  //     getRootRecord().then(function (rootRecord) {
-  //       if (!rootRecord.fromTime) {
-  //         requestCreator('Null').then(initProfileView).catch(function (error) {
-  //           if (error.apiRejection) {
-  //             snacks(error.message, 'Okay');
-  //             return;
-  //           }
-
-  //           handleError({
-  //             message: error.message,
-  //             body: error,
-  //           })
-  //         })
-  //         return;
-  //       }
-  //       initProfileView()
-  //       runRead({
-  //         read: '1'
-  //       });
-  //     })
-  //   }).catch(function (error) {
-
-  //     snacks(error.message)
-  //     if (error.apiRejection) {
-  //       snacks(error.message, 'Okay')
-  //       return;
-  //     }
-  //     handleError({
-  //       message: error.message,
-  //       body: JSON.stringify(error)
-  //     })
-  //   })
-  // }
-  // req.onerror = function () {
-
-  //   handleError({
-  //     message: `${req.error.name}`,
-  //     body: JSON.stringify(req.error.message)
-  //   })
-  // }
+    handleError({
+      message: `${req.error.name}`,
+      body: JSON.stringify(req.error.message)
+    })
+  }
 }
 
 function initProfileView() {
-  document.getElementById('app-current-panel').innerHTML = '';
+  // document.getElementById('app-current-panel').innerHTML = '';
   // document.getElementById('start-load').classList.add('hidden')
+  document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
 }
@@ -558,25 +559,41 @@ function checkForEmail() {
   const auth = firebase.auth().currentUser;
   if (auth.email && auth.emailVerified) {
     increaseStep(4);
-    checkForBankAccount();
+    checkForId();
     return
   }
 
-
+  
   getRootRecord().then(function (record) {
     if (record.skipEmail) {
       increaseStep(4);
-      checkForBankAccount();
+      checkForId();
       return
     }
     increaseStep(3)
     emailUpdation(true, function () {
 
-      checkForBankAccount()
+      checkForId()
     });
 
   })
 }
+
+
+function checkForId() {
+
+  getRootRecord().then(function (record) {
+    if (record.skipIdproof) {
+      increaseStep(5);
+      checkForBankAccount();
+      return
+    }
+    increaseStep(4);
+    idProofView(checkForBankAccount);
+  
+  })
+}
+
 
 function checkForBankAccount() {
 
@@ -585,7 +602,7 @@ function checkForBankAccount() {
       openMap();
       return;
     }
-    increaseStep(4)
+    increaseStep(5)
     history.pushState(['addNewBankAccount'], null, null);
     addNewBankAccount(openMap);
   })
@@ -665,6 +682,9 @@ function getProfileCompletionTabs() {
       <i class='material-icons'>email</i>
     </div>
     <div id="step4" class="progress-step">
+      <i class='material-icons'>verified_user</i>
+     </div>
+    <div id="step5" class="progress-step">
       <i class='material-icons'>payment</i>
     </div>
   </div>
@@ -675,9 +695,9 @@ function getProfileCompletionTabs() {
 
 function profileCheck() {
   const auth = firebase.auth().currentUser;
-  document.getElementById("app-header").classList.remove('hidden');
   document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
   if (!auth.displayName) {
+    document.getElementById("app-header").classList.remove('hidden');
     increaseStep(1)
     updateName(function () {
       history.pushState(['checkForPhoto'], null, null);
@@ -955,19 +975,19 @@ function getCheckInSubs() {
 }
 
 function openMap() {
-  // document.getElementById('start-load').classList.remove('hidden');
   document.getElementById('step-ui').innerHTML = ''
+
   progressBar.open();
   appLocation(3).then(function (geopoint) {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
       console.log(checkInSubs)
-      // document.getElementById('start-load').classList.add('hidden');
-      if (!Object.keys(checkInSubs).length) {
+      if (Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        history.pushState(['newUserLandingpage', geopoint], null, null)
-        newUserLandingpage(geopoint);
+        history.pushState(['searchOffice', geopoint], null, null)
+        searchOffice(geopoint);
+        
         return
       };
 
@@ -985,7 +1005,6 @@ function openMap() {
     })
   }).catch(function (error) {
     progressBar.close();
-    // document.getElementById('start-load').classList.add('hidden');
     handleLocationError(error, true)
   })
 }

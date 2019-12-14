@@ -76,8 +76,8 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     return resolve({
-      latitude: 28.123,
-      longitude: 77.123,
+      latitude: 28.5503,
+      longitude: 77.2502,
       lastLocationTime:Date.now(),
       provider:'HTML5',
       accuracy:30
@@ -1381,4 +1381,75 @@ ${skipbtn ? `<button class='mdc-button mt-10' id='skip-btn'>
 
 </div>
 `
+}
+
+
+
+function idProofView(callback) {
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Add ID Proof</span>
+  `
+  getHeader('app-header',backIcon,'');
+  const panel = document.getElementById('app-current-panel');
+  panel.innerHTML = `
+  <div class='id-container app-padding'>
+    <div class='pan-container'>
+      <div class='text-field-container mt-10 mb-10'>
+        ${textField({
+          id:'pan-number',
+          label:'Enter PAN Number',
+          value:'',
+          type:'text',
+          required:true
+        })}
+        <div class="mdc-text-field-helper-line">
+          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+        </div>
+    </div>
+    <div class='pan-images'>
+ 
+   
+    </div>
+    </div>
+    <div class='aadhar-container'>
+      <div class='text-field-container mt-10 mb-10'>
+        ${textField({
+          id:'aadhar-number',
+          label:'Enter AADHAR card Number',
+          value:'',
+          type:'text',
+          required:true
+        })}
+        <div class="mdc-text-field-helper-line">
+          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+        </div>
+      </div>
+      <div class='aadhar-images'></div>
+    </div>
+    <div class='button-cont'>
+        <button class='mdc-button' id='skip-btn'>SKIP</button>
+        <button class='mdc-button mdc-button--raised' id='submit-btn'>SUBMIT</button>
+    </div>
+  </div>
+  
+  `
+
+  const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
+  const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
+  const skipBtn = document.getElementById('skip-btn');
+  new mdc.ripple.MDCRipple(skipBtn);
+  skipBtn.addEventListener('click',function(){
+    const tx = db.transaction('root','readwrite');
+    const store = tx.objectStore('root')
+    store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+      const record = event.target.result;
+      record.skipIdproof = true
+      store.put(record)
+    }
+    tx.oncomplete = function(){
+      if(callback){
+        callback();
+      }
+    }
+  })
 }

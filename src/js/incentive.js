@@ -2,7 +2,6 @@ function incentiveView() {
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
     sectionContent.innerHTML = incentiveDom();
-    document.getElementById('start-load').classList.add('hidden')
     const el = document.getElementById('incentive-view')
     getSubscription('', 'customer').then(function (subs) {
         if (!subs.length) return;

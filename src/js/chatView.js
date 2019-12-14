@@ -8,7 +8,6 @@ const duration = 800;
 
 function chatView() {
 
-    document.getElementById('start-load').classList.add('hidden');
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
     // initHeaderView();

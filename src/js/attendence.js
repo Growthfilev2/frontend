@@ -3,7 +3,7 @@ function attendanceView(yesterdayAttendanceRecord) {
 
   if (!sectionContent) return;
   sectionContent.innerHTML = attendanceDom();
-  document.getElementById('start-load').classList.add('hidden')
+  // document.getElementById('start-load').classList.add('hidden')
   
   const el = document.getElementById('attendance-view')
   getSubscription('', 'leave').then(function (subs) {
@@ -40,7 +40,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
       }
       return;
     }
-    document.getElementById('start-load').classList.add('hidden')
+    // document.getElementById('start-load').classList.add('hidden')
 
     let monthlyString = ''
     let month;
@@ -69,7 +69,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
 
   }).catch(function (error) {
     console.log(error)
-    document.getElementById('start-load').classList.add('hidden')
+    // document.getElementById('start-load').classList.add('hidden')
     handleError({
       message: error.message,
       body: {

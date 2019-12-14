@@ -3,7 +3,6 @@ function expenseView() {
 
     if (!sectionContent) return;
     sectionContent.innerHTML = reimDom();
-    document.getElementById('start-load').classList.add('hidden')
     const el = document.getElementById('reim-view')
     getSubscription('', 'claim').then(function (subs) {
         if (!subs.length) return;

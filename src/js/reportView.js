@@ -56,7 +56,6 @@ function reportView(state, attendanceRecord) {
         return;
       }
 
-      document.getElementById('start-load').classList.remove('hidden')
       const reportDataObject = reportTabs[evt.detail.index];
 
       window[reportDataObject.view]();
