@@ -201,18 +201,21 @@ function userSignedOut() {
     <div class='slider' id='app-slider'>
       <div class='slider-container'>
         <div class='slider-content'>
-          <div class='heading'>
-            <h3 class='mdc-typography--headline4'>Welcome to Growthfile</h3>
-            <p class='mdc-typography--body1'>Mark attendance on Growthfile to avoid deductions in salary and expenses</p>
+          <div class='graphic-container'>
+            <img src='./img/ic_launcher.png'>
           </div>
 
-          <div class='image-container'>
-              <img src='./img/ic_launcher.png'>
+          <div class='text'>
+              <p class='mdc-typography--headline4 text-center mb-0'>
+                Welcome to Growthfile
+              </p>
+              <p class='mdc-typography--subtitle2 text-center'>
+                Mark attendance on Growthfile to avoid deductions in salary and expenses
+              </p>
           </div>
-          
         </div>
-       
-        <div class='login-button-container'>
+      
+        <div class='login-button-container invisible'>
         <div class='dot-container'>
             <span class='dot active'></span>
             <span class='dot'></span>
@@ -232,6 +235,10 @@ function userSignedOut() {
       </div>
     </div>
   `;
+
+  setTimeout(function(){
+    document.querySelector('.login-button-container').classList.remove('invisible')
+  },1000)
   const btn = new mdc.ripple.MDCRipple(document.querySelector('.login-button-container .mdc-button'));
   btn.root_.addEventListener('click', function () {
     panel.innerHTML = '';
@@ -243,17 +250,15 @@ function userSignedOut() {
 
   swipe(sliderEl);
   sliderEl.addEventListener('siwpe', function (swipeEvent) {
-    console.log(event);
 
     if (swipeEvent.detail.direction === 'left') {
-      // tabList.activateTab()
       if (sliderIndex <= 1) return;
-      sliderIndex--
+       sliderIndex--
     }
 
     if (swipeEvent.detail.direction === 'right') {
       if (sliderIndex >= 3) return;
-      sliderIndex++
+       sliderIndex++
     }
 
     loadSlider(sliderEl);
@@ -263,16 +268,9 @@ function userSignedOut() {
         el.classList.add('active')
       }
     })
-
   });
-
 }
 
-
-function loadPrevSlider(sliderEl) {
-  sliderEl.querySelector('.icon-container i').textContent = 'room'
-  sliderEl.querySelector('.text-container p').textContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel erat pellentesque, dapibus quam ac, semper tortor. Suspendisse eu felis laoreet, tempus mi ac, venenatis justo.'
-}
 
 function loadSlider(sliderEl) {
 
@@ -280,13 +278,18 @@ function loadSlider(sliderEl) {
 
   switch (sliderIndex) {
     case 1:
-      sliderContent = `<div class='heading'>
-       <h3 class='mdc-typography--headline4'>Welcome to Growthfile</h3>
-       <p class='mdc-typography--body1'>Mark attendance on Growthfile to avoid deductions in salary and expenses</p>
-     </div>
-     <div class='image-container'>
-         <img src='./img/ic_launcher.png'>
-     </div>`
+      sliderContent = `<div class='graphic-container'>
+      <img src='./img/ic_launcher.png'>
+    </div>
+
+    <div class='text'>
+        <p class='mdc-typography--headline4 text-center mb-0'>
+          Welcome to Growthfile
+        </p>
+        <p class='mdc-typography--subtitle2 text-center'>
+          Mark attendance on Growthfile to avoid deductions in salary and expenses
+        </p>
+    </div>`
       break;
     case 2:
       sliderContent = `

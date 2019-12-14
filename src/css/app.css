@@ -153,6 +153,12 @@ body {
   display: none !important;
 }
 
+.invisible {
+  opacity: 0;
+  visibility: hidden;
+}
+
+
 .text-center {
   text-align: center
 }
@@ -273,9 +279,10 @@ body {
 
 .graphic-container img {
   display: block;
-  margin: 0 auto; 
+  margin: 0 auto;
   max-width: 100px;
 }
+
 .splash-content .text {
   text-align: center;
   padding: 10px;
@@ -421,11 +428,13 @@ body {
   margin: 0 auto;
   width: 65px;
 }
+
 .loader:before {
   content: '';
   display: block;
   padding-top: 100%;
 }
+
 .circular {
   animation: rotate 2s linear infinite;
   height: 100%;
@@ -438,6 +447,7 @@ body {
   right: 0;
   margin: auto;
 }
+
 .path {
   stroke-dasharray: 1, 200;
   stroke-dashoffset: 0;
@@ -449,34 +459,37 @@ body {
 @keyframes rotate {
   100% {
     transform: rotate(360deg);
- }
+  }
 }
+
 @keyframes dash {
   0% {
     stroke-dasharray: 1, 200;
     stroke-dashoffset: 0;
- }
+  }
+
   50% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -35px;
- }
+  }
+
   100% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -124px;
- }
+  }
 }
 
 
 .showbox {
   position: absolute;
-   top: 6rem;
-   bottom: 0rem;
-   left: 0;
-   right: 0;
-   margin: auto;
-   height: 64px;
-   z-index: 9;
-   text-align: center;
+  top: 6rem;
+  bottom: 0rem;
+  left: 0;
+  right: 0;
+  margin: auto;
+  height: 64px;
+  z-index: 9;
+  text-align: center;
 }
 
 @media (max-width:360px) {
@@ -897,22 +910,35 @@ iframe {
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+
 }
 
 .slider-container {
   margin: auto;
   text-align: center;
+
+
 }
+
 .slider-container .slider-content {
-   min-height: 300px;
-   min-width: 300px;
+  min-height: 300px;
+  min-width: 300px;
+  position: relative;
+  animation-duration: 0.9s;
+  animation-name: bottomToTop;
+
+
+
 }
+
 .slider-container .slider-content .heading {
   min-height: 200px;
 }
+
 .slider-container .image-container {
   min-height: 200px;
 }
+
 .slider-container .image-container img {
   max-width: 200px;
   width: 40%;
@@ -924,15 +950,19 @@ iframe {
 }
 
 .slider-container .text-container ul {
-  margin:  auto;
+  margin: auto;
 }
-.slider .login-button-container {
 
+.slider .login-button-container {
+  transition: opacity 1s;
   max-width: 330px;
-  display: block;
   margin: 0 auto;
-  /* margin-top: 40%; */
+  position: relative;
+
 }
+
+
+
 
 @media (max-width:480px) {
   /* .slider .login-button-container {
@@ -988,10 +1018,3 @@ iframe {
 .id-container .button-cont .mdc-button:nth-child(2) {
   float: right;
 }
-
-
-
-
-
-
-
