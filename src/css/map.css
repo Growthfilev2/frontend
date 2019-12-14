@@ -210,9 +210,7 @@
   display: block;
   margin: 0 auto;
 }
-.place-box {
-  position: relative;
-}
+
 
 
 @keyframes bottomToTop {
@@ -227,8 +225,19 @@
   }
 }
 
+@keyframes topToBottom {
+  from {
+    bottom: 0px;
+   
+  }
+
+  to {
+    bottom: -1000px;
+  }
+}
+
 .place-box {
- 
+  position: relative;
   animation-duration: 0.5s;
   animation-name: bottomToTop;
 }
@@ -275,6 +284,21 @@
     border-radius: 3px 0 0 3px;
   }
 
+  .expand-box  {
+    position: relative;
+   
+  }
+  .expand-box.up{
+    animation-duration: 0.8s;
+    animation-name: bottomToTop;
+  }
+  .expand-box.down {
+
+    animation-duration: 0.5s;
+    animation-name: topToBottom;
+    animation-iteration-count: 1;
+
+  }
 
   .expand-box .mdc-card .demo-card__primary {
     padding-bottom: 0px;

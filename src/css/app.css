@@ -944,12 +944,9 @@ iframe {
   width: 20%;
 }
 
-.slider-container .text-container {
-  /* display: flex;
-  min-height: 300px; */
-}
 
-.slider-container .text-container .slider-list li {
+
+.slider-list li {
   margin-top: 10px;
   margin-bottom: 10px;
   text-align: left;

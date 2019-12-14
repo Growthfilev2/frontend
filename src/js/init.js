@@ -111,7 +111,9 @@ function initializeApp() {
         userSignedOut()
         return;
       }
-      document.getElementById('app-header').classList.add("hidden");
+      const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
+      header.listen('MDCTopAppBar:nav', handleNav);
+      header.root_.classList.add("hidden");
       if (appKey.getMode() === 'production') {
         if (!native.getInfo()) {
           redirect();
@@ -239,38 +241,40 @@ function userSignedOut() {
   setTimeout(function(){
     document.querySelector('.login-button-container').classList.remove('invisible')
   },1000)
+  const sliderEl = document.getElementById('app-slider');
   const btn = new mdc.ripple.MDCRipple(document.querySelector('.login-button-container .mdc-button'));
   btn.root_.addEventListener('click', function () {
+    removeSwipe()
     panel.innerHTML = '';
     history.pushState(['login'], null, null);
     initializeFirebaseUI();
 
   })
-  const sliderEl = document.getElementById('app-slider');
+  swipe(sliderEl,sliderSwipe);
+  // sliderEl.addEventListener('siwpe', sliderSwipe,false);
+}
 
-  swipe(sliderEl);
-  sliderEl.addEventListener('siwpe', function (swipeEvent) {
 
-    if (swipeEvent.detail.direction === 'left') {
+function sliderSwipe(swipeEvent){
+  const el = swipeEvent.element;
+    if (swipeEvent.direction === 'left') {
       if (sliderIndex <= 1) return;
        sliderIndex--
     }
 
-    if (swipeEvent.detail.direction === 'right') {
+    if (swipeEvent.direction === 'right') {
       if (sliderIndex >= 3) return;
        sliderIndex++
     }
 
-    loadSlider(sliderEl);
-    [...document.querySelectorAll('.dot')].forEach(function (el, index) {
-      el.classList.remove('active');
+    loadSlider(el);
+    [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
+      dotEl.classList.remove('active');
       if (index == sliderIndex -1) {
-        el.classList.add('active')
+        dotEl.classList.add('active')
       }
     })
-  });
 }
-
 
 function loadSlider(sliderEl) {
 

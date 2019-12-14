@@ -262,13 +262,22 @@ function createRadio(radioId, inputId) {
 
 var xStart = null;
 var yStart = null;
-
-function swipe(el) {
+var sliderElement;
+var sliderCallback = null;
+function swipe(el,callback) {
     if (!el) return;
+    sliderElement = el;
+    sliderCallback = callback;
     el.addEventListener('touchstart', handleTouchStart, false);
-    el.addEventListener('touchmove', function(evt){
-        handleTouchMove(evt,el)
-    }, false);
+    el.addEventListener('touchmove', handleTouchMove,false);
+}
+
+function removeSwipe(){
+    if(!sliderElement) return;
+    sliderElement.removeEventListener('touchstart',handleTouchStart,false);
+    sliderElement.removeEventListener('touchmove',handleTouchMove,false);
+    sliderElement = null;
+    sliderCallback = null;
 }
 
 function handleTouchStart(evt) {
@@ -278,7 +287,7 @@ function handleTouchStart(evt) {
     yStart = firstTouch.clientY
 }
 
-function handleTouchMove(evt,el) {
+function handleTouchMove(evt) {
     if (!xStart) return
 
     const xEnd = evt.touches[0].clientX;
@@ -288,7 +297,8 @@ function handleTouchMove(evt,el) {
     const yAxisDiff = yEnd - yStart;
 
     const listenerDetail =  {
-        direction:''
+        direction:'',
+        element:sliderElement
     }
     
    
@@ -305,16 +315,18 @@ function handleTouchMove(evt,el) {
     } else {
         if (yAxisDiff > 0) {
            
-            listenerDetail.direction = 'up'
+            listenerDetail.direction = 'down'
         } else {
             
-            listenerDetail.direction = 'down'
+            listenerDetail.direction = 'up'
         }
     }
     xStart = null;
     yStart = null;
-    var swipeEvent = new CustomEvent('siwpe', {
-        detail: listenerDetail
-    });
-    el.dispatchEvent(swipeEvent);
+    sliderCallback(listenerDetail);
+
+    // var swipeEvent = new CustomEvent('siwpe', {
+    //     detail: listenerDetail
+    // });
+    // sliderElement.dispatchEvent(swipeEvent);
 }

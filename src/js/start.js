@@ -38,7 +38,7 @@ function searchOffice(geopoint = history.state[1]) {
     </div>`;
 
 
-     setHeader( '<span class="mdc-top-app-bar__title">Search Office</span>', '');
+    const header = setHeader('<span class="mdc-top-app-bar__title">Search Office</span>', '');
     header.root_.classList.remove('hidden');
 
     const center = {
@@ -138,7 +138,7 @@ var searchDebounde = debounce(function (event) {
                 });
                 ul.root_.appendChild(li);
             });
-         
+
             return;
         }
 
@@ -157,7 +157,7 @@ window.addEventListener('searchPlaces', searchDebounde)
 function CenterControl(controlDiv) {
 
     var controlUI = createElement('div', {
-        className: 'mdc-card place-box'
+        className: 'mdc-card place-box mdc-elevation--z24'
     });
     controlUI.innerHTML = `
     <div class='mdc-card__primary-action'>
@@ -192,15 +192,12 @@ function expandPlaceBox() {
         <span class="mdc-top-app-bar__title">${placeResult.name}</span>
         `
         const clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='close-placebox'>clear</button>`
-         setHeader( backIcon, clearIcon);
+        const header = setHeader(backIcon, clearIcon);
         header.root_.classList.remove('hidden');
 
-        document.getElementById('close-placebox').addEventListener('click',function(){
-            history.back();
-        })
 
 
-        parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust'>
+        parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust up'>
         <div class='mdc-card'>
             <div class='mdc-card__primary-action'>
                <div class='mdc-card__media mdc-card__media--16-9' style='background-image:url("${placeResult.photos.length ? placeResult.photos[0].getUrl() : './img/business.svg'}")'>
@@ -241,20 +238,27 @@ function expandPlaceBox() {
                   ${createExtendedFab('check','CONFIRM','confirm-btn',true).outerHTML}
       </div>`
 
+        document.getElementById('close-placebox').addEventListener('click', function () {
+            document.querySelector('.expand-box').classList.add('down')
+            document.querySelector('.expand-box').classList.remove('up')
+            setTimeout(function () {
+                history.back();
+            }, 500)
+        })
 
         const confirmFab = document.getElementById('confirm-btn');
         confirmFab.addEventListener('click', function () {
-         
+
             confirmFab.classList.add('mdc-fab--exited')
             // requestCreator('search', {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
-          
+
             if (true) {
                 giveSubscriptionInit();
                 return;
             }
-            
+
             const ownerCont = document.getElementById("owner-action-cont");
             ownerCont.innerHTML = `
             <div class='text-center'>
@@ -264,20 +268,20 @@ function expandPlaceBox() {
             `
             ownerCont.classList.add('pb-20')
             document.getElementById('create-office-btn').classList.add('mdc-button--raised')
-            document.getElementById('create-office-btn').addEventListener('click',function(){
-                firebase.auth().currentUser.getIdTokenResult().then(function(idTokenResult){
+            document.getElementById('create-office-btn').addEventListener('click', function () {
+                firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
                     console.log(idTokenResult);
-                    const isUserAdminOfOffice = isAdmin(idTokenResult,placeResult.name);
+                    const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
                     createOfficeInit(isUserAdminOfOffice);
-                }).catch(function(error){
+                }).catch(function (error) {
                     createOfficeInit();
                 })
             })
-            window.scrollTo(0,document.body.scrollHeight);
-            
+            window.scrollTo(0, document.body.scrollHeight);
+
             // }).catch(function (error) {
             //     console.log(error)
-           
+
             // })
         })
 
@@ -303,11 +307,11 @@ function expandPlaceBox() {
     });
 }
 
-function isAdmin(idTokenResult,officeName){
-    if(!idTokenResult.claims.hasOwnProperty('admin')) return;
-    if(!Array.isArray(idTokenResult.claims.admin)) return;
-    if(!idTokenResult.claims.admin.length) return;
-    if(idTokenResult.claims.admin.indexOf(officeName) == -1) return;
+function isAdmin(idTokenResult, officeName) {
+    if (!idTokenResult.claims.hasOwnProperty('admin')) return;
+    if (!Array.isArray(idTokenResult.claims.admin)) return;
+    if (!idTokenResult.claims.admin.length) return;
+    if (idTokenResult.claims.admin.indexOf(officeName) == -1) return;
     return true;
 }
 
@@ -316,12 +320,12 @@ function createOfficeInit(isAdmin) {
 
     const template = {
         "user": {
-            details:{
+            details: {
                 photoURL: firebase.auth().currentUser.photoURL,
                 displayName: firebase.auth().currentUser.displayName,
                 phoneNumber: firebase.auth().currentUser.phoneNumber
             },
-            isAdmin:isAdmin
+            isAdmin: isAdmin
         },
         "hidden": 0,
         "canEditRule": "NONE",
@@ -392,7 +396,7 @@ function createOfficeInit(isAdmin) {
             }
         },
         "template": "office",
-     
+
         "venue": []
     }
     history.pushState(['addView'], null, null);
@@ -454,7 +458,16 @@ function showPlaceBox() {
     centerControlDiv.addEventListener('click', function () {
         history.pushState(['expandPlaceBox'], null, null);
         expandPlaceBox();
+
     })
+    swipe(centerControlDiv, function (swipeEvent) {
+        console.log(swipeEvent)
+        if (swipeEvent.direction === 'up') {
+            history.pushState(['expandPlaceBox'], null, null);
+            expandPlaceBox();
+            removeSwipe()
+        }
+    });
 }
 
 function searchPlaceResultList(primaryText, secondaryText, icon) {
