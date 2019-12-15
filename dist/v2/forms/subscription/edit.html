@@ -11,35 +11,36 @@
 </head>
 
 <body>
-    <div class='forms mdc-card employee-form' id='form'>
+    <div class='forms' id='form'>
         <div class="form-list">
 
-            <div class="form-component pb-0">
+            <div class="form-component pb-0" id='manager-cont'>
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
-                        Supervisor
+                        Add Managers
                     </h1>
-                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more" aria-label="Favorite"
-                        id='add-manager' data-mdc-auto-init="MDCRipple">
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more add-phone-fab"
+                        aria-label="Favorite" id='add-manager' data-mdc-auto-init="MDCRipple">
                         <div class="mdc-fab__ripple"></div>
                         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
                     </button>
                 </div>
-                <div  id='manager-cont'>
-                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='manager-list'
-                        data-mdc-auto-init="MDCList">
-                    </ul>
-                </div>
+                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='manager-list'
+                    data-mdc-auto-init="MDCList">
+                </ul>
             </div>
 
 
+            <div class="action-button-container">
+                <div class="submit-button-cont">
+                    <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
+                        id='submit-btn'>
+                        <div class="mdc-button__ripple"></div>
+                        <i class="material-icons mdc-button__icon" aria-hidden="true">play_arrow</i>
+                        <span class="mdc-button__label">Check-in</span>
+                    </button>
 
-            <div class="form-component" style="margin-top: 50px;">
-                <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple" id='submit-btn'>
-                    <div class="mdc-button__ripple"></div>
-                    <i class="material-icons mdc-button__icon" aria-hidden="true">play_arrow</i>
-                    <span class="mdc-button__label">Check-in</span>
-                </button>
+                </div>
             </div>
 
 
@@ -56,12 +57,19 @@
         const addManagerBtn = document.getElementById('add-manager')
         const managerObject = {};
         const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
-        
+
         function init(subscriptionTemplate) {
-            addManagerBtn.addEventListener('click', function () {  
-                callContact("getContactManager")
+            let index = 0
+            addManagerBtn.addEventListener('click', function () {
+                index++
+                setContactForManager({
+                    phoneNumber: '999928892' + index,
+                    displayName: 'shikhar ' + index,
+                    email: ''
+                })
+                // callContact("getContactManager")
             });
-            
+
             document.getElementById('submit-btn').addEventListener('click', function () {
                 const array = []
                 Object.keys(managerObject).forEach(function (number) {
@@ -88,12 +96,9 @@
             managerList.root_.appendChild(li)
             managerObject[contactObject.phoneNumber] = contactObject
             window.scrollTo(0, document.body.scrollHeight);
-            parent.window.scrollTo(0, parent.document.body.scrollHeight);
+            // parent.window.scrollTo(0, parent.document.body.scrollHeight);
             document.getElementById("manager-cont").appendChild(addManagerBtn);
-            if (managerList.listElements.length == 3) {
-                addManagerBtn.classList.add('hidden')
-                return;
-            }
+
         }
     </script>
 </body>

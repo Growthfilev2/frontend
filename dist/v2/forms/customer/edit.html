@@ -50,7 +50,7 @@
                 <div class="mdc-select" data-mdc-auto-init="MDCSelect">
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control">
-                        <option value=""  selected></option>
+                        <option value="" selected></option>
                     </select>
                     <label class="mdc-floating-label mdc-floating-label--float-above">Customer Type</label>
                     <div class="mdc-line-ripple"></div>
@@ -68,12 +68,16 @@
                         <div class="mdc-notched-outline__trailing"></div>
                     </div>
                 </div>
-             
+
             </div>
 
 
-            <div class="form-component">
-                <input type="submit" value="CREATE CUSTOMER" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
+            <div class="action-button-container">
+                
+                <div class="submit-button-cont">
+                    <input type="submit" value="CREATE CUSTOMER" class="mdc-button mdc-button--raised submit-btn"
+                    data-mdc-auto-init="MDCRipple">
+                </div>
             </div>
     </form>
     </div>
@@ -104,7 +108,7 @@
                     return
                 }
                 webkit.messageHandlers.getContact.postMessage("setContactForCustomer");
-                
+
 
             });
             cusomerSecondContact.input_.addEventListener('click', function () {
@@ -114,13 +118,13 @@
                 }
                 webkit.messageHandlers.getContact.postMessage("setContactForSecondCustomer");
             });
-            getDropDownContent(subscriptionTemplate.office,'customer-type','officeTemplate').then(function(result){
-                if(result.string) {
+            getDropDownContent(subscriptionTemplate.office, 'customer-type', 'officeTemplate').then(function (result) {
+                if (result.string) {
                     select.nativeControl_.innerHTML += result.string;
                     document.querySelector('.customer-type-container').classList.remove('hidden')
                 }
             })
-                     
+
             var formEl = document.getElementById('form');
 
             formEl.addEventListener('submit', function (e) {
@@ -151,7 +155,7 @@
             if (type === 'First Contact') {
                 customerContact.value = contactObject.phoneNumber;
                 customerAuths[type] = contactObject
-            
+
                 cusomerSecondContact.root_.classList.remove('hidden')
             }
             if (type === 'Second Contact') {

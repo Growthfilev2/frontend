@@ -1,11 +1,11 @@
 function reportView(state, attendanceRecord) {
-  progressBar.close()
 
+  
   const panel = document.getElementById('app-current-panel');
   panel.classList.remove('mdc-theme--primary-bg')
   getReportTabData().then(function (reportTabs) {
     console.log(reportTabs);
-
+    reportViewHeader()
     panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
     panel.innerHTML = `
     ${showTabs(reportTabs)}
@@ -85,6 +85,84 @@ function reportView(state, attendanceRecord) {
   })
 }
 
+function reportViewHeader(){
+  let clearIcon = ''
+  if (ApplicationState.nearByLocations.length > 1) {
+    clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
+  }
+  const header = setHeader(homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
+  header.root_.classList.remove('hidden');
+
+  if (!ApplicationState.venue) {
+    generateCheckInVenueName(header);
+  }
+  if (document.getElementById('change-location')) {
+    document.getElementById('change-location').addEventListener('click', function () {
+      progressBar.open();
+      appLocation(3).then(mapView).catch(handleLocationError)
+    })
+  }
+}
+
+
+function homeHeaderStartContent(name) {
+  return `<img class="mdc-top-app-bar__navigation-icon mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
+  <span class="mdc-top-app-bar__title">${name}</span>`;
+
+}
+
+
+function generateCheckInVenueName(header) {
+  const lastCheckInCreatedTimestamp = ApplicationState.lastCheckInCreated;
+  if (!lastCheckInCreatedTimestamp) return;
+  if (!header) return;
+  const myNumber = firebase.auth().currentUser.phoneNumber;
+  const tx = db.transaction('addendum');
+  const addendumStore = tx.objectStore('addendum')
+  let addendums = [];
+
+  if (addendumStore.indexNames.contains('KeyTimestamp')) {
+    const key = myNumber + myNumber
+    const range = IDBKeyRange.only([lastCheckInCreatedTimestamp, key])
+    addendumStore.index('KeyTimestamp').getAll(range).onsuccess = function (event) {
+      if (!event.target.result.length) return;
+      addendums = event.target.result;
+    };
+  } else {
+
+    addendumStore.index('user').openCursor(myNumber).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.timestamp !== lastCheckInCreatedTimestamp) {
+        cursor.continue();
+        return;
+      }
+      addendums.push(cursor.value)
+      cursor.continue();
+    }
+  }
+
+  tx.oncomplete = function () {
+    console.log(addendums);
+    if (!addendums.length) return;
+    addendums.forEach(function (addendum) {
+      const activityStore = db.transaction('activity').objectStore('activity');
+      activityStore.get(addendum.activityId).onsuccess = function (activityEvent) {
+        const activity = activityEvent.target.result;
+        if (!activity) return;
+        if (activity.template !== 'check-in') return;
+        const commentArray = addendum.comment.split(" ");
+        const index = commentArray.indexOf("from");
+        const nameOfLocation = commentArray.slice(index + 1, commentArray.length).join(" ");
+        console.log(header)
+        console.log(nameOfLocation)
+        if (header.root_.querySelector('.mdc-top-app-bar__title')) {
+          header.root_.querySelector('.mdc-top-app-bar__title').textContent = nameOfLocation;
+        }
+      }
+    })
+  }
+}
 
 
 

@@ -179,6 +179,7 @@ function expandPlaceBox() {
         }
         console.log(placeDetail)
         const parentEl = document.getElementById('app-current-panel');
+        parentEl.classList.add('mdc-top-app-bar--fixed-adjust')
         const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <span class="mdc-top-app-bar__title">${placeResult.name}</span>
         `
@@ -188,7 +189,7 @@ function expandPlaceBox() {
 
 
 
-        parentEl.innerHTML = `<div class='expand-box mdc-top-app-bar--fixed-adjust up'>
+        parentEl.innerHTML = `<div class='expand-box up'>
         <div class='mdc-card'>
             <div class='mdc-card__primary-action'>
                <div class='mdc-card__media mdc-card__media--16-9' style='background-image:url("${placeResult.photos.length ? placeResult.photos[0].getUrl() : './img/business.svg'}")'>
@@ -319,7 +320,6 @@ function giveSubscriptionInit() {
             }
         },
         "template": "subscription",
-
     };
 
     history.pushState(['addView'], null, null);

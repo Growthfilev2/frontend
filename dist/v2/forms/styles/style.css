@@ -12,7 +12,8 @@
   --mdc-theme-text-secondary-on-dark: #006bc1;
 }
 
-html , body {
+html,
+body {
   width: 100%;
   height: 100%;
 }
@@ -52,12 +53,15 @@ html , body {
 .ml-0 {
   margin-left: 0px;
 }
+
 .pt-0 {
   padding-top: 0px;
 }
+
 .pb-0 {
   padding-bottom: 0px;
 }
+
 .pb-20 {
   padding-bottom: 20px;
 }
@@ -117,50 +121,60 @@ body {
   margin: 0px;
 }
 
-.view-list .mdc-chip__text {
-  /* white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 70px; */
-}
 
 /** view-form**/
 .forms {
   height: 100%;
-  
+  padding-top: 20px;
 }
 
 .forms .form-list {
- height: inherit;
+  height: inherit;
 }
 
 .forms .form-list .form-component {
   padding: 10px 17px;
   page-break-inside: avoid;
-  
+  overflow-y: auto;
+
+}
+
+.action-button-container {
+  padding-top: 60px;
+  position: relative;
 }
 
 .submit-button-cont {
   width: 100%;
-  position: absolute;
-  bottom: 0;
+  position: fixed;
+  height: 56px;
+  bottom: 0px;
   animation-duration: 0.5s;
   animation-name: bottomToTop;
+
 }
+
 .submit-btn {
   display: block;
   margin: 0 auto;
-  font-size: 17px;
+  font-size: 20px;
   max-width: 480px;
   height: 56px;
   width: 100%;
   border-radius: 0px;
+  font-weight: bold;
 }
+.submit-btn .mdc-button__icon {
+  font-size: 24px;
+  
+}
+
 @keyframes bottomToTop {
   from {
     bottom: -1000px;
 
   }
+
   to {
     bottom: 0;
   }
@@ -172,8 +186,9 @@ body {
     bottom: 1rem;
     margin: auto;
   }
-  
+
 }
+
 
 .forms .form-list .form-component .mdc-text-field,
 .forms .form-list .form-component .mdc-select {
@@ -184,6 +199,7 @@ body {
 .forms .form-list .product-container .form-component {
   width: auto;
 }
+
 .owner-checkbox-form {
   float: right;
 }
@@ -252,9 +268,10 @@ body {
 
 .inline-flex {
   display: inline-flex;
-    align-items: center;
-    width: 100%;
+  align-items: center;
+  width: 100%;
 }
+
 .inline-flex button {
   margin-left: auto;
 
@@ -263,6 +280,7 @@ body {
 .add-phone-fab {
   float: right;
 }
+
 .mdc-fab--mini .material-icons {
   font-size: 20px;
 }
