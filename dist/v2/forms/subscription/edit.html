@@ -14,7 +14,7 @@
     <div class='forms' id='form'>
         <div class="form-list">
 
-            <div class="form-component pb-0" id='manager-cont'>
+            <div class="form-component pb-0" id='managers-cont'>
                 <div class="inline-flex">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
                         Add Managers
@@ -59,15 +59,10 @@
         const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
 
         function init(subscriptionTemplate) {
-            let index = 0
+         
             addManagerBtn.addEventListener('click', function () {
-                index++
-                setContactForManager({
-                    phoneNumber: '999928892' + index,
-                    displayName: 'shikhar ' + index,
-                    email: ''
-                })
-                // callContact("getContactManager")
+              
+                callContact("getContactManager")
             });
 
             document.getElementById('submit-btn').addEventListener('click', function () {
@@ -89,15 +84,16 @@
                 delete managerObject[contactObject.phoneNumber];
                 addManagerBtn.classList.remove('hidden')
                 if (!managerList.listElements.length) {
-                    document.getElementById('manager-cont').appendChild(addManagerBtn);
+                    document.querySelector('#managers-cont .inline-flex').appendChild(addManagerBtn);
+                   
                     return;
                 }
             });
             managerList.root_.appendChild(li)
             managerObject[contactObject.phoneNumber] = contactObject
             window.scrollTo(0, document.body.scrollHeight);
-            // parent.window.scrollTo(0, parent.document.body.scrollHeight);
-            document.getElementById("manager-cont").appendChild(addManagerBtn);
+           
+            document.getElementById("managers-cont").appendChild(addManagerBtn);
 
         }
     </script>

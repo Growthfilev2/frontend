@@ -243,7 +243,7 @@ function expandPlaceBox() {
             //     query: `template=office&attachmentName=${placeResult.name}`
             // }).then(function (searchResponse) {
 
-            // if (true) return giveSubscriptionInit();
+            if (true) return giveSubscriptionInit();
             createOfficeInit();
 
             // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
