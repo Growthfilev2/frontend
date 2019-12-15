@@ -140,7 +140,7 @@ body {
 }
 
 .action-button-container {
-  padding-top: 60px;
+  /* padding-top: 60px; */
   position: relative;
 }
 
@@ -149,9 +149,6 @@ body {
   position: fixed;
   height: 56px;
   bottom: 0px;
-  animation-duration: 0.5s;
-  animation-name: bottomToTop;
-
 }
 
 .submit-btn {
@@ -169,6 +166,14 @@ body {
   
 }
 
+@media (min-width:481px) {
+  .submit-button-cont {
+    bottom: 1rem;
+    margin: auto;
+  }
+
+}
+
 @keyframes bottomToTop {
   from {
     bottom: -1000px;
@@ -181,13 +186,6 @@ body {
 }
 
 
-@media (min-width:481px) {
-  .submit-btn {
-    bottom: 1rem;
-    margin: auto;
-  }
-
-}
 
 
 .forms .form-list .form-component .mdc-text-field,

@@ -943,18 +943,6 @@ iframe {
   text-align: left;
 }
 
-.slider .login-button-container {
-  transition: opacity 1s;
-  max-width: 300px;
-  margin: 0 auto;
-  position: relative;
-  margin-top: 10%;
-
-}
-
-
-
-
 
 
 .slider .login-button-container .mdc-button {
@@ -973,14 +961,14 @@ iframe {
 
 
 
-.slider .dot-container {
+ .dot-container {
   min-height: 20px;
   text-align: center;
   margin-bottom: 20px;
   margin-top: 10px;
 }
 
-.slider .dot {
+ .dot {
   cursor: pointer;
   height: 15px;
   width: 15px;
@@ -993,7 +981,7 @@ iframe {
 }
 
 
-.slider .dot.active {
+.dot.active {
   color: var(--mdc-theme-primary);
   background-color: var(--mdc-theme-primary);
 }
@@ -1001,4 +989,44 @@ iframe {
 
 .id-container .button-cont .mdc-button:nth-child(2) {
   float: right;
+}
+
+
+
+.action-button-container {
+  padding-top: 60px;
+  position: relative;
+}
+
+.submit-button-cont {
+  width: 100%;
+  position: fixed;
+  min-height: 56px;
+  bottom: 0px;
+  animation-duration: 0.5s;
+  animation-name: bottomToTop;
+
+}
+
+.submit-btn {
+  display: block;
+  margin: 0 auto;
+  font-size: 20px;
+  max-width: 480px;
+  height: 56px;
+  width: 100%;
+  border-radius: 0px;
+  font-weight: bold;
+}
+.submit-btn .mdc-button__icon {
+  font-size: 24px;
+  
+}
+
+@media (min-width:481px) {
+  .submit-button-cont {
+    bottom: 1rem;
+    margin: auto;
+  }
+
 }

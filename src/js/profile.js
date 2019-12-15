@@ -461,7 +461,7 @@ function createViewProfile() {
           document.getElementById('reports').innerHTML = ` <h1 class="mdc-typography--subtitle1 mt-0">
                           Reports :
                           ${reports.map(function(report){
-                              return `<span>${report.attachment.Name.value}</span>  <span class="dot"></span>`
+                              return `<span>${report.attachment.Name.value}</span>  <span class="dots"></span>`
                           }).join("")}
                           </h1>`
         }

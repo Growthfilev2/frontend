@@ -216,33 +216,36 @@ function userSignedOut() {
               </p>
           </div>
         </div>
-      
-        <div class='login-button-container invisible'>
-        <div class='dot-container'>
-            <span class='dot active'></span>
-            <span class='dot'></span>
-            <span class='dot'></span>
-      </div>
-        <div class='mdc-typography--body1 mb-10'>
-          <span class='text-center'>
-            <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
-            <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
-           </span>
-        </div>
-        <div class='mdc-button mdc-button--raised full-width'>
-            <div class="mdc-button__ripple"></div>
-            <span class="mdc-button__label">Agree & Continue</span>
-          </div>
-        </div>
+        
+
       </div>
     </div>
+    <div class="action-button-container">
+          <div class="submit-button-cont">
+              <div class='dot-container'>
+                <span class='dot active'></span>
+                <span class='dot'></span>
+                <span class='dot'></span>
+              </div>
+              <div class='mdc-typography--body1 mb-10'>
+                <div class='text-center'>
+                  <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
+                  <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
+                </div>
+              </div>
+              <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
+                  id='login-btn'>
+                  <div class="mdc-button__ripple"></div>
+                  
+                  <span class="mdc-button__label">Agree & Continue</span>
+              </button>
+          </div>
+        </div>
   `;
 
-  setTimeout(function(){
-    document.querySelector('.login-button-container').classList.remove('invisible')
-  },1000)
+
   const sliderEl = document.getElementById('app-slider');
-  const btn = new mdc.ripple.MDCRipple(document.querySelector('.login-button-container .mdc-button'));
+  const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
   btn.root_.addEventListener('click', function () {
     removeSwipe()
     panel.innerHTML = '';
