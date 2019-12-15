@@ -71,7 +71,7 @@ function getAndroidDeviceInformation() {
 }
 
 window.onpopstate = function (event) {
-
+  this.console.log(event)
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
 
