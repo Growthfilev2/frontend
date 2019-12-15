@@ -20,9 +20,10 @@ function isWifiRequired() {
 
 
 var readDebounce = debounce(function () {
-  requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+  requestCreator('Null').then(handleComponentUpdation).catch(console.error)
 }, 1000, false)
 window.addEventListener('callRead', readDebounce);
+
 
 
 function handleError(error) {
@@ -78,9 +79,9 @@ function appLocation(maxRetry) {
     return resolve({
       latitude: 28.5503,
       longitude: 77.2502,
-      lastLocationTime:Date.now(),
-      provider:'HTML5',
-      accuracy:30
+      lastLocationTime: Date.now(),
+      provider: 'HTML5',
+      accuracy: 30
     })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
@@ -209,11 +210,7 @@ function handleGeoLocationApi() {
     if (!Object.keys(body).length) {
       reject("empty object from getCellularInformation");
     }
-    requestCreator('geolocationApi', body).then(function (result) {
-      return resolve(result.response);
-    }).catch(function (error) {
-      reject(error)
-    })
+    requestCreator('geolocationApi', body).then(resolve).catch(reject)
   })
 }
 
@@ -297,23 +294,32 @@ function requestCreator(requestType, requestBody, geopoint) {
 
 function executeRequest(requestGenerator) {
   const auth = firebase.auth().currentUser;
-  progressBar.open();
+  if (requestGenerator.type !== 'instant') {
+    progressBar.open();
+  }
 
- return auth.getIdToken().then(function (token) {
+  return auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token;
     apiHandler.onmessage = function (event) {
-    progressBar.close()
+      progressBar.close();
 
       console.log(event);
       if (!event.data.success) {
         const reject = workerRejects[event.data.id];
         if (reject) {
           reject(event.data);
+          if (event.data.apiRejection && event.data.requestType !== 'Null') {
+            snacks(event.data.message);
+          }
+          handleError({
+            message: event.data.message,
+            body: JSON.stringify(event.data.body)
+          })
         }
       } else {
         const resolve = workerResolves[event.data.id];
         if (resolve) {
-          resolve(event.data);
+          resolve(event.data.response);
         }
       }
       delete workerResolves[event.data.id]
@@ -321,8 +327,16 @@ function executeRequest(requestGenerator) {
     }
 
     apiHandler.onerror = function (event) {
-      console.log(event);
 
+      progressBar.open();
+      handleError({
+        message: event.message,
+        body: JSON.stringify({
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno
+        })
+      })
     };
 
     return new Promise(function (resolve, reject) {
@@ -383,7 +397,7 @@ function updateIosLocation(geopointIos) {
 
 function handleComponentUpdation(readResponse) {
   console.log(readResponse)
-  if (readResponse.response.templates.length) {
+  if (readResponse.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
@@ -395,11 +409,11 @@ function handleComponentUpdation(readResponse) {
 
 
     case 'enterChat':
-      if (!readResponse.response.addendum.length) return;
-      dynamicAppendChats(readResponse.response.addendum)
+      if (!readResponse.addendum.length) return;
+      dynamicAppendChats(readResponse.addendum)
       break;
     case 'chatView':
-      if (!readResponse.response.addendum.length) return;
+      if (!readResponse.addendum.length) return;
       readLatestChats(false);
       break;
 
@@ -1041,7 +1055,7 @@ function updateName(callback) {
   } else {
     backIcon = `<span class="mdc-top-app-bar__title">Add Name</span>`
   }
-   setHeader( backIcon, '');
+  setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   
   <div class='mdc-layout-grid change-name'>
@@ -1123,7 +1137,7 @@ function emailUpdation(skip, callback) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
   `
-   setHeader( backIcon, '');
+  setHeader(backIcon, '');
   header.root_.classList.remove('hidden');
 
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
@@ -1217,16 +1231,16 @@ function emailVerificationWait(callback) {
   </button>
 </div>`
   document.getElementById('continue').addEventListener('click', function (evt) {
-    
+
     firebase.auth().currentUser.reload();
     setTimeout(function () {
       firebase.auth().currentUser.reload();
       if (!auth.emailVerified) {
         snacks('Email Not Verified. Try Again');
-      
+
         return;
       }
-     
+
 
       callback();
     }, 2000)
@@ -1306,7 +1320,7 @@ function idProofView(callback) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Add ID Proof</span>
   `
-  setHeader(backIcon,'');
+  setHeader(backIcon, '');
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
   <div class='id-container app-padding'>
@@ -1355,16 +1369,16 @@ function idProofView(callback) {
   const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
   const skipBtn = document.getElementById('skip-btn');
   new mdc.ripple.MDCRipple(skipBtn);
-  skipBtn.addEventListener('click',function(){
-    const tx = db.transaction('root','readwrite');
+  skipBtn.addEventListener('click', function () {
+    const tx = db.transaction('root', 'readwrite');
     const store = tx.objectStore('root')
-    store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+    store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
       const record = event.target.result;
       record.skipIdproof = true
       store.put(record)
     }
-    tx.oncomplete = function(){
-      if(callback){
+    tx.oncomplete = function () {
+      if (callback) {
         callback();
       }
     }

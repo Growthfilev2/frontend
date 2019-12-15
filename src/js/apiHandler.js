@@ -37,7 +37,8 @@ function sendErrorRequestToMainThread(error) {
     body: error,
     apiRejection: false,
     success: false,
-    id: error.id
+    id: error.id,
+    requestType:error.requestType
   }
   if (error.stack) {
     errorObject.stack = error.stack
@@ -78,7 +79,8 @@ self.onmessage = function (event) {
       }).then(function (response) {
         sendSuccessRequestToMainThread(response,workerId)
       }).catch(function (error) {
-        error.id = workerId
+        error.id = workerId,
+        error.requestType = event.data.type
         sendErrorRequestToMainThread(error)
       })
       return;
@@ -88,6 +90,7 @@ self.onmessage = function (event) {
       sendSuccessRequestToMainThread(response,workerId)
     }).catch(function (error) {
       error.id = workerId;
+      error.requestType = event.data.type
       sendErrorRequestToMainThread(error)
     })
   }
@@ -116,12 +119,14 @@ function handleNow(eventData, db) {
           sendSuccessRequestToMainThread(response,workerId)
         }).catch(function (error) {
           error.id = eventData.id;
+          error.requestType = eventData.type
           sendErrorRequestToMainThread(error)
         })
       };
     }
   }).catch(function (error) {
     error.id = eventData.id
+    error.requestType = eventData.type
     sendErrorRequestToMainThread(error)
   })
 }

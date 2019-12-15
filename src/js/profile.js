@@ -55,11 +55,7 @@ function setDetails() {
       
       snacks('Profile Picture Update Successfully')
       firebase.auth().currentUser.reload();
-    }).catch(function (error) {
-      
-      snacks(error.message)
-     
-    })
+    }).catch(console.error)
 
   })
   createViewProfile()
@@ -131,10 +127,7 @@ function bankAccount() {
             bankAccount: number
           }).then(function () {
             snacks(`Account ${number} removed`)
-          }).catch(function (error) {
-           
-            snacks(error.message);
-          })
+          }).catch(console.error)
         
       })
     })
@@ -278,10 +271,7 @@ function addNewBankAccount(callback) {
       } else {
         history.back();
       }
-    }).catch(function (error) {
-      snacks(error.message)
-     
-    })
+    }).catch(console.error)
   });
   const skipBtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
   skipBtn.root_.addEventListener('click', function () {
@@ -400,8 +390,7 @@ function changePhoneNumber() {
         
           submitDialog.close();
           document.getElementById('app-current-panel').classList.remove('freeze')
-          console.log(error)
-          snacks(error.message);
+         
         })
       }).catch(handleLocationError)
     })

@@ -5,6 +5,7 @@ let snackBar;
 let DB_VERSION = 30;
 let initApp = true;
 var firebaseUI;
+
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -93,8 +94,8 @@ function initializeApp() {
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
     // header =  new mdc.topAppBar.MDCTopAppBar(this.document.getElementById('app-header'))
-   
-    
+
+
     const panel = this.document.getElementById('app-current-panel');
 
     if (!window.Worker && !window.indexedDB) {
@@ -106,7 +107,7 @@ function initializeApp() {
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
 
-        // document.getElementById('start-load').classList.add('hidden');
+        ;
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
@@ -194,10 +195,10 @@ function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
-  if(firebaseUI) {
+  if (firebaseUI) {
     firebaseUI.delete();
   }
-  
+
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
     <div class='slider' id='app-slider'>
@@ -251,32 +252,30 @@ function userSignedOut() {
     panel.innerHTML = '';
     history.pushState(['login'], null, null);
     initializeFirebaseUI();
-
   })
-  swipe(sliderEl,sliderSwipe);
-  // sliderEl.addEventListener('siwpe', sliderSwipe,false);
+  swipe(sliderEl, sliderSwipe);
 }
 
 
-function sliderSwipe(swipeEvent){
+function sliderSwipe(swipeEvent) {
   const el = swipeEvent.element;
-    if (swipeEvent.direction === 'left') {
-      if (sliderIndex <= 1) return;
-       sliderIndex--
-    }
+  if (swipeEvent.direction === 'left') {
+    if (sliderIndex <= 1) return;
+    sliderIndex--
+  }
 
-    if (swipeEvent.direction === 'right') {
-      if (sliderIndex >= 3) return;
-       sliderIndex++
-    }
+  if (swipeEvent.direction === 'right') {
+    if (sliderIndex >= 3) return;
+    sliderIndex++
+  }
 
-    loadSlider(el);
-    [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
-      dotEl.classList.remove('active');
-      if (index == sliderIndex -1) {
-        dotEl.classList.add('active')
-      }
-    })
+  loadSlider(el);
+  [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
+    dotEl.classList.remove('active');
+    if (index == sliderIndex - 1) {
+      dotEl.classList.add('active')
+    }
+  })
 }
 
 function loadSlider(sliderEl) {
@@ -340,7 +339,7 @@ function loadSlider(sliderEl) {
 }
 
 
-function  loadingScreen() {
+function loadingScreen() {
   const panel = document.getElementById('app-current-panel');
 
   const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
@@ -392,7 +391,7 @@ function  loadingScreen() {
       </div>
   </div>
   `
- const startLoad = document.getElementById('start-load')
+  const startLoad = document.getElementById('start-load')
   let index = 0;
   var interval = setInterval(function () {
     if (index == texts.length - 1) {
@@ -439,54 +438,42 @@ function startApp() {
     db = req.result;
     console.log("run app")
     loadingScreen();
-  
+
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
       registerToken: native.getFCMToken()
     }).then(function (res) {
-
-      if (res.response.updateClient) {
+      if (res.updateClient) {
         updateApp()
         return
       }
-      if (res.response.revokeSession) {
+      if (res.revokeSession) {
         revokeSession(true);
         return
       };
-
-      getRootRecord().then(function (rootRecord) {
-        if (!rootRecord.fromTime) {
-          requestCreator('Null').then(initProfileView).catch(function (error) {
-            if (error.apiRejection) {
-              snacks(error.message, 'Okay');
-              return;
-            }
-
-            handleError({
-              message: error.message,
-              body: error,
-            })
-          })
-          return;
+      let rootRecord;
+      const rootTx = db.transaction('root', 'readwrite');
+      const store = rootTx.objectStore('root');
+      store.get(dbName).onsuccess = function (transactionEvent) {
+        rootRecord = transactionEvent.target.result;
+        if (res.bankAccount) {
+          rootRecord.currentBankAccounts = res.bankAccount
         }
+        if (res.idProofs) {
+          rootRecord.idProofs = res.idProofs
+        }
+        store.put(rootRecord);
+
+      }
+      rootTx.oncomplete = function () {
+        if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
         initProfileView()
         runRead({
           read: '1'
-        });
-      })
-    }).catch(function (error) {
-
-      snacks(error.message)
-      if (error.apiRejection) {
-        snacks(error.message, 'Okay')
-        return;
+        })
       }
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error)
-      })
-    })
+    }).catch(console.error)
   }
   req.onerror = function () {
 
@@ -498,7 +485,7 @@ function startApp() {
 }
 
 function initProfileView() {
- 
+
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
@@ -579,7 +566,7 @@ function checkForEmail() {
     return
   }
 
-  
+
   getRootRecord().then(function (record) {
     if (record.skipEmail) {
       increaseStep(4);
@@ -599,14 +586,14 @@ function checkForEmail() {
 function checkForId() {
 
   getRootRecord().then(function (record) {
-    if (record.skipIdproof) {
+    if (record.skipIdproof || record.idProofs) {
       increaseStep(5);
       checkForBankAccount();
       return
     }
     increaseStep(4);
     idProofView(checkForBankAccount);
-  
+
   })
 }
 
@@ -614,12 +601,11 @@ function checkForId() {
 function checkForBankAccount() {
 
   getRootRecord().then(function (record) {
-    if (record.skipBankAccountAdd) {
+    if (record.skipBankAccountAdd || record.currentBankAccounts) {
       openMap();
       return;
     }
     increaseStep(5)
-    history.pushState(['addNewBankAccount'], null, null);
     addNewBankAccount(openMap);
   })
 }
@@ -998,12 +984,12 @@ function openMap() {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
       console.log(checkInSubs)
-      if (Object.keys(checkInSubs).length) {
+      if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         history.pushState(['searchOffice', geopoint], null, null)
         searchOffice(geopoint);
-        
+
         return
       };
 

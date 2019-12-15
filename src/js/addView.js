@@ -70,10 +70,7 @@ function sendFormToParent(formData) {
                 successDialog(`You Created a ${templateName}`);
                 // getSuggestions();
                 reportView()
-            }).catch(function (error) {
-               
-                snacks(error.message, 'Okay')
-            })
+            }).catch(console.error)
             return;
         }
         requestCreator('create', formData, geopoint).then(function () {
@@ -111,19 +108,14 @@ function sendFormToParent(formData) {
                 Object.keys(customerAuths).forEach(function (customerNumber) {
                     requestCreator('updateAuth', customerAuths[customerNumber], geopoint).then(function (response) {
                         console.log(response)
-                    }).catch(function (error) {
-                        console.log(error.message)
-                    })
+                    }).catch(console.error)
                 })
             }
 
             reportView()
 
             return;
-        }).catch(function (error) {
-           
-            snacks(error.message, 'Okay')
-        })
+        }).catch(console.error)
 
     }).catch(handleLocationError)
 }

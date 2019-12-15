@@ -934,10 +934,7 @@ function addAssignee(record, userArray) {
             
             snacks(`You Added ${userArray.length} People`)
             history.back();
-        }).catch(function (error) {
-            snacks(error.message)
-           
-        })
+        }).catch(console.error)
 
     }).catch(handleLocationError)
 }
@@ -954,10 +951,7 @@ function setActivityStatus(record, status) {
             snacks(`${record.activityName} is ${status}`)
            
     
-        }).catch(function (error) {
-            snacks(error.message);
-           
-        })
+        }).catch(console.error)
     }).catch(handleLocationError)
 }
 
