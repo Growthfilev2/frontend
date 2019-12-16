@@ -94,7 +94,7 @@ function createBaseDetails() {
 function bankAccount() {
     getRootRecord().then(function(rootRecord) {
       const accounts = rootRecord.currentBankAccounts || [];
-
+     
       console.log(accounts);
       const auth = firebase.auth().currentUser;
       const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>

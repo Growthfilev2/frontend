@@ -367,9 +367,8 @@ function updateApp() {
   })
 }
 
-function revokeSession(init) {
+function revokeSession() {
   firebase.auth().signOut().then(function () {
-    initApp = init;
     document.getElementById('app-header').classList.add('hidden');
   }).catch(function (error) {
 
@@ -1045,7 +1044,6 @@ function getImageBase64(evt, id) {
 
 
 function updateName(callback) {
-
   const auth = firebase.auth().currentUser;
   let backIcon = ''
   if (!callback) {
@@ -1137,77 +1135,70 @@ function emailUpdation(skip, callback) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
   `
-  setHeader(backIcon, '');
+  const header = setHeader(backIcon, '');
   header.root_.classList.remove('hidden');
 
-  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-
-    document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid update-email'>
-        
-    ${updateEmailDom(skip, getReportOffices(result), headings)}
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid update-email'>
+          ${updateEmailDom(skip, headings)}
     </div>`
-    const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
-    emailField.focus();
-    document.getElementById('email-btn').addEventListener('click', function () {
-      console.log(emailField)
+  const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
+  emailField.focus();
+  document.getElementById('email-btn').addEventListener('click', function () {
+
+    if (!emailReg(emailField.value)) {
+      setHelperInvalid(emailField)
+      emailField.helperTextContent = 'Enter A Valid Email Id';
+      return;
+    };
 
 
-      if (!emailReg(emailField.value)) {
-        setHelperInvalid(emailField)
-        emailField.helperTextContent = 'Enter A Valid Email Id';
+    progressBar.open();
+
+    if (auth.email) {
+      if (emailField.value !== auth.email) {
+        emailUpdate(emailField.value, callback)
         return;
-      };
-
-
-      progressBar.open();
-
-      if (auth.email) {
-        if (emailField.value !== auth.email) {
-          emailUpdate(emailField.value, callback)
-          return;
-        }
-        if (!auth.emailVerified) {
-          emailVerification(callback);
-          return
-        }
-        progressBar.close()
-        setHelperInvalid(emailField)
-        emailField.helperTextContent = 'New Email Cannot Be Same As Previous Email';
+      }
+      if (!auth.emailVerified) {
+        emailVerification(callback);
         return
       }
-
-      emailUpdate(emailField.value, callback)
+      progressBar.close()
+      setHelperInvalid(emailField)
+      emailField.helperTextContent = 'New Email Cannot Be Same As Previous Email';
       return
-    });
+    }
 
-    const skipbtn = document.getElementById('skip-btn')
-    if (!skipbtn) return;
+    emailUpdate(emailField.value, callback)
+    return
+  });
 
-    new mdc.ripple.MDCRipple(skipbtn)
-    skipbtn.classList.remove('hidden')
-    skipbtn.addEventListener('click', function () {
+  const skipbtn = document.getElementById('skip-btn')
+  if (!skipbtn) return;
 
+  new mdc.ripple.MDCRipple(skipbtn)
+  skipbtn.classList.remove('hidden')
+  skipbtn.addEventListener('click', function () {
+    const rootTx = db.transaction('root', 'readwrite');
+    const rootStore = rootTx.objectStore('root');
 
-      const rootTx = db.transaction('root', 'readwrite');
-      const rootStore = rootTx.objectStore('root');
+    rootStore.get(auth.uid).onsuccess = function (event) {
+      const record = event.target.result;
+      record.skipEmail = true
+      rootStore.put(record);
+    }
+    rootTx.oncomplete = function () {
 
-      rootStore.get(auth.uid).onsuccess = function (event) {
-        const record = event.target.result;
-        record.skipEmail = true
-        rootStore.put(record);
-      }
-      rootTx.oncomplete = function () {
-
-        callback();
-      }
-    })
-
+      callback();
+    }
   })
+
+
 }
 
 function emailUpdate(email, callback) {
   firebase.auth().currentUser.updateEmail(email).then(function () {
-    emailVerification(callback)
+    emailVerification(callback);
   }).catch(handleEmailError)
 }
 
@@ -1237,11 +1228,8 @@ function emailVerificationWait(callback) {
       firebase.auth().currentUser.reload();
       if (!auth.emailVerified) {
         snacks('Email Not Verified. Try Again');
-
         return;
       }
-
-
       callback();
     }, 2000)
   })
@@ -1249,36 +1237,24 @@ function emailVerificationWait(callback) {
 
 function handleEmailError(error) {
   progressBar.close()
-  if (error.code === 'auth/requires-recent-login') {
-    const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
-    dialog.listen('MDCDialog:closed', function (evt) {
-      if (evt.detail.action !== 'accept') return;
-      revokeSession();
-    })
-    return;
-  }
-  snacks(error.message);
-
-}
-
-function getReportOffices(result) {
-
-  const offices = []
-  result.forEach(function (report, idx) {
-
-    if (offices.indexOf(report.office) > -1) return
-    offices.push(report.office);
+  // if (error.code === 'auth/requires-recent-login') {
+  const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
+  dialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
+    if (history.state[0] !== 'profileCheck') {
+      EMAIL_REAUTH = true;
+    }
+    revokeSession();
   })
-  if (offices.length) {
-    return `
-    Email is required to add bank account.
-    You Are A Recipient In Reports for ${offices.join(', ').replace(/,(?!.*,)/gmi, ' &')}`
-  }
-  return 'Email is required to add bank account.'
+  return;
+  // }
+  snacks(error.message);
 }
 
 
-function updateEmailDom(skipbtn, reportString, headings) {
+
+
+function updateEmailDom(skipbtn, headings) {
   const email = firebase.auth().currentUser.email
   return `
 

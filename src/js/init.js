@@ -3,7 +3,7 @@ let progressBar;
 var db;
 let snackBar;
 let DB_VERSION = 30;
-let initApp = true;
+var EMAIL_REAUTH;
 var firebaseUI;
 
 function imgErr(source) {
@@ -106,8 +106,6 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
-
-        ;
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
@@ -115,20 +113,20 @@ function initializeApp() {
       const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
       header.listen('MDCTopAppBar:nav', handleNav);
       header.root_.classList.add("hidden");
-      if (appKey.getMode() === 'production') {
-        if (!native.getInfo()) {
-          redirect();
-          return;
-        }
-      }
+      if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
       panel.classList.remove('hidden');
-
-      if (!initApp) {
-        document.getElementById('app-header').classList.remove('hidden')
-        return
-      };
-
+      if(EMAIL_REAUTH) {
+        history.pushState(['reportView'],null,null);
+        history.pushState(['profileView'],null,null);
+        history.pushState(['emailUpdation'],null,null);
+        emailUpdation(false,function(){
+          EMAIL_REAUTH = false
+          history.back()
+        })
+        return;
+      }
+      
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
 
@@ -155,6 +153,9 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        console.log(authResult);
+        
+        
         return false;
       },
       signInFailure: function (error) {
@@ -369,10 +370,6 @@ function loadingScreen() {
     </div>
     <p class="mdc-typography--subtitle2 mdc-theme--primary"></p>
   </div>
-
-
-
-
     <div class='icon-cont mdc-layout-grid__inner mt-20'>
         <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
           <div class='icon text-center'>
