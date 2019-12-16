@@ -308,13 +308,17 @@ function executeRequest(requestGenerator) {
         const reject = workerRejects[event.data.id];
         if (reject) {
           reject(event.data);
-          if (event.data.apiRejection && event.data.requestType !== 'Null') {
+
+
+          if(!event.data.apiRejection) {
+            handleError({
+              message: event.data.message,
+              body: JSON.stringify(event.data.body)
+            })
+          }
+          else if(event.data.requestType !== 'Null') {
             snacks(event.data.message);
           }
-          handleError({
-            message: event.data.message,
-            body: JSON.stringify(event.data.body)
-          })
         }
       } else {
         const resolve = workerResolves[event.data.id];

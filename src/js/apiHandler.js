@@ -12,14 +12,14 @@ const requestFunctionCaller = {
   share: share,
   update: update,
   create: create,
-  search: search,
   backblaze: backblaze,
   updateAuth: updateAuth,
   comment: comment,
   changePhoneNumber: changePhoneNumber,
-  paymentMethods: paymentMethods,
   newBankAccount: newBankAccount,
-  removeBankAccount: removeBankAccount
+  removeBankAccount: removeBankAccount,
+  createOffice:createOffice,
+  searchOffice:searchOffice
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -248,16 +248,7 @@ function changePhoneNumber(body, meta) {
   return http(req)
 }
 
-function paymentMethods(body, meta) {
-  const req = {
-    method: 'GET',
-    url: `${meta.apiUrl}paymentMethods`,
-    body: null,
-    token: meta.user.token,
-    timeout: null
-  }
-  return http(req)
-}
+
 
 function removeBankAccount(body, meta) {
   const req = {
@@ -274,6 +265,28 @@ function newBankAccount(body, meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}paymentMethods`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function createOffice(body,meta) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}services/office`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function searchOffice(body,meta) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}offices/search?q=${body.query}`,
     body: JSON.stringify(body),
     token: meta.user.token,
     timeout: null
@@ -411,16 +424,6 @@ function create(requestBody, meta) {
 
 }
 
-function search(requestBody, meta) {
-  console.log(requestBody);
-  const req = {
-    method: 'GET',
-    url: `${meta.apiUrl}search?${requestBody.query}`,
-    body: null,
-    token: meta.user.token,
-  }
-  return http(req)
-}
 
 function removeFromOffice(offices, meta, db) {
   return new Promise(function (resolve, reject) {
