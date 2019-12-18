@@ -59,9 +59,15 @@
         const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
 
         function init(subscriptionTemplate) {
-         
+            let index = 0
             addManagerBtn.addEventListener('click', function () {
-                callContact("getContactManager")
+                index++
+                setContactForManager({
+                    displayName: 'Shikhar ' + index,
+                    phoneNumber: '+91999928892' + index,
+                    email: ''
+                })
+                // callContact("getContactManager")
             });
 
             document.getElementById('submit-btn').addEventListener('click', function () {
@@ -84,14 +90,13 @@
                 addManagerBtn.classList.remove('hidden')
                 if (!managerList.listElements.length) {
                     document.querySelector('#managers-cont .inline-flex').appendChild(addManagerBtn);
-                   
+
                     return;
                 }
             });
             managerList.root_.appendChild(li)
             managerObject[contactObject.phoneNumber] = contactObject
             window.scrollTo(0, document.body.scrollHeight);
-           
             document.getElementById("managers-cont").appendChild(addManagerBtn);
 
         }

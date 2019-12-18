@@ -242,19 +242,15 @@ function expandPlaceBox() {
             requestCreator('searchOffice', {
                 query: placeResult.name
             }).then(function (searchResponse) {
-                console.log(searchResponse);
-            // if (true) return giveSubscriptionInit();
-            createOfficeInit();
-
-            // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
-            //     console.log(idTokenResult);
-            //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
-            // }).catch(function (error) {
-            //     createOfficeInit();
-            // })
-
-
-
+                console.log(searchResponse)
+                if (!searchResponse.length) return createOfficeInit();
+                return giveSubscriptionInit();
+                // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
+                //     console.log(idTokenResult);
+                //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
+                // }).catch(function (error) {
+                //     createOfficeInit();
+                // })
             }).catch(function (error) {
                 console.log(error)
                 confirmFab.classList.remove('mdc-fab--exited')
@@ -299,8 +295,8 @@ function createOfficeInit() {
         'secondContact': '',
         'name': placeResult.name,
         'placeId': placeResult.place_id,
-        'registeredOfficeAddress':placeResult.formatted_address,
-        'timezone':moment.tz.guess()
+        'registeredOfficeAddress': placeResult.formatted_address,
+        'timezone': moment.tz.guess()
     }
     history.pushState(['addView'], null, null);
     addView(template);
@@ -310,18 +306,9 @@ function giveSubscriptionInit() {
 
     const template = {
 
-        "assigness": [],
-        "attachment": {
-            "Subscriber": {
-                "value": firebase.auth().currentUser.phoneNumber,
-                "type": "phoneNumber"
-            },
-            "Template": {
-                "value": "check-in",
-                "type": "string"
-            }
-        },
+        "assignees": [],
         "template": "subscription",
+        "office": placeResult.name
     };
 
     history.pushState(['addView'], null, null);

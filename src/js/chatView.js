@@ -28,7 +28,7 @@ function chatView() {
     const addContactBtn = createFab('contacts');
 
     addContactBtn.addEventListener('click',function() {
-        if (parent.native.getName() === 'Android') {
+        if (native.getName() === 'Android') {
             AndroidInterface.getContact("chooseContact");
             return
         }
@@ -408,7 +408,7 @@ function enterChat(userRecord) {
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
 
-     setHeader(backIcon, '');
+    const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
     console.log(header)
 

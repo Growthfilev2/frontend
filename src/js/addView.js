@@ -7,7 +7,7 @@ function addView(sub) {
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
     
-    <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
+    <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
     `;
 
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -29,12 +29,14 @@ function sendOfficeData(requestBody) {
 function sendSubscriptionData(formData) {
     appLocation(3).then(function(geopoint){
         requestCreator('subscription',formData,geopoint).then(function(response){
-            console.log(response);
+            ApplicationState.createdSubscription = true;
+            localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
+            // console.log(response);
             history.pushState(['reportView'], null, null);
             reportView();
         });
-
-    }).catch(handleLocationError)
+    }).catch(handleLocationError);
+    
     // getCheckInSubs().then(function (subs) {
     //     if (!Object.keys(subs).length) {
     //         document.getElementById('app-current-panel').classList.add('mdc-theme--primary-bg')

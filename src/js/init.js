@@ -986,7 +986,6 @@ function openMap() {
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         history.pushState(['searchOffice', geopoint], null, null)
         searchOffice(geopoint);
-
         return
       };
 

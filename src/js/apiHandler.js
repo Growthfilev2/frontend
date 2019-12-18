@@ -286,8 +286,8 @@ function createOffice(body,meta) {
 
 function searchOffice(body,meta) {
   const req = {
-    method: 'POST',
-    url: `${meta.apiUrl}offices/search?q=${body.query}`,
+    method: 'GET',
+    url: `${meta.apiUrl}services/search?q=${body.query}`,
     body: JSON.stringify(body),
     token: meta.user.token,
     timeout: null

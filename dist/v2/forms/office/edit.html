@@ -53,10 +53,15 @@
         const managerBtn = document.getElementById('add-manager');
         const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
         let officeTemplate;
-      
+        let index = 0
         managerBtn.addEventListener('click', function () {
-           
-            callContact('getContactManager')
+            index++
+            setContactForManager({
+                displayName:'Shikhar '+index,
+                phoneNumber:'+91999928892'+index,
+                email:''
+            })
+            // callContact('getContactManager')
         });
 
 
