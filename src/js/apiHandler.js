@@ -19,7 +19,8 @@ const requestFunctionCaller = {
   changePhoneNumber: changePhoneNumber,
   paymentMethods: paymentMethods,
   newBankAccount: newBankAccount,
-  removeBankAccount: removeBankAccount
+  removeBankAccount: removeBankAccount,
+  subscription:createSubscription
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -269,6 +270,17 @@ function newBankAccount(body, meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}paymentMethods`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function createSubscription(body,meta) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}services/subscription`,
     body: JSON.stringify(body),
     token: meta.user.token,
     timeout: null

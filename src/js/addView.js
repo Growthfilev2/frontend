@@ -3,7 +3,7 @@ function addView(sub) {
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template === 'employee' ? 'Check-in subscribers' : formatTextToTitleCase(sub.template)}</span>
     `
-    setHeader( backIcon, '');
+    setHeader(backIcon, '');
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
     
@@ -18,8 +18,8 @@ function addView(sub) {
 
 
 function sendOfficeData(requestBody) {
-    appLocation(3).then(function(geopoint) {
-        requestCreator('createOffice',requestBody,geopoint).then(function(){
+    appLocation(3).then(function (geopoint) {
+        requestCreator('createOffice', requestBody, geopoint).then(function () {
             successDialog(`Office created successfully`);
             giveSubscriptionInit();
         }).catch(console.error)
@@ -27,29 +27,35 @@ function sendOfficeData(requestBody) {
 }
 
 function sendSubscriptionData(formData) {
-    progressBar.open();
-    setTimeout(() => {
-        getCheckInSubs().then(function(subs){
-            if(!Object.keys(subs).length) {
-                document.getElementById('app-current-panel').classList.add('mdc-theme--primary-bg')
-                document.getElementById('app-current-panel').innerHTML = `
-                <p class='mdc-typography--headline6 text-center'>
-                    Please wait while you get check-in subscription
-                </p>
-                `;
-                document.getElementById('start-load').classList.remove('hidden');
-                setTimeout(() => {
-                    progressBar.close();
-                    history.pushState(['reportView'], null, null);
-                    reportView();
-                }, 2000);
-                return
-            }
-            progressBar.close();
+    appLocation(3).then(function(geopoint){
+        requestCreator('subscription',formData,geopoint).then(function(response){
+            console.log(response);
             history.pushState(['reportView'], null, null);
             reportView();
-        })
-    }, 1000);
+        });
+
+    }).catch(handleLocationError)
+    // getCheckInSubs().then(function (subs) {
+    //     if (!Object.keys(subs).length) {
+    //         document.getElementById('app-current-panel').classList.add('mdc-theme--primary-bg')
+    //         document.getElementById('app-current-panel').innerHTML = `
+    //             <p class='mdc-typography--headline6 text-center'>
+    //                 Please wait while you get check-in subscription
+    //             </p>
+    //             `;
+         
+    //         setTimeout(() => {
+    //             progressBar.close();
+    //             history.pushState(['reportView'], null, null);
+    //             reportView();
+    //         }, 2000);
+    //         return
+    //     }
+    //     progressBar.close();
+    //     history.pushState(['reportView'], null, null);
+    //     reportView();
+    // })
+
 }
 
 function sendFormToParent(formData) {
@@ -66,18 +72,18 @@ function sendFormToParent(formData) {
             })
 
             Promise.all(prom).then(function (response) {
-              
+
                 successDialog(`You Created a ${templateName}`);
                 // getSuggestions();
                 reportView()
             }).catch(function (error) {
-               
+
                 snacks(error.message, 'Okay')
             })
             return;
         }
         requestCreator('create', formData, geopoint).then(function () {
-            
+
             if (formData.template === 'attendance regularization') {
                 successDialog(`You Applied for an AR`);
                 const tx = db.transaction('attendance', 'readwrite');
@@ -121,7 +127,7 @@ function sendFormToParent(formData) {
 
             return;
         }).catch(function (error) {
-           
+
             snacks(error.message, 'Okay')
         })
 
