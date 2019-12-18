@@ -81,12 +81,12 @@
                     return;
                 }
             });
-            if (!officeTemplate['First Contact']) {
-                officeTemplate['First Contact'] = contactObject
-                li.dataset.type = 'First Contact'
+            if (!officeTemplate['firstContact']) {
+                officeTemplate['firstContact'] = contactObject
+                li.dataset.type = 'firstContact'
             } else {
-                officeTemplate['Second Contact'] = contactObject
-                li.dataset.type = 'Second Contact'
+                officeTemplate['secondContact'] = contactObject
+                li.dataset.type = 'secondContact'
 
             }
 

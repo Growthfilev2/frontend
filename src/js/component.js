@@ -8,7 +8,7 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-// to do make visible on scroll only
+
 function createFab(icon) {
     const button = createElement('button', {
         className: 'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited'
@@ -23,6 +23,22 @@ function createFab(icon) {
         button.classList.remove('mdc-fab--exited')
     }, 200)
     return button;
+}
+
+function actionButton(name, id = '') {
+    const actionContainer = createElement('div', {
+        className: 'action-button-container'
+    })
+    const submitContainer = createElement('div', {
+        className: 'submit-button-cont'
+    })
+    const button = createButton(name, id);
+    button.classList.add('mdc-button--raised', 'submit-btn');
+    new mdc.ripple.MDCRipple(button);
+    submitContainer.appendChild(button);
+    actionContainer.appendChild(submitContainer);
+    return actionContainer;
+
 }
 
 function createExtendedFab(icon, name, id, absolute) {
@@ -40,7 +56,7 @@ function createExtendedFab(icon, name, id, absolute) {
     return button
 }
 
-function createButton(name, icon, id) {
+function createButton(name, id, icon) {
     const button = createElement('button', {
         className: 'mdc-button',
         id: id || ''
@@ -264,18 +280,19 @@ var xStart = null;
 var yStart = null;
 var sliderElement;
 var sliderCallback = null;
-function swipe(el,callback) {
+
+function swipe(el, callback) {
     if (!el) return;
     sliderElement = el;
     sliderCallback = callback;
     el.addEventListener('touchstart', handleTouchStart, false);
-    el.addEventListener('touchmove', handleTouchMove,false);
+    el.addEventListener('touchmove', handleTouchMove, false);
 }
 
-function removeSwipe(){
-    if(!sliderElement) return;
-    sliderElement.removeEventListener('touchstart',handleTouchStart,false);
-    sliderElement.removeEventListener('touchmove',handleTouchMove,false);
+function removeSwipe() {
+    if (!sliderElement) return;
+    sliderElement.removeEventListener('touchstart', handleTouchStart, false);
+    sliderElement.removeEventListener('touchmove', handleTouchMove, false);
     sliderElement = null;
     sliderCallback = null;
 }
@@ -296,28 +313,28 @@ function handleTouchMove(evt) {
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
 
-    const listenerDetail =  {
-        direction:'',
-        element:sliderElement
+    const listenerDetail = {
+        direction: '',
+        element: sliderElement
     }
-    
-   
+
+
     if (Math.abs(xAxisDiff) > Math.abs(yAxisDiff)) {
         if (xAxisDiff > 0) {
-           
+
             listenerDetail.direction = 'left'
             // left
         } else {
-           
+
             listenerDetail.direction = 'right'
             //right
         }
     } else {
         if (yAxisDiff > 0) {
-           
+
             listenerDetail.direction = 'down'
         } else {
-            
+
             listenerDetail.direction = 'up'
         }
     }

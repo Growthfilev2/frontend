@@ -55,11 +55,7 @@ function setDetails() {
       
       snacks('Profile Picture Update Successfully')
       firebase.auth().currentUser.reload();
-    }).catch(function (error) {
-      
-      snacks(error.message)
-     
-    })
+    }).catch(console.error)
 
   })
   createViewProfile()
@@ -89,72 +85,66 @@ function createBaseDetails() {
   <li class='mdc-list-item'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
     Bank Accounts
-    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="bankAccount()">edit</span>
+    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['bankAccount'], null, null);bankAccount()">edit</span>
   </li>
   </ul>
 </div>`
 }
 
 function bankAccount() {
+    getRootRecord().then(function(rootRecord) {
+      const accounts = rootRecord.currentBankAccounts || [];
+     
+      console.log(accounts);
+      const auth = firebase.auth().currentUser;
+      const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+      <span class="mdc-top-app-bar__title">Bank accounts</span>
+      `
+       setHeader( backIcon, '');
+      document.getElementById('app-current-panel').innerHTML = `
+      <ul class='mdc-list mdc-list--two-line' id='bank-list'>
+      ${accounts.map(function(account){
+          return `<li class='mdc-list-item'>
+            <span class="mdc-list-item__text">
+              <span class="mdc-list-item__primary-text">${account.bankAccount}</span>
+              <span class="mdc-list-item__secondary-text">${account.ifsc}</span>
+          </span>
+          <span class='mdc-list-item__meta material-icons bank-account-remove mdc-theme--error'  data-account="${getLast4digitsOfAccount(account.bankAccount)}">delete</span>
+          </li>`
+      }).join("")}
+      </ul>
+      `
+      const list = new mdc.list.MDCList(document.getElementById('bank-list'));
+      list.selectedIndex = 0;
   
-  requestCreator('paymentMethods').then(function (accounts) {
-    history.pushState(['bankAccount'], null, null);
-    console.log(accounts);
-    const auth = firebase.auth().currentUser;
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Bank accounts</span>
-    `
-     setHeader( backIcon, '');
-    document.getElementById('app-current-panel').innerHTML = `
-    <ul class='mdc-list mdc-list--two-line' id='bank-list'>
-    ${accounts.map(function(account){
-        return `<li class='mdc-list-item'>
-          <span class="mdc-list-item__text">
-            <span class="mdc-list-item__primary-text">${account.bankAccount}</span>
-            <span class="mdc-list-item__secondary-text">${account.ifsc}</span>
-        </span>
-        <span class='mdc-list-item__meta material-icons bank-account-remove mdc-theme--error'  data-account="${getLast4digitsOfAccount(account.bankAccount)}">delete</span>
-        </li>`
-    }).join("")}
-    </ul>
-    `
-    const list = new mdc.list.MDCList(document.getElementById('bank-list'));
-    list.selectedIndex = 0;
-
-    [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
-      if (!el) return;
-      el.addEventListener('click', function () {
-       
-        
-          const number = el.dataset.account;
-          requestCreator('removeBankAccount', {
-            bankAccount: number
-          }).then(function () {
-            snacks(`Account ${number} removed`)
-          }).catch(function (error) {
-           
-            snacks(error.message);
-          })
-        
+      [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
+        if (!el) return;
+        el.addEventListener('click', function () {
+         
+          
+            const number = el.dataset.account;
+            requestCreator('removeBankAccount', {
+              bankAccount: number
+            }).then(function () {
+              snacks(`Account ${number} removed`)
+            }).catch(console.error)
+          
+        })
       })
+      
+      const addNewBtn = actionButton('Add BANK ACCOUNT');
+      addNewBtn.querySelector('.mdc-button').addEventListener('click', function () {
+        if (!auth.email || !auth.emailVerified) {
+          history.pushState(['emailUpdation'], null, null)
+          emailUpdation(profileView, true)
+          return
+        }
+        history.pushState(['addNewBankAccount'], null, null);
+        addNewBankAccount();
+      })
+      document.getElementById('app-current-panel').appendChild(addNewBtn);
+  
     })
-
-    const addNewBtn = createFab('add');
-    addNewBtn.addEventListener('click', function () {
-      if (!auth.email || !auth.emailVerified) {
-        history.pushState(['emailUpdation'], null, null)
-        emailUpdation(profileView, true)
-        return
-      }
-      history.pushState(['addNewBankAccount'], null, null);
-      addNewBankAccount();
-    })
-    document.getElementById('app-current-panel').appendChild(addNewBtn);
-
-  }).catch(function (error) {
-   
-    snacks(error.message)
-  })
 }
 
 function getLast4digitsOfAccount(accountNumber) {
@@ -278,10 +268,7 @@ function addNewBankAccount(callback) {
       } else {
         history.back();
       }
-    }).catch(function (error) {
-      snacks(error.message)
-     
-    })
+    }).catch(console.error)
   });
   const skipBtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
   skipBtn.root_.addEventListener('click', function () {
@@ -400,8 +387,7 @@ function changePhoneNumber() {
         
           submitDialog.close();
           document.getElementById('app-current-panel').classList.remove('freeze')
-          console.log(error)
-          snacks(error.message);
+         
         })
       }).catch(handleLocationError)
     })
@@ -461,7 +447,7 @@ function createViewProfile() {
           document.getElementById('reports').innerHTML = ` <h1 class="mdc-typography--subtitle1 mt-0">
                           Reports :
                           ${reports.map(function(report){
-                              return `<span>${report.attachment.Name.value}</span>  <span class="dot"></span>`
+                              return `<span>${report.attachment.Name.value}</span>  <span class="dots"></span>`
                           }).join("")}
                           </h1>`
         }

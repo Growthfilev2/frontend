@@ -18,7 +18,7 @@ var markersObject = {
 
 function failureScreen(error, callback) {
 
-  // document.getElementById('start-load').classList.add('hidden');
+  ;
   document.getElementById('app-header').classList.add('hidden')
 
   document.getElementById('app-current-panel').innerHTML = `
@@ -171,7 +171,6 @@ function mapView(location) {
 }
 
 function createUnkownCheckIn(cardProd, geopoint, retry) {
-  // document.getElementById('start-load').classList.remove('hidden');
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
@@ -209,11 +208,10 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
       });
       return
     };
-    // document.getElementById('start-load').classList.add('hidden');
     if (cardProd) {
       cardProd.close()
     }
-    snacks(error.message);
+    
   })
 }
 
@@ -262,7 +260,7 @@ function handleInvalidCheckinLocation(retry, callback) {
 
 
 function loadCardData(venues, map, geopoint) {
-  // document.getElementById('start-load').classList.add('hidden');
+  ;
   ApplicationState.knownLocation = true;
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${venues.map(function(venue) {
@@ -314,7 +312,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
       });
       return
     };
-    snacks(error.message);
+   
     if (cardProd) {
       cardProd.close()
     }
@@ -508,11 +506,7 @@ function setFilePath(base64) {
       history.pushState(['reportView'], null, null)
       reportView()
       successDialog('Check-In Created')
-
-    }).catch(function (error) {
-
-      snacks(error.message)
-    });
+    }).catch(console.error);
   })
 }
 

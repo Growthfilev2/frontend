@@ -7,7 +7,7 @@ function addView(sub) {
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
     
-    <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>
+    <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>
     `;
 
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -76,10 +76,7 @@ function sendFormToParent(formData) {
                 successDialog(`You Created a ${templateName}`);
                 // getSuggestions();
                 reportView()
-            }).catch(function (error) {
-
-                snacks(error.message, 'Okay')
-            })
+            }).catch(console.error)
             return;
         }
         requestCreator('create', formData, geopoint).then(function () {
@@ -117,19 +114,14 @@ function sendFormToParent(formData) {
                 Object.keys(customerAuths).forEach(function (customerNumber) {
                     requestCreator('updateAuth', customerAuths[customerNumber], geopoint).then(function (response) {
                         console.log(response)
-                    }).catch(function (error) {
-                        console.log(error.message)
-                    })
+                    }).catch(console.error)
                 })
             }
 
             reportView()
 
             return;
-        }).catch(function (error) {
-
-            snacks(error.message, 'Okay')
-        })
+        }).catch(console.error)
 
     }).catch(handleLocationError)
 }

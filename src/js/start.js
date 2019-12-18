@@ -239,11 +239,11 @@ function expandPlaceBox() {
         confirmFab.addEventListener('click', function () {
 
             confirmFab.classList.add('mdc-fab--exited')
-            // requestCreator('search', {
-            //     query: `template=office&attachmentName=${placeResult.name}`
-            // }).then(function (searchResponse) {
-
-            if (true) return giveSubscriptionInit();
+            requestCreator('searchOffice', {
+                query: placeResult.name
+            }).then(function (searchResponse) {
+                console.log(searchResponse);
+            // if (true) return giveSubscriptionInit();
             createOfficeInit();
 
             // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
@@ -255,10 +255,10 @@ function expandPlaceBox() {
 
 
 
-            // }).catch(function (error) {
-            //     console.log(error)
-
-            // })
+            }).catch(function (error) {
+                console.log(error)
+                confirmFab.classList.remove('mdc-fab--exited')
+            })
         })
 
         const nextImageEl = document.getElementById('next-image')
@@ -295,10 +295,12 @@ function isAdmin(idTokenResult, officeName) {
 function createOfficeInit() {
     const template = {
         'template': 'office',
-        'First Contact': '',
-        'Second Contact': '',
+        'firstContact': '',
+        'secondContact': '',
         'name': placeResult.name,
-        'placeId': placeResult.place_id
+        'placeId': placeResult.place_id,
+        'registeredOfficeAddress':placeResult.formatted_address,
+        'timezone':moment.tz.guess()
     }
     history.pushState(['addView'], null, null);
     addView(template);

@@ -3,8 +3,9 @@ let progressBar;
 var db;
 let snackBar;
 let DB_VERSION = 30;
-let initApp = true;
+var EMAIL_REAUTH;
 var firebaseUI;
+
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -70,7 +71,7 @@ function getAndroidDeviceInformation() {
 }
 
 window.onpopstate = function (event) {
-
+  this.console.log(event)
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
 
@@ -93,8 +94,8 @@ function initializeApp() {
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
     // header =  new mdc.topAppBar.MDCTopAppBar(this.document.getElementById('app-header'))
-   
-    
+
+
     const panel = this.document.getElementById('app-current-panel');
 
     if (!window.Worker && !window.indexedDB) {
@@ -105,8 +106,6 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
-
-        // document.getElementById('start-load').classList.add('hidden');
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
@@ -114,20 +113,20 @@ function initializeApp() {
       const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
       header.listen('MDCTopAppBar:nav', handleNav);
       header.root_.classList.add("hidden");
-      if (appKey.getMode() === 'production') {
-        if (!native.getInfo()) {
-          redirect();
-          return;
-        }
-      }
+      if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
       panel.classList.remove('hidden');
-
-      if (!initApp) {
-        document.getElementById('app-header').classList.remove('hidden')
-        return
-      };
-
+      if(EMAIL_REAUTH) {
+        history.pushState(['reportView'],null,null);
+        history.pushState(['profileView'],null,null);
+        history.pushState(['emailUpdation'],null,null);
+        emailUpdation(false,function(){
+          EMAIL_REAUTH = false
+          history.back()
+        })
+        return;
+      }
+      
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
 
@@ -154,6 +153,9 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        console.log(authResult);
+        
+        
         return false;
       },
       signInFailure: function (error) {
@@ -194,10 +196,10 @@ function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
-  if(firebaseUI) {
+  if (firebaseUI) {
     firebaseUI.delete();
   }
-  
+
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
     <div class='slider' id='app-slider'>
@@ -216,64 +218,65 @@ function userSignedOut() {
               </p>
           </div>
         </div>
-      
-        <div class='login-button-container invisible'>
-        <div class='dot-container'>
-            <span class='dot active'></span>
-            <span class='dot'></span>
-            <span class='dot'></span>
-      </div>
-        <div class='mdc-typography--body1 mb-10'>
-          <span class='text-center'>
-            <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
-            <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
-           </span>
-        </div>
-        <div class='mdc-button mdc-button--raised full-width'>
-            <div class="mdc-button__ripple"></div>
-            <span class="mdc-button__label">Agree & Continue</span>
-          </div>
-        </div>
+        
+
       </div>
     </div>
+    <div class="action-button-container">
+          <div class="submit-button-cont">
+              <div class='dot-container'>
+                <span class='dot active'></span>
+                <span class='dot'></span>
+                <span class='dot'></span>
+              </div>
+              <div class='mdc-typography--body1 mb-10'>
+                <div class='text-center'>
+                  <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
+                  <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
+                </div>
+              </div>
+              <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
+                  id='login-btn'>
+                  <div class="mdc-button__ripple"></div>
+                  
+                  <span class="mdc-button__label">Agree & Continue</span>
+              </button>
+          </div>
+        </div>
   `;
 
-  setTimeout(function(){
-    document.querySelector('.login-button-container').classList.remove('invisible')
-  },1000)
+
   const sliderEl = document.getElementById('app-slider');
-  const btn = new mdc.ripple.MDCRipple(document.querySelector('.login-button-container .mdc-button'));
+  const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
   btn.root_.addEventListener('click', function () {
     removeSwipe()
     panel.innerHTML = '';
     history.pushState(['login'], null, null);
     initializeFirebaseUI();
-
   })
-  swipe(sliderEl,sliderSwipe);
-  // sliderEl.addEventListener('siwpe', sliderSwipe,false);
+  swipe(sliderEl, sliderSwipe);
 }
 
 
-function sliderSwipe(swipeEvent){
+function sliderSwipe(swipeEvent) {
   const el = swipeEvent.element;
-    if (swipeEvent.direction === 'left') {
-      if (sliderIndex <= 1) return;
-       sliderIndex--
-    }
+  if (swipeEvent.direction === 'left') {
+    if (sliderIndex <= 1) return;
+    sliderIndex--
+  }
 
-    if (swipeEvent.direction === 'right') {
-      if (sliderIndex >= 3) return;
-       sliderIndex++
-    }
+  if (swipeEvent.direction === 'right') {
+    if (sliderIndex >= 3) return;
+    sliderIndex++
+  }
 
-    loadSlider(el);
-    [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
-      dotEl.classList.remove('active');
-      if (index == sliderIndex -1) {
-        dotEl.classList.add('active')
-      }
-    })
+  loadSlider(el);
+  [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
+    dotEl.classList.remove('active');
+    if (index == sliderIndex - 1) {
+      dotEl.classList.add('active')
+    }
+  })
 }
 
 function loadSlider(sliderEl) {
@@ -337,7 +340,7 @@ function loadSlider(sliderEl) {
 }
 
 
-function  loadingScreen() {
+function loadingScreen() {
   const panel = document.getElementById('app-current-panel');
 
   const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
@@ -367,10 +370,6 @@ function  loadingScreen() {
     </div>
     <p class="mdc-typography--subtitle2 mdc-theme--primary"></p>
   </div>
-
-
-
-
     <div class='icon-cont mdc-layout-grid__inner mt-20'>
         <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
           <div class='icon text-center'>
@@ -389,7 +388,7 @@ function  loadingScreen() {
       </div>
   </div>
   `
- const startLoad = document.getElementById('start-load')
+  const startLoad = document.getElementById('start-load')
   let index = 0;
   var interval = setInterval(function () {
     if (index == texts.length - 1) {
@@ -436,54 +435,42 @@ function startApp() {
     db = req.result;
     console.log("run app")
     loadingScreen();
-  
+
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
       registerToken: native.getFCMToken()
     }).then(function (res) {
-
-      if (res.response.updateClient) {
+      if (res.updateClient) {
         updateApp()
         return
       }
-      if (res.response.revokeSession) {
+      if (res.revokeSession) {
         revokeSession(true);
         return
       };
-
-      getRootRecord().then(function (rootRecord) {
-        if (!rootRecord.fromTime) {
-          requestCreator('Null').then(initProfileView).catch(function (error) {
-            if (error.apiRejection) {
-              snacks(error.message, 'Okay');
-              return;
-            }
-
-            handleError({
-              message: error.message,
-              body: error,
-            })
-          })
-          return;
+      let rootRecord;
+      const rootTx = db.transaction('root', 'readwrite');
+      const store = rootTx.objectStore('root');
+      store.get(dbName).onsuccess = function (transactionEvent) {
+        rootRecord = transactionEvent.target.result;
+        if (res.bankAccount) {
+          rootRecord.currentBankAccounts = res.bankAccount
         }
+        if (res.idProofs) {
+          rootRecord.idProofs = res.idProofs
+        }
+        store.put(rootRecord);
+
+      }
+      rootTx.oncomplete = function () {
+        if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
         initProfileView()
         runRead({
           read: '1'
-        });
-      })
-    }).catch(function (error) {
-
-      snacks(error.message)
-      if (error.apiRejection) {
-        snacks(error.message, 'Okay')
-        return;
+        })
       }
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error)
-      })
-    })
+    }).catch(console.error)
   }
   req.onerror = function () {
 
@@ -495,7 +482,7 @@ function startApp() {
 }
 
 function initProfileView() {
- 
+
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
@@ -576,7 +563,7 @@ function checkForEmail() {
     return
   }
 
-  
+
   getRootRecord().then(function (record) {
     if (record.skipEmail) {
       increaseStep(4);
@@ -596,14 +583,14 @@ function checkForEmail() {
 function checkForId() {
 
   getRootRecord().then(function (record) {
-    if (record.skipIdproof) {
+    if (record.skipIdproof || record.idProofs) {
       increaseStep(5);
       checkForBankAccount();
       return
     }
     increaseStep(4);
     idProofView(checkForBankAccount);
-  
+
   })
 }
 
@@ -611,12 +598,11 @@ function checkForId() {
 function checkForBankAccount() {
 
   getRootRecord().then(function (record) {
-    if (record.skipBankAccountAdd) {
+    if (record.skipBankAccountAdd || record.currentBankAccounts) {
       openMap();
       return;
     }
     increaseStep(5)
-    history.pushState(['addNewBankAccount'], null, null);
     addNewBankAccount(openMap);
   })
 }
@@ -995,12 +981,12 @@ function openMap() {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
       console.log(checkInSubs)
-      if (Object.keys(checkInSubs).length) {
+      if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         history.pushState(['searchOffice', geopoint], null, null)
         searchOffice(geopoint);
-        
+
         return
       };
 
