@@ -4,7 +4,7 @@ function profileView() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
 
-   setHeader( backIcon, '');
+  setHeader(backIcon, '');
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
@@ -47,12 +47,12 @@ function setDetails() {
 
     getImageBase64(evt).then(function (dataURL) {
       document.querySelector('.mdc-card__media.mdc-card__media--16-9').style.backgroundImage = `url(${dataURL})`
-     
+
       return requestCreator('backblaze', {
         'imageBase64': dataURL
       })
     }).then(function () {
-      
+
       snacks('Profile Picture Update Successfully')
       firebase.auth().currentUser.reload();
     }).catch(console.error)
@@ -92,16 +92,16 @@ function createBaseDetails() {
 }
 
 function bankAccount() {
-    getRootRecord().then(function(rootRecord) {
-      const accounts = rootRecord.currentBankAccounts || [];
-     
-      console.log(accounts);
-      const auth = firebase.auth().currentUser;
-      const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  getRootRecord().then(function (rootRecord) {
+    const accounts = rootRecord.currentBankAccounts || [];
+
+    console.log(accounts);
+    const auth = firebase.auth().currentUser;
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
       <span class="mdc-top-app-bar__title">Bank accounts</span>
       `
-       setHeader( backIcon, '');
-      document.getElementById('app-current-panel').innerHTML = `
+    setHeader(backIcon, '');
+    document.getElementById('app-current-panel').innerHTML = `
       <ul class='mdc-list mdc-list--two-line' id='bank-list'>
       ${accounts.map(function(account){
           return `<li class='mdc-list-item'>
@@ -114,37 +114,37 @@ function bankAccount() {
       }).join("")}
       </ul>
       `
-      const list = new mdc.list.MDCList(document.getElementById('bank-list'));
-      list.selectedIndex = 0;
-  
-      [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
-        if (!el) return;
-        el.addEventListener('click', function () {
-         
-          
-            const number = el.dataset.account;
-            requestCreator('removeBankAccount', {
-              bankAccount: number
-            }).then(function () {
-              snacks(`Account ${number} removed`)
-            }).catch(console.error)
-          
-        })
+    const list = new mdc.list.MDCList(document.getElementById('bank-list'));
+    list.selectedIndex = 0;
+
+    [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
+      if (!el) return;
+      el.addEventListener('click', function () {
+
+
+        const number = el.dataset.account;
+        requestCreator('removeBankAccount', {
+          bankAccount: number
+        }).then(function () {
+          snacks(`Account ${number} removed`)
+        }).catch(console.error)
+
       })
-      
-      const addNewBtn = actionButton('Add BANK ACCOUNT');
-      addNewBtn.querySelector('.mdc-button').addEventListener('click', function () {
-        if (!auth.email || !auth.emailVerified) {
-          history.pushState(['emailUpdation'], null, null)
-          emailUpdation(profileView, true)
-          return
-        }
-        history.pushState(['addNewBankAccount'], null, null);
-        addNewBankAccount();
-      })
-      document.getElementById('app-current-panel').appendChild(addNewBtn);
-  
     })
+
+    const addNewBtn = actionButton('Add BANK ACCOUNT');
+    addNewBtn.querySelector('.mdc-button').addEventListener('click', function () {
+      if (!auth.email || !auth.emailVerified) {
+        history.pushState(['emailUpdation'], null, null)
+        emailUpdation(profileView, true)
+        return
+      }
+      history.pushState(['addNewBankAccount'], null, null);
+      addNewBankAccount();
+    })
+    document.getElementById('app-current-panel').appendChild(addNewBtn);
+
+  })
 }
 
 function getLast4digitsOfAccount(accountNumber) {
@@ -153,10 +153,16 @@ function getLast4digitsOfAccount(accountNumber) {
 
 function addNewBankAccount(callback) {
   const auth = firebase.auth().currentUser
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Add New Bank Account</span>
-  `
-   setHeader( backIcon, '');
+  let backIcon = ''
+  if (history.state[0] === 'profileCheck') {
+    backIcon = '<span class="mdc-top-app-bar__title">Add New Bank Account</span>';
+  } else {
+
+    backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">Add New Bank Account</span>
+    `
+  }
+  setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
   <div class='add-bank-container mt-20'>
@@ -252,7 +258,7 @@ function addNewBankAccount(callback) {
       }
       field.helperTextContent = ''
     }
-   
+
     requestCreator('newBankAccount', {
       name: auth.displayName,
       email: auth.email,
@@ -272,7 +278,7 @@ function addNewBankAccount(callback) {
   });
   const skipBtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
   skipBtn.root_.addEventListener('click', function () {
-   
+
     if (callback) {
       const rootTx = db.transaction('root', 'readwrite');
       const rootStore = rootTx.objectStore('root');
@@ -297,7 +303,7 @@ function changePhoneNumber() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Change Phone Number</span>
   `
-   setHeader( backIcon, '');
+  setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number'>
   
   <div class='change-number-form full-width'>
@@ -369,8 +375,7 @@ function changePhoneNumber() {
     console.log(newNumberValue)
     const dialog = showReLoginDialog('Change Phone Number', `On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value} to change your phone number`);
     dialog.listen('MDCDialog:closed', function (evt) {
-      if (evt.detail.action !== 'accept') return;
-     ;
+      if (evt.detail.action !== 'accept') return;;
       const submitDialog = new Dialog('Please Wait', `<h3 class='mdc-typography--body1 mdc-theme--primary'>Do not close the app while transition is taking place.</h3>`).create('simple');
       submitDialog.open();
       console.log(submitDialog)
@@ -384,10 +389,10 @@ function changePhoneNumber() {
           }, 5000)
           console.log(response)
         }).catch(function (error) {
-        
+
           submitDialog.close();
           document.getElementById('app-current-panel').classList.remove('freeze')
-         
+
         })
       }).catch(handleLocationError)
     })

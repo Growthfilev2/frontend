@@ -76,13 +76,13 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude: 28.5503,
-      longitude: 77.2502,
-      lastLocationTime: Date.now(),
-      provider: 'HTML5',
-      accuracy: 30
-    })
+    // return resolve({
+    //   latitude: 28.5503,
+    //   longitude: 77.2502,
+    //   lastLocationTime: Date.now(),
+    //   provider: 'HTML5',
+    //   accuracy: 30
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -250,7 +250,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=57');
+const apiHandler = new Worker('js/apiHandler.js?version=58');
 
 
 
@@ -1136,9 +1136,16 @@ function getEmailViewHeading(auth) {
 function emailUpdation(skip, callback) {
   const auth = firebase.auth().currentUser;
   const headings = getEmailViewHeading(auth)
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
-  `
+  let backIcon ='';
+  if(history.state[0] === 'profileCheck') {
+   backIcon = `
+    <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
+    `
+  }
+  else {
+    backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>`
+  }
+
   const header = setHeader(backIcon, '');
   header.root_.classList.remove('hidden');
 
@@ -1241,7 +1248,7 @@ function emailVerificationWait(callback) {
 
 function handleEmailError(error) {
   progressBar.close()
-  // if (error.code === 'auth/requires-recent-login') {
+  if (error.code === 'auth/requires-recent-login') {
   const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
   dialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
@@ -1251,7 +1258,7 @@ function handleEmailError(error) {
     revokeSession();
   })
   return;
-  // }
+  }
   snacks(error.message);
 }
 
@@ -1297,10 +1304,17 @@ ${skipbtn ? `<button class='mdc-button mt-10' id='skip-btn'>
 
 
 function idProofView(callback) {
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Add ID Proof</span>
-  `
+  let backIcon = ''
+  if(history.state[0] === 'profileCheck') {
+    backIcon = ' <span class="mdc-top-app-bar__title">Add ID Proof</span>'
+  }
+  else {
+   backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">Add ID Proof</span>
+    `
+  }
   setHeader(backIcon, '');
+
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
   <div class='id-container app-padding'>

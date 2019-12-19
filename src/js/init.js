@@ -195,6 +195,7 @@ var sliderIndex = 1;
 function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
+  document.getElementById('step-ui').innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
   if (firebaseUI) {
     firebaseUI.delete();

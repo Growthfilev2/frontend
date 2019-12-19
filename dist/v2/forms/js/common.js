@@ -91,6 +91,7 @@ function getDropDownContent(office, template, indexName) {
             data: [],
             string: ''
         }
+        const name_object = {}
         const tx = parent.db.transaction(['children'])
         const keyRange = IDBKeyRange.only([office, template])
         tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
@@ -100,9 +101,14 @@ function getDropDownContent(office, template, indexName) {
                 cursor.continue();
                 return;
             }
-
-            result.string += ` <option value="${cursor.value.attachment.Name.value}">
-                    ${cursor.value.attachment.Name.value}
+            const value = cursor.value.attachment.Name.value
+            if(name[value]) {
+                cursor.continue();
+                return;
+            }
+            name_object[value] = true;
+            result.string += ` <option value="${value}">
+                    ${value}
                   </option>`
             cursor.continue();
         }
