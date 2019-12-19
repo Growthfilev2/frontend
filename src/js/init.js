@@ -74,7 +74,6 @@ window.onpopstate = function (event) {
   this.console.log(event)
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
-
   if (event.state[0] === 'reportView') {
     this.reportView(event.state[1])
     return;
@@ -455,9 +454,8 @@ function startApp() {
       const store = rootTx.objectStore('root');
       store.get(dbName).onsuccess = function (transactionEvent) {
         rootRecord = transactionEvent.target.result;
-        if (res.bankAccount) {
-          rootRecord.currentBankAccounts = res.bankAccount
-        }
+        
+        rootRecord.linkedAccount = res.linkedAccount
         if (res.idProofs) {
           rootRecord.idProofs = res.idProofs
         }
@@ -599,7 +597,7 @@ function checkForId() {
 function checkForBankAccount() {
 
   getRootRecord().then(function (record) {
-    if (record.skipBankAccountAdd || record.currentBankAccounts) {
+    if (record.skipBankAccountAdd || !record.linkedAccount.length) {
       openMap();
       return;
     }

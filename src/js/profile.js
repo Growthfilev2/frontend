@@ -93,7 +93,7 @@ function createBaseDetails() {
 
 function bankAccount() {
   getRootRecord().then(function (rootRecord) {
-    const accounts = rootRecord.currentBankAccounts || [];
+    const accounts = rootRecord.linkedAccount
 
     console.log(accounts);
     const auth = firebase.auth().currentUser;
@@ -173,7 +173,7 @@ function addNewBankAccount(callback) {
         label:'Bank Account Number',
         disabled:false,
         value:'',
-        type:'text',
+        type:'number',
         required:true
       })}
       <div class="mdc-text-field-helper-line">
@@ -187,7 +187,7 @@ function addNewBankAccount(callback) {
         label:'Re-enter Bank Account Number',
         disabled:false,
         value:'',
-        type:'text',
+        type:'number',
         required:true
       })}
       <div class="mdc-text-field-helper-line">
@@ -220,30 +220,42 @@ function addNewBankAccount(callback) {
       </div>
     </div>
     <div class='button-cont'>
-    <button class='mdc-button' id='skip-btn'>SKIP</button>
-
-    <button class='mdc-button mdc-button--raised' id='submit-btn'>SUBMIT</button>
+      ${history.state[0] === 'profileCheck' ? `<button class='mdc-button' id='skip-btn'>SKIP</button>` : ''}
+      
+      <button class='mdc-button mdc-button--raised' id='submit-btn'>SUBMIT</button>
     </div>
   </div>
   </div>
   `;
 
 
-
+  const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
   const fields = {};
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);
-    if (el.id === 'account-number-re') {
-      field.input_.addEventListener('paste', function (e) {
-        e.preventDefault();
-      })
-    }
-
+    field.input_.addEventListener('paste', function (e) {
+      e.preventDefault();
+    });
     field.root_.classList.add('full-width')
     fields[field.label_.root_.textContent] = field;
   });
 
-  const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
+  fields['Re-enter Bank Account Number'].input_.addEventListener('input',function(){
+    if(fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
+       setHelperInvalid(fields['Re-enter Bank Account Number'],false)
+       submitBtn.root_.setAttribute('disabled','true')
+    }
+    else {
+      setHelperValid(fields['Re-enter Bank Account Number'])
+      submitBtn.root_.removeAttribute('disabled')
+
+    }
+  })
+
+  if(fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value){
+
+  }
+
   submitBtn.root_.addEventListener('click', function () {
     console.log(fields)
     const labels = Object.keys(fields);
@@ -259,14 +271,16 @@ function addNewBankAccount(callback) {
       field.helperTextContent = ''
     }
 
+    if(fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value){
+      setHelperInvalid(fields['Re-enter Bank Account Number'])
+      field.helperTextContent = `Bank Account number do not match`;
+      return;
+    }
+    field.helperTextContent = ''
     requestCreator('newBankAccount', {
-      name: auth.displayName,
-      email: auth.email,
-      phoneNumber: auth.phoneNumber,
-      bankAccount: fields['Bank Account'].value,
+      bankAccount: fields['Bank Account Number'].value,
       ifsc: fields['IFSC'].value,
       address1: fields['Address'].value,
-      type: 'bankTransfer'
     }).then(function () {
       snacks('New Bank Account Added');
       if (callback) {
@@ -276,8 +290,11 @@ function addNewBankAccount(callback) {
       }
     }).catch(console.error)
   });
-  const skipBtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
-  skipBtn.root_.addEventListener('click', function () {
+
+  const skipBtn = document.getElementById('skip-btn');
+  if(!skipBtn) return;
+  new mdc.ripple.MDCRipple(skipBtn);
+  skipBtn.addEventListener('click', function () {
 
     if (callback) {
       const rootTx = db.transaction('root', 'readwrite');
@@ -400,11 +417,15 @@ function changePhoneNumber() {
 
 }
 
-function setHelperInvalid(field) {
+function setHelperInvalid(field,shouldShake = true) {
   field.focus();
   field.foundation_.setValid(false);
-  field.foundation_.adapter_.shakeLabel(true);
+  field.foundation_.adapter_.shakeLabel(shouldShake);
+}
 
+function setHelperValid(field) {
+  field.focus();
+  field.foundation_.setValid(true);
 }
 
 function createUserDetails() {

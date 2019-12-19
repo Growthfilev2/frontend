@@ -254,7 +254,7 @@ function changePhoneNumber(body, meta) {
 function removeBankAccount(body, meta) {
   const req = {
     method: 'DELETE',
-    url: `${meta.apiUrl}paymentMethods/bankAccount?bankAccount=${body.bankAccount}`,
+    url: `${meta.apiUrl}services/accounts?bankAccount=${body.bankAccount}`,
     body: null,
     token: meta.user.token,
     timeout: null
@@ -265,7 +265,7 @@ function removeBankAccount(body, meta) {
 function newBankAccount(body, meta) {
   const req = {
     method: 'POST',
-    url: `${meta.apiUrl}paymentMethods`,
+    url: `${meta.apiUrl}services/accounts/`,
     body: JSON.stringify(body),
     token: meta.user.token,
     timeout: null

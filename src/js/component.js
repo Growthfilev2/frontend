@@ -228,7 +228,7 @@ function textFieldTelephone(attr) {
 function textField(attr) {
     return `<div class="mdc-text-field mdc-text-field--outlined full-width ${attr.leadingIcon ? 'mdc-text-field--with-leading-icon' :''} ${attr.trailingIcon ? 'mdc-text-field--with-trailing-icon' :''} ${attr.disabled ? 'mdc-text-field--disabled' :''}" id='${attr.id}'>
     ${attr.leadingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.leadingIcon}</i>`:''}
-    <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="text" class="mdc-text-field__input" value="${attr.value || ''}" type="${attr.type}" required="${attr.required || 'false'}" ${attr.disabled ? 'disabled':''}>
+    <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="${attr.type || 'text'}" class="mdc-text-field__input" value="${attr.value || ''}"  required="${attr.required || 'false'}" ${attr.disabled ? 'disabled':''} >
     ${attr.trailingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.trailingIcon}</i>` :''}
     
     <div class="mdc-notched-outline">
