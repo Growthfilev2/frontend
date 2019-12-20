@@ -722,7 +722,7 @@ function profileCheck() {
     document.getElementById("app-header").classList.remove('hidden');
     increaseStep(1)
     updateName(function () {
-      history.pushState(['checkForPhoto'], null, null);
+     
       checkForPhoto();
     });
     return

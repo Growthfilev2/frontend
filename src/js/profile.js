@@ -228,7 +228,7 @@ function addNewBankAccount(callback) {
 
 
   const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
-  submitBtn.root_.setAttribute('disabled','true')
+  submitBtn.root_.setAttribute('disabled','true');
   const fields = {};
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);

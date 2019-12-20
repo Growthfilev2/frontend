@@ -1221,10 +1221,9 @@ function emailVerificationWait(callback) {
   document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
   <h3 class='mdc-typography--headline6'>Verification Link Has Been Sent To ${firebase.auth().currentUser.email}</h3>
   <p class='mdc-typography--body1'>Click Continue To Proceed Further</p>
-  <button class='mdc-button mdc-theme--primary-bg mt-10' id='continue'>
-  <span class='mdc-button__label mdc-theme--on-primary'>CONTINUE</span>
-  </button>
-</div>`
+</div>
+${actionButton('CONTINUE','continue').outerHTML}
+`
   document.getElementById('continue').addEventListener('click', function (evt) {
 
     firebase.auth().currentUser.reload();

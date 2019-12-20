@@ -209,7 +209,7 @@
 .update-email {
     max-width: 640px;
 }
-.update-email .mdc-text-field , #continue {
+.mdc-text-field{
     width: 100%;
 }
 

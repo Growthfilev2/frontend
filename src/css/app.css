@@ -1020,6 +1020,9 @@ iframe {
   border-radius: 0px;
   font-weight: bold;
 }
+.submit-btn:disabled {
+  background-color: #dddddd;
+}
 .submit-btn .mdc-button__icon {
   font-size: 24px;
   
