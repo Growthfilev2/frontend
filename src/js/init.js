@@ -131,6 +131,16 @@ function initializeApp() {
 
     });
   })
+  window.addEventListener('orientationchange',function(){
+    const el = this.document.querySelector('.action-button-container .submit-button-cont');
+    if(!el) return;
+    if(this.screen.orientation.angle == 90) {
+      el.style.position = 'relative'
+    }
+    if(this.screen.orientation.angle == 0) {
+      el.style.position = 'fixed'
+    }
+  })
 }
 
 function checkNetworkValidation() {
@@ -190,7 +200,7 @@ function initializeFirebaseUI() {
 }
 
 var sliderIndex = 1;
-
+var sliderTimeout = 10000;
 function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
@@ -210,10 +220,10 @@ function userSignedOut() {
           </div>
 
           <div class='text'>
-              <p class='mdc-typography--headline4 text-center mb-0'>
+              <p class='mdc-typography--headline6 text-center mb-0'>
                 Welcome to Growthfile
               </p>
-              <p class='mdc-typography--subtitle2 text-center'>
+              <p class='mdc-typography--body1 text-center p-10'>
                 Mark attendance on Growthfile to avoid deductions in salary and expenses
               </p>
           </div>
@@ -254,20 +264,38 @@ function userSignedOut() {
     history.pushState(['login'], null, null);
     initializeFirebaseUI();
   })
+  
+  var interval = setInterval(function(){
+    sliderSwipe({
+      element:sliderEl,
+      direction:'right'
+    })
+  },sliderTimeout);
   swipe(sliderEl, sliderSwipe);
 }
+
+
 
 
 function sliderSwipe(swipeEvent) {
   const el = swipeEvent.element;
   if (swipeEvent.direction === 'left') {
-    if (sliderIndex <= 1) return;
-    sliderIndex--
+    if (sliderIndex <= 1) {
+      sliderIndex = 3;
+    }
+    else {
+      sliderIndex--
+
+    }
   }
 
   if (swipeEvent.direction === 'right') {
-    if (sliderIndex >= 3) return;
-    sliderIndex++
+    if (sliderIndex >= 3) {
+      sliderIndex = 1;
+    }
+    else {
+      sliderIndex++
+    }
   }
 
   loadSlider(el);
@@ -290,10 +318,10 @@ function loadSlider(sliderEl) {
     </div>
 
     <div class='text'>
-        <p class='mdc-typography--headline4 text-center mb-0'>
+        <p class='mdc-typography--headline6 text-center mb-0'>
           Welcome to Growthfile
         </p>
-        <p class='mdc-typography--subtitle2 text-center'>
+        <p class='mdc-typography--body1 text-center p-10'>
           Mark attendance on Growthfile to avoid deductions in salary and expenses
         </p>
     </div>`
@@ -305,12 +333,10 @@ function loadSlider(sliderEl) {
 
         </div>
         <div class='text-container'>
-          <ul class='slider-list mdc-typography--headline6'>
+          <ul class='slider-list'>
             <li>Mark attendance on your phone</li>
-            <li>From any location</li>
-            <li>Branch / Customer / Unknown</li>
-            <li>Calculate travel km</li>
-            <li>Manage leave & claims</li>
+            <li>Branch, customer or unknown location</li>
+            <li>Calculate kilometres traveled</li>
           </ul>
         </div>
         `
@@ -323,19 +349,16 @@ function loadSlider(sliderEl) {
             <img src='./img/currency_large.png'>
         </div>
         <div class='text-container'>
-        <ul class='slider-list mdc-typography--headline6'>
-            <li>Offer letter</li>
-            <li>Payslip & Form 16</li>
-            <li>Submit rent receipts</li>
-            <li>Invest to save tax</li>
-            <li>File tax returns</li>
+        <ul class='slider-list'>
+            <li>Daily payment calculation</li>
+            <li>Online bank transfer</li>
+            <li>Offer letter, payslip & form 16</li>
+            
         </ul>
         </div>
         `
       break;
   }
-
-
   sliderEl.querySelector('.slider-content').innerHTML = sliderContent;
 }
 

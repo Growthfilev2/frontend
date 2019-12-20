@@ -239,22 +239,21 @@ function expandPlaceBox() {
         confirmFab.addEventListener('click', function () {
 
             confirmFab.classList.add('mdc-fab--exited')
-            requestCreator('searchOffice', {
-                query: placeResult.name
-            }).then(function (searchResponse) {
-                console.log(searchResponse)
-                if (!searchResponse.length) return createOfficeInit();
-                return giveSubscriptionInit();
+            // requestCreator('searchOffice', {
+            //     query: placeResult.place_id
+            // }).then(function (searchResponse) {
+                createOfficeInit();
+                // return giveSubscriptionInit();
                 // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
                 //     console.log(idTokenResult);
                 //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
                 // }).catch(function (error) {
                 //     createOfficeInit();
                 // })
-            }).catch(function (error) {
-                console.log(error)
-                confirmFab.classList.remove('mdc-fab--exited')
-            })
+            // }).catch(function (error) {
+            //     console.log(error)
+            //     confirmFab.classList.remove('mdc-fab--exited')
+            // })
         })
 
         const nextImageEl = document.getElementById('next-image')

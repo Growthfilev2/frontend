@@ -61,13 +61,13 @@
         function init(subscriptionTemplate) {
             let index = 0
             addManagerBtn.addEventListener('click', function () {
-                index++
-                setContactForManager({
-                    displayName: 'Shikhar ' + index,
-                    phoneNumber: '+91999928892' + index,
-                    email: ''
-                })
-                // callContact("getContactManager")
+                // index++
+                // setContactForManager({
+                //     displayName: 'Shikhar ' + index,
+                //     phoneNumber: '+91999928892' + index,
+                //     email: ''
+                // })
+                callContact("getContactManager")
             });
 
             document.getElementById('submit-btn').addEventListener('click', function () {
@@ -75,13 +75,11 @@
                 Object.keys(managerObject).forEach(function (number) {
                     array.push(managerObject[number]);
                 })
-                subscriptionTemplate.assignees = array
+                subscriptionTemplate.share = array
                 delete subscriptionTemplate.user
                 parent.sendSubscriptionData(subscriptionTemplate);
             })
         }
-
-
 
         function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
