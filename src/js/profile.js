@@ -165,6 +165,7 @@ function addNewBankAccount(callback) {
   setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
+  ${history.state[0] === 'profileCheck' ? `<button class='mdc-button mdc-theme--secondary' id='skip-btn'>SKIP</button>` : ''}
   <div class='add-bank-container mt-20'>
 
     <div class='text-field-container mb-10'>
@@ -219,17 +220,15 @@ function addNewBankAccount(callback) {
         <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
       </div>
     </div>
-    <div class='button-cont'>
-      ${history.state[0] === 'profileCheck' ? `<button class='mdc-button' id='skip-btn'>SKIP</button>` : ''}
-      
-      <button class='mdc-button mdc-button--raised' id='submit-btn'>SUBMIT</button>
-    </div>
+ 
   </div>
   </div>
+  ${actionButton('SUBMIT','submit-btn').outerHTML}
   `;
 
 
   const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
+  submitBtn.root_.setAttribute('disabled','true')
   const fields = {};
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);
@@ -252,9 +251,6 @@ function addNewBankAccount(callback) {
     }
   })
 
-  if(fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value){
-
-  }
 
   submitBtn.root_.addEventListener('click', function () {
     console.log(fields)
@@ -276,7 +272,7 @@ function addNewBankAccount(callback) {
       field.helperTextContent = `Bank Account number do not match`;
       return;
     }
-    field.helperTextContent = ''
+   
     requestCreator('newBankAccount', {
       bankAccount: fields['Bank Account Number'].value,
       ifsc: fields['IFSC'].value,

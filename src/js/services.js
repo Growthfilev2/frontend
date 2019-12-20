@@ -1061,7 +1061,7 @@ function updateName(callback) {
   document.getElementById('app-current-panel').innerHTML = `
   
   <div class='mdc-layout-grid change-name'>
-  <p class='mdc-typography--body1 mdc-theme--primary'>
+  <p class='mdc-typography--body1'>
   Please provide your name
   
   </p>
@@ -1079,12 +1079,9 @@ function updateName(callback) {
   <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	">
   </div>
 </div>
-
-<div  class='mb-10 mt-10'>
-  <button class='mdc-button mdc-theme--primary-bg' id='name-btn'>
-  <span class='mdc-button__label mdc-theme--on-primary'>Update<span>
-</button>
-</div>
+  </div>
+  <div  class='mb-10 mt-10'>
+    ${actionButton('update','name-btn').outerHTML}
   </div>`
   const nameField = new mdc.textField.MDCTextField(document.getElementById('name'))
   nameField.focus();
@@ -1103,8 +1100,6 @@ function updateName(callback) {
       progressBar.close();
       snacks('Name Updated Successfully')
       callback();
-
-
     })
   })
 }
@@ -1118,13 +1113,13 @@ function getEmailViewHeading(auth) {
 
   if (!auth.email) {
     text.topBarText = 'Add Email';
-    text.heading = 'Please Add You Email Address To Continue'
+    // text.heading = 'Please Add You Email Address To Continue'
     return text;
   }
   if (!auth.emailVerified) {
 
     text.topBarText = 'Verify Email'
-    text.heading = 'Please Verify Your Email Address To Continue'
+    // text.heading = 'Please Verify Your Email Address To Continue'
     text.btnText = 'Verify'
     return text;
   }
@@ -1149,9 +1144,7 @@ function emailUpdation(skip, callback) {
   const header = setHeader(backIcon, '');
   header.root_.classList.remove('hidden');
 
-  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid update-email'>
-          ${updateEmailDom(skip, headings)}
-    </div>`
+  document.getElementById('app-current-panel').innerHTML = updateEmailDom(skip, headings)
   const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
   emailField.focus();
   document.getElementById('email-btn').addEventListener('click', function () {
@@ -1268,6 +1261,10 @@ function handleEmailError(error) {
 function updateEmailDom(skipbtn, headings) {
   const email = firebase.auth().currentUser.email
   return `
+  <div class='mdc-layout-grid update-email'>
+  ${skipbtn ? `<button class='mdc-button mt-10' id='skip-btn'>
+  <span class='mdc-button__label mdc-theme--secondary'>SKIP<span>
+  </button>` :''}
 
 <h3 class='mdc-typography--headline6'>${headings.heading}</h3>
 <p class='report-rec mt-10 mdc-typography--body1'>
@@ -1289,14 +1286,9 @@ Verify your email to receive  offer letter, salary slip, tax forms & other docum
   </div>
 </div>
 
+</div>
 <div  class='mb-10 mt-10'>
-<button class='mdc-button mdc-theme--primary-bg' id='email-btn'>
-<span class='mdc-button__label mdc-theme--on-primary'>${headings.btnText}<span>
-</button>
-${skipbtn ? `<button class='mdc-button mt-10' id='skip-btn'>
-<span class='mdc-button__label'>SKIP<span>
-</button>` :''}
-
+  ${actionButton(headings.btnText,'email-btn').outerHTML}
 </div>
 `
 }
@@ -1318,6 +1310,7 @@ function idProofView(callback) {
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
   <div class='id-container app-padding'>
+  <button class='mdc-button mdc-theme--secondary' id='skip-btn'>SKIP</button>
     <div class='pan-container'>
       <div class='text-field-container mt-10 mb-10'>
         ${textField({
@@ -1351,11 +1344,10 @@ function idProofView(callback) {
       </div>
       <div class='aadhar-images'></div>
     </div>
-    <div class='button-cont'>
-        <button class='mdc-button' id='skip-btn'>SKIP</button>
-        <button class='mdc-button mdc-button--raised' id='submit-btn'>SUBMIT</button>
+   
+       
     </div>
-  </div>
+    ${actionButton('UPDATE','submit-btn').outerHTML}
   
   `
 

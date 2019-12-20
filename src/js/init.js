@@ -5,6 +5,9 @@ let snackBar;
 let DB_VERSION = 30;
 var EMAIL_REAUTH;
 var firebaseUI;
+var sliderIndex = 1;
+var sliderTimeout = 10000;
+
 
 function imgErr(source) {
   source.onerror = '';
@@ -163,8 +166,7 @@ function firebaseUiConfig() {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         console.log(authResult);
-        
-        
+      
         return false;
       },
       signInFailure: function (error) {
@@ -199,8 +201,7 @@ function initializeFirebaseUI() {
   firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
-var sliderIndex = 1;
-var sliderTimeout = 10000;
+
 function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
@@ -620,7 +621,7 @@ function checkForId() {
 function checkForBankAccount() {
 
   getRootRecord().then(function (record) {
-    if (record.skipBankAccountAdd || !record.linkedAccount.length) {
+    if (record.skipBankAccountAdd || record.linkedAccount.length) {
       openMap();
       return;
     }
