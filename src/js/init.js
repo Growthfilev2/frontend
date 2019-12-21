@@ -479,7 +479,8 @@ function startApp() {
       store.get(dbName).onsuccess = function (transactionEvent) {
         rootRecord = transactionEvent.target.result;
         
-        rootRecord.linkedAccount = res.linkedAccount
+        rootRecord.linkedAccounts = res.linkedAccounts || [];
+      
         if (res.idProofs) {
           rootRecord.idProofs = res.idProofs
         }
@@ -621,7 +622,7 @@ function checkForId() {
 function checkForBankAccount() {
 
   getRootRecord().then(function (record) {
-    if (record.skipBankAccountAdd || record.linkedAccount.length) {
+    if (record.skipBankAccountAdd || record.linkedAccounts.length) {
       openMap();
       return;
     }

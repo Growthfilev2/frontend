@@ -252,10 +252,11 @@ function changePhoneNumber(body, meta) {
 
 
 function removeBankAccount(body, meta) {
+  
   const req = {
     method: 'DELETE',
-    url: `${meta.apiUrl}services/accounts?bankAccount=${body.bankAccount}`,
-    body: null,
+    url: `${meta.apiUrl}services/accounts`,
+    body: JSON.stringify(body),
     token: meta.user.token,
     timeout: null
   }

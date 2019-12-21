@@ -148,7 +148,9 @@ body {
 .pr-0 {
   padding-right: 0px;
 }
-
+.width-100 {
+  width: 100%;
+}
 .hidden {
   display: none !important;
 }
@@ -623,6 +625,15 @@ body {
 
 }
 
+.mdc-radio .mdc-radio__native-control:enabled:checked+.mdc-radio__background .mdc-radio__outer-circle {
+  
+  border-color: var(--mdc-theme-primary);
+}
+
+.mdc-radio .mdc-radio__native-control:enabled+.mdc-radio__background .mdc-radio__inner-circle {
+  
+  border-color: var(--mdc-theme-primary);
+}
 
 /** override **/
 

@@ -93,7 +93,7 @@ function createBaseDetails() {
 
 function bankAccount() {
   getRootRecord().then(function (rootRecord) {
-    const accounts = rootRecord.linkedAccount
+    const accounts = rootRecord.linkedAccounts 
 
     console.log(accounts);
     const auth = firebase.auth().currentUser;
@@ -103,8 +103,8 @@ function bankAccount() {
     setHeader(backIcon, '');
     document.getElementById('app-current-panel').innerHTML = `
       <ul class='mdc-list mdc-list--two-line' id='bank-list'>
-      ${accounts.map(function(account){
-          return `<li class='mdc-list-item'>
+      ${accounts.map(function(account,index){
+          return `<li class='mdc-list-item' data-index="${index}">
             <span class="mdc-list-item__text">
               <span class="mdc-list-item__primary-text">${account.bankAccount}</span>
               <span class="mdc-list-item__secondary-text">${account.ifsc}</span>
@@ -120,15 +120,25 @@ function bankAccount() {
     [].map.call(document.querySelectorAll('.bank-account-remove'), function (el) {
       if (!el) return;
       el.addEventListener('click', function () {
-
-
         const number = el.dataset.account;
         requestCreator('removeBankAccount', {
           bankAccount: number
         }).then(function () {
-          snacks(`Account ${number} removed`)
-        }).catch(console.error)
-
+          const uid = firebase.auth().currentUser.uid
+          const tx = db.transaction('root','readwrite');
+          const store = tx.objectStore('root');
+          let newRootRecord;
+          store.get(uid).onsuccess = function(event){
+            newRootRecord  = event.target.result;
+            const index = Number(el.parentNode.dataset.index);
+            newRootRecord.linkedAccounts.splice(index,1);
+            store.put(newRootRecord)
+          }
+          tx.oncomplete = function() {
+            el.parentNode.remove();
+            snacks(`Account removed`)
+          }
+        }).catch(console.error);
       })
     })
 
@@ -140,7 +150,9 @@ function bankAccount() {
         return
       }
       history.pushState(['addNewBankAccount'], null, null);
-      addNewBankAccount();
+      addNewBankAccount(function(){
+        reloadPage();
+      });
     })
     document.getElementById('app-current-panel').appendChild(addNewBtn);
 

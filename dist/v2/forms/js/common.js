@@ -179,3 +179,15 @@ function createPhoneNumberLi(contactObject,withoutIcon,callback) {
     return li
 }
 
+
+
+function setHelperInvalid(field,shouldShake = true) {
+    field.focus();
+    field.foundation_.setValid(false);
+    field.foundation_.adapter_.shakeLabel(shouldShake);
+  }
+  
+  function setHelperValid(field) {
+    field.focus();
+    field.foundation_.setValid(true);
+  }

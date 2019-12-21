@@ -90,7 +90,10 @@ function Dialog(title, content, id) {
     this.title = title;
     this.content = content;
     this.id = id;
+    
 }
+
+
 
 Dialog.prototype.create = function (type) {
     const parent = createElement('div', {
@@ -129,24 +132,24 @@ Dialog.prototype.create = function (type) {
     surface.appendChild(contentContainer);
     if (type !== 'simple') {
 
-        const cancelButton = createElement('button', {
+        this.cancelButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
             textContent: 'Close'
         })
-        cancelButton.setAttribute('data-mdc-dialog-action', 'close');
+        this.cancelButton.setAttribute('data-mdc-dialog-action', 'close');
 
 
-        const okButton = createElement('button', {
+        this.okButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
             textContent: 'Okay'
         });
 
 
-        okButton.setAttribute('data-mdc-dialog-action', 'accept')
-        this.footer.appendChild(cancelButton)
-        this.footer.appendChild(okButton);
+        this.okButton.setAttribute('data-mdc-dialog-action', 'accept')
+        this.footer.appendChild(this.cancelButton)
+        this.footer.appendChild(this.okButton);
         surface.appendChild(this.footer)
     }
 
@@ -161,8 +164,6 @@ Dialog.prototype.create = function (type) {
     dialogParent.appendChild(parent)
     return new mdc.dialog.MDCDialog(parent);
 }
-
-
 
 
 function setHeader(sectionStart, sectionEnd) {

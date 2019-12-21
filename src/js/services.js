@@ -358,7 +358,6 @@ function executeRequest(requestGenerator) {
 function updateApp() {
   if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
   const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
-
   updateAppDialog.open();
   updateAppDialog.scrimClickAction = ''
   updateAppDialog.listen('MDCDialog:opened', function () {
@@ -926,8 +925,9 @@ function officeSelectionList(subs) {
     </ul>`
 
   return officeList;
-
 }
+
+
 
 function bottomDialog(dialog, ul) {
 
@@ -1314,9 +1314,19 @@ function idProofView(callback) {
           <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
         </div>
     </div>
-    <div class='pan-images'>
- 
-   
+    <div class='pan-images mdc-layout-grid__inner'>
+        <div class='mdc-layout-grid__cell'>
+          <img src='./img/placeholder.png' class='width-100'>
+          <div class="mdc-image-list__supporting">
+            <span class="mdc-image-list__label">PAN FRONT</span>
+          </div>
+        </div>
+        <div class='mdc-layout-grid__cell'>
+          <img src='./img/placeholder.png' class='width-100'>
+          <div class="mdc-image-list__supporting">
+            <span class="mdc-image-list__label">PAN BACK</span>
+          </div>
+        </div>
     </div>
     </div>
     <div class='aadhar-container'>

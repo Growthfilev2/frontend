@@ -242,12 +242,89 @@ function expandPlaceBox() {
             requestCreator('searchOffice', {
                 query: placeResult.place_id
             }).then(function (searchResponse) {
-                console.log(searchResponse)
-                if(!searchResponse.length) {
-                    createOfficeInit();
 
-                }
-                // return giveSubscriptionInit();
+                if(!searchResponse.length) {
+                    var dialog = new Dialog(`${placeResult.name} not found`,'Do you want to create a new office ? ').create();
+                    dialog.buttons_[0].textContent = 'cancel'
+                    dialog.buttons_[1].textContent = 'create new office';
+                    dialog.open();
+                    dialog.listen('MDCDialog:closed',function(dialogEvent){
+                        if(dialogEvent.detail.action !== 'accept') {
+                            confirmFab.classList.remove('mdc-fab--exited')
+                            return;
+                        }
+                        createOfficeInit();
+                    })
+                    return;
+                };
+
+                const officeContent = `<ul class='mdc-list  mdc-list--two-line'  id='office-selection-list'>
+                    ${searchResponse.map(function(response,index){
+                        return `<li class='mdc-list-item pl-0 pr-0' tabindex="-1">
+                            <span class='mdc-list-item__text'>
+                                <span class='mdc-list-item__primary-text'>${response.name}</span>
+                                <span class='mdc-list-item__secondary-text'>${response.registeredOfficeAddress}</span>
+                            </span>
+                            <span class="mdc-list-item__graphic mdc-list-item__meta">
+                            <div class="mdc-checkbox">
+                                <input type="checkbox"
+                                        class="mdc-checkbox__native-control"
+                                        id="demo-list-checkbox-item-${index}" />
+                                <div class="mdc-checkbox__background">
+                                  <svg class="mdc-checkbox__checkmark"
+                                        viewBox="0 0 24 24">
+                                    <path class="mdc-checkbox__checkmark-path"
+                                          fill="none"
+                                          d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+                                  </svg>
+                                  <div class="mdc-checkbox__mixedmark"></div>
+                                </div>
+                              </div>
+                        </span>
+                        </li>`
+                    }).join("")}
+                </ul> 
+                `
+
+           
+    
+                var dialog = new Dialog('Choose office', officeContent).create();
+                dialog.buttons_[0].textContent = 'cancel'
+                dialog.buttons_[1].textContent = 'create new office';
+                dialog.open();
+                const list = new mdc.list.MDCList(document.getElementById('office-selection-list'));
+                list.singleSelection = true;
+                let selectedListIndex;
+                
+                dialog.listen('MDCDialog:opened',function(openEvent){
+                    list.layout();
+                    list.listen('MDCList:action',function(listEvent){
+                        console.log(listEvent);
+                        console.log(list)
+                        if(!list.selectedIndex.length) {
+                            selectedListIndex = null;
+                            dialog.buttons_[1].textContent = 'create new office';
+                        }
+                        else {
+                            selectedListIndex = listEvent.detail.index;
+                            list.selectedIndex = [listEvent.detail.index]
+                            dialog.buttons_[1].textContent = 'JOIN';
+                        }
+                    });
+                })
+                dialog.listen('MDCDialog:closed', function (dialogEvent) {
+                    if (dialogEvent.detail.action !== 'accept') {
+                        confirmFab.classList.remove('mdc-fab--exited')
+                        return;
+                    }
+                    if(list.selectedIndex.length) {
+                        giveSubscriptionInit();
+                        return
+                    }
+
+                    createOfficeInit();
+                })
+               
                 // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
                 //     console.log(idTokenResult);
                 //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
@@ -299,19 +376,17 @@ function createOfficeInit() {
         'name': placeResult.name,
         'placeId': placeResult.place_id,
         'registeredOfficeAddress': placeResult.formatted_address,
-        'timezone': moment.tz.guess()
     }
     history.pushState(['addView'], null, null);
     addView(template);
 }
 
-function giveSubscriptionInit() {
+function giveSubscriptionInit(name = placeResult.name) {
 
     const template = {
-
         "assignees": [],
         "template": "subscription",
-        "office": placeResult.name
+        "office": name
     };
 
     history.pushState(['addView'], null, null);
