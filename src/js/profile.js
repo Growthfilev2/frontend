@@ -53,7 +53,7 @@ function setDetails() {
       })
     }).then(function () {
 
-      snacks('Profile Picture Update Successfully')
+      snacks('Profile picture updated')
       firebase.auth().currentUser.reload();
     }).catch(console.error)
 
@@ -84,7 +84,7 @@ function createBaseDetails() {
   </li>
   <li class='mdc-list-item'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
-    Bank Accounts
+    Bank accounts
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['bankAccount'], null, null);bankAccount()">edit</span>
   </li>
   </ul>
@@ -136,7 +136,7 @@ function bankAccount() {
     addNewBtn.querySelector('.mdc-button').addEventListener('click', function () {
       if (!auth.email || !auth.emailVerified) {
         history.pushState(['emailUpdation'], null, null)
-        emailUpdation(profileView, true)
+        emailUpdation(true,profileView)
         return
       }
       history.pushState(['addNewBankAccount'], null, null);
@@ -168,7 +168,7 @@ function addNewBankAccount(callback) {
   ${history.state[0] === 'profileCheck' ? `<button class='mdc-button mdc-theme--secondary' id='skip-btn'>SKIP</button>` : ''}
   <div class='add-bank-container mt-20'>
 
-    <div class='text-field-container mb-10'>
+    <div class='text-field-container'>
       ${textField({
         id:'account-number',
         label:'Bank Account Number',
@@ -182,7 +182,7 @@ function addNewBankAccount(callback) {
       </div>
     </div>
 
-    <div class='text-field-container mb-10'>
+    <div class='text-field-container mt-10'>
       ${textField({
         id:'account-number-re',
         label:'Re-enter Bank Account Number',
@@ -210,7 +210,7 @@ function addNewBankAccount(callback) {
       </div>
     </div>
 
-    <div class='text-field-container mt-10 mb-10'>
+    <div class='text-field-container mb-10'>
       ${textArea({
         id:'address',
         label:'Address',
@@ -278,7 +278,7 @@ function addNewBankAccount(callback) {
       ifsc: fields['IFSC'].value,
       address1: fields['Address'].value,
     }).then(function () {
-      snacks('New Bank Account Added');
+      snacks('New bank account added');
       if (callback) {
         callback()
       } else {
@@ -314,7 +314,7 @@ function addNewBankAccount(callback) {
 function changePhoneNumber() {
   const auth = firebase.auth().currentUser;
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Change Phone Number</span>
+  <span class="mdc-top-app-bar__title">Phone number</span>
   `
   setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number'>
@@ -331,7 +331,7 @@ function changePhoneNumber() {
     </div>
     <h3 class='mdc-typography--body1'>Enter your new phone number with country code</h3>
     <div class='new-phone-number-container full-width'>
-    <span class="mdc-typography--headline5 plus-synbol">+</span>
+      <span class="mdc-typography--headline5 plus-synbol">+</span>
       ${textFieldTelephone({
         disable:false,
         value:'91',
@@ -350,14 +350,10 @@ function changePhoneNumber() {
     </div>
   
     <div class="mdc-theme--error mt-10"	id='change-number-helper'></div>
-   
-    <div  class='mb-10 mt-10'>
-      <button class='mdc-button mdc-theme--primary-bg full-width' id='change-number-btn'>
-      <span class='mdc-button__label mdc-theme--on-primary'>Change<span>
-    </button>
+    </div>
   </div>
-
-  </div>`
+  ${actionButton('Update','change-number-btn').outerHTML}
+  `
 
   const oldNumber = new mdc.textField.MDCTextField(document.getElementById("old-phone-number"))
   const newNumber = new mdc.textField.MDCTextField(document.getElementById("new-phone-number"));

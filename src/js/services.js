@@ -514,21 +514,6 @@ function emailReg(email) {
   return emailRegString.test(String(email).toLowerCase())
 }
 
-function formatTextToTitleCase(string) {
-  const arr = [];
-  for (var i = 0; i < string.length; i++) {
-    if (i == 0) {
-      arr.push(string[i].toUpperCase())
-    } else {
-      if (string[i - 1].toLowerCase() == string[i - 1].toUpperCase()) {
-        arr.push(string[i].toUpperCase())
-      } else {
-        arr.push(string[i].toLowerCase())
-      }
-    }
-  }
-  return arr.join('')
-}
 
 
 
@@ -1014,7 +999,7 @@ function templateList(suggestedTemplates) {
       li.dataset.template = sub.template;
       li.dataset.office = JSON.stringify([sub.office]);
       li.dataset.value = JSON.stringify([sub])
-      li.innerHTML = `${formatTextToTitleCase(`Create New ${sub.template}`)}
+      li.innerHTML = `${`Create New ${sub.template}`}
       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
         keyboard_arrow_right
       </span>`
@@ -1048,14 +1033,16 @@ function getImageBase64(evt, id) {
 
 
 function updateName(callback) {
+  console.log(callback)
   const auth = firebase.auth().currentUser;
   let backIcon = ''
-  if (!callback) {
+ 
+  if (callback) {
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Update Name</span>
+    <span class="mdc-top-app-bar__title">Name</span>
     `
   } else {
-    backIcon = `<span class="mdc-top-app-bar__title">Add Name</span>`
+    backIcon = `<span class="mdc-top-app-bar__title">Name</span>`
   }
   setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
@@ -1081,15 +1068,14 @@ function updateName(callback) {
 </div>
   </div>
   <div  class='mb-10 mt-10'>
-    ${actionButton('update','name-btn').outerHTML}
+    ${actionButton('Update','name-btn').outerHTML}
   </div>`
+
   const nameField = new mdc.textField.MDCTextField(document.getElementById('name'))
   nameField.focus();
   document.getElementById('name-btn').addEventListener('click', function () {
     if (!nameField.value) {
-      nameField.focus();
-      nameField.foundation_.setValid(false);
-      nameField.foundation_.adapter_.shakeLabel(true);
+      setHelperInvalid(nameField)
       nameField.helperTextContent = 'Name Cannot Be Left Blank';
       return;
     }
@@ -1098,7 +1084,7 @@ function updateName(callback) {
       displayName: nameField.value.trim()
     }).then(function () {
       progressBar.close();
-      snacks('Name Updated Successfully')
+      snacks('Name updated')
       callback();
     })
   })
@@ -1112,21 +1098,24 @@ function getEmailViewHeading(auth) {
   }
 
   if (!auth.email) {
-    text.topBarText = 'Add Email';
+    text.topBarText = 'Email';
     // text.heading = 'Please Add You Email Address To Continue'
     return text;
   }
   if (!auth.emailVerified) {
 
-    text.topBarText = 'Verify Email'
+    text.topBarText = 'Email'
     // text.heading = 'Please Verify Your Email Address To Continue'
     text.btnText = 'Verify'
     return text;
   }
-  text.topBarText = 'Update Email'
+  text.topBarText = 'Email'
   text.btnText = 'Update'
   return text;
 }
+
+
+
 
 function emailUpdation(skip, callback) {
   const auth = firebase.auth().currentUser;
@@ -1138,7 +1127,9 @@ function emailUpdation(skip, callback) {
     `
   }
   else {
-    backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>`
+    backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
+    `
   }
 
   const header = setHeader(backIcon, '');
@@ -1209,7 +1200,7 @@ function emailUpdate(email, callback) {
 function emailVerification(callback) {
 
   firebase.auth().currentUser.sendEmailVerification().then(function () {
-    snacks('Email Verification Has Been Sent.')
+    snacks('Email verification has been sent.')
     progressBar.close();
 
     emailVerificationWait(callback)
@@ -1230,7 +1221,7 @@ ${actionButton('CONTINUE','continue').outerHTML}
     setTimeout(function () {
       firebase.auth().currentUser.reload();
       if (!auth.emailVerified) {
-        snacks('Email Not Verified. Try Again');
+        snacks('Email not verified. Try again');
         return;
       }
       callback();

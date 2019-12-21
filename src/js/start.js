@@ -243,7 +243,10 @@ function expandPlaceBox() {
                 query: placeResult.place_id
             }).then(function (searchResponse) {
                 console.log(searchResponse)
-                createOfficeInit();
+                if(!searchResponse.length) {
+                    createOfficeInit();
+
+                }
                 // return giveSubscriptionInit();
                 // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
                 //     console.log(idTokenResult);

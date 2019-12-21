@@ -308,7 +308,7 @@ function checkStatusSubscription(event) {
   }
   tx.oncomplete = function () {
     if (!subscription) {
-      snacks(`You Don't Have ${formatTextToTitleCase(dataset.template)} Subscription`);
+      snacks(`You don't have ${dataset.template} subscription`);
       return
     }
 

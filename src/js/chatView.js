@@ -932,7 +932,7 @@ function addAssignee(record, userArray) {
             share: userArray
         },geopoint).then(function () {
             
-            snacks(`You Added ${userArray.length} People`)
+            snacks(`You added ${userArray.length} people`)
             history.back();
         }).catch(console.error)
 

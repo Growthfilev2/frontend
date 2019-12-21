@@ -270,6 +270,7 @@
     padding: 16px;
     margin-top: -22px;
     color: white;
+    background-color: rgba(0, 0, 0, 0.74);
     font-weight: bold;
     font-size: 18px;
     transition: 0.6s ease;

@@ -739,7 +739,7 @@ function successResponse(read, param, db, resolve, reject) {
   read.activities.forEach(function (activity) {
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
-    activity.activityName = formatTextToTitleCase(activity.activityName)
+    activity.activityName = activity.activityName
     activityObjectStore.put(activity);
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
@@ -884,19 +884,3 @@ function updateIDB(config) {
     }
   })
 };
-
-function formatTextToTitleCase(string) {
-  const arr = [];
-  for (var i = 0; i < string.length; i++) {
-    if (i == 0) {
-      arr.push(string[i].toUpperCase())
-    } else {
-      if (string[i - 1].toLowerCase() == string[i - 1].toUpperCase()) {
-        arr.push(string[i].toUpperCase())
-      } else {
-        arr.push(string[i].toLowerCase())
-      }
-    }
-  }
-  return arr.join('');
-}
