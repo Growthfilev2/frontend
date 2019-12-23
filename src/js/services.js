@@ -238,7 +238,7 @@ function html5Geolocation() {
       })
     }, {
       maximumAge: 0,
-      timeout: true,
+      timeout: 8000,
       enableHighAccuracy: false
     })
   })
@@ -1035,17 +1035,19 @@ function getImageBase64(evt, id) {
 
 
 function updateName(callback) {
-  console.log(callback)
+
   const auth = firebase.auth().currentUser;
   let backIcon = ''
- 
-  if (callback) {
+  if(history.state[0] === 'profileCheck') {
+    backIcon = `<span class="mdc-top-app-bar__title">Name</span>`
+    
+  }
+  else {
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Name</span>
     `
-  } else {
-    backIcon = `<span class="mdc-top-app-bar__title">Name</span>`
   }
+  
   setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   
