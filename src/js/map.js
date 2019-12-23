@@ -242,13 +242,7 @@ function handleInvalidCheckinLocation(retry, callback) {
       window.removeEventListener('iosLocation', _iosLocation, true);
     }, true);
   } catch (e) {
-    return callback({
-      latitude: 28.1234,
-      longitude: 77.1234,
-      lastLocationTime:Date.now(),
-      provider:'ios',
-      accuracy:30
-    });
+    
     failureScreen({
       message: 'There was a problem in detecting your location.',
       icon: 'location_off',

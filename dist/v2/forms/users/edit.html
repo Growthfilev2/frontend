@@ -37,7 +37,7 @@
                         id='submit-btn'>
                         <div class="mdc-button__ripple"></div>
                        
-                        <span class="mdc-button__label">JOIN</span>
+                        <span class="mdc-button__label">SUBMIT</span>
                     </button>
 
                 </div>
@@ -59,14 +59,9 @@
         const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
 
         function init(subscriptionTemplate) {
-            let index = 0
+           
             addManagerBtn.addEventListener('click', function () {
-                // index++
-                // setContactForManager({
-                //     displayName: 'Shikhar ' + index,
-                //     phoneNumber: '+91999928892' + index,
-                //     email: ''
-                // })
+              
                 callContact("getContactManager")
             });
 
@@ -75,9 +70,10 @@
                 Object.keys(managerObject).forEach(function (number) {
                     array.push(managerObject[number]);
                 })
-                subscriptionTemplate.share = array
-                delete subscriptionTemplate.user
-                parent.sendSubscriptionData(subscriptionTemplate);
+                subscriptionTemplate.phoneNumbers = array
+               
+                delete subscriptionTemplate.template;
+                parent.sendUsersData(subscriptionTemplate);
             })
         }
 
@@ -88,7 +84,6 @@
                 addManagerBtn.classList.remove('hidden')
                 if (!managerList.listElements.length) {
                     document.querySelector('#managers-cont .inline-flex').appendChild(addManagerBtn);
-
                     return;
                 }
             });

@@ -157,3 +157,25 @@
 .add-bank-container #submit-btn {
     float: right;
 }
+.id-container .image-container {
+    position: relative;
+}
+.id-container .image-container img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.id-container .image-container .add-icon-cont {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+ 
+}
+.id-container .image-container .add-icon-cont .mdc-icon-button {
+    border-radius: 50%;
+}
+.id-container .aadhar-container {
+    border-top: 1px solid #ccc;
+}

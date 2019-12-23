@@ -10,11 +10,11 @@ function chatView() {
 
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
-    if(!document.getElementById('search-btn')) {
-        const searchIcon = createElement('button',{
-            className:'material-icons mdc-top-app-bar__action-item mdc-icon-button',
-            id:'search-btn',
-            textContent:'search'
+    if (!document.getElementById('search-btn')) {
+        const searchIcon = createElement('button', {
+            className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
+            id: 'search-btn',
+            textContent: 'search'
         });
         document.getElementById('section-end').appendChild(searchIcon);
         searchIcon.addEventListener('click', function () {
@@ -22,24 +22,48 @@ function chatView() {
             search()
         })
     }
-  
-    
-    sectionContent.innerHTML = chatDom();
-    const addContactBtn = createFab('contacts');
 
-    addContactBtn.addEventListener('click',function() {
-        if (native.getName() === 'Android') {
-            AndroidInterface.getContact("chooseContact");
-            return
-        }
-        webkit.messageHandlers.getContact.postMessage("chooseContact");
-    })
-    document.querySelector('.user-chats').appendChild(addContactBtn);
+
+    sectionContent.innerHTML = chatDom();
+    firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
+        const isUserAdminOfOffice = isAdmin(idTokenResult);
+        if (!isUserAdminOfOffice) return;
+        const addContactBtn = createFab('person_add');
+
+        document.querySelector('.user-chats').appendChild(addContactBtn);
+
+        addContactBtn.addEventListener('click', function () {
+
+            if (idTokenResult.claims.admin.length == 1) {
+                history.pushState(['addView'], null, null);
+                addView({
+                    template: 'users',
+                    phoneNumbers: [],
+                    office: idTokenResult.claims.admin[0]
+                })
+                return;
+            }
+
+            const dialog = new Dialog('Choose Office', officeSelectionList(idTokenResult.claims.admin), 'choose-office-subscription').create('simple');
+            const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+            bottomDialog(dialog, ul)
+
+            ul.listen('MDCList:action', function (event) {
+                dialog.close()
+                history.pushState(['addView'], null, null);
+                addView({
+                    template: 'users',
+                    phoneNumbers: [],
+                    office: idTokenResult.claims.admin[event.detail.index]
+                })
+            })
+        })
+    });
     readLatestChats(true);
 }
 
 function chooseContact(contactString) {
-    
+
     const contactDetails = parseContact(contactString);
     contactDetails.mobile = contactDetails.phoneNumber;
     delete contactDetails.phoneNumber;
@@ -267,7 +291,7 @@ function readLatestChats(initList) {
         cursor.continue();
     }
     tx.oncomplete = function () {
-      
+
         const chatsEl = document.getElementById('chats')
         document.querySelector('.chats-container').classList.remove("hidden")
         if (!chatsEl) return
@@ -401,7 +425,7 @@ function isToday(comparisonTimestamp) {
 
 function enterChat(userRecord) {
     const sectionContent = document.querySelector('.tabs-section .data-container')
-    if(!sectionContent) return;
+    if (!sectionContent) return;
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
@@ -412,7 +436,7 @@ function enterChat(userRecord) {
     header.root_.classList.remove('hidden')
     console.log(header)
 
-    
+
     sectionContent.innerHTML = `
     <div class="page">
     <div class="marvel-device nexus5">
@@ -613,7 +637,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
             items = items.concat(getStatusArray(activity))
             console.log(items)
         };
-        
+
         const joinedId = addendumId + activityId
         document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
         document.getElementById(joinedId).appendChild(menuItemMap({
@@ -713,7 +737,7 @@ function createDynamicChips(text, id, leadingIcon) {
 
 function share(activity) {
     const sectionContent = document.querySelector('.tabs-section .data-container');
-    if(!sectionContent) return;
+    if (!sectionContent) return;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add People</span>
     `
@@ -743,7 +767,7 @@ function share(activity) {
 
     sectionContent.innerHTML = content;
 
-     setHeader( backIcon, searchIcon);
+    setHeader(backIcon, searchIcon);
     const chipSetEl = document.getElementById('share')
     const chipInit = new mdc.chips.MDCChipSet(chipSetEl)
     const ulSelector = document.getElementById('users-list')
@@ -924,14 +948,14 @@ function activityDomCustomer(activityRecord) {
 }
 
 function addAssignee(record, userArray) {
-  
+
     closeSearchBar();
-    appLocation(3).then(function(geopoint){
+    appLocation(3).then(function (geopoint) {
         requestCreator('share', {
             activityId: record.activityId,
             share: userArray
-        },geopoint).then(function () {
-            
+        }, geopoint).then(function () {
+
             snacks(`You added ${userArray.length} people`)
             history.back();
         }).catch(console.error)
@@ -941,16 +965,16 @@ function addAssignee(record, userArray) {
 
 
 function setActivityStatus(record, status) {
-  
-    appLocation(3).then(function(geopoint){
+
+    appLocation(3).then(function (geopoint) {
 
         requestCreator('statusChange', {
             activityId: record.activityId,
             status: status
-        },geopoint).then(function () {
+        }, geopoint).then(function () {
             snacks(`${record.activityName} is ${status}`)
-           
-    
+
+
         }).catch(console.error)
     }).catch(handleLocationError)
 }
@@ -1200,7 +1224,7 @@ function getUserChats(userRecord) {
             const val = input.value;
             if (!val) return;
 
-          
+
             const param = input.dataset.param
             const paramValue = input.dataset.paramValue
             const requestBody = {
@@ -1208,19 +1232,19 @@ function getUserChats(userRecord) {
             }
             requestBody[param] = paramValue
 
-            appLocation(3).then(function(geopoint){
-                requestCreator(input.dataset.name, requestBody,geopoint).then(function () {
+            appLocation(3).then(function (geopoint) {
+                requestCreator(input.dataset.name, requestBody, geopoint).then(function () {
                     parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                     setBottomScroll();
                     input.value = ''
-                  
+
                     input.dataset.name = 'dm';
                     input.dataset.param = 'assignee'
                     input.dataset.paramValue = userRecord.mobile
                     input.placeholder = 'Type a message'
                 }).catch(function (error) {
                     input.value = ''
-                   
+
                     snacks(error.message);
                 })
             }).catch(handleLocationError)

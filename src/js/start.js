@@ -325,12 +325,7 @@ function expandPlaceBox() {
                     createOfficeInit();
                 })
                
-                // firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
-                //     console.log(idTokenResult);
-                //     const isUserAdminOfOffice = isAdmin(idTokenResult, placeResult.name);
-                // }).catch(function (error) {
-                //     createOfficeInit();
-                // })
+            
             }).catch(function (error) {
                 console.log(error)
                 confirmFab.classList.remove('mdc-fab--exited')
@@ -359,11 +354,10 @@ function expandPlaceBox() {
     });
 }
 
-function isAdmin(idTokenResult, officeName) {
+function isAdmin(idTokenResult) {
     if (!idTokenResult.claims.hasOwnProperty('admin')) return;
     if (!Array.isArray(idTokenResult.claims.admin)) return;
     if (!idTokenResult.claims.admin.length) return;
-    if (idTokenResult.claims.admin.indexOf(officeName) == -1) return;
     return true;
 }
 

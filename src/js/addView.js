@@ -1,12 +1,12 @@
 function addView(sub) {
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">${sub.template === 'office' || sub.template === 'subscription' ? '' : sub.template}</span>
+    <span class="mdc-top-app-bar__title">${sub.template === 'subscription' ? 'Add other contacts' : sub.template === 'users' ? 'Add people' : sub.template}</span>
     `
     setHeader(backIcon, '');
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         document.getElementById('form-iframe').contentWindow.init(sub);
     })
@@ -23,38 +23,36 @@ function sendOfficeData(requestBody) {
     }).catch(handleLocationError);
 }
 
+function sendUsersData(formData) {
+    appLocation(3).then(function(geopoint){
+        requestCreator('checkIns',formData,geopoint).then(function(response){
+           history.back();
+           successDialog('')
+        }).catch(console.error);
+
+    }).catch(handleLocationError);
+}
+
 function sendSubscriptionData(formData) {
     appLocation(3).then(function(geopoint){
         requestCreator('subscription',formData,geopoint).then(function(response){
             ApplicationState.createdSubscription = true;
             localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
-            // console.log(response);
-            history.pushState(['reportView'], null, null);
-            reportView();
+            document.getElementById('app-header').classList.add('hidden');
+            loadingScreen();
+            const rootTx = db.transaction(['root'],'readwrite');
+            const store = rootTx.objectStore('root')
+            const uid = firebase.auth().currentUser.uid
+            store.get(uid).onsuccess = function(event){
+               const record = event.target.result;
+                record.fromTime = 0;
+                store.put(record)
+            }
+            rootTx.oncomplete = function(){
+                reloadPage();
+            }
         });
-    }).catch(handleLocationError);
-    
-    // getCheckInSubs().then(function (subs) {
-    //     if (!Object.keys(subs).length) {
-    //         document.getElementById('app-current-panel').classList.add('mdc-theme--primary-bg')
-    //         document.getElementById('app-current-panel').innerHTML = `
-    //             <p class='mdc-typography--headline6 text-center'>
-    //                 Please wait while you get check-in subscription
-    //             </p>
-    //             `;
-         
-    //         setTimeout(() => {
-    //             progressBar.close();
-    //             history.pushState(['reportView'], null, null);
-    //             reportView();
-    //         }, 2000);
-    //         return
-    //     }
-    //     progressBar.close();
-    //     history.pushState(['reportView'], null, null);
-    //     reportView();
-    // })
-
+    }).catch(handleLocationError);   
 }
 
 function sendFormToParent(formData) {

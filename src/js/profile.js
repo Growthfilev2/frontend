@@ -87,6 +87,11 @@ function createBaseDetails() {
     Bank accounts
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['bankAccount'], null, null);bankAccount()">edit</span>
   </li>
+  <li class='mdc-list-item'>
+    <span class="mdc-list-item__graphic material-icons" aria-hidden="true">verified_user</span>
+    Id proofs
+    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['idProofView'],null,null);idProofView(function(){history.back()})">edit</span>
+  </li>
   </ul>
 </div>`
 }
@@ -662,3 +667,5 @@ function isEmailValid(newEmail, currentEmail) {
   return !(newEmail === currentEmail)
 
 }
+
+

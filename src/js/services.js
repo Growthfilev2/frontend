@@ -76,13 +76,7 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude: 28.5503,
-      longitude: 77.2502,
-      lastLocationTime: Date.now(),
-      provider: 'HTML5',
-      accuracy: 30
-    })
+   
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -250,9 +244,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=58');
-
-
+const apiHandler = new Worker('js/apiHandler.js?version=70');
 
 
 function requestCreator(requestType, requestBody, geopoint) {
@@ -399,11 +391,18 @@ function updateIosLocation(geopointIos) {
 
 function handleComponentUpdation(readResponse) {
   console.log(readResponse)
+  if(readResponse.reloadApp) {
+    reloadPage();
+    return;
+  }
+
   if (readResponse.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
+
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     })
+   
   }
   if (!history.state) return;
 
@@ -898,7 +897,6 @@ function handleTemplateListClick(listInit) {
       return
     }
 
-
     const dialog = new Dialog('Choose Office', officeSelectionList(valueSelectedList), 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
     bottomDialog(dialog, ul)
@@ -916,7 +914,7 @@ function officeSelectionList(subs) {
   const officeList = `<ul class='mdc-list subscription-list' id='dialog-office'>
     ${subs.map(function(sub){
       return `<li class='mdc-list-item'>
-      ${sub.office}
+      ${typeof sub === 'object' ? sub.office : sub}
       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
         keyboard_arrow_right
       </span>
@@ -926,6 +924,10 @@ function officeSelectionList(subs) {
 
   return officeList;
 }
+
+
+
+
 
 
 
@@ -1300,8 +1302,10 @@ function idProofView(callback) {
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
   <div class='id-container app-padding'>
-  <button class='mdc-button mdc-theme--secondary' id='skip-btn'>SKIP</button>
-    <div class='pan-container'>
+  ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-theme--secondary' id='skip-btn'>SKIP</button>` :'' }
+ 
+    <div class='pan-container pb-10'>
+    <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter PAN card details</h3>
       <div class='text-field-container mt-10 mb-10'>
         ${textField({
           id:'pan-number',
@@ -1316,20 +1320,40 @@ function idProofView(callback) {
     </div>
     <div class='pan-images mdc-layout-grid__inner'>
         <div class='mdc-layout-grid__cell'>
-          <img src='./img/placeholder.png' class='width-100'>
-          <div class="mdc-image-list__supporting">
-            <span class="mdc-image-list__label">PAN FRONT</span>
+          <div class='image-container'>
+            <img src='./img/placeholder.png' class='width-100' data-name="panFront">
+           
+            <div class='add-icon-cont'>
+            <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='pan-front-btn' data-name="panFront">
+              <div class="mdc-fab__ripple"></div>
+              <span class="mdc-fab__icon material-icons">add_a_photo</span>
+            </button>
+            </div>
           </div>
+          <div class="mdc-image-list__supporting">
+          <span class="mdc-image-list__label">PAN FRONT</span>
+        </div>
         </div>
         <div class='mdc-layout-grid__cell'>
-          <img src='./img/placeholder.png' class='width-100'>
-          <div class="mdc-image-list__supporting">
-            <span class="mdc-image-list__label">PAN BACK</span>
+        <div class='image-container'>
+            <img src='./img/placeholder.png' class='width-100' data-name="panBack">
+            
+            <div class='add-icon-cont'>
+            <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='pan-back-btn' data-name="panBack">
+              <div class="mdc-fab__ripple"></div>
+              <span class="mdc-fab__icon material-icons">add_a_photo</span>
+            </button>
           </div>
+            
+        </div>
+        <div class="mdc-image-list__supporting">
+              <span class="mdc-image-list__label">PAN BACK</span>
+            </div> 
         </div>
     </div>
     </div>
     <div class='aadhar-container'>
+        <h3 class='mdc-typography--headline6 mdc-theme--primary'>Enter AADHAR card details</h3>
       <div class='text-field-container mt-10 mb-10'>
         ${textField({
           id:'aadhar-number',
@@ -1342,7 +1366,40 @@ function idProofView(callback) {
           <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
         </div>
       </div>
-      <div class='aadhar-images'></div>
+      <div class='aadhar-images mdc-layout-grid__inner'>
+      <div class='mdc-layout-grid__cell'>
+      <div class='image-container'>
+        <img src='./img/placeholder.png' class='width-100' data-name="aadharFront">
+       
+        <div class='add-icon-cont'>
+        <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='aadhar-front-btn' data-name="aadharFront">
+          <div class="mdc-fab__ripple"></div>
+          <span class="mdc-fab__icon material-icons">add_a_photo</span>
+        </button>
+        </div>
+      </div>
+      <div class="mdc-image-list__supporting">
+      <span class="mdc-image-list__label">AADHAR FRONT</span>
+    </div>
+    </div>
+    <div class='mdc-layout-grid__cell'>
+    <div class='image-container'>
+        <img src='./img/placeholder.png' class='width-100' data-name="aadharBack">
+        
+        <div class='add-icon-cont'>
+        <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='aadhar-back-btn' data-name="aadharBack">
+          <div class="mdc-fab__ripple"></div>
+          <span class="mdc-fab__icon material-icons">add_a_photo</span>
+        </button>
+      </div>
+        
+    </div>
+    <div class="mdc-image-list__supporting">
+          <span class="mdc-image-list__label">AADHAR BACK</span>
+        </div> 
+    </div>
+</div>
+      </div>
     </div>
    
        
@@ -1354,6 +1411,26 @@ function idProofView(callback) {
   const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
   const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
   const skipBtn = document.getElementById('skip-btn');
+
+  [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function(el){
+    el.addEventListener('click',function(){
+      if (parent.native.getName() === 'Android') {
+        AndroidInterface.startCamera(el.dataset.name);
+
+        return;
+    }
+    webkit.messageHandlers.startCamera.postMessage(el.dataset.name)
+    })
+  })
+
+  const submitBtn = document.getElementById('submit-btn');
+  new mdc.ripple.MDCRipple(submitBtn);
+  submitBtn.addEventListener("click",function(){
+    snacks('Service unavailable right now. please try again later');
+    window.scrollTo(0,0);
+
+  })
+  if(!skipBtn) return;
   new mdc.ripple.MDCRipple(skipBtn);
   skipBtn.addEventListener('click', function () {
     const tx = db.transaction('root', 'readwrite');
@@ -1369,4 +1446,30 @@ function idProofView(callback) {
       }
     }
   })
+}
+
+
+function aadharFront(base64) {
+  const img = document.querySelector(`[data-name="aadharFront"]`);
+  if(img) {
+    img.src = `data:image/jpg;base64,${base64}`
+  }
+}
+function aadharBack(base64) {
+  const img = document.querySelector(`[data-name="aadharBack"]`);
+  if(img) {
+    img.src = `data:image/jpg;base64,${base64}`
+  }
+}
+function panFront(base64) {
+  const img = document.querySelector(`[data-name="panFront"]`);
+  if(img) {
+    img.src = `data:image/jpg;base64,${base64}`
+  }
+}
+function panBack(base64) {
+  const img = document.querySelector(`[data-name="panBack"]`);
+  if(img) {
+    img.src = `data:image/jpg;base64,${base64}`
+  }
 }

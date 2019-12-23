@@ -18,17 +18,20 @@ const requestFunctionCaller = {
   changePhoneNumber: changePhoneNumber,
   newBankAccount: newBankAccount,
   removeBankAccount: removeBankAccount,
-  subscription:createSubscription,
-  createOffice:createOffice,
-  searchOffice:searchOffice
+  subscription: createSubscription,
+  createOffice: createOffice,
+  searchOffice: searchOffice,
+  checkIns:checkIns
 }
 
 function sendSuccessRequestToMainThread(response, id) {
+  response.reloadApp = reloadApp;
   self.postMessage({
     response: response,
     success: true,
-    id: id
+    id: id,
   })
+  reloadApp = false;
 }
 
 function sendErrorRequestToMainThread(error) {
@@ -39,7 +42,7 @@ function sendErrorRequestToMainThread(error) {
     apiRejection: false,
     success: false,
     id: error.id,
-    requestType:error.requestType
+    requestType: error.requestType
   }
   if (error.stack) {
     errorObject.stack = error.stack
@@ -58,7 +61,7 @@ self.onmessage = function (event) {
   const workerId = event.data.id
   if (event.data.type === 'geolocationApi') {
     geolocationApi(event.data.body, event.data.meta, 3).then(function (response) {
-      sendSuccessRequestToMainThread(response,workerId)
+      sendSuccessRequestToMainThread(response, workerId)
     }).catch(function (error) {
       error.id = workerId;
       self.postMessage(error);
@@ -78,17 +81,17 @@ self.onmessage = function (event) {
         payload: event.data,
         db: db
       }).then(function (response) {
-        sendSuccessRequestToMainThread(response,workerId)
+        sendSuccessRequestToMainThread(response, workerId)
       }).catch(function (error) {
         error.id = workerId,
-        error.requestType = event.data.type
+          error.requestType = event.data.type
         sendErrorRequestToMainThread(error)
       })
       return;
     }
 
     requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (response) {
-      sendSuccessRequestToMainThread(response,workerId)
+      sendSuccessRequestToMainThread(response, workerId)
     }).catch(function (error) {
       error.id = workerId;
       error.requestType = event.data.type
@@ -117,7 +120,7 @@ function handleNow(eventData, db) {
 
       if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
         removeFromOffice(response.removeFromOffice, eventData.meta, db).then(function (response) {
-          sendSuccessRequestToMainThread(response,workerId)
+          sendSuccessRequestToMainThread(response, workerId)
         }).catch(function (error) {
           error.id = eventData.id;
           error.requestType = eventData.type
@@ -252,7 +255,7 @@ function changePhoneNumber(body, meta) {
 
 
 function removeBankAccount(body, meta) {
-  
+
   const req = {
     method: 'DELETE',
     url: `${meta.apiUrl}services/accounts`,
@@ -274,7 +277,7 @@ function newBankAccount(body, meta) {
   return http(req)
 }
 
-function createOffice(body,meta) {
+function createOffice(body, meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}services/office`,
@@ -285,7 +288,7 @@ function createOffice(body,meta) {
   return http(req)
 }
 
-function searchOffice(body,meta) {
+function searchOffice(body, meta) {
   const req = {
     method: 'GET',
     url: `${meta.apiUrl}services/search?q=${body.query}`,
@@ -296,7 +299,18 @@ function searchOffice(body,meta) {
   return http(req)
 }
 
-function createSubscription(body,meta) {
+function checkIns(body,meta) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}services/checkIns`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function createSubscription(body, meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}services/subscription`,
@@ -647,15 +661,27 @@ function removeActivityFromDB(id, updateTx) {
 
 }
 
-function updateSubscription(subscription, tx) {
+function updateSubscription(subscription, tx, fromTime) {
   const store = tx.objectStore('subscriptions');
   const index = store.index('officeTemplate');
+
+  if (subscription.template === 'check-in' && fromTime !== 0) {
+    index.get([subscription.office, subscription.template]).onsuccess = function (event) {
+      const record = event.target.result;
+      if (record) {
+        reloadApp = false
+      } else {
+        reloadApp = true;
+      }
+    }
+  }
+
   index.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
     const cursor = event.target.result;
     if (!cursor) {
       store.put(subscription)
       return;
-    }
+    };
     const deleteReq = cursor.delete();
     cursor.continue();
     deleteReq.onsuccess = function () {
@@ -666,6 +692,7 @@ function updateSubscription(subscription, tx) {
 
 
 
+let reloadApp = false;
 
 function successResponse(read, param, db, resolve, reject) {
 
@@ -689,7 +716,7 @@ function successResponse(read, param, db, resolve, reject) {
         removeActivityFromDB(addendum.activityId, updateTx);
       } else {
         removeUserFromAssigneeInActivity(addendum, updateTx)
-      }
+      };
     };
 
 
@@ -723,16 +750,14 @@ function successResponse(read, param, db, resolve, reject) {
     }
   })
 
-  if (read.locations.length) {
 
-    const mapObjectStore = updateTx.objectStore('map')
-    var clearMap = mapObjectStore.clear();
-    clearMap.onsuccess = function () {
-      read.locations.forEach(function (location) {
-        mapObjectStore.add(location);
-      });
-    }
-  }
+
+  const mapObjectStore = updateTx.objectStore('map')
+
+  read.locations.forEach(function (location) {
+    mapObjectStore.add(location);
+  });
+
 
   updateAttendance(read.attendances, attendaceStore)
   updateReimbursements(read.reimbursements, reimbursementStore)
@@ -773,7 +798,7 @@ function successResponse(read, param, db, resolve, reject) {
 
     const currentAddendums = userTimestamp[number]
     currentAddendums.forEach(function (addendum) {
-      if (addendum.isComment && addendum.assignee) return updateUserStore(userStore, number, addendum,counter);
+      if (addendum.isComment && addendum.assignee) return updateUserStore(userStore, number, addendum, counter);
       const activityId = addendum.activityId
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
@@ -784,20 +809,22 @@ function successResponse(read, param, db, resolve, reject) {
 
           addendumObjectStore.put(addendum);
           if (number === param.user.phoneNumber) {
-            updateUserStore(userStore, user.phoneNumber, addendum,counter)
+            updateUserStore(userStore, user.phoneNumber, addendum, counter)
           }
           if (number === user.phoneNumber) {
-            updateUserStore(userStore, number, addendum,counter)
+            updateUserStore(userStore, number, addendum, counter)
           }
         })
       }
     })
   })
 
+
   read.templates.forEach(function (subscription) {
     if (subscription.status !== 'CANCELLED') {
-      updateSubscription(subscription, updateTx)
+      updateSubscription(subscription, updateTx, read.fromTime)
     }
+
   })
 
   updateRoot(read, updateTx, param.user.uid, counter);
@@ -810,7 +837,7 @@ function successResponse(read, param, db, resolve, reject) {
   }
 }
 
-function updateUserStore(userStore, phoneNumber, currentAddendum,counter) {
+function updateUserStore(userStore, phoneNumber, currentAddendum, counter) {
   userStore.get(phoneNumber).onsuccess = function (event) {
     let userRecord = event.target.result
     if (!userRecord) {
