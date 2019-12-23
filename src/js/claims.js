@@ -1,6 +1,8 @@
-function expenseView(sectionContent) {
+function expenseView() {
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+
+    if (!sectionContent) return;
     sectionContent.innerHTML = reimDom();
-    sectionContent.dataset.view = 'reimbursements'
     const el = document.getElementById('reim-view')
     getSubscription('', 'claim').then(function (subs) {
         if (!subs.length) return;
@@ -149,7 +151,7 @@ function convertAmountToCurrency(amount, currency) {
 }
 
 function reimDom() {
-    return `<div class='reim-section' id='reim-view'>
+    return `<div class='reim-section report-view' id='reim-view'>
         <div id='reimbursement-cards' class='mdc-layout-grid__inner'></div>
     `
 }

@@ -8,25 +8,67 @@ const duration = 800;
 
 function chatView() {
 
-    document.getElementById('start-load').classList.add('hidden');
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Chat</span>
-    `
-    const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
-        search
-    </a>`
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+    if (!sectionContent) return;
+    if (!document.getElementById('search-btn')) {
+        const searchIcon = createElement('button', {
+            className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
+            id: 'search-btn',
+            textContent: 'search'
+        });
+        document.getElementById('section-end').appendChild(searchIcon);
+        searchIcon.addEventListener('click', function () {
+            history.pushState(['searchChats'], null, null)
+            search()
+        })
+    }
 
-    const header = getHeader('app-header', backIcon, searchIcon);
-    header.root_.classList.remove('hidden')
-    if (!document.getElementById('search-btn')) return;
-    document.getElementById('search-btn').addEventListener('click', function () {
-        history.pushState(['searchChats'], null, null)
-        search()
-    })
-    document.getElementById('app-current-panel').innerHTML = chatDom()
 
+    sectionContent.innerHTML = chatDom();
+    firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
+        const isUserAdminOfOffice = isAdmin(idTokenResult);
+        if (!isUserAdminOfOffice) return;
+        const addContactBtn = createFab('person_add');
+
+        document.querySelector('.user-chats').appendChild(addContactBtn);
+
+        addContactBtn.addEventListener('click', function () {
+
+            if (idTokenResult.claims.admin.length == 1) {
+                history.pushState(['addView'], null, null);
+                addView({
+                    template: 'users',
+                    phoneNumbers: [],
+                    office: idTokenResult.claims.admin[0]
+                })
+                return;
+            }
+
+            const dialog = new Dialog('Choose Office', officeSelectionList(idTokenResult.claims.admin), 'choose-office-subscription').create('simple');
+            const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+            bottomDialog(dialog, ul)
+
+            ul.listen('MDCList:action', function (event) {
+                dialog.close()
+                history.pushState(['addView'], null, null);
+                addView({
+                    template: 'users',
+                    phoneNumbers: [],
+                    office: idTokenResult.claims.admin[event.detail.index]
+                })
+            })
+        })
+    });
     readLatestChats(true);
-    getOtherContacts();
+}
+
+function chooseContact(contactString) {
+
+    const contactDetails = parseContact(contactString);
+    contactDetails.mobile = contactDetails.phoneNumber;
+    delete contactDetails.phoneNumber;
+    history.pushState(['enterChat', contactDetails], null, null);
+    enterChat(contactDetails);
 }
 
 function chatDom() {
@@ -39,13 +81,13 @@ function chatDom() {
 <div class="mdc-list-group">
  <h3 id='no-result-found' style='text-align:center'></h3>   
 <div class='chats-container'>
-<h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Chats</h3>
+<h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6"></h3>
 <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
 
 </ul>
 </div>
 <div class='contacts-container'>
-  <h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Other Contacts</h3>
+  <h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6"></h3>
   <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='all-contacts'>
   </ul>
 </div>
@@ -112,16 +154,20 @@ function search() {
             }
             if (chatsEl) {
                 if (!currentChatsArray.length) {
+                    document.querySelector('.chats-container h3').textContent = ''
                     document.querySelector('.chats-container').classList.add("hidden")
                 } else {
+                    document.querySelector('.chats-container h3').textContent = 'Chats'
                     document.querySelector('.chats-container').classList.remove("hidden")
                 }
                 chatsEl.innerHTML = currentChats
             }
             if (contactsEl) {
                 if (!currentContacts) {
+                    document.querySelector('.contacts-container h3').textContent = ''
                     document.querySelector('.contacts-container').classList.add("hidden")
                 } else {
+                    document.querySelector('.contacts-container h3').textContent = 'Other Contacts'
                     document.querySelector('.contacts-container').classList.remove("hidden")
                 }
                 contactsEl.innerHTML = currentContacts;
@@ -245,7 +291,7 @@ function readLatestChats(initList) {
         cursor.continue();
     }
     tx.oncomplete = function () {
-      
+
         const chatsEl = document.getElementById('chats')
         document.querySelector('.chats-container').classList.remove("hidden")
         if (!chatsEl) return
@@ -378,24 +424,23 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
- 
+    const sectionContent = document.querySelector('.tabs-section .data-container')
+    if (!sectionContent) return;
+
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
 
-    const header = getHeader('app-header', backIcon, '');
+    const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
     console.log(header)
 
 
-    document.getElementById('app-current-panel').innerHTML = `
+    sectionContent.innerHTML = `
     <div class="page">
     <div class="marvel-device nexus5">
-   
-      
-      
-      
+  
       <div class="screen">
         <div class="screen-container">
           
@@ -592,7 +637,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
             items = items.concat(getStatusArray(activity))
             console.log(items)
         };
-        
+
         const joinedId = addendumId + activityId
         document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
         document.getElementById(joinedId).appendChild(menuItemMap({
@@ -691,7 +736,8 @@ function createDynamicChips(text, id, leadingIcon) {
 }
 
 function share(activity) {
-
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+    if (!sectionContent) return;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add People</span>
     `
@@ -719,8 +765,9 @@ function share(activity) {
         alreadySelected[ass.phoneNumber] = true
     });
 
-    document.getElementById('app-current-panel').innerHTML = content;
-    const header = getHeader('app-header', backIcon, searchIcon);
+    sectionContent.innerHTML = content;
+
+    setHeader(backIcon, searchIcon);
     const chipSetEl = document.getElementById('share')
     const chipInit = new mdc.chips.MDCChipSet(chipSetEl)
     const ulSelector = document.getElementById('users-list')
@@ -901,40 +948,34 @@ function activityDomCustomer(activityRecord) {
 }
 
 function addAssignee(record, userArray) {
-    progressBar.open();
+
     closeSearchBar();
-    appLocation(3).then(function(geopoint){
+    appLocation(3).then(function (geopoint) {
         requestCreator('share', {
             activityId: record.activityId,
             share: userArray
-        },geopoint).then(function () {
-            progressBar.close();
-            snacks(`You Added ${userArray.length} People`)
+        }, geopoint).then(function () {
+
+            snacks(`You added ${userArray.length} people`)
             history.back();
-        }).catch(function (error) {
-            snacks(error.response.message)
-            progressBar.close();
-        })
+        }).catch(console.error)
 
     }).catch(handleLocationError)
 }
 
 
 function setActivityStatus(record, status) {
-    progressBar.open();
-    appLocation(3).then(function(geopoint){
+
+    appLocation(3).then(function (geopoint) {
 
         requestCreator('statusChange', {
             activityId: record.activityId,
             status: status
-        },geopoint).then(function () {
+        }, geopoint).then(function () {
             snacks(`${record.activityName} is ${status}`)
-            progressBar.close();
-    
-        }).catch(function (error) {
-            snacks(error.response.message);
-            progressBar.close();
-        })
+
+
+        }).catch(console.error)
     }).catch(handleLocationError)
 }
 
@@ -1183,7 +1224,7 @@ function getUserChats(userRecord) {
             const val = input.value;
             if (!val) return;
 
-            progressBar.open()
+
             const param = input.dataset.param
             const paramValue = input.dataset.paramValue
             const requestBody = {
@@ -1191,20 +1232,20 @@ function getUserChats(userRecord) {
             }
             requestBody[param] = paramValue
 
-            appLocation(3).then(function(geopoint){
-                requestCreator(input.dataset.name, requestBody,geopoint).then(function () {
+            appLocation(3).then(function (geopoint) {
+                requestCreator(input.dataset.name, requestBody, geopoint).then(function () {
                     parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                     setBottomScroll();
                     input.value = ''
-                    progressBar.close()
+
                     input.dataset.name = 'dm';
                     input.dataset.param = 'assignee'
                     input.dataset.paramValue = userRecord.mobile
                     input.placeholder = 'Type a message'
                 }).catch(function (error) {
                     input.value = ''
-                    progressBar.close()
-                    snacks(error.response.message);
+
+                    snacks(error.message);
                 })
             }).catch(handleLocationError)
         });

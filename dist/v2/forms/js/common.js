@@ -1,3 +1,11 @@
+function callContact(functionName) {
+    if (parent.native.getName() === 'Android') {
+        AndroidInterface.getContact(functionName);
+        return
+    }
+    webkit.messageHandlers.getContact.postMessage(functionName);
+}
+
 function createDate(dateObject) {
     console.log(dateObject)
     let month = dateObject.getMonth() + 1;
@@ -8,7 +16,7 @@ function createDate(dateObject) {
     if (date < 10) {
         date = '0' + date
     };
-    
+
     return `${dateObject.getFullYear()}-${month}-${date}`
 }
 
@@ -27,15 +35,15 @@ function showSecondDate(event, className, dataName) {
 
 
 function initializeDates(subscriptionTemplate, defaultDateString) {
-   
+
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);
-        startfield.addEventListener('change',function(evt){
+        startfield.addEventListener('change', function (evt) {
             endField.value = evt.target.value
             endField.min = evt.target.value
         });
-        startfield.value = endField.value = endField.min =  defaultDateString
+        startfield.value = endField.value = endField.min = defaultDateString
     });
 }
 
@@ -45,7 +53,7 @@ function getNewSchedule(subscriptionTemplate) {
     let index = 0;
     let isScheduleValid = false;
     const length = subscriptionTemplate.schedule.length;
-    for (index;index < length; index++) {
+    for (index; index < length; index++) {
         const name = subscriptionTemplate.schedule[index]
 
         const startDate = document.querySelector(`[data-name="${name} start date"]`).value;
@@ -59,9 +67,9 @@ function getNewSchedule(subscriptionTemplate) {
             break;
         }
         const startDate_UTS = Date.parse(startDate);
-        const endDate_UTS = Date.parse(endDate) 
-        if(startDate_UTS > endDate_UTS) {
-            parent.snacks('start date in ' + name +' cannot be greater than end date');
+        const endDate_UTS = Date.parse(endDate)
+        if (startDate_UTS > endDate_UTS) {
+            parent.snacks('start date in ' + name + ' cannot be greater than end date');
             break;
         }
         isScheduleValid = true;
@@ -71,9 +79,9 @@ function getNewSchedule(subscriptionTemplate) {
             endTime: endDate_UTS,
         })
     }
-    if(isScheduleValid) return newSchedules;
+    if (isScheduleValid) return newSchedules;
 
-    return ;
+    return;
 
 }
 
@@ -83,6 +91,7 @@ function getDropDownContent(office, template, indexName) {
             data: [],
             string: ''
         }
+        const name_object = {}
         const tx = parent.db.transaction(['children'])
         const keyRange = IDBKeyRange.only([office, template])
         tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
@@ -92,9 +101,14 @@ function getDropDownContent(office, template, indexName) {
                 cursor.continue();
                 return;
             }
-
-            result.string += ` <option value="${cursor.value.attachment.Name.value}">
-                    ${cursor.value.attachment.Name.value}
+            const value = cursor.value.attachment.Name.value
+            if(name[value]) {
+                cursor.continue();
+                return;
+            }
+            name_object[value] = true;
+            result.string += ` <option value="${value}">
+                    ${value}
                   </option>`
             cursor.continue();
         }
@@ -126,3 +140,54 @@ function createProductAmount(product) {
     `
     return li;
 }
+
+function createElement(tagName, attrs) {
+    const el = document.createElement(tagName)
+    if (attrs) {
+        Object.keys(attrs).forEach(function (attr) {
+            el[attr] = attrs[attr]
+        })
+    }
+    return el;
+}
+
+function createPhoneNumberLi(contactObject,withoutIcon,callback) {
+
+    const li = createElement('li', {
+        className: 'mdc-list-item',
+    })
+    li.dataset.number = contactObject.phoneNumber;
+
+    li.innerHTML = `<span class="mdc-list-item__text">
+        <span class="mdc-list-item__primary-text">${contactObject.displayName}</span>
+        <span class="mdc-list-item__secondary-text">${contactObject.phoneNumber}</span>
+    </span>`
+    if(withoutIcon) {
+        return li;
+    }
+    const clearIcon = createElement('span',{
+        className:'mdc-list-item__meta material-icons mdc-theme--error',
+        textContent:'clear'
+    })
+    clearIcon.addEventListener('click',function(){
+        li.remove();
+        if(callback) {
+            callback();
+        }
+    })
+    li.appendChild(clearIcon);    
+    return li
+}
+
+
+
+function setHelperInvalid(field,shouldShake = true) {
+    field.focus();
+    field.foundation_.setValid(false);
+    field.foundation_.adapter_.shakeLabel(shouldShake);
+  }
+  
+  function setHelperValid(field) {
+    field.focus();
+    field.foundation_.setValid(true);
+  }

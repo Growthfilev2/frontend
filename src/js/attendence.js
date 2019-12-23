@@ -1,7 +1,9 @@
-function attendenceView(sectionContent, yesterdayAttendanceRecord) {
+function attendanceView(yesterdayAttendanceRecord) {
+  const sectionContent = document.querySelector('.tabs-section .data-container');
+
+  if (!sectionContent) return;
   sectionContent.innerHTML = attendanceDom();
-  sectionContent.dataset.view = 'attendence'
-  document.getElementById('start-load').classList.add('hidden')
+  
   const el = document.getElementById('attendance-view')
   getSubscription('', 'leave').then(function (subs) {
     if (!subs.length) return;
@@ -25,7 +27,6 @@ function attendenceView(sectionContent, yesterdayAttendanceRecord) {
   }).catch(function (error) {
     createAttendanceCard();
   });
-
 }
 
 
@@ -38,7 +39,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
       }
       return;
     }
-    document.getElementById('start-load').classList.add('hidden')
+    
 
     let monthlyString = ''
     let month;
@@ -67,7 +68,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
 
   }).catch(function (error) {
     console.log(error)
-    document.getElementById('start-load').classList.add('hidden')
+    
     handleError({
       message: error.message,
       body: {
@@ -191,7 +192,7 @@ function attendanceStatusType(data) {
 }
 
 function attendanceDom() {
-  return `<div class='attendance-section' id='attendance-view'>
+  return `<div class='attendance-section report-view' id='attendance-view'>
     <div class='monthly-stat  mdc-layout-grid__inner' id='attendance-cards'></div>
   </div>`
 }
@@ -254,6 +255,9 @@ function getMonthlyData() {
         if (!cursor.value.hasOwnProperty('attendance')) {
           cursor.continue();
           return;
+        };
+        if (!cursor.value.addendum) {
+          cursor.value.addendum = [];
         }
         if (!cursor.value.hasOwnProperty('addendum')) {
           cursor.value.addendum = [];
@@ -305,7 +309,7 @@ function checkStatusSubscription(event) {
   }
   tx.oncomplete = function () {
     if (!subscription) {
-      snacks(`You Don't Have ${formatTextToTitleCase(dataset.template)} Subscription`);
+      snacks(`You don't have ${dataset.template} subscription`);
       return
     }
 

@@ -2,7 +2,8 @@ var map;
 var globMark;
 let o;
 let selectedSubs;
-ApplicationState = {
+
+ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   location: '',
   knownLocation: false,
   venue: '',
@@ -13,11 +14,10 @@ var markersObject = {
   markers: [],
   infowindow: []
 }
-var geocodeVenue = '';
 
 function failureScreen(error, callback) {
 
-  document.getElementById('start-load').classList.add('hidden');
+  
   document.getElementById('app-header').classList.add('hidden')
 
   document.getElementById('app-current-panel').innerHTML = `
@@ -44,39 +44,48 @@ function handleLocationError(error, onAppOpen) {
   if (progressBar) {
     progressBar.close()
   }
-  if (document.getElementById('check-in-prog')) {
-    document.getElementById('check-in-prog').classList.add('mdc-linear-progress--closed')
+  if (document.getElementById('selection-box-prog')) {
+    document.getElementById('selection-box-prog').classList.add('mdc-linear-progress--closed')
   }
 
   switch (error.message) {
     case 'THRESHOLD EXCEED':
-      mapView(error.body.geopoint)
+      if (history.state)
+        mapView(error.body.geopoint);
       break;
+
     case 'BROKEN INTERNET CONNECTION':
       if (onAppOpen) {
         failureScreen({
           message: 'You Are Currently Offline. Please Check Your Internet Connection',
           icon: 'wifi_off',
           title: 'BROKEN INTERNET CONNECTION'
-        }, openMap);
+        }, function(){
+          loadingScreen();
+          openMap();
+        });
         return;
-      }
+      };
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
-
+      
     case 'TURN ON YOUR WIFI':
       if (onAppOpen) {
         failureScreen({
           message: 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location',
           icon: 'wifi_off',
           title: 'TURN ON YOUR WIFI'
-        }, openMap);
+        }, function(){
+          loadingScreen();
+          openMap();
+        });
         return;
       }
       alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
       break;
+
     default:
       handleError({
         message: error.message,
@@ -90,7 +99,10 @@ function handleLocationError(error, onAppOpen) {
           message: 'There was a problem in detecting your location. Please try again later',
           icon: 'location_off',
           title: 'Failed To Detect Location'
-        }, openMap);
+        }, function(){
+          loadingScreen();
+          openMap();
+        });
         return;
       }
       alertDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
@@ -134,7 +146,6 @@ function mapView(location) {
       latLngBounds: o,
       strictBounds: true,
     },
-
   })
 
   var marker = new google.maps.Marker({
@@ -151,7 +162,7 @@ function mapView(location) {
     fillOpacity: 0.35,
     map: map,
     center: latLng,
-    radius: location.accuracy
+    radius: location.accuracy < 100 ? location.accuracy * 2 : location.accuracy
   });
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
@@ -167,7 +178,6 @@ function mapView(location) {
 }
 
 function createUnkownCheckIn(cardProd, geopoint, retry) {
-  document.getElementById('start-load').classList.remove('hidden');
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
@@ -175,7 +185,6 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
   offices.forEach(function (office) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
-
     prom.push(requestCreator('create', fillVenueInCheckInSub(copy, ''), geopoint))
   })
 
@@ -187,30 +196,32 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
     if (cardProd) {
       cardProd.close()
     }
-    document.getElementById('start-load').classList.add('hidden');
+   ;
 
     successDialog('Check-In Created')
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    getSuggestions()
+    
+
+    history.pushState(['reportView'], null, null)
+    reportView()
   }).catch(function (error) {
 
-    if (error.response.message === 'Invalid check-in') {
+
+    if (error.message === 'Invalid check-in') {
+
       handleInvalidCheckinLocation(retry, function (newGeopoint) {
         ApplicationState.location = newGeopoint;
         createUnkownCheckIn(cardProd, newGeopoint, true);
       });
       return
     };
-
-    document.getElementById('start-load').classList.add('hidden');
-    snacks(error.response.message);
     if (cardProd) {
       cardProd.close()
     }
+    
   })
 }
-
 
 
 function handleInvalidCheckinLocation(retry, callback) {
@@ -239,6 +250,7 @@ function handleInvalidCheckinLocation(retry, callback) {
       window.removeEventListener('iosLocation', _iosLocation, true);
     }, true);
   } catch (e) {
+    
     failureScreen({
       message: 'There was a problem in detecting your location.',
       icon: 'location_off',
@@ -248,8 +260,9 @@ function handleInvalidCheckinLocation(retry, callback) {
 }
 
 
+
 function loadCardData(venues, map, geopoint) {
-  document.getElementById('start-load').classList.add('hidden');
+  ;
   ApplicationState.knownLocation = true;
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${venues.map(function(venue) {
@@ -262,7 +275,7 @@ function loadCardData(venues, map, geopoint) {
   document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
   document.querySelector('#selection-box .content-body').innerHTML = venuesList;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
-  const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
+  const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('selection-box-prog'));
 
   const ul = new mdc.list.MDCList(document.getElementById('selected-venue'))
   ul.singleSelection = true;
@@ -285,16 +298,15 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     cardProd.open();
   }
 
-  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue),geopoint).then(function () {
+  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue), geopoint).then(function () {
 
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    getSuggestions();
+    history.pushState(['reportView'], null, null)
+    reportView();
   }).catch(function (error) {
-   
-
-    if (error.response.message === 'Invalid check-in') {
+    if (error.message === 'Invalid check-in') {
 
       handleInvalidCheckinLocation(retry, function (newGeopoint) {
         ApplicationState.location = newGeopoint;
@@ -302,7 +314,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
       });
       return
     };
-    snacks(error.response.message);
+   
     if (cardProd) {
       cardProd.close()
     };
@@ -335,15 +347,10 @@ function venueList(venue) {
 
 }
 
-function showNoOfficeFound() {
-  const content = `<h3 class='mdc-typography--headline6'>No Office Found For ${firebase.auth().currentUser.phoneNumber}</h3>
-  <p>Please Contact Your Administrator</p>
-  `
-  const dialog = new Dialog('No Office Found', content).create('simple');
-  dialog.scrimClickAction = ''
-  dialog.open();
-}
 
+function newOfficeView() {
+
+}
 
 
 function selectionBox() {
@@ -355,7 +362,7 @@ function selectionBox() {
   </div>
   <div role="progressbar"
     class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-    id='check-in-prog'>
+    id='selection-box-prog'>
     <div class="mdc-linear-progress__buffering-dots"></div>
     <div class="mdc-linear-progress__buffer"></div>
     <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
@@ -369,8 +376,6 @@ function selectionBox() {
   <div class="content-body">
   </div>
   </div>
-
-
 `
 }
 
@@ -404,12 +409,33 @@ function mapDom() {
   `
 }
 
-function snapView() {
+function snapView(selector) {
+  document.querySelector(selector).innerHTML = `
+  <div class='snap-container'>
+  <h6 class='mdc-typography--headline5 text-center'>
+    Create a photo check-in
+  </h6>
+  <div class='landing-page-container text-center'>
+    <button class="mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary">
+      <div class="mdc-fab__ripple"></div>
+      <span class="material-icons mdc-fab__icon">camera</span>
+      <span class="mdc-fab__label">Take photo</span>
+    </button>
+  </div>
+  </div>
+  `;
+
+  document.querySelector('.snap-container .mdc-fab').addEventListener('click', openCamera)
+  openCamera();
+
+}
+
+function openCamera() {
   if (native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return
   }
-  webkit.messageHandlers.startCamera.postMessage("setFilePath")
+  webkit.messageHandlers.startCamera.postMessage("setFilePath");
 
 }
 
@@ -419,12 +445,12 @@ function setFilePathFailed(error) {
 
 function setFilePath(base64) {
 
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
-  const header = getHeader('app-header', backIcon, '');
-  header.root_.classList.remove('hidden')
+  // const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
+  //  setHeader( backIcon, '');
+  // header.root_.classList.remove('hidden')
 
   const url = `data:image/jpg;base64,${base64}`
-  document.getElementById('app-current-panel').innerHTML = `
+  document.querySelector('.tabs-section .data-container').innerHTML = `
 
   <div class='image-container'>
   <div id='snap' class="snap-bckg">
@@ -476,16 +502,13 @@ function setFilePath(base64) {
     sub.attachment.Photo.value = url
     sub.attachment.Comment.value = textValue;
     sub.share = []
-    progressBar.open();
 
     requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
-      getSuggestions()
+    
+      history.pushState(['reportView'], null, null)
+      reportView()
       successDialog('Check-In Created')
-      progressBar.close()
-    }).catch(function (error) {
-      progressBar.close()
-      snacks(error.response.message)
-    })
+    }).catch(console.error);
   })
 }
 
