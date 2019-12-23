@@ -751,13 +751,16 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
 
+  if (read.locations.length) {
 
-  const mapObjectStore = updateTx.objectStore('map')
-
-  read.locations.forEach(function (location) {
-    mapObjectStore.add(location);
-  });
-
+    const mapObjectStore = updateTx.objectStore('map')
+    var clearMap = mapObjectStore.clear();
+    clearMap.onsuccess = function () {
+      read.locations.forEach(function (location) {
+        mapObjectStore.add(location);
+      });
+    }
+  }
 
   updateAttendance(read.attendances, attendaceStore)
   updateReimbursements(read.reimbursements, reimbursementStore)
