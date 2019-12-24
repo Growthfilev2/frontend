@@ -320,7 +320,7 @@ function expandPlaceBox() {
                         return;
                     }
                     if(list.selectedIndex.length) {
-                        giveSubscriptionInit();
+                        giveSubscriptionInit(searchResponse[selectedListIndex].name);
                         return
                     }
 
