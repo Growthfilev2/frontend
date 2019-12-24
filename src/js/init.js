@@ -10,20 +10,24 @@ var sliderTimeout = 10000;
 
 
 window.addEventListener('error',function(event){
-  handleError({
-    message:event.message,
-    body:{
-      lineno:event.lineno,
-      filename:event.filename,
-      colno:event.colno,
-      error:JSON.stringify({
-        stack:event.error.stack,
-        message:event.error.message
-      })
-    }
-  })  
+  if(event.message.toLowerCase().indexOf('script error') > -1) {
+    this.console.log(event)
+  }
+  else {
+    handleError({
+      message:'global error :' + event.message,
+      body:{
+        lineno:event.lineno,
+        filename:event.filename,
+        colno:event.colno,
+        error:JSON.stringify({
+          stack:event.error.stack,
+          message:event.error.message
+        })
+      }
+    })  
+  }
 })
-
 
 
 function imgErr(source) {
@@ -414,15 +418,15 @@ function loadingScreen() {
     <div class='icon-cont mdc-layout-grid__inner mt-20'>
         <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
           <div class='icon text-center'>
-            <i class='material-icons'>room</i>
-            <p class='mt-10 mdc-typography--subtitle1'>Check-in</p>
+            <i class='material-icons mdc-theme--primary'>room</i>
+            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Check-in</p>
           </div>
         </div>
        
         <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
           <div class='icon text-center'>
-            <img src='./img/currency.png'>
-            <p class='mt-10 mdc-typography--subtitle1'>Incentives</p>
+            <img src='./img/currency.png' class='currency-primary'>
+            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Incentives</p>
           </div>
         </div>
 
@@ -1020,7 +1024,6 @@ function openMap() {
   appLocation(3).then(function (geopoint) {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
-      console.log(checkInSubs)
       if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));

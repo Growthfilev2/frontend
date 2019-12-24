@@ -1253,7 +1253,7 @@ function updateEmailDom(skipbtn, headings) {
   const email = firebase.auth().currentUser.email
   return `
   <div class='mdc-layout-grid update-email'>
-  ${skipbtn ? `<button class='mdc-button mt-10' id='skip-btn'>
+  ${skipbtn ? `<button class='mdc-button mt-10 mdc-button--raised' id='skip-btn'>
   <span class='mdc-button__label mdc-theme--secondary'>SKIP<span>
   </button>` :''}
 
@@ -1301,7 +1301,7 @@ function idProofView(callback) {
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
   <div class='id-container app-padding'>
-  ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-theme--secondary' id='skip-btn'>SKIP</button>` :'' }
+  ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` :'' }
  
     <div class='pan-container pb-10'>
     <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter PAN card details</h3>

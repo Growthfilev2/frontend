@@ -182,7 +182,7 @@ function addNewBankAccount(callback) {
   setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
-  ${history.state[0] === 'profileCheck' ? `<button class='mdc-button mdc-theme--secondary' id='skip-btn'>SKIP</button>` : ''}
+  ${history.state[0] === 'profileCheck' ? `<button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` : ''}
   <div class='add-bank-container mt-20'>
 
     <div class='text-field-container'>
