@@ -84,7 +84,7 @@ function appLocation(maxRetry) {
         return resolve(geopoint);
       }
 
-      if (history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+      if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
           body: {
