@@ -43,15 +43,17 @@ function actionButton(name, id = '') {
 
 function createExtendedFab(icon, name, id, absolute) {
     const button = createElement('button', {
-        className: 'mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary',
+        className: 'mdc-fab mdc-fab--extended mdc-button--raised mdc-fab-custom',
         id: id
     })
     if (absolute) {
         button.classList.add('app-fab--absolute')
     }
-    button.innerHTML = `<div class="mdc-fab__ripple"></div>
+    button.innerHTML = `
                    <span class="material-icons mdc-fab__icon">${icon}</span>
-                   <span class="mdc-fab__label">${name}</span>`
+                   <span class="mdc-fab__label">${name}</span>
+                   <div class="mdc-fab__ripple"></div>
+                   `
     new mdc.ripple.MDCRipple(button);
     return button
 }

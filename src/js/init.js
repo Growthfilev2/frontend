@@ -29,7 +29,6 @@ window.addEventListener('error',function(event){
   }
 })
 
-
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -81,6 +80,7 @@ let native = function () {
     }
   }
 }();
+
 
 function getAndroidDeviceInformation() {
   return JSON.stringify({
@@ -1024,7 +1024,7 @@ function openMap() {
   appLocation(3).then(function (geopoint) {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
-      if (!Object.keys(checkInSubs).length) {
+      if (Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         history.pushState(['searchOffice', geopoint], null, null)

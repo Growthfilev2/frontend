@@ -236,6 +236,8 @@ function expandPlaceBox() {
         })
 
         const confirmFab = document.getElementById('confirm-btn');
+        new mdc.ripple.MDCRipple(confirmFab);
+
         confirmFab.addEventListener('click', function () {
 
             confirmFab.classList.add('mdc-fab--exited')
@@ -328,6 +330,7 @@ function expandPlaceBox() {
             
             }).catch(function (error) {
                 console.log(error)
+
                 confirmFab.classList.remove('mdc-fab--exited')
             })
         })
