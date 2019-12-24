@@ -9,6 +9,23 @@ var sliderIndex = 1;
 var sliderTimeout = 10000;
 
 
+window.addEventListener('error',function(event){
+  handleError({
+    message:event.message,
+    body:{
+      lineno:event.lineno,
+      filename:event.filename,
+      colno:event.colno,
+      error:JSON.stringify({
+        stack:event.error.stack,
+        message:event.error.message
+      })
+    }
+  })  
+})
+
+
+
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -330,7 +347,7 @@ function loadSlider(sliderEl) {
     case 2:
       sliderContent = `
         <div class='icon-container'>
-          <i class='material-icons'>room</i>
+          <i class='material-icons mdc-theme--primary'>room</i>
 
         </div>
         <div class='text-container'>
@@ -347,7 +364,7 @@ function loadSlider(sliderEl) {
 
       sliderContent = `
         <div class='image-container'>
-            <img src='./img/currency_large.png'>
+            <img src='./img/currency_large.png' class='currency-primary'>
         </div>
         <div class='text-container'>
         <ul class='slider-list'>

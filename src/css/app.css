@@ -1046,3 +1046,7 @@ iframe {
   }
 
 }
+
+.currency-primary {
+  filter: invert(18%) sepia(45%) saturate(2574%) hue-rotate(318deg) brightness(94%) contrast(91%)
+}

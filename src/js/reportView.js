@@ -252,7 +252,7 @@ function showTabs(reportTabs) {
               return `
               <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${report.id || ''}>
               <span class="mdc-tab__content">
-                ${report.name === 'Incentives' ?`<img class='mdc-tab__icon' src=${report.icon}>`  : `<span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>`}
+                ${report.name === 'Incentives' ?`<img class='mdc-tab__icon currency-primary' src=${report.icon}>`  : `<span class="mdc-tab__icon material-icons" aria-hidden="true">${report.icon}</span>`}
                 
                 <span class="mdc-tab__text-label">${report.name}</span>
               </span>
