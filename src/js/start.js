@@ -379,16 +379,18 @@ function createOfficeInit() {
 }
 
 function giveSubscriptionInit(name = placeResult.name) {
-
     const template = {
         "assignees": [],
         "template": "subscription",
         "office": name
     };
-
-    history.pushState(['addView'], null, null);
+    if(history.state[0] === 'addView') {
+          history.replaceState(['addView'],null,null);
+    } 
+    else {
+        history.pushState(['addView'], null, null);
+    }
     addView(template);
-
 }
 
 function loadImageInPlaceBox(src) {
