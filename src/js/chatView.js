@@ -293,7 +293,11 @@ function readLatestChats(initList) {
     tx.oncomplete = function () {
 
         const chatsEl = document.getElementById('chats')
-        document.querySelector('.chats-container').classList.remove("hidden")
+        const contactsEl = document.getElementById('all-contacts');
+        const chatsCont = document.querySelector('.chats-container')
+        if(chatsCont) {
+            chatsCont.classList.remove("hidden")
+        }
         if (!chatsEl) return
         if (!currentChatsArray.length) {
             chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
@@ -305,7 +309,7 @@ function readLatestChats(initList) {
         if (!initList) return;
         chatsUl = new mdc.list.MDCList(chatsEl);
         initializeChatList(chatsUl);
-        initializeContactList(new mdc.list.MDCList(document.getElementById('all-contacts')))
+        initializeContactList(new mdc.list.MDCList(contactsEl))
 
     }
 }
