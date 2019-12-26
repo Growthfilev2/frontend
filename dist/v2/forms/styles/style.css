@@ -150,7 +150,11 @@ body {
   height: 56px;
   bottom: 0px;
 }
-
+@media screen and (orientation:landscape) {
+	.action-button-container .submit-button-cont {
+    position: relative;
+  }
+}
 .submit-btn {
   display: block;
   margin: 0 auto;

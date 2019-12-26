@@ -1011,6 +1011,7 @@ iframe {
   position: relative;
 }
 
+
 .submit-button-cont {
   width: 100%;
   position: fixed;
@@ -1019,6 +1020,11 @@ iframe {
   animation-duration: 0.5s;
   animation-name: bottomToTop;
 
+}
+@media screen and (orientation:landscape) {
+	.action-button-container .submit-button-cont {
+    position: relative;
+  }
 }
 
 .submit-btn {

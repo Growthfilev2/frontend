@@ -157,16 +157,7 @@ function initializeApp() {
 
     });
   })
-  window.addEventListener('orientationchange',function(){
-    const el = this.document.querySelector('.action-button-container .submit-button-cont');
-    if(!el) return;
-    if(this.screen.orientation.angle == 90) {
-      el.style.position = 'relative'
-    }
-    if(this.screen.orientation.angle == 0) {
-      el.style.position = 'fixed'
-    }
-  })
+  
 }
 
 function checkNetworkValidation() {
