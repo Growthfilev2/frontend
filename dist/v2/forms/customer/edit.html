@@ -121,6 +121,7 @@
             getDropDownContent(subscriptionTemplate.office, 'customer-type', 'officeTemplate').then(function (result) {
                 if (result.string) {
                     select.nativeControl_.innerHTML += result.string;
+                    select.nativeControl_.setAttribute('required','true')
                     document.querySelector('.customer-type-container').classList.remove('hidden')
                 }
             })

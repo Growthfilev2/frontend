@@ -3,7 +3,8 @@ function addView(sub) {
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template === 'subscription' ? 'Add other contacts' : sub.template === 'users' ? 'Add people' : sub.template}</span>
     `
-    setHeader(backIcon, '');
+    const header = setHeader(backIcon, '');
+    header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
         <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;

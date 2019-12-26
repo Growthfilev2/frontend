@@ -95,7 +95,7 @@ function getAndroidDeviceInformation() {
 }
 
 window.onpopstate = function (event) {
-  this.console.log(event)
+
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
   if (event.state[0] === 'reportView') {
@@ -106,7 +106,9 @@ window.onpopstate = function (event) {
     history.go(-1);
     return;
   };
-  window[event.state[0]](event.state[1]);
+  if(window[event.state[0]]) {
+    window[event.state[0]](event.state[1]);
+  }
 }
 
 
@@ -1019,6 +1021,7 @@ function getCheckInSubs() {
 }
 
 function openMap() {
+  document.getElementById('app-header').classList.add("hidden")
   document.getElementById('step-ui').innerHTML = ''
   progressBar.open();
   appLocation(3).then(function (geopoint) {

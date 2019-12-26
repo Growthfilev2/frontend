@@ -7,7 +7,7 @@ let timer = null;
 const duration = 800;
 
 function chatView() {
-
+    document.getElementById('app-header').classList.remove("hidden")
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
     if (!document.getElementById('search-btn')) {
@@ -305,6 +305,8 @@ function readLatestChats(initList) {
         if (!initList) return;
         chatsUl = new mdc.list.MDCList(chatsEl);
         initializeChatList(chatsUl);
+        initializeContactList(new mdc.list.MDCList(document.getElementById('all-contacts')))
+
     }
 }
 

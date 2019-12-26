@@ -35,7 +35,7 @@ function showSecondDate(event, className, dataName) {
 
 
 function initializeDates(subscriptionTemplate, defaultDateString) {
-
+    
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);

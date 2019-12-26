@@ -126,6 +126,7 @@
                 if (result.string) {
                     document.querySelector('.customer-select-container').classList.remove('hidden');
                     customer.nativeControl_.innerHTML += result.string
+                    customer.nativeControl_.setAttribute('required','true')
                 }
             });
 
@@ -135,6 +136,7 @@
                     el.classList.remove('hidden');
 
                     product.nativeControl_.innerHTML += result.string;
+                    product.nativeControl_.setAttribute('required','true')
                     product.listen('MDCSelect:change', function (evt) {
                         if (!evt.detail.value) return
                         const listEl = document.getElementById('product-amount-list')
