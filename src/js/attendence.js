@@ -139,7 +139,7 @@ function getMinimumDalyCount(data, employeeRecord) {
   if (!employeeRecord[data.office]) {
     return ` Count : ${data.addendum.length}`
   }
-  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Daily Activity Count')) return;
+  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Daily Activity Count')) return ` Count : ${data.addendum.length}`;
   if (!employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value) {
     return ` Count : ${data.addendum.length}`
   }
@@ -152,6 +152,7 @@ function getWorkingHoursText(data, employeeRecord) {
   const offices = Object.keys(employeeRecord);
   if (!offices.length) return ` Working hours :  ${hours}`;
   if (!employeeRecord[data.office]) return ` Working hours :  ${hours}`;
+  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Working Hours')) return ` Working hours :  ${hours}`;
   if (!employeeRecord[data.office].attachment['Minimum Working Hours'].value) return ` Working hours :  ${hours}`;
   return ` Working hours :  ${hours} / ${employeeRecord[data.office].attachment['Minimum Working Hours'].value} `
 }
