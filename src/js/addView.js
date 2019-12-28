@@ -7,10 +7,10 @@ function addView(sub) {
     header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         const frame = document.getElementById('form-iframe');
-        if(!frame) return;
+        if (!frame) return;
         frame.contentWindow.init(sub);
     })
 
@@ -27,35 +27,35 @@ function sendOfficeData(requestBody) {
 }
 
 function sendUsersData(formData) {
-    appLocation(3).then(function(geopoint){
-        requestCreator('checkIns',formData,geopoint).then(function(response){
-           history.back();
-           successDialog('')
+    appLocation(3).then(function (geopoint) {
+        requestCreator('checkIns', formData, geopoint).then(function (response) {
+            history.back();
+            successDialog('')
         }).catch(console.error);
 
     }).catch(handleLocationError);
 }
 
 function sendSubscriptionData(formData) {
-    appLocation(3).then(function(geopoint){
-        requestCreator('subscription',formData,geopoint).then(function(response){
+    appLocation(3).then(function (geopoint) {
+        requestCreator('subscription', formData, geopoint).then(function (response) {
             ApplicationState.createdSubscription = true;
-            localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
+            localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
             document.getElementById('app-header').classList.add('hidden');
             loadingScreen();
-            const rootTx = db.transaction(['root'],'readwrite');
+            const rootTx = db.transaction(['root'], 'readwrite');
             const store = rootTx.objectStore('root')
             const uid = firebase.auth().currentUser.uid
-            store.get(uid).onsuccess = function(event){
-               const record = event.target.result;
+            store.get(uid).onsuccess = function (event) {
+                const record = event.target.result;
                 record.fromTime = 0;
                 store.put(record)
             }
-            rootTx.oncomplete = function(){
+            rootTx.oncomplete = function () {
                 reloadPage();
             }
         });
-    }).catch(handleLocationError);   
+    }).catch(handleLocationError);
 }
 
 function sendFormToParent(formData) {
@@ -80,9 +80,12 @@ function sendFormToParent(formData) {
             return;
         }
         requestCreator('create', formData, geopoint).then(function () {
-
-            if (formData.template === 'attendance regularization') {
-                successDialog(`You Applied for an AR`);
+            if (formData.report === 'attendance') {
+                if (formData.template === 'attendance regularization') {
+                    successDialog(`You Applied for an AR`);
+                } else {
+                    successDialog(`You Created a ${formData.template}`);
+                }
                 const tx = db.transaction('attendance', 'readwrite');
                 const store = tx.objectStore('attendance')
                 store.get(formData.id).onsuccess = function (event) {
@@ -93,10 +96,11 @@ function sendFormToParent(formData) {
                 }
                 tx.oncomplete = function () {
                     reportView()
-                    // getSuggestions();
                 }
                 return;
             }
+
+
             successDialog(`You Created a ${formData.template}`);
 
             if (formData.template === 'customer') {
@@ -142,7 +146,7 @@ function parseContact(contactString) {
 function setContactForCustomer(contactString) {
     const contactDetails = parseContact(contactString);
     const frame = document.getElementById('form-iframe')
-    if(!frame) return;
+    if (!frame) return;
     frame.contentWindow.setContact(contactDetails, 'First Contact');
 }
 
@@ -157,7 +161,7 @@ function setContactForCustomerFailed(exceptionMessage) {
 function getContactManager(contactString) {
     const contactDetails = parseContact(contactString);
     const frame = document.getElementById('form-iframe')
-    if(!frame) return;
+    if (!frame) return;
     frame.contentWindow.setContactForManager(contactDetails);
 }
 
@@ -166,14 +170,14 @@ function getContactManager(contactString) {
 function getContactSupervisors(contactString) {
     const contactDetails = parseContact(contactString);
     const frame = document.getElementById('form-iframe')
-    if(!frame) return;
+    if (!frame) return;
     frame.contentWindow.setContactForSupervisors(contactDetails);
 }
 
 function setContactForSecondCustomer(contactString) {
     const contactDetails = parseContact(contactString);
     const frame = document.getElementById('form-iframe')
-    if(!frame) return;
+    if (!frame) return;
     frame.contentWindow.setContact(contactDetails, 'Second Contact');
 }
 
@@ -187,6 +191,6 @@ function setContactForSecondCustomerFailed(exceptionMessage) {
 
 function expenseClaimImage(base64) {
     const frame = document.getElementById('form-iframe')
-    if(!frame) return;
+    if (!frame) return;
     frame.contentWindow.setExpenseImage(base64);
 }

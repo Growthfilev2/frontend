@@ -94,13 +94,13 @@
         const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
         let officeTemplate;
        
-        
+
         managerBtn.addEventListener('click', function () {
-           
+         
             callContact('getContactManager')
         });
 
-
+        
         function init(subscriptionTemplate) {
             officeTemplate = subscriptionTemplate;
             document.getElementById('submit-btn').addEventListener('click', function () {
@@ -128,7 +128,6 @@
             officeName.value = subscriptionTemplate.name;
         }
 
-
         function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
 
@@ -141,17 +140,15 @@
                     return;
                 }
             });
+            
             if (!officeTemplate['firstContact']) {
                 officeTemplate['firstContact'] = contactObject
                 li.dataset.type = 'firstContact'
             } else {
                 officeTemplate['secondContact'] = contactObject
                 li.dataset.type = 'secondContact'
-
             }
-
             managerList.root_.appendChild(li)
-
             document.getElementById("managers-cont").appendChild(managerBtn);
             if (managerList.listElements.length == 2) {
                 managerBtn.classList.add('hidden')
