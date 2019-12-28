@@ -169,7 +169,7 @@ function getLast4digitsOfAccount(accountNumber) {
 }
 
 function validateIFSC(string) {
-  return /^[A-Za-z]{4}\d{7}$/.test(string)
+  return /^[A-Za-z]{4}[a-zA-Z0-9]{7}$/.test(string)
 }
 
 function addNewBankAccount(callback) {
