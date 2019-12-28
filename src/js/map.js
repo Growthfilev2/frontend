@@ -15,6 +15,14 @@ var markersObject = {
   infowindow: []
 }
 
+function logReportEvent(name) {
+  const deviceInfo = JSON.parse(native.getInfo());
+  if(native.getName() === 'Android' && deviceInfo.appVersion === '14') {
+    AndroidInterface.logEvent(name);
+  }
+  return;
+}
+
 function failureScreen(error, callback) {
 
   
@@ -204,6 +212,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
     
 
     history.pushState(['reportView'], null, null)
+    logReportEvent('report');
     reportView()
   }).catch(function (error) {
 
@@ -304,6 +313,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     history.pushState(['reportView'], null, null)
+    logReportEvent('report');
     reportView();
   }).catch(function (error) {
     if (error.message === 'Invalid check-in') {

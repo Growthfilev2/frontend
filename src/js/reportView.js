@@ -69,19 +69,6 @@ function reportView(state, attendanceRecord) {
 
     tabList.activateTab(state);
 
-    // const swipeCont = document.querySelector('.tabs-section .data-container')
-    // swipeCont.addEventListener('siwpe',function(swipeEvent){
-    //   console.log(event);
-    //   if(swipeEvent.detail.direction === 'left') {
-    //     // tabList.activateTab()
-    //   }
-    //   if(swipeEvent.detail.direction === 'right') {
-        
-    //   }
-    // });
-
-    // swipe(swipeCont)
-   
   })
 }
 
