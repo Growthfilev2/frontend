@@ -168,6 +168,10 @@ function getLast4digitsOfAccount(accountNumber) {
   return accountNumber.substr(accountNumber.length - 4)
 }
 
+function validateIFSC(string) {
+  return /^[A-Za-z]{4}\d{7}$/.test(string)
+}
+
 function addNewBankAccount(callback) {
   const auth = firebase.auth().currentUser
   let backIcon = ''
@@ -286,6 +290,12 @@ function addNewBankAccount(callback) {
     if (fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
       setHelperInvalid(fields['Re-enter Bank Account Number'])
       field.helperTextContent = `Bank Account number do not match`;
+      return;
+    }
+
+    if(!validateIFSC(fields['IFSC'].value)) {
+      setHelperInvalid(fields['IFSC']);
+      fields['IFSC'].helperTextContent = `Invalid IFSC code`;
       return;
     }
 
