@@ -98,7 +98,7 @@ function createBaseDetails() {
 
 function bankAccount() {
   getRootRecord().then(function (rootRecord) {
-    const accounts = rootRecord.linkedAccounts 
+    const accounts = rootRecord.linkedAccounts
 
     console.log(accounts);
     const auth = firebase.auth().currentUser;
@@ -130,16 +130,16 @@ function bankAccount() {
           bankAccount: number
         }).then(function () {
           const uid = firebase.auth().currentUser.uid
-          const tx = db.transaction('root','readwrite');
+          const tx = db.transaction('root', 'readwrite');
           const store = tx.objectStore('root');
           let newRootRecord;
-          store.get(uid).onsuccess = function(event){
-            newRootRecord  = event.target.result;
+          store.get(uid).onsuccess = function (event) {
+            newRootRecord = event.target.result;
             const index = Number(el.parentNode.dataset.index);
-            newRootRecord.linkedAccounts.splice(index,1);
+            newRootRecord.linkedAccounts.splice(index, 1);
             store.put(newRootRecord)
           }
-          tx.oncomplete = function() {
+          tx.oncomplete = function () {
             el.parentNode.remove();
             snacks(`Account removed`)
           }
@@ -151,11 +151,11 @@ function bankAccount() {
     addNewBtn.querySelector('.mdc-button').addEventListener('click', function () {
       if (!auth.email || !auth.emailVerified) {
         history.pushState(['emailUpdation'], null, null)
-        emailUpdation(true,profileView)
+        emailUpdation(true, profileView)
         return
       }
       history.pushState(['addNewBankAccount'], null, null);
-      addNewBankAccount(function(){
+      addNewBankAccount(function () {
         reloadPage();
       });
     })
@@ -245,7 +245,7 @@ function addNewBankAccount(callback) {
 
 
   const submitBtn = new mdc.ripple.MDCRipple(document.getElementById('submit-btn'))
-  submitBtn.root_.setAttribute('disabled','true');
+  submitBtn.root_.setAttribute('disabled', 'true');
   const fields = {};
   [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
     const field = new mdc.textField.MDCTextField(el);
@@ -256,12 +256,11 @@ function addNewBankAccount(callback) {
     fields[field.label_.root_.textContent] = field;
   });
 
-  fields['Re-enter Bank Account Number'].input_.addEventListener('input',function(){
-    if(fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
-       setHelperInvalid(fields['Re-enter Bank Account Number'],false)
-       submitBtn.root_.setAttribute('disabled','true')
-    }
-    else {
+  fields['Re-enter Bank Account Number'].input_.addEventListener('input', function () {
+    if (fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
+      setHelperInvalid(fields['Re-enter Bank Account Number'], false)
+      submitBtn.root_.setAttribute('disabled', 'true')
+    } else {
       setHelperValid(fields['Re-enter Bank Account Number'])
       submitBtn.root_.removeAttribute('disabled')
 
@@ -284,12 +283,12 @@ function addNewBankAccount(callback) {
       field.helperTextContent = ''
     }
 
-    if(fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value){
+    if (fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
       setHelperInvalid(fields['Re-enter Bank Account Number'])
       field.helperTextContent = `Bank Account number do not match`;
       return;
     }
-   
+
     requestCreator('newBankAccount', {
       bankAccount: fields['Bank Account Number'].value,
       ifsc: fields['IFSC'].value,
@@ -305,7 +304,7 @@ function addNewBankAccount(callback) {
   });
 
   const skipBtn = document.getElementById('skip-btn');
-  if(!skipBtn) return;
+  if (!skipBtn) return;
   new mdc.ripple.MDCRipple(skipBtn);
   skipBtn.addEventListener('click', function () {
 
@@ -426,7 +425,7 @@ function changePhoneNumber() {
 
 }
 
-function setHelperInvalid(field,shouldShake = true) {
+function setHelperInvalid(field, shouldShake = true) {
   field.focus();
   field.foundation_.setValid(false);
   field.foundation_.adapter_.shakeLabel(shouldShake);
@@ -520,22 +519,24 @@ function createViewProfile() {
         };
 
         tx.oncomplete = function () {
-          if (supers) {
-            document.getElementById('supervisors').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Supervisors</h1>
+          const superEl = document.getElementById('supervisors');
+          const teamEl = document.getElementById('my-team')
+          if (supers && superEl) {
+
+            superEl.innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Supervisors</h1>
                   <div class="mdc-chip-set supervisor">
                   ${supers}
                   </div>
                   `
           }
-          if (team) {
+          if (team && teamEl) {
 
-            document.getElementById('my-team').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Team</h1>
+            teamEl.innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Team</h1>
                   <div class="mdc-chip-set">
                   ${team}
                   </div>`
           }
         }
-
       })
     })
     tabInit.activateTab(0);
@@ -667,5 +668,3 @@ function isEmailValid(newEmail, currentEmail) {
   return !(newEmail === currentEmail)
 
 }
-
-
