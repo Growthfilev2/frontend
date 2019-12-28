@@ -98,13 +98,19 @@ var searchDebounde = debounce(function (event) {
     const value = event.detail.value;
     const geopoint = event.detail.geopoint
     placeRequesParam.query = value;
-    const ul = new mdc.list.MDCList(document.getElementById('place-query-ul'))
+    const ulEl = document.getElementById('place-query-ul');
+    let ul;
+    if(ulEl) {
+      ul = new mdc.list.MDCList(ulEl)
+    }
     var infowindow = new google.maps.InfoWindow();
     progressBar.open();
 
     placeService = new google.maps.places.PlacesService(map)
     placeService.findPlaceFromQuery(placeRequesParam, function (results, status) {
-        ul.root_.innerHTML = ''
+        if(ul) {
+            ul.root_.innerHTML = ''
+        }
         progressBar.close();
         if (status === google.maps.places.PlacesServiceStatus.OK) {
 
@@ -120,13 +126,18 @@ var searchDebounde = debounce(function (event) {
                 const li = searchPlaceResultList(resultVal.name, resultVal.formatted_address);
                 li.addEventListener('click', function () {
                     placeResult = resultVal
-                    ul.root_.innerHTML = ''
+                    if(ul) {
+                        ul.root_.innerHTML = ''
+                    }
                     placeSearchField.value = placeResult.name
                     showPlaceBox(map);
                     createPlaceMarker(infowindow)
 
                 });
-                ul.root_.appendChild(li);
+                if(ul) {
+                    ul.root_.appendChild(li);
+
+                }
             });
 
             return;
@@ -138,7 +149,10 @@ var searchDebounde = debounce(function (event) {
             lat: geopoint.latitude,
             lng: geopoint.longitude
         });
-        ul.root_.appendChild(createLi(`No result found for "${value}"`));
+        if(ul) {
+
+            ul.root_.appendChild(createLi(`No result found for "${value}"`));
+        }
     })
 }, 1000, false)
 
