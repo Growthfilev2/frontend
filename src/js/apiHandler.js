@@ -21,7 +21,8 @@ const requestFunctionCaller = {
   subscription: createSubscription,
   createOffice: createOffice,
   searchOffice: searchOffice,
-  checkIns:checkIns
+  checkIns:checkIns,
+  idProof:idProof
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -308,6 +309,18 @@ function checkIns(body,meta) {
     timeout: null
   }
   return http(req)
+}
+
+function idProof(body,meta) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}services/idProof`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+ 
 }
 
 function createSubscription(body, meta) {

@@ -1011,9 +1011,8 @@ function templateList(suggestedTemplates) {
 }
 
 
-function getImageBase64(evt, id) {
+function getImageBase64(evt, compressionFactor = 0.5) {
   return new Promise(function (resolve, reject) {
-
     const files = evt.target.files
     if (!files.length) return;
     const file = files[0];
@@ -1023,7 +1022,7 @@ function getImageBase64(evt, id) {
       const image = new Image();
       image.src = srcData;
       image.onload = function () {
-        const newDataUrl = resizeAndCompressImage(image);
+        const newDataUrl = resizeAndCompressImage(image,compressionFactor);
         return resolve(newDataUrl)
       }
     }
@@ -1285,9 +1284,30 @@ Verify your email to receive  offer letter, salary slip, tax forms & other docum
 `
 }
 
+function isPossiblyValidAadharNumber(string) {
+  return /^\d{4}\d{4}\d{4}$/.test(string)
+}
+function isPossiblyValidPan(string) {
+  return /^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$/.test(string)
+}
 
 
 function idProofView(callback) {
+  getRootRecord().then(function(rootRecord) {
+
+  const ids = rootRecord.idProof || {
+    'aadhar':{
+      'front':'',
+      'back':'',
+      'number':''
+    },
+    'pan':{
+      'front':'',
+      'back':'',
+      'number':''
+    }
+  }
+  
   let backIcon = ''
   if(history.state[0] === 'profileCheck') {
     backIcon = ' <span class="mdc-top-app-bar__title">Add ID Proof</span>'
@@ -1310,7 +1330,7 @@ function idProofView(callback) {
         ${textField({
           id:'pan-number',
           label:'Enter PAN Number',
-          value:'',
+          value:ids.pan.number,
           type:'text',
           required:true
         })}
@@ -1319,12 +1339,12 @@ function idProofView(callback) {
         </div>
     </div>
     <div class='pan-images mdc-layout-grid__inner'>
-        <div class='mdc-layout-grid__cell'>
+        <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
           <div class='image-container'>
-            <img src='./img/placeholder.png' class='width-100' data-name="panFront">
+            <img src='${ids.front || './img/placeholder.png' }'  class='width-100' data-name="panFront"  data-valid="false">
            
             <div class='add-icon-cont'>
-            <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='pan-front-btn' data-name="panFront">
+            <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-front-btn' data-name="panFront">
               <div class="mdc-fab__ripple"></div>
               <span class="mdc-fab__icon material-icons">add_a_photo</span>
             </button>
@@ -1334,12 +1354,12 @@ function idProofView(callback) {
           <span class="mdc-image-list__label">PAN FRONT</span>
         </div>
         </div>
-        <div class='mdc-layout-grid__cell'>
+        <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
         <div class='image-container'>
-            <img src='./img/placeholder.png' class='width-100' data-name="panBack">
+            <img src='${ids.back || './img/placeholder.png' }' class='width-100' data-name="panBack"  data-valid="false">
             
             <div class='add-icon-cont'>
-            <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='pan-back-btn' data-name="panBack">
+            <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-back-btn' data-name="panBack">
               <div class="mdc-fab__ripple"></div>
               <span class="mdc-fab__icon material-icons">add_a_photo</span>
             </button>
@@ -1358,7 +1378,7 @@ function idProofView(callback) {
         ${textField({
           id:'aadhar-number',
           label:'Enter AADHAR card Number',
-          value:'',
+          value:ids.aadhar.number,
           type:'text',
           required:true
         })}
@@ -1367,12 +1387,12 @@ function idProofView(callback) {
         </div>
       </div>
       <div class='aadhar-images mdc-layout-grid__inner'>
-      <div class='mdc-layout-grid__cell'>
+      <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
       <div class='image-container'>
-        <img src='./img/placeholder.png' class='width-100' data-name="aadharFront">
+        <img src='${ids.aadhar.front || './img/placeholder.png' }' class='width-100' data-name="aadharFront"  data-valid="false">
        
         <div class='add-icon-cont'>
-        <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='aadhar-front-btn' data-name="aadharFront">
+        <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-front-btn' data-name="aadharFront">
           <div class="mdc-fab__ripple"></div>
           <span class="mdc-fab__icon material-icons">add_a_photo</span>
         </button>
@@ -1382,12 +1402,12 @@ function idProofView(callback) {
       <span class="mdc-image-list__label">AADHAR FRONT</span>
     </div>
     </div>
-    <div class='mdc-layout-grid__cell'>
+    <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
     <div class='image-container'>
-        <img src='./img/placeholder.png' class='width-100' data-name="aadharBack">
+        <img src='${ids.aadhar.back || './img/placeholder.png' }' class='width-100' data-name="aadharBack" data-valid="false">
         
         <div class='add-icon-cont'>
-        <button class="mdc-fab mdc-button--raised" aria-label="Favorite" id='aadhar-back-btn' data-name="aadharBack">
+        <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-back-btn' data-name="aadharBack">
           <div class="mdc-fab__ripple"></div>
           <span class="mdc-fab__icon material-icons">add_a_photo</span>
         </button>
@@ -1426,9 +1446,34 @@ function idProofView(callback) {
   const submitBtn = document.getElementById('submit-btn');
   new mdc.ripple.MDCRipple(submitBtn);
   submitBtn.addEventListener("click",function(){
-    snacks('Service unavailable right now. please try again later');
-    window.scrollTo(0,0);
+    
+    if(!isPossiblyValidAadharNumber(aadharNumber.value)) {
+      setHelperInvalid(aadharNumber);
+      aadharNumber.helperTextContent = 'Please enter a valid AADHAR number'
+      return;
+    }
 
+    if(!isPossiblyValidPan(panNumber.value)) {
+      setHelperInvalid(panNumber);
+      panNumber.helperTextContent = 'Please enter a valid PAN number'
+      return;
+    }; 
+    const validImagesLength = [...document.querySelectorAll(`[data-valid="true"]`)].length;
+    if(validImagesLength !== 4) {
+      snacks('Please Upload All Images');
+      return;
+    }
+
+    ids.aadhar.number = aadharNumber.value;
+    ids.aadhar.front = document.querySelector(`[data-name="aadharFront"]`).src;
+    ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
+    ids.pan.number = panNumber.value;
+    ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
+    ids.pan.back = document.querySelector(`[data-name="panBack"]`).src;
+
+    requestCreator('idProof',ids).then(function(){
+      callback();
+    }).catch(console.error);
   })
   if(!skipBtn) return;
   new mdc.ripple.MDCRipple(skipBtn);
@@ -1446,30 +1491,36 @@ function idProofView(callback) {
       }
     }
   })
+})
 }
 
 
 function aadharFront(base64) {
   const img = document.querySelector(`[data-name="aadharFront"]`);
   if(img) {
+    img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }
 }
+
 function aadharBack(base64) {
   const img = document.querySelector(`[data-name="aadharBack"]`);
   if(img) {
+    img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }
 }
 function panFront(base64) {
   const img = document.querySelector(`[data-name="panFront"]`);
   if(img) {
+    img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }
 }
 function panBack(base64) {
   const img = document.querySelector(`[data-name="panBack"]`);
   if(img) {
+    img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }
 }

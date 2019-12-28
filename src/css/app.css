@@ -1060,3 +1060,7 @@ iframe {
 .mdc-fab-custom.mdc-fab::before,.mdc-fab-custom.mdc-fab::after {
   width: auto;
 }
+
+.mdc-fab--mini .material-icons {
+  font-size: 20px;
+}

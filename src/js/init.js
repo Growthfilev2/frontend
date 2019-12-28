@@ -625,7 +625,7 @@ function checkForId() {
       increaseStep(5);
       checkForBankAccount();
       return
-    }
+    };
     increaseStep(4);
     idProofView(checkForBankAccount);
 
@@ -646,7 +646,7 @@ function checkForBankAccount() {
 }
 
 
-function resizeAndCompressImage(image) {
+function resizeAndCompressImage(image,compressionFactor) {
   var canvas = document.createElement('canvas');
   const canvasDimension = new CanvasDimension(image.width, image.height);
   canvasDimension.setMaxHeight(screen.height)
@@ -656,7 +656,7 @@ function resizeAndCompressImage(image) {
   canvas.height = newDimension.height;
   var ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
-  const newDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+  const newDataUrl = canvas.toDataURL('image/jpeg', compressionFactor);
   return newDataUrl;
 
 }
