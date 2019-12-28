@@ -9,7 +9,9 @@ function addView(sub) {
     document.getElementById('app-current-panel').innerHTML = `
         <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
-        document.getElementById('form-iframe').contentWindow.init(sub);
+        const frame = document.getElementById('form-iframe');
+        if(!frame) return;
+        frame.contentWindow.init(sub);
     })
 
 }
@@ -139,7 +141,9 @@ function parseContact(contactString) {
 
 function setContactForCustomer(contactString) {
     const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContact(contactDetails, 'First Contact');
+    const frame = document.getElementById('form-iframe')
+    if(!frame) return;
+    frame.contentWindow.setContact(contactDetails, 'First Contact');
 }
 
 function setContactForCustomerFailed(exceptionMessage) {
@@ -152,19 +156,25 @@ function setContactForCustomerFailed(exceptionMessage) {
 
 function getContactManager(contactString) {
     const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContactForManager(contactDetails);
+    const frame = document.getElementById('form-iframe')
+    if(!frame) return;
+    frame.contentWindow.setContactForManager(contactDetails);
 }
 
 
 
 function getContactSupervisors(contactString) {
     const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContactForSupervisors(contactDetails);
+    const frame = document.getElementById('form-iframe')
+    if(!frame) return;
+    frame.contentWindow.setContactForSupervisors(contactDetails);
 }
 
 function setContactForSecondCustomer(contactString) {
     const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContact(contactDetails, 'Second Contact');
+    const frame = document.getElementById('form-iframe')
+    if(!frame) return;
+    frame.contentWindow.setContact(contactDetails, 'Second Contact');
 }
 
 function setContactForSecondCustomerFailed(exceptionMessage) {
@@ -176,5 +186,7 @@ function setContactForSecondCustomerFailed(exceptionMessage) {
 
 
 function expenseClaimImage(base64) {
-    document.getElementById('form-iframe').contentWindow.setExpenseImage(base64);
+    const frame = document.getElementById('form-iframe')
+    if(!frame) return;
+    frame.contentWindow.setExpenseImage(base64);
 }
