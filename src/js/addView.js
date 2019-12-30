@@ -80,12 +80,21 @@ function sendFormToParent(formData) {
             return;
         }
         requestCreator('create', formData, geopoint).then(function () {
+           console.log(formData)
+           
+           
             if (formData.report === 'attendance') {
                 if (formData.template === 'attendance regularization') {
                     successDialog(`You Applied for an AR`);
                 } else {
                     successDialog(`You Created a ${formData.template}`);
+                };
+
+                if(!formData.id) {
+                    reportView()
+                    return;
                 }
+
                 const tx = db.transaction('attendance', 'readwrite');
                 const store = tx.objectStore('attendance')
                 store.get(formData.id).onsuccess = function (event) {
