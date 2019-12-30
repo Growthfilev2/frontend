@@ -70,10 +70,7 @@ let native = function () {
       if (!this.getName()) return false;
 
       if (this.getName() === 'Android') {
-        if (!localStorage.getItem('deviceInfo')) {
-          localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
-        }
-
+        localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
         return localStorage.getItem('deviceInfo');
       }
       return this.getIosInfo();
