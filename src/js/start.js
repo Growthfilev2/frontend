@@ -5,6 +5,62 @@ var placeSearchField;
 var map;
 
 
+function chooseAlternativePhoneNumber(alternatePhoneNumbers,geopoint) {
+    const auth = firebase.auth().currentUser;
+    const appEl = document.getElementById('app-current-panel');
+    appEl.innerHTML = `<div class='phone-number-choose'>
+            <div class='phone-number-choose-cont'>
+                <h1 class='mdc-typography--headline5 mb-0'>
+                    Hello, ${auth.displayName}
+                </h1>
+                <p class='mdc-typography--headline5 mt-10'>You are logged in with <span class='mdc-theme--primary'>${auth.phoneNumber}</span></p>
+                <p class='mdc-typography--headline6 mt-0'>Confirm that this is your number</p>
+
+                <ul class='mdc-list' id='phone-list'>
+                    ${createCheckBoxList(auth.phoneNumber,0)}
+                    <li class='mdc-list-divider'></li>
+                    ${alternatePhoneNumbers.map(function(number,index){
+                        return `${number ? createCheckBoxList(number,index) : ''}`
+                    }).join("")}
+                </ul>
+            </div>
+    </div>
+    ${actionButton('Confirm', 'confirm-phone-btn').outerHTML}
+    `
+
+    const list = document.getElementById('phone-list');
+    if(!list) return;
+    const confirmBtn = document.getElementById("confirm-phone-btn");
+    if(!confirmBtn) return;
+    const listInit = new mdc.list.MDCList(list);
+    console.log(listInit)
+    new mdc.ripple.MDCRipple(confirmBtn);
+    listInit.listen('MDCList:action',function(listEvent){
+        if(!listInit.selectedIndex.length) {
+           
+            confirmBtn.setAttribute('disabled',true);
+        }
+        else {
+            listInit.selectedIndex = [listEvent.detail.index]
+            confirmBtn.removeAttribute('disabled');
+        }
+    })
+    
+    listInit.singleSelection = true;
+    listInit.selectedIndex = [0];
+
+    confirmBtn.addEventListener('click',function(){
+        if(listInit.selectedIndex == 0) {
+            history.pushState(['searchOffice', geopoint], null, null)
+            searchOffice(geopoint);
+            return
+        }
+        
+        revokeSession();
+        return;
+    })
+}
+
 function searchOffice(geopoint = history.state[1]) {
     const appEl = document.getElementById('app-current-panel');
     appEl.innerHTML = `<div class='search-map-cont mdc-top-app-bar--fixed-adjust'>

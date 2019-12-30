@@ -30,7 +30,7 @@ function handleError(error) {
   console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message))
-  error.device = localStorage.getItem('deviceInfo');
+    error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   return requestCreator('instant', JSON.stringify(error))
@@ -76,7 +76,7 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-   
+
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -299,13 +299,12 @@ function executeRequest(requestGenerator) {
           reject(event.data);
 
 
-          if(!event.data.apiRejection) {
+          if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
               body: JSON.stringify(event.data.body)
             })
-          }
-          else if(event.data.requestType !== 'Null') {
+          } else if (event.data.requestType !== 'Null') {
             snacks(event.data.message);
           }
         }
@@ -388,7 +387,7 @@ function updateIosLocation(geopointIos) {
 
 function handleComponentUpdation(readResponse) {
   console.log(readResponse)
-  if(readResponse.reloadApp) {
+  if (readResponse.reloadApp) {
     reloadPage();
     return;
   }
@@ -399,7 +398,7 @@ function handleComponentUpdation(readResponse) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     })
-   
+
   }
   if (!history.state) return;
 
@@ -631,7 +630,7 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-  if(!history.state) return;
+  if (!history.state) return;
   if (history.state[0] === 'reportView') {
     history.pushState(['profileView'], null, null)
     profileView();
@@ -1022,7 +1021,7 @@ function getImageBase64(evt, compressionFactor = 0.5) {
       const image = new Image();
       image.src = srcData;
       image.onload = function () {
-        const newDataUrl = resizeAndCompressImage(image,compressionFactor);
+        const newDataUrl = resizeAndCompressImage(image, compressionFactor);
         return resolve(newDataUrl)
       }
     }
@@ -1035,16 +1034,15 @@ function updateName(callback) {
 
   const auth = firebase.auth().currentUser;
   let backIcon = ''
-  if(history.state[0] === 'profileCheck') {
+  if (history.state[0] === 'profileCheck') {
     backIcon = `<span class="mdc-top-app-bar__title">Name</span>`
-    
-  }
-  else {
+
+  } else {
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Name</span>
     `
   }
-  
+
   setHeader(backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   
@@ -1121,13 +1119,12 @@ function getEmailViewHeading(auth) {
 function emailUpdation(skip, callback) {
   const auth = firebase.auth().currentUser;
   const headings = getEmailViewHeading(auth)
-  let backIcon ='';
-  if(history.state[0] === 'profileCheck') {
-   backIcon = `
+  let backIcon = '';
+  if (history.state[0] === 'profileCheck') {
+    backIcon = `
     <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
     `
-  }
-  else {
+  } else {
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
     `
@@ -1233,15 +1230,15 @@ ${actionButton('CONTINUE','continue').outerHTML}
 function handleEmailError(error) {
   progressBar.close()
   if (error.code === 'auth/requires-recent-login') {
-  const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
-  dialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept') return;
-    if (history.state[0] !== 'profileCheck') {
-      EMAIL_REAUTH = true;
-    }
-    revokeSession();
-  })
-  return;
+    const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
+    dialog.listen('MDCDialog:closed', function (evt) {
+      if (evt.detail.action !== 'accept') return;
+      if (history.state[0] !== 'profileCheck') {
+        EMAIL_REAUTH = true;
+      }
+      revokeSession();
+    })
+    return;
   }
   snacks(error.message);
 }
@@ -1287,44 +1284,57 @@ Verify your email to receive  offer letter, salary slip, tax forms & other docum
 function isPossiblyValidAadharNumber(string) {
   return /^\d{4}\d{4}\d{4}$/.test(string)
 }
+
 function isPossiblyValidPan(string) {
   return /^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$/.test(string)
 }
 
 
-function idProofView(callback) {
-  getRootRecord().then(function(rootRecord) {
+function showPan(record) {
 
-  const ids = rootRecord.idProof || {
-    'aadhar':{
-      'front':'',
-      'back':'',
-      'number':''
-    },
-    'pan':{
-      'front':'',
-      'back':'',
-      'number':''
+  if (history.state[0] !== 'profileCheck') return true
+  if (record.pan.number && record.pan.front && record.pan.back) return false;
+  return true
+}
+
+function showAadhar(record) {
+  if (history.state[0] !== 'profileCheck') return true
+  if (record.aadhar.number && record.aadhar.front && record.aadhar.back) return false;
+  return true
+}
+
+function idProofView(callback) {
+  getRootRecord().then(function (rootRecord) {
+    const auth = firebase.auth().currentUser;
+    const ids = rootRecord.idProof || {
+      'aadhar': {
+        'front': '',
+        'back': '',
+        'number': ''
+      },
+      'pan': {
+        'front': '',
+        'back': '',
+        'number': ''
+      }
     }
-  }
-  
-  let backIcon = ''
-  if(history.state[0] === 'profileCheck') {
-    backIcon = ' <span class="mdc-top-app-bar__title">Add ID Proof</span>'
-  }
-  else {
-   backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+
+    let backIcon = ''
+    if (history.state[0] === 'profileCheck') {
+      backIcon = ' <span class="mdc-top-app-bar__title">Add ID Proof</span>'
+    } else {
+      backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add ID Proof</span>
     `
-  }
-  setHeader(backIcon, '');
+    }
+    setHeader(backIcon, '');
 
-  const panel = document.getElementById('app-current-panel');
-  panel.innerHTML = `
+    const panel = document.getElementById('app-current-panel');
+    panel.innerHTML = `
   <div class='id-container app-padding'>
   ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` :'' }
  
-    <div class='pan-container pb-10'>
+    <div class='pan-container pb-10 ${showPan(ids) ? '' : 'hidden'}'>
     <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter PAN card details</h3>
       <div class='text-field-container mt-10 mb-10'>
         ${textField({
@@ -1341,8 +1351,7 @@ function idProofView(callback) {
     <div class='pan-images mdc-layout-grid__inner'>
         <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
           <div class='image-container'>
-            <img src='${ids.front || './img/placeholder.png' }'  class='width-100' data-name="panFront"  data-valid="false">
-           
+            <img src='${ids.pan.front || './img/placeholder.png' }'  class='width-100' data-name="panFront"  data-valid="${ids.pan.front ? 'true' : 'false'}">
             <div class='add-icon-cont'>
             <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-front-btn' data-name="panFront">
               <div class="mdc-fab__ripple"></div>
@@ -1356,7 +1365,7 @@ function idProofView(callback) {
         </div>
         <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
         <div class='image-container'>
-            <img src='${ids.back || './img/placeholder.png' }' class='width-100' data-name="panBack"  data-valid="false">
+            <img src='${ids.pan.back || './img/placeholder.png' }' class='width-100' data-name="panBack"  data-valid="${ids.pan.back ? 'true' : 'false'}">
             
             <div class='add-icon-cont'>
             <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-back-btn' data-name="panBack">
@@ -1372,7 +1381,7 @@ function idProofView(callback) {
         </div>
     </div>
     </div>
-    <div class='aadhar-container'>
+    <div class='aadhar-container ${showAadhar(ids) ? '' : 'hidden'}'>
         <h3 class='mdc-typography--headline6 mdc-theme--primary'>Enter AADHAR card details</h3>
       <div class='text-field-container mt-10 mb-10'>
         ${textField({
@@ -1389,7 +1398,7 @@ function idProofView(callback) {
       <div class='aadhar-images mdc-layout-grid__inner'>
       <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
       <div class='image-container'>
-        <img src='${ids.aadhar.front || './img/placeholder.png' }' class='width-100' data-name="aadharFront"  data-valid="false">
+        <img src='${ids.aadhar.front || './img/placeholder.png' }' class='width-100' data-name="aadharFront"  data-valid="${ids.aadhar.front ? 'true' : 'false'}">
        
         <div class='add-icon-cont'>
         <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-front-btn' data-name="aadharFront">
@@ -1404,7 +1413,7 @@ function idProofView(callback) {
     </div>
     <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
     <div class='image-container'>
-        <img src='${ids.aadhar.back || './img/placeholder.png' }' class='width-100' data-name="aadharBack" data-valid="false">
+        <img src='${ids.aadhar.back || './img/placeholder.png' }' class='width-100' data-name="aadharBack" data-valid="${ids.aadhar.back ? 'true' : 'false'}">
         
         <div class='add-icon-cont'>
         <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-back-btn' data-name="aadharBack">
@@ -1428,76 +1437,98 @@ function idProofView(callback) {
   
   `
 
-  const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
-  const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
-  const skipBtn = document.getElementById('skip-btn');
+    const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
+    const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
+    const skipBtn = document.getElementById('skip-btn');
 
-  [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function(el){
-    el.addEventListener('click',function(){
-      if (parent.native.getName() === 'Android') {
-        AndroidInterface.startCamera(el.dataset.name);
+    [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function (el) {
+      el.addEventListener('click', function () {
+        if (parent.native.getName() === 'Android') {
 
+          AndroidInterface.startCamera(el.dataset.name);
+
+          return;
+        }
+        webkit.messageHandlers.startCamera.postMessage(el.dataset.name)
+      })
+    })
+
+    const submitBtn = document.getElementById('submit-btn');
+    new mdc.ripple.MDCRipple(submitBtn);
+    submitBtn.addEventListener("click", function () {
+
+      if (!isPossiblyValidAadharNumber(aadharNumber.value.trim())) {
+        setHelperInvalid(aadharNumber);
+        aadharNumber.helperTextContent = 'Please enter a valid AADHAR number'
         return;
-    }
-    webkit.messageHandlers.startCamera.postMessage(el.dataset.name)
+      }
+
+      if (!isPossiblyValidPan(panNumber.value.trim())) {
+        setHelperInvalid(panNumber);
+        panNumber.helperTextContent = 'Please enter a valid PAN number'
+        return;
+      };
+      const validImagesLength = [...document.querySelectorAll(`[data-valid="false"]`)].length;
+
+      if (validImagesLength) {
+        snacks('Please Upload All Images');
+        return;
+      }
+
+      ids.aadhar.number = aadharNumber.value.trim();
+      ids.aadhar.front = document.querySelector(`[data-name="aadharFront"]`).src;
+      ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
+      ids.pan.number = panNumber.value.trim();
+      ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
+      ids.pan.back = document.querySelector(`[data-name="panBack"]`).src;
+
+      submitBtn.setAttribute('disabled', true)
+      if (skipBtn) {
+        skipBtn.setAttribute('disabled', true)
+      }
+      requestCreator('idProof', ids).then(function (response) {
+        const tx = db.transaction('root', 'readwrite');
+        const store = tx.objectStore('root')
+        store.get(auth.uid).onsuccess = function (event) {
+          const newRecord = event.target.result;
+          newRecord.idProof = response;
+          store.put(newRecord);
+        }
+        tx.oncomplete = function () {
+          callback();
+        }
+      }).catch(function () {
+        if (skipBtn) {
+          skipBtn.removeAttribute('disabled')
+        }
+        submitBtn.removeAttribute('disabled')
+      });
+    })
+    if (!skipBtn) return;
+
+    new mdc.ripple.MDCRipple(skipBtn);
+    skipBtn.addEventListener('click', function () {
+      const tx = db.transaction('root', 'readwrite');
+      const store = tx.objectStore('root')
+      store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        record.skipIdproofs = true
+        store.put(record)
+      }
+      tx.oncomplete = function () {
+        if (callback) {
+          callback();
+        }
+      }
     })
   })
-
-  const submitBtn = document.getElementById('submit-btn');
-  new mdc.ripple.MDCRipple(submitBtn);
-  submitBtn.addEventListener("click",function(){
-    
-    if(!isPossiblyValidAadharNumber(aadharNumber.value)) {
-      setHelperInvalid(aadharNumber);
-      aadharNumber.helperTextContent = 'Please enter a valid AADHAR number'
-      return;
-    }
-
-    if(!isPossiblyValidPan(panNumber.value)) {
-      setHelperInvalid(panNumber);
-      panNumber.helperTextContent = 'Please enter a valid PAN number'
-      return;
-    }; 
-    const validImagesLength = [...document.querySelectorAll(`[data-valid="true"]`)].length;
-    if(validImagesLength !== 4) {
-      snacks('Please Upload All Images');
-      return;
-    }
-
-    ids.aadhar.number = aadharNumber.value;
-    ids.aadhar.front = document.querySelector(`[data-name="aadharFront"]`).src;
-    ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
-    ids.pan.number = panNumber.value;
-    ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
-    ids.pan.back = document.querySelector(`[data-name="panBack"]`).src;
-
-    requestCreator('idProof',ids).then(function(){
-      callback();
-    }).catch(console.error);
-  })
-  if(!skipBtn) return;
-  new mdc.ripple.MDCRipple(skipBtn);
-  skipBtn.addEventListener('click', function () {
-    const tx = db.transaction('root', 'readwrite');
-    const store = tx.objectStore('root')
-    store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-      const record = event.target.result;
-      record.skipIdproof = true
-      store.put(record)
-    }
-    tx.oncomplete = function () {
-      if (callback) {
-        callback();
-      }
-    }
-  })
-})
 }
+
 
 
 function aadharFront(base64) {
   const img = document.querySelector(`[data-name="aadharFront"]`);
-  if(img) {
+  if (img) {
     img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }
@@ -1505,21 +1536,23 @@ function aadharFront(base64) {
 
 function aadharBack(base64) {
   const img = document.querySelector(`[data-name="aadharBack"]`);
-  if(img) {
+  if (img) {
     img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }
 }
+
 function panFront(base64) {
   const img = document.querySelector(`[data-name="panFront"]`);
-  if(img) {
+  if (img) {
     img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }
 }
+
 function panBack(base64) {
   const img = document.querySelector(`[data-name="panBack"]`);
-  if(img) {
+  if (img) {
     img.dataset.valid = true
     img.src = `data:image/jpg;base64,${base64}`
   }

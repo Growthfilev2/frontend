@@ -157,8 +157,11 @@
 .add-bank-container #submit-btn {
     float: right;
 }
+
 .id-container .image-container {
     position: relative;
+    width: auto;
+    height: auto;
 }
 .id-container .image-container img {
   display: block;

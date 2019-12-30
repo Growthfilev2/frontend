@@ -95,6 +95,9 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
+  if(event.state[0] === 'searchOffice') return;
+  if(event.state[0] === 'profileCheck') return;
+
   if (event.state[0] === 'reportView') {
     this.reportView(event.state[1])
     return;
@@ -491,9 +494,9 @@ function startApp() {
         rootRecord = transactionEvent.target.result;
         
         rootRecord.linkedAccounts = res.linkedAccounts || [];
-      
-        if (res.idProofs) {
-          rootRecord.idProofs = res.idProofs
+        rootRecord.potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers;
+        if (res.idProof) {
+          rootRecord.idProof = res.idProof
         }
         store.put(rootRecord);
 
@@ -615,17 +618,28 @@ function checkForEmail() {
 }
 
 
+function checkEmptyIdProofs(record) {
+  if(!record.idProof) return true;
+  const keys =  Object.keys(record.idProof);
+  let isEmpty = false;
+  keys.forEach(function(key){
+    if(!record.idProof[key].number ||!record.idProof[key].front ||!record.idProof[key].back) {
+      isEmpty = true;
+      return;
+    }
+  })
+  return isEmpty;
+}
 function checkForId() {
-
   getRootRecord().then(function (record) {
-    if (record.skipIdproof || record.idProofs) {
+  
+    if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
       increaseStep(5);
       checkForBankAccount();
       return
     };
     increaseStep(4);
     idProofView(checkForBankAccount);
-
   })
 }
 
@@ -1018,8 +1032,15 @@ function openMap() {
       if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        history.pushState(['searchOffice', geopoint], null, null)
-        searchOffice(geopoint);
+        getRootRecord().then(function(rootRecord){
+          if(rootRecord.potentialAlternatePhoneNumbers && rootRecord.potentialAlternatePhoneNumbers.length) {
+          
+            chooseAlternativePhoneNumber(rootRecord.potentialAlternatePhoneNumbers,geopoint);
+            return
+          }
+          history.pushState(['searchOffice', geopoint], null, null)
+          searchOffice(geopoint);
+        })
         return
       };
 
