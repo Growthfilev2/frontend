@@ -330,21 +330,9 @@ function expandPlaceBox() {
 
                 if(!searchResponse.length) {    
                    
-                    var dialog = new Dialog(`${placeResult.name} not found`,'<p>Are you sure you want to  create a new company ?</p>').create();
-                    dialog.buttons_[0].textContent = 'cancel'
-                    dialog.buttons_[1].textContent = 'create new company';
-                    dialog.open();
-                    dialog.root_.dataset.accepted = "false"
-                  
-                   
-                    dialog.listen('MDCDialog:closed',function(dialogEvent){
-                        if(dialogEvent.detail.action !== 'accept') {
-                            confirmFab.classList.remove('mdc-fab--exited')
-                            return;
-                        }
-                        createOfficeInit(dialog);
-                        
-                    })
+                    createOfficeInit(confirmFab);
+                    
+                    
                     return;
                 };
 
@@ -360,11 +348,15 @@ function expandPlaceBox() {
                 
                 `
                 var dialog = new Dialog('Choose company', officeContent).create();
-                dialog.buttons_[0].textContent = 'cancel'
-                dialog.buttons_[1].textContent = 'create new company';
                 dialog.open();
+                dialog.buttons_[0].textContent = 'cancel'
+                dialog.buttons_[0].style.marginRight = 'inherit'
+                dialog.buttons_[1].textContent = 'JOIN';
+              
+
                 const list = new mdc.list.MDCList(document.getElementById('office-selection-list'));
                 list.singleSelection = true;
+                list.selectedIndex = [0]
                 let selectedListIndex;
                 
                 dialog.listen('MDCDialog:opened',function(openEvent){
@@ -374,13 +366,21 @@ function expandPlaceBox() {
                         console.log(list)
                         if(!list.selectedIndex.length) {
                             selectedListIndex = null;
-                            dialog.buttons_[1].textContent = 'create new company';
+                            dialog.buttons_[1].setAttribute('disabled','true')
                         }
                         else {
                             selectedListIndex = listEvent.detail.index;
                             list.selectedIndex = [listEvent.detail.index]
-                            dialog.buttons_[1].textContent = 'JOIN';
+                            dialog.buttons_[1].removeAttribute('disabled')
                         }
+                    });
+                    const notFoundBtn = dialogButton('not found ? ','not-found')
+
+                    dialog.container_.querySelector('footer').insertBefore(notFoundBtn,dialog.buttons_[1]);
+                    notFoundBtn.style.color = 'black'
+                    notFoundBtn.style.marginRight = 'auto'
+                    notFoundBtn.addEventListener('click',function(){
+                        createOfficeInit(confirmFab)
                     });
                 })
                 dialog.listen('MDCDialog:closed', function (dialogEvent) {
@@ -388,11 +388,7 @@ function expandPlaceBox() {
                         confirmFab.classList.remove('mdc-fab--exited')
                         return;
                     }
-                    if(list.selectedIndex.length) {
-                        giveSubscriptionInit(searchResponse[selectedListIndex].name);
-                        return
-                    }
-                    createOfficeInit(dialog);
+                    giveSubscriptionInit(searchResponse[selectedListIndex].name);                    
                 })
             }).catch(function (error) {
                 console.log(error)
@@ -431,8 +427,40 @@ function isAdmin(idTokenResult) {
 }
 
 
-function createOfficeInit(dialog) {
-    if(dialog.root_.dataset.accepted === 'true') {
+function createOfficeInit(confirmFab) {
+    const content = `
+    <p>Are you sure you want to  create a new company ?</p>
+    <p>Before continuing please agree to Growthfile's privacy policy & terms or use</p>
+    <div class='terms-cont'>
+        ${createCheckBox('office-checkbox')}
+    </div>`
+    var dialog = new Dialog(`${placeResult.name} not found`,content).create();
+    dialog.buttons_[0].textContent = 'cancel'
+    dialog.buttons_[1].textContent = 'create new company';
+    dialog.buttons_[1].setAttribute('disabled','true')
+    dialog.open();
+     
+    const form = new mdc.formField.MDCFormField(dialog.content_.querySelector('.mdc-form-field'))
+    const chckBox = new mdc.checkbox.MDCCheckbox(dialog.content_.querySelector('.mdc-checkbox'))
+    form.input = chckBox;
+    form.label_.innerHTML = `I agree to <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
+    <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>`
+
+    chckBox.listen('change',function(){
+        if(chckBox.checked) {
+            dialog.buttons_[1].removeAttribute('disabled')
+        }
+        else {
+            dialog.buttons_[1].setAttribute('disabled','true')
+        }
+    })   
+
+    dialog.listen('MDCDialog:closed',function(dialogEvent){
+        if(dialogEvent.detail.action !== 'accept') {
+            confirmFab.classList.remove('mdc-fab--exited')
+            return;
+        }
+
         const template = {
             'template': 'office',
             'firstContact': '',
@@ -443,35 +471,7 @@ function createOfficeInit(dialog) {
         }
         history.pushState(['addView'], null, null);
         addView(template);
-        return;
-    }
-
-    const content = `
-    <p>Before continuing please agree to Growthfile's privacy policy & terms or use</p>
-    <div class='terms-cont'>
-        ${createCheckBox('office-checkbox')}
-    </div>
-    `
-    dialog.open();
-    dialog.buttons_[1].textContent = 'Agree & continue';
-    dialog.buttons_[1].setAttribute('disabled','true')
-    dialog.content_.innerHTML = content;
-    dialog.container_.querySelector('.mdc-dialog__title').innerHTML = 'Create Company'
-    const form = new mdc.formField.MDCFormField(dialog.content_.querySelector('.mdc-form-field'))
-    const chckBox = new mdc.checkbox.MDCCheckbox(dialog.content_.querySelector('.mdc-checkbox'))
-    form.input = chckBox;
-    form.label_.innerHTML = `I agree to <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
-    <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>`
-    chckBox.listen('change',function(){
-        if(chckBox.checked) {
-            dialog.buttons_[1].removeAttribute('disabled')
-            dialog.root_.dataset.accepted = "true"
-        }
-        else {
-            dialog.buttons_[1].setAttribute('disabled','true')
-            dialog.root_.dataset.accepted = "false"
-        }
-    })   
+    })
 }
 
 function giveSubscriptionInit(name = placeResult.name) {

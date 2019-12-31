@@ -16,7 +16,7 @@ function createFab(icon, id = '') {
         className: 'mdc-fab  mdc-button--raised mdc-fab app-fab--absolute ',
         id: id
     });
-   
+
 
     const span = createElement('span', {
         className: 'mdc-fab__icon material-icons',
@@ -172,6 +172,17 @@ Dialog.prototype.create = function (type) {
     return new mdc.dialog.MDCDialog(parent);
 }
 
+function dialogButton(name, action) {
+    const button = createElement('button', {
+        className: 'mdc-button mdc-dialog__button',
+        type: 'button',
+        textContent: name
+    });
+
+
+    button.setAttribute('data-mdc-dialog-action', action)
+    return button;
+}
 
 function setHeader(sectionStart, sectionEnd) {
     const el = document.getElementById('app-header');
@@ -317,7 +328,7 @@ function createRadio(radioId, inputId) {
 }
 
 
-function createCheckBox(id,label = '') {
+function createCheckBox(id, label = '') {
     return `
     <div class="mdc-form-field">
   <div class="mdc-checkbox">

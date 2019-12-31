@@ -520,7 +520,7 @@ body {
 }
 
 
-.mdc-dialog footer .mdc-button:nth-child(2) {
+.mdc-dialog footer .mdc-button:last-child {
   color: #0399f4;
 }
 
