@@ -311,6 +311,9 @@ function executeRequest(requestGenerator) {
       } else {
         const resolve = workerResolves[event.data.id];
         if (resolve) {
+          if(event.data.response.hasOwnProperty('reloadApp') && !event.data.response.reloadApp)  {
+            delete event.data.response.reloadApp;
+          }
           resolve(event.data.response);
         }
       }
@@ -1287,7 +1290,7 @@ function showAadhar(record) {
 
 function idProofView(callback) {
   getRootRecord().then(function (rootRecord) {
-    const auth = firebase.auth().currentUser;
+    const auth = firebase.auth().currentUser;  
     const ids = rootRecord.idProof || {
       'aadhar': {
         'front': '',
@@ -1333,7 +1336,10 @@ function idProofView(callback) {
                   <div class='image-container'>
                     <img src='${ids[idName][type] || './img/placeholder.png' }'  class='width-100' data-name="${idName}${type}"  data-valid="${ids[idName][type] ? 'true' : 'false'}">
                     <div class='add-icon-cont'>
-                      ${createFab('add_a_photo',`${idName}-${type}-btn`,{name:`${idName}${type}`},false).outerHTML}
+                    <button class="mdc-fab mdc-fab--mini mdc-button--raised">
+                      <span class="mdc-fab__icon material-icons">add_a_photo</span>
+                      <input type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
+                    </button>
                     </div>
                   </div>
                   <div class="mdc-image-list__supporting">
@@ -1352,14 +1358,15 @@ function idProofView(callback) {
     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
     const skipBtn = document.getElementById('skip-btn');
 
-    [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function (el) {
-      el.classList.add('mdc-fab--mini')
-      el.addEventListener('click', function () {
-        if (parent.native.getName() === 'Android') {
-          AndroidInterface.startCamera(el.dataset.name);
-          return;
-        }
-        webkit.messageHandlers.startCamera.postMessage(el.dataset.name)
+    [...document.querySelectorAll('.id-container .mdc-fab input')].forEach(function (el) {
+      el.addEventListener('change', function (evt) {
+
+        getImageBase64(evt).then(function (dataURL) {
+          const parentImg = el.closest('.image-container').querySelector('img')
+          if(!parentImg) return;
+          parentImg.src = `${dataURL}`;
+          parentImg.dataset.valid = true
+        });
       })
     })
 
@@ -1434,36 +1441,3 @@ function idProofView(callback) {
   })
 }
 
-
-
-function aadharfront(base64) {
-  const img = document.querySelector(`[data-name="aadharFront"]`);
-  if (img) {
-    img.dataset.valid = true
-    img.src = `data:image/jpg;base64,${base64}`
-  }
-}
-
-function aadharback(base64) {
-  const img = document.querySelector(`[data-name="aadharBack"]`);
-  if (img) {
-    img.dataset.valid = true
-    img.src = `data:image/jpg;base64,${base64}`
-  }
-}
-
-function panfront(base64) {
-  const img = document.querySelector(`[data-name="panFront"]`);
-  if (img) {
-    img.dataset.valid = true
-    img.src = `data:image/jpg;base64,${base64}`
-  }
-}
-
-function panback(base64) {
-  const img = document.querySelector(`[data-name="panback"]`);
-  if (img) {
-    img.dataset.valid = true
-    img.src = `data:image/jpg;base64,${base64}`
-  }
-}

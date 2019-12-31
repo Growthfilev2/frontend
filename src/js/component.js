@@ -11,18 +11,12 @@ function createElement(tagName, attrs) {
 
 
 
-function createFab(icon, id = '', dataset = {},isAbsolute = true) {
+function createFab(icon, id = '',) {
     const button = createElement('button', {
         className: 'mdc-fab  mdc-button--raised',
         id: id
     });
-    if(isAbsolute) {
-        button.classList.add('mdc-fab--exited','app-fab--absolute');
-    }
-    const dataKeys = Object.keys(dataset);
-    dataKeys.forEach(function (key) {
-        button.dataset[key] = dataset[key];
-    })
+   
 
     const span = createElement('span', {
         className: 'mdc-fab__icon material-icons',

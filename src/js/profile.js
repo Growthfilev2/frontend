@@ -13,12 +13,10 @@ function profileView() {
   <button class="mdc-fab mdc-fab--mini mdc-theme--primary-bg" aria-label="Favorite" style="
     position: fixed;
     top: 1rem;
-    right: 1rem;
-">
-  <span class="mdc-fab__icon material-icons">edit</span>
-  <input id='choose-profile-image' type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
-
-</button>
+    right: 1rem;">
+      <span class="mdc-fab__icon material-icons">edit</span>
+      <input id='choose-profile-image' type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
+  </button>
 </div>
 
 <div id='base-details'></div>
@@ -43,20 +41,15 @@ function setDetails() {
   new mdc.list.MDCList(document.getElementById('basic-info-edit'));
   const input = document.getElementById('choose-profile-image')
   input.addEventListener('change', function (evt) {
-
-
     getImageBase64(evt).then(function (dataURL) {
       document.querySelector('.mdc-card__media.mdc-card__media--16-9').style.backgroundImage = `url(${dataURL})`
-
       return requestCreator('backblaze', {
         'imageBase64': dataURL
       })
     }).then(function () {
-
       snacks('Profile picture updated')
       firebase.auth().currentUser.reload();
     }).catch(console.error)
-
   })
   createViewProfile()
 
