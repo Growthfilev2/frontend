@@ -11,9 +11,9 @@ function createElement(tagName, attrs) {
 
 
 
-function createFab(icon, id = '',) {
+function createFab(icon, id = '') {
     const button = createElement('button', {
-        className: 'mdc-fab  mdc-button--raised',
+        className: 'mdc-fab  mdc-button--raised mdc-fab app-fab--absolute ',
         id: id
     });
    

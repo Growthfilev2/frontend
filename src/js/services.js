@@ -1288,6 +1288,8 @@ function showAadhar(record) {
   return true
 }
 
+
+
 function idProofView(callback) {
   getRootRecord().then(function (rootRecord) {
     const auth = firebase.auth().currentUser;
