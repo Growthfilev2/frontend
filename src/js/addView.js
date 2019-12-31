@@ -13,9 +13,7 @@ function addView(sub) {
         if (!frame) return;
         frame.contentWindow.init(sub);
     })
-
 }
-
 
 function sendOfficeData(requestBody) {
     appLocation(3).then(function (geopoint) {

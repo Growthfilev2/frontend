@@ -6,6 +6,7 @@ var map;
 
 
 function chooseAlternativePhoneNumber(alternatePhoneNumbers,geopoint) {
+   
     const auth = firebase.auth().currentUser;
     const appEl = document.getElementById('app-current-panel');
     appEl.innerHTML = `<div class='phone-number-choose'>
@@ -13,19 +14,26 @@ function chooseAlternativePhoneNumber(alternatePhoneNumbers,geopoint) {
                 <h1 class='mdc-typography--headline5 mb-0'>
                     Hello, ${auth.displayName}
                 </h1>
-                <p class='mdc-typography--headline5 mt-10'>You are logged in with <span class='mdc-theme--primary'>${auth.phoneNumber}</span></p>
-                <p class='mdc-typography--headline6 mt-0'>Confirm that this is your number</p>
+                <p class='mdc-typography--body1'>We found other numbers you used with this device . Choose a phone number to proceed</p>
 
-                <ul class='mdc-list' id='phone-list'>
-                    ${createCheckBoxList(auth.phoneNumber,0)}
+                <ul class='mdc-list  mdc-list--two-line' id='phone-list'>
+                    ${createCheckBoxList({
+                        primaryText:auth.phoneNumber,
+                        secondaryText:'',
+                        index:0
+                    })}
                     <li class='mdc-list-divider'></li>
-                    ${alternatePhoneNumbers.map(function(number,index){
-                        return `${number ? createCheckBoxList(number,index) : ''}`
+                    ${alternatePhoneNumbers.map(function(data,index){
+                        return `${createCheckBoxList({
+                            primaryText:data.phoneNumber,
+                            secondaryText:data.office,
+                            index:index
+                        })}`
                     }).join("")}
                 </ul>
             </div>
     </div>
-    ${actionButton('Confirm', 'confirm-phone-btn').outerHTML}
+    ${actionButton('CONTINUE', 'confirm-phone-btn').outerHTML}
     `
 
     const list = document.getElementById('phone-list');
@@ -37,18 +45,23 @@ function chooseAlternativePhoneNumber(alternatePhoneNumbers,geopoint) {
     new mdc.ripple.MDCRipple(confirmBtn);
     listInit.listen('MDCList:action',function(listEvent){
         if(!listInit.selectedIndex.length) {
-           
             confirmBtn.setAttribute('disabled',true);
         }
         else {
             listInit.selectedIndex = [listEvent.detail.index]
             confirmBtn.removeAttribute('disabled');
+            if(listEvent.detail.index == 0){
+                confirmBtn.textContent = 'Continue'
+            }
+            else {
+                confirmBtn.textContent = 'Confirm & re-login'
+            }
         }
     })
     
     listInit.singleSelection = true;
     listInit.selectedIndex = [0];
-
+    listInit.listElements[0].style.height = '48px';
     confirmBtn.addEventListener('click',function(){
         if(listInit.selectedIndex == 0) {
             history.pushState(['searchOffice', geopoint], null, null)
@@ -68,7 +81,7 @@ function searchOffice(geopoint = history.state[1]) {
      <div class='search-container'>
         ${textField({
             id: 'search-address',
-            label: 'Search for your office location',
+            label: 'Search for your company location',
             leadingIcon:'search',
             trailingIcon:'clear',
             autocomplete:'organization'
@@ -85,7 +98,7 @@ function searchOffice(geopoint = history.state[1]) {
     </div>`;
 
 
-    const header = setHeader('<span class="mdc-top-app-bar__title">Search Office</span>', '');
+    const header = setHeader('<span class="mdc-top-app-bar__title">Search company</span>', '');
     header.root_.classList.remove('hidden');
 
     const center = {
@@ -315,54 +328,40 @@ function expandPlaceBox() {
                 query: placeResult.place_id
             }).then(function (searchResponse) {
 
-                if(!searchResponse.length) {
-                    var dialog = new Dialog(`${placeResult.name} not found`,'Do you want to create a new office ? ').create();
+                if(!searchResponse.length) {    
+                   
+                    var dialog = new Dialog(`${placeResult.name} not found`,'<p>Are you sure you want to  create a new company ?</p>').create();
                     dialog.buttons_[0].textContent = 'cancel'
-                    dialog.buttons_[1].textContent = 'create new office';
+                    dialog.buttons_[1].textContent = 'create new company';
                     dialog.open();
+                    dialog.root_.dataset.accepted = "false"
+                  
+                   
                     dialog.listen('MDCDialog:closed',function(dialogEvent){
                         if(dialogEvent.detail.action !== 'accept') {
                             confirmFab.classList.remove('mdc-fab--exited')
                             return;
                         }
-                        createOfficeInit();
+                        createOfficeInit(dialog);
+                        
                     })
                     return;
                 };
 
                 const officeContent = `<ul class='mdc-list  mdc-list--two-line'  id='office-selection-list'>
                     ${searchResponse.map(function(response,index){
-                        return `<li class='mdc-list-item pl-0 pr-0' tabindex="-1">
-                            <span class='mdc-list-item__text'>
-                                <span class='mdc-list-item__primary-text'>${response.name}</span>
-                                <span class='mdc-list-item__secondary-text'>${response.registeredOfficeAddress}</span>
-                            </span>
-                            <span class="mdc-list-item__graphic mdc-list-item__meta">
-                            <div class="mdc-checkbox">
-                                <input type="checkbox"
-                                        class="mdc-checkbox__native-control"
-                                        id="demo-list-checkbox-item-${index}" />
-                                <div class="mdc-checkbox__background">
-                                  <svg class="mdc-checkbox__checkmark"
-                                        viewBox="0 0 24 24">
-                                    <path class="mdc-checkbox__checkmark-path"
-                                          fill="none"
-                                          d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-                                  </svg>
-                                  <div class="mdc-checkbox__mixedmark"></div>
-                                </div>
-                              </div>
-                        </span>
-                        </li>`
+                        return `${createCheckBoxList({
+                            primaryText:response.name,
+                            secondaryText:response.registeredOfficeAddress,
+                            index:index
+                        })}`
                     }).join("")}
                 </ul> 
+                
                 `
-
-           
-    
-                var dialog = new Dialog('Choose office', officeContent).create();
+                var dialog = new Dialog('Choose company', officeContent).create();
                 dialog.buttons_[0].textContent = 'cancel'
-                dialog.buttons_[1].textContent = 'create new office';
+                dialog.buttons_[1].textContent = 'create new company';
                 dialog.open();
                 const list = new mdc.list.MDCList(document.getElementById('office-selection-list'));
                 list.singleSelection = true;
@@ -375,7 +374,7 @@ function expandPlaceBox() {
                         console.log(list)
                         if(!list.selectedIndex.length) {
                             selectedListIndex = null;
-                            dialog.buttons_[1].textContent = 'create new office';
+                            dialog.buttons_[1].textContent = 'create new company';
                         }
                         else {
                             selectedListIndex = listEvent.detail.index;
@@ -393,14 +392,10 @@ function expandPlaceBox() {
                         giveSubscriptionInit(searchResponse[selectedListIndex].name);
                         return
                     }
-
-                    createOfficeInit();
+                    createOfficeInit(dialog);
                 })
-               
-            
             }).catch(function (error) {
                 console.log(error)
-
                 confirmFab.classList.remove('mdc-fab--exited')
             })
         })
@@ -427,6 +422,7 @@ function expandPlaceBox() {
     });
 }
 
+
 function isAdmin(idTokenResult) {
     if (!idTokenResult.claims.hasOwnProperty('admin')) return;
     if (!Array.isArray(idTokenResult.claims.admin)) return;
@@ -435,17 +431,47 @@ function isAdmin(idTokenResult) {
 }
 
 
-function createOfficeInit() {
-    const template = {
-        'template': 'office',
-        'firstContact': '',
-        'secondContact': '',
-        'name': placeResult.name,
-        'placeId': placeResult.place_id,
-        'registeredOfficeAddress': placeResult.formatted_address,
+function createOfficeInit(dialog) {
+    if(dialog.root_.dataset.accepted === 'true') {
+        const template = {
+            'template': 'office',
+            'firstContact': '',
+            'secondContact': '',
+            'name': placeResult.name,
+            'placeId': placeResult.place_id,
+            'registeredOfficeAddress': placeResult.formatted_address,
+        }
+        history.pushState(['addView'], null, null);
+        addView(template);
+        return;
     }
-    history.pushState(['addView'], null, null);
-    addView(template);
+
+    const content = `
+    <p>Before continuing please agree to Growthfile's privacy policy & terms or use</p>
+    <div class='terms-cont'>
+        ${createCheckBox('office-checkbox')}
+    </div>
+    `
+    dialog.open();
+    dialog.buttons_[1].textContent = 'Agree & continue';
+    dialog.buttons_[1].setAttribute('disabled','true')
+    dialog.content_.innerHTML = content;
+    dialog.container_.querySelector('.mdc-dialog__title').innerHTML = 'Create Company'
+    const form = new mdc.formField.MDCFormField(dialog.content_.querySelector('.mdc-form-field'))
+    const chckBox = new mdc.checkbox.MDCCheckbox(dialog.content_.querySelector('.mdc-checkbox'))
+    form.input = chckBox;
+    form.label_.innerHTML = `I agree to <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
+    <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>`
+    chckBox.listen('change',function(){
+        if(chckBox.checked) {
+            dialog.buttons_[1].removeAttribute('disabled')
+            dialog.root_.dataset.accepted = "true"
+        }
+        else {
+            dialog.buttons_[1].setAttribute('disabled','true')
+            dialog.root_.dataset.accepted = "false"
+        }
+    })   
 }
 
 function giveSubscriptionInit(name = placeResult.name) {

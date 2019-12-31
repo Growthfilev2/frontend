@@ -145,7 +145,7 @@ Dialog.prototype.create = function (type) {
             textContent: 'Close'
         })
         this.cancelButton.setAttribute('data-mdc-dialog-action', 'close');
-
+        this.cancelButton.style.marginRight = 'auto';
 
         this.okButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
@@ -317,6 +317,28 @@ function createRadio(radioId, inputId) {
 }
 
 
+function createCheckBox(id,label = '') {
+    return `
+    <div class="mdc-form-field">
+  <div class="mdc-checkbox">
+    <input type="checkbox"
+           class="mdc-checkbox__native-control"
+           id=${id}/>
+    <div class="mdc-checkbox__background">
+      <svg class="mdc-checkbox__checkmark"
+           viewBox="0 0 24 24">
+        <path class="mdc-checkbox__checkmark-path"
+              fill="none"
+              d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+      </svg>
+      <div class="mdc-checkbox__mixedmark"></div>
+    </div>
+    <div class="mdc-checkbox__ripple"></div>
+  </div>
+  <label for="${id}">${label}</label>
+</div>`
+}
+
 
 
 
@@ -394,24 +416,27 @@ function handleTouchMove(evt) {
 }
 
 
-function createCheckBoxList(name, index, preSelected) {
-    return `<li class='mdc-list-item ${preSelected ? 'mdc-list-item--selected' :''}' ${preSelected ? 'aria-selected="true"' :''} tabindex="${preSelected ? "0" : "-1"}"  role="checkbox">
-    ${name}
-<span class="mdc-list-item__graphic mdc-list-item__meta">
-<div class="mdc-checkbox">
-    <input type="checkbox"
-            class="mdc-checkbox__native-control"
-            id="demo-list-checkbox-item-${index}" />
-    <div class="mdc-checkbox__background">
-      <svg class="mdc-checkbox__checkmark"
-            viewBox="0 0 24 24">
-        <path class="mdc-checkbox__checkmark-path"
-              fill="none"
-              d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-      </svg>
-      <div class="mdc-checkbox__mixedmark"></div>
-    </div>
-  </div>
+function createCheckBoxList(attr) {
+    return `<li class='mdc-list-item checkbox-list' tabindex="-1">
+    <span class='mdc-list-item__text'>
+        <span class='mdc-list-item__primary-text'>${attr.primaryText.trim()}</span>
+        <span class='mdc-list-item__secondary-text mdc-theme--primary'>${attr.secondaryText.trim()}</span>
+    </span>
+    <span class="mdc-list-item__graphic mdc-list-item__meta">
+    <div class="mdc-checkbox">
+        <input type="checkbox"
+                class="mdc-checkbox__native-control"
+                id="demo-list-checkbox-item-${attr.index}" />
+        <div class="mdc-checkbox__background">
+          <svg class="mdc-checkbox__checkmark"
+                viewBox="0 0 24 24">
+            <path class="mdc-checkbox__checkmark-path"
+                  fill="none"
+                  d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+          </svg>
+          <div class="mdc-checkbox__mixedmark"></div>
+        </div>
+      </div>
 </span>
 </li>`
 }

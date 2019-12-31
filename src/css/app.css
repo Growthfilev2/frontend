@@ -519,8 +519,13 @@ body {
   color: red;
 }
 
+
 .mdc-dialog footer .mdc-button:nth-child(2) {
   color: #0399f4;
+}
+
+.mdc-dialog footer .mdc-button:disabled {
+  color: var(--mdc-theme-secondary);
 }
 
 .custom-dialog-heading {
@@ -905,7 +910,7 @@ iframe {
   padding-top: 100px;
 }
 
-.slider, .phone-number-choose {
+.slider {
   height: 100%;
   display: flex;
   width: 100%;
@@ -914,12 +919,15 @@ iframe {
 
 }
 
-.slider-container, .phone-number-choose-cont {
+.slider-container {
   margin: auto;
   text-align: center;
 }
 .phone-number-choose {
   overflow-y: auto;
+}
+.phone-number-choose-cont {
+  text-align: center;
 }
 
 .slider-container .slider-content {
@@ -1066,4 +1074,9 @@ iframe {
 }
 .mdc-fab--mini .material-icons {
   font-size: 20px;
+}
+
+
+.checkbox-list .mdc-list-item__secondary-text , .checkbox-list .mdc-list-item__primary-text {
+  text-align: left;
 }

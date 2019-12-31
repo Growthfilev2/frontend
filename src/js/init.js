@@ -7,7 +7,7 @@ var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
-
+var potentialAlternatePhoneNumbers;
 
 window.addEventListener('error',function(event){
   if(event.message.toLowerCase().indexOf('script error') > -1) {
@@ -92,12 +92,15 @@ function getAndroidDeviceInformation() {
 }
 
 window.onpopstate = function (event) {
-
+  const nonRefreshViews = {
+    'mapView':true,
+    'userSignedOut':true,
+    'profileCheck':true,
+    'login':true
+  }
   if (!event.state) return;
-  if (event.state[0] === 'mapView') return;
-  if(event.state[0] === 'searchOffice') return;
-  if(event.state[0] === 'profileCheck') return;
-
+  if(nonRefreshViews[event.state[0]]) return
+ 
   if (event.state[0] === 'reportView') {
     this.reportView(event.state[1])
     return;
@@ -494,7 +497,8 @@ function startApp() {
         rootRecord = transactionEvent.target.result;
         
         rootRecord.linkedAccounts = res.linkedAccounts || [];
-        rootRecord.potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers;
+        potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
+       
         if (res.idProof) {
           rootRecord.idProof = res.idProof
         }
@@ -1029,19 +1033,15 @@ function openMap() {
   appLocation(3).then(function (geopoint) {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
-      if (!Object.keys(checkInSubs).length) {
+      if (Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        getRootRecord().then(function(rootRecord){
-          if(rootRecord.potentialAlternatePhoneNumbers && rootRecord.potentialAlternatePhoneNumbers.length) {
-          
-            chooseAlternativePhoneNumber(rootRecord.potentialAlternatePhoneNumbers,geopoint);
+          if(potentialAlternatePhoneNumbers.length) {
+            chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers,geopoint);
             return
-          }
+          };
           history.pushState(['searchOffice', geopoint], null, null)
-          searchOffice(geopoint);
-        })
-        return
+          return
       };
 
       ApplicationState.officeWithCheckInSubs = checkInSubs;
