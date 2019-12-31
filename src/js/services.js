@@ -1288,6 +1288,230 @@ function showAadhar(record) {
   return true
 }
 
+// function idProofView(callback) {
+//   getRootRecord().then(function (rootRecord) {
+//     const auth = firebase.auth().currentUser;
+//     const ids = rootRecord.idProof || {
+//       'aadhar': {
+//         'front': '',
+//         'back': '',
+//         'number': ''
+//       },
+//       'pan': {
+//         'front': '',
+//         'back': '',
+//         'number': ''
+//       }
+//     }
+
+//     let backIcon = ''
+//     if (history.state[0] === 'profileCheck') {
+//       backIcon = ' <span class="mdc-top-app-bar__title">Add ID Proof</span>'
+//     } else {
+//       backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+//     <span class="mdc-top-app-bar__title">Add ID Proof</span>
+//     `
+//     }
+//     setHeader(backIcon, '');
+
+//     const panel = document.getElementById('app-current-panel');
+//     panel.innerHTML = `
+//   <div class='id-container app-padding'>
+//   ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` :'' }
+ 
+//     <div class='pan-container pb-10 ${showPan(ids) ? '' : 'hidden'}'>
+//     <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter PAN card details</h3>
+//       <div class='text-field-container mt-10 mb-10'>
+//         ${textField({
+//           id:'pan-number',
+//           label:'Enter PAN Number',
+//           value:ids.pan.number,
+//           type:'text',
+//           required:true
+//         })}
+//         <div class="mdc-text-field-helper-line">
+//           <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+//         </div>
+//     </div>
+//     <div class='pan-images mdc-layout-grid__inner'>
+//         <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
+//           <div class='image-container'>
+//             <img src='${ids.pan.front || './img/placeholder.png' }'  class='width-100' data-name="panFront"  data-valid="${ids.pan.front ? 'true' : 'false'}">
+//             <div class='add-icon-cont'>
+//             <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-front-btn' data-name="panFront">
+//               <div class="mdc-fab__ripple"></div>
+//               <span class="mdc-fab__icon material-icons">add_a_photo</span>
+//             </button>
+//             </div>
+//           </div>
+//           <div class="mdc-image-list__supporting">
+//           <span class="mdc-image-list__label">PAN FRONT</span>
+//         </div>
+//         </div>
+//         <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
+//         <div class='image-container'>
+//             <img src='${ids.pan.back || './img/placeholder.png' }' class='width-100' data-name="panBack"  data-valid="${ids.pan.back ? 'true' : 'false'}">
+            
+//             <div class='add-icon-cont'>
+//             <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-back-btn' data-name="panBack">
+//               <div class="mdc-fab__ripple"></div>
+//               <span class="mdc-fab__icon material-icons">add_a_photo</span>
+//             </button>
+//           </div>
+            
+//         </div>
+//         <div class="mdc-image-list__supporting">
+//               <span class="mdc-image-list__label">PAN BACK</span>
+//             </div> 
+//         </div>
+//     </div>
+//     </div>
+//     <div class='aadhar-container ${showAadhar(ids) ? '' : 'hidden'}'>
+//         <h3 class='mdc-typography--headline6 mdc-theme--primary'>Enter AADHAR card details</h3>
+//       <div class='text-field-container mt-10 mb-10'>
+//         ${textField({
+//           id:'aadhar-number',
+//           label:'Enter AADHAR card Number',
+//           value:ids.aadhar.number,
+//           type:'text',
+//           required:true
+//         })}
+//         <div class="mdc-text-field-helper-line">
+//           <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+//         </div>
+//       </div>
+//       <div class='aadhar-images mdc-layout-grid__inner'>
+//       <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
+//       <div class='image-container'>
+//         <img src='${ids.aadhar.front || './img/placeholder.png' }' class='width-100' data-name="aadharFront"  data-valid="${ids.aadhar.front ? 'true' : 'false'}">
+       
+//         <div class='add-icon-cont'>
+//         <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-front-btn' data-name="aadharFront">
+//           <div class="mdc-fab__ripple"></div>
+//           <span class="mdc-fab__icon material-icons">add_a_photo</span>
+//         </button>
+//         </div>
+//       </div>
+//       <div class="mdc-image-list__supporting">
+//       <span class="mdc-image-list__label">AADHAR FRONT</span>
+//     </div>
+//     </div>
+//     <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
+//     <div class='image-container'>
+//         <img src='${ids.aadhar.back || './img/placeholder.png' }' class='width-100' data-name="aadharBack" data-valid="${ids.aadhar.back ? 'true' : 'false'}">
+        
+//         <div class='add-icon-cont'>
+//         <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-back-btn' data-name="aadharBack">
+//           <div class="mdc-fab__ripple"></div>
+//           <span class="mdc-fab__icon material-icons">add_a_photo</span>
+//         </button>
+//       </div>
+        
+//     </div>
+//     <div class="mdc-image-list__supporting">
+//           <span class="mdc-image-list__label">AADHAR BACK</span>
+//         </div> 
+//     </div>
+// </div>
+//       </div>
+//     </div>
+   
+       
+//     </div>
+//     ${actionButton('UPDATE','submit-btn').outerHTML}
+  
+//   `
+
+//     const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
+//     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
+//     const skipBtn = document.getElementById('skip-btn');
+
+//     [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function (el) {
+//       el.addEventListener('click', function () {
+//         if (parent.native.getName() === 'Android') {
+
+//           AndroidInterface.startCamera(el.dataset.name);
+
+//           return;
+//         }
+//         webkit.messageHandlers.startCamera.postMessage(el.dataset.name)
+//       })
+//     })
+
+//     const submitBtn = document.getElementById('submit-btn');
+//     new mdc.ripple.MDCRipple(submitBtn);
+//     submitBtn.addEventListener("click", function () {
+
+//       if (!isPossiblyValidAadharNumber(aadharNumber.value.trim())) {
+//         setHelperInvalid(aadharNumber);
+//         aadharNumber.helperTextContent = 'Please enter a valid AADHAR number'
+//         return;
+//       }
+
+//       if (!isPossiblyValidPan(panNumber.value.trim())) {
+//         setHelperInvalid(panNumber);
+//         panNumber.helperTextContent = 'Please enter a valid PAN number'
+//         return;
+//       };
+//       const validImagesLength = [...document.querySelectorAll(`[data-valid="false"]`)].length;
+
+//       if (validImagesLength) {
+//         snacks('Please Upload All Images');
+//         return;
+//       }
+
+//       ids.aadhar.number = aadharNumber.value.trim();
+//       ids.aadhar.front = document.querySelector(`[data-name="aadharFront"]`).src;
+//       ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
+//       ids.pan.number = panNumber.value.trim();
+//       ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
+//       ids.pan.back = document.querySelector(`[data-name="panBack"]`).src;
+
+//       submitBtn.setAttribute('disabled', true)
+//       if (skipBtn) {
+//         skipBtn.setAttribute('disabled', true)
+//       }
+//       requestCreator('idProof', ids).then(function (response) {
+//         const tx = db.transaction('root', 'readwrite');
+//         const store = tx.objectStore('root')
+//         store.get(auth.uid).onsuccess = function (event) {
+//           const newRecord = event.target.result;
+//           newRecord.idProof = response;
+//           store.put(newRecord);
+//         }
+//         tx.oncomplete = function () {
+//           callback();
+//         }
+//       }).catch(function () {
+//         if (skipBtn) {
+//           skipBtn.removeAttribute('disabled')
+//         }
+//         submitBtn.removeAttribute('disabled')
+//       });
+//     })
+//     if (!skipBtn) return;
+
+//     new mdc.ripple.MDCRipple(skipBtn);
+//     skipBtn.addEventListener('click', function () {
+//       const tx = db.transaction('root', 'readwrite');
+//       const store = tx.objectStore('root')
+//       store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+//         const record = event.target.result;
+//         record.skipIdproofs = true
+//         store.put(record)
+//       }
+//       tx.oncomplete = function () {
+//         if (callback) {
+//           callback();
+//         }
+//       }
+//     })
+//   })
+// }
+
+
+
+
 function idProofView(callback) {
   getRootRecord().then(function (rootRecord) {
     const auth = firebase.auth().currentUser;  
