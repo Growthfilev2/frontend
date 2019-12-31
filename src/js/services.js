@@ -1414,13 +1414,15 @@ function idProofView(callback) {
     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
     const skipBtn = document.getElementById('skip-btn');
 
-    [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function (el) {
-      el.addEventListener('click', function () {
-        if (parent.native.getName() === 'Android') {
-          AndroidInterface.startCamera(el.dataset.name);
-          return;
-        }
-        webkit.messageHandlers.startCamera.postMessage(el.dataset.name)
+    [...document.querySelectorAll('.id-container .mdc-fab input')].forEach(function (el) {
+      el.addEventListener('change', function (evt) {
+
+        getImageBase64(evt).then(function (dataURL) {
+          const parentImg = el.closest('.image-container').querySelector('img')
+          if(!parentImg) return;
+          parentImg.src = `${dataURL}`;
+          parentImg.dataset.valid = true
+        });
       })
     })
 
@@ -1450,6 +1452,7 @@ function idProofView(callback) {
       ids.aadhar.front = document.querySelector(`[data-name="aadharFront"]`).src;
       ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
       ids.pan.number = panNumber.value.trim();
+      ids.pan.back = document.querySelector(`[data-name="panBack"]`).src;
       ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
 
       submitBtn.setAttribute('disabled', true)
