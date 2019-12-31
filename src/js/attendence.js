@@ -1,7 +1,9 @@
-function attendenceView(sectionContent, yesterdayAttendanceRecord) {
+function attendanceView(yesterdayAttendanceRecord) {
+  const sectionContent = document.querySelector('.tabs-section .data-container');
+
+  if (!sectionContent) return;
   sectionContent.innerHTML = attendanceDom();
-  sectionContent.dataset.view = 'attendence'
-  document.getElementById('start-load').classList.add('hidden')
+  
   const el = document.getElementById('attendance-view')
   getSubscription('', 'leave').then(function (subs) {
     if (!subs.length) return;
@@ -26,7 +28,6 @@ function attendenceView(sectionContent, yesterdayAttendanceRecord) {
   }).catch(function (error) {
     createAttendanceCard();
   });
-
 }
 
 
@@ -39,7 +40,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
       }
       return;
     }
-    document.getElementById('start-load').classList.add('hidden')
+    
 
     let monthlyString = ''
     let month;
@@ -68,7 +69,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
 
   }).catch(function (error) {
     console.log(error)
-    document.getElementById('start-load').classList.add('hidden')
+    
     handleError({
       message: error.message,
       body: {
@@ -115,7 +116,7 @@ function attendaceCard(data, employeeRecord) {
         </div>
       <div class='time-container'>
           ${data.addendum.map(ad => {
-              return `<a class='time addendum-value mdc-typography--headline6 mdc-theme--primary' href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'>
+              return ` <a class='time addendum-value mdc-typography--headline6 ${ad.latitude && ad.longitude ? 'mdc-theme--primary' :''}' ${ad.latitude && ad.longitude ? `href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'` : ''}>
                   ${getAttendanceTime(ad)}
                   <div class='mdc-typography--caption'>Check-in</div>
               </a>`
@@ -139,6 +140,7 @@ function getMinimumDalyCount(data, employeeRecord) {
   if (!employeeRecord[data.office]) {
     return ` Count : ${data.addendum.length}`
   }
+  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Daily Activity Count')) return ` Count : ${data.addendum.length}`;
   if (!employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value) {
     return ` Count : ${data.addendum.length}`
   }
@@ -151,6 +153,7 @@ function getWorkingHoursText(data, employeeRecord) {
   const offices = Object.keys(employeeRecord);
   if (!offices.length) return ` Working hours :  ${hours}`;
   if (!employeeRecord[data.office]) return ` Working hours :  ${hours}`;
+  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Working Hours')) return ` Working hours :  ${hours}`;
   if (!employeeRecord[data.office].attachment['Minimum Working Hours'].value) return ` Working hours :  ${hours}`;
   return ` Working hours :  ${hours} / ${employeeRecord[data.office].attachment['Minimum Working Hours'].value} `
 }
@@ -191,7 +194,7 @@ function attendanceStatusType(data) {
 }
 
 function attendanceDom() {
-  return `<div class='attendance-section' id='attendance-view'>
+  return `<div class='attendance-section report-view' id='attendance-view'>
     <div class='monthly-stat  mdc-layout-grid__inner' id='attendance-cards'></div>
   </div>`
 }
@@ -254,6 +257,9 @@ function getMonthlyData() {
         if (!cursor.value.hasOwnProperty('attendance')) {
           cursor.continue();
           return;
+        };
+        if (!cursor.value.addendum) {
+          cursor.value.addendum = [];
         }
         if (!cursor.value.hasOwnProperty('addendum')) {
           cursor.value.addendum = [];
@@ -305,7 +311,7 @@ function checkStatusSubscription(event) {
   }
   tx.oncomplete = function () {
     if (!subscription) {
-      snacks(`You Don't Have ${formatTextToTitleCase(dataset.template)} Subscription`);
+      snacks(`You don't have ${dataset.template} subscription`);
       return
     }
 

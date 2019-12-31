@@ -45,11 +45,6 @@
     width: 100%;
 }
 
-#base-details {
-    /* padding-right: 10px;
-    padding-left: 10px; */
-    /* padding-top: 10px; */
-}
 
 #user-details {
     padding-right: 10px;
@@ -62,13 +57,6 @@
     background-color: var(--mdc-theme-background)
 }
 
-#edit-profile {
-
-    /* border-radius: 50%;
-    right: 1rem;
-    top: 1rem;
-    float: right; */
-}
 
 #edit-profile.without-tabs-des {
     bottom: 54.5rem;
@@ -92,7 +80,7 @@
 }
 
 
-.dot {
+.dots {
     height: 5px;
     width: 5px;
     background-color: #bbb;
@@ -164,4 +152,30 @@
 #change-number-helper {
     text-align: center;
     
+}
+
+.add-bank-container #submit-btn {
+    float: right;
+}
+
+.id-container .image-container {
+    position: relative;
+    width: auto;
+    height: auto;
+}
+.id-container .image-container img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.id-container .image-container .add-icon-cont {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+ 
+}
+.id-container .image-container .add-icon-cont .mdc-icon-button {
+    border-radius: 50%;
 }

@@ -2,9 +2,12 @@
 	text-align: center;
 
 }
-.data-container {
+.report-view {
 	padding-left: 10px;
 	padding-right: 10px;
+}
+.data-container {
+	padding: 0px;
 }
 
 .capitalize {

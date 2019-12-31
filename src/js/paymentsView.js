@@ -1,12 +1,14 @@
-function paymentView(sectionContent) {
+function paymentView() {
+    const sectionContent = document.querySelector('.tabs-section .data-container');
+    if (!sectionContent) return;
     sectionContent.innerHTML = paymentDom();
-    sectionContent.dataset.view = 'payments'
+    document.getElementById('start-load').classList.add('hidden')
     const parent = document.getElementById('payments');
     let month = ''
     let monthlyString = ''
     getPaymentData().then(function (paymentData) {
         const keys = Object.keys(paymentData);
-
+        
         if (!keys.length) {
             if(parent) {
                 parent.innerHTML = "<h5 class='mdc-typography--headline5 text-center'>No Payment Found</h5>"
@@ -156,6 +158,6 @@ function calculateTotalPayment(data) {
 }
 
 function paymentDom() {
-    return `<div class='payment-section' id='payments'>   
+    return `<div class='payment-section report-view' id='payments'>   
 </div>`
 }

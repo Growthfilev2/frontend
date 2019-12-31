@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div class='forms' id='form'>
+        <div class="form-list">
+
+            <div class="form-component pb-0" id='managers-cont'>
+                <div class="inline-flex">
+                    <h1 class="mdc-typography--headline6 mdc-theme--primary">
+                        Contacts
+                    </h1>
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini people-add-more add-phone-fab"
+                        aria-label="Favorite" id='add-manager' data-mdc-auto-init="MDCRipple">
+                        <div class="mdc-fab__ripple"></div>
+                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
+                    </button>
+                </div>
+                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='manager-list'
+                    data-mdc-auto-init="MDCList">
+                </ul>
+            </div>
+
+
+            <div class="action-button-container">
+                <div class="submit-button-cont">
+                    <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
+                        id='submit-btn'>
+                        <div class="mdc-button__ripple"></div>
+                       
+                        <span class="mdc-button__label">JOIN</span>
+                    </button>
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    </div>
+
+    <script src="../js/common.js"></script>
+
+    <script>
+        parent.window.mdc.autoInit();
+
+        const addManagerBtn = document.getElementById('add-manager')
+        const managerObject = {};
+        const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
+
+        function init(subscriptionTemplate) {
+           
+            addManagerBtn.addEventListener('click', function () {
+              
+                callContact("getContactManager")
+            });
+
+            document.getElementById('submit-btn').addEventListener('click', function () {
+                const array = []
+                Object.keys(managerObject).forEach(function (number) {
+                    array.push(managerObject[number]);
+                })
+                subscriptionTemplate.share = array
+                delete subscriptionTemplate.user
+                parent.sendSubscriptionData(subscriptionTemplate);
+            })
+        }
+
+        function setContactForManager(contactObject) {
+            if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
+            const li = createPhoneNumberLi(contactObject, false, function () {
+                delete managerObject[contactObject.phoneNumber];
+                addManagerBtn.classList.remove('hidden')
+                if (!managerList.listElements.length) {
+                    document.querySelector('#managers-cont .inline-flex').appendChild(addManagerBtn);
+
+                    return;
+                }
+            });
+            managerList.root_.appendChild(li)
+            managerObject[contactObject.phoneNumber] = contactObject
+            window.scrollTo(0, document.body.scrollHeight);
+            document.getElementById("managers-cont").appendChild(addManagerBtn);
+
+        }
+    </script>
+</body>
+
+</html>

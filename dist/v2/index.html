@@ -11,18 +11,21 @@
 
   <link type="text/css" rel="stylesheet" href="external/css/firebaseui.css" />
   <link href="external/css/material.min.css" rel="stylesheet" type="text/css">
-  <link href="css/bundle.css?version=59" rel="stylesheet" type="text/css">
+  <link href="css/bundle.css?version=79" rel="stylesheet" type="text/css">
 </head>
 
 <body class="mdc-typography">
   <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
+        <a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title"></span>
       </section>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
       </section>
     </div>
-    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+    <div role="progressbar" id='main-progress-bar'
+      class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
       <div class="mdc-linear-progress__buffering-dots"></div>
       <div class="mdc-linear-progress__buffer"></div>
       <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
@@ -32,34 +35,26 @@
         <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
+
   </header>
 
-  <div id='start-load'>
-    <div class="lds-roller">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-    <p></p>
-  </div>
   </div>
 
   <div class="success--container hidden center-abs" id="success-animation">
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
-      <circle class="path circle" fill="none" stroke="#89273E" stroke-width="6" stroke-miterlimit="10" cx="65.1" cy="65.1" r="62.1"/>
-      <polyline class="path check" fill="none" stroke="#89273E" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 "/>
+      <circle class="path circle" fill="none" stroke="#89273E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+        cy="65.1" r="62.1" />
+      <polyline class="path check" fill="none" stroke="#89273E" stroke-width="6" stroke-linecap="round"
+        stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
     </svg>
     <p class="success-text mdc-theme--primary"></p>
+
   </div>
 
-  <div id='login-container'></div>
-  <div id="app-current-panel"></div>
 
+  <div id='login-container'></div>
+  <div id='step-ui'></div>
+  <div id="app-current-panel"></div>
   <div id="snackbar-container">
     <div class="mdc-snackbar">
       <div class="mdc-snackbar__surface">
@@ -71,15 +66,20 @@
       </div>
     </div>
   </div>
-  <div id='dialog-container'></div>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
-  <script src='external/js/firebase-app.js'></script>
+  <div id='dialog-container'>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"
+    integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.27/moment-timezone-with-data.min.js" integrity="sha256-ltodGpbck6Njvgsa9pG7Xnr0xkVF57ctgfAS+LOeZt4=" crossorigin="anonymous"></script>  <script src='external/js/firebase-app.js'></script>
   <script src='external/js/firebase-auth.js'></script>
   <script src="external/js/firebaseui.js"></script>
   <script src='external/js/material.min.js'></script>
-  <script src="js/bundle.min.js?version=59"></script>
-  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&callback=initializeApp"></script> 
+  <script src="js/bundle.min.js?version=79"></script>
+  <script type="text/javascript"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo&libraries=places&callback=initializeApp">
+  </script>
 </body>
 
 </html>

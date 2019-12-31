@@ -32,7 +32,8 @@
   <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
-
+        <a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title"></span>
       </section>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
       </section>
@@ -47,21 +48,9 @@
         <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
+   
   </header>
 
-  <div id='start-load'>
-    <div class="lds-roller">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-    <p></p>
-  </div>
   </div>
 
   <div class="success--container hidden center-abs" id="success-animation">
@@ -77,6 +66,7 @@
 
 
   <div id='login-container'></div>
+  <div id='step-ui'></div>
   <div id="app-current-panel"></div>
   <div id="snackbar-container">
     <div class="mdc-snackbar">
@@ -94,7 +84,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.27/moment-timezone-with-data.min.js" integrity="sha256-ltodGpbck6Njvgsa9pG7Xnr0xkVF57ctgfAS+LOeZt4=" crossorigin="anonymous"></script>
   <script src='external/js/firebase-app.js'></script>
   <script src='external/js/firebase-auth.js'></script>
   <script src="external/js/firebaseui.js"></script>
@@ -104,9 +94,8 @@
   <script src="js/location.js"></script>
   <script src="js/services.js"></script>
   <script src="js/init.js"></script>
-
+  <script src="js/start.js"></script>
   <script src="js/map.js"></script>
-  <script src="js/homeView.js"></script>
   <script src="js/addView.js"></script>
   <script src="js/profile.js"></script>
   <script src="js/chatView.js"></script>
@@ -114,8 +103,10 @@
   <script src="js/attendence.js"></script>
   <script src="js/claims.js"></script>
   <script src="js/paymentsView.js"></script>
+  <script src="js/incentive.js"></script>
+
   <script type="text/javascript"
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&callback=initializeApp">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&libraries=places&callback=initializeApp">
   </script>
 </body>
 

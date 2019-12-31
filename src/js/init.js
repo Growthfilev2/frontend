@@ -3,8 +3,31 @@ let progressBar;
 var db;
 let snackBar;
 let DB_VERSION = 30;
-let initApp = true;
+var EMAIL_REAUTH;
+var firebaseUI;
+var sliderIndex = 1;
+var sliderTimeout = 10000;
+var potentialAlternatePhoneNumbers;
 
+window.addEventListener('error',function(event){
+  if(event.message.toLowerCase().indexOf('script error') > -1) {
+    this.console.log(event)
+  }
+  else {
+    handleError({
+      message:'global error :' + event.message,
+      body:{
+        lineno:event.lineno,
+        filename:event.filename,
+        colno:event.colno,
+        error:JSON.stringify({
+          stack:event.error.stack,
+          message:event.error.message
+        })
+      }
+    })  
+  }
+})
 
 function imgErr(source) {
   source.onerror = '';
@@ -47,16 +70,14 @@ let native = function () {
       if (!this.getName()) return false;
 
       if (this.getName() === 'Android') {
-        if (!localStorage.getItem('deviceInfo')) {
-          localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
-        }
-
+        localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
         return localStorage.getItem('deviceInfo');
       }
       return this.getIosInfo();
     }
   }
 }();
+
 
 function getAndroidDeviceInformation() {
   return JSON.stringify({
@@ -71,18 +92,26 @@ function getAndroidDeviceInformation() {
 }
 
 window.onpopstate = function (event) {
-
+  const nonRefreshViews = {
+    'mapView':true,
+    'userSignedOut':true,
+    'profileCheck':true,
+    'login':true
+  }
   if (!event.state) return;
-  if (event.state[0] === 'mapView' || event.state[0] === 'snapView') return;
-  if (event.state[0] === 'homeView') {
-    getSuggestions();
-    return
+  if(nonRefreshViews[event.state[0]]) return
+ 
+  if (event.state[0] === 'reportView') {
+    this.reportView(event.state[1])
+    return;
   }
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
     history.go(-1);
     return;
+  };
+  if(window[event.state[0]]) {
+    window[event.state[0]](event.state[1]);
   }
-  window[event.state[0]](event.state[1]);
 }
 
 
@@ -92,6 +121,9 @@ function initializeApp() {
     progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+    // header =  new mdc.topAppBar.MDCTopAppBar(this.document.getElementById('app-header'))
+
+
     const panel = this.document.getElementById('app-current-panel');
 
     if (!window.Worker && !window.indexedDB) {
@@ -102,28 +134,33 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
-        document.getElementById("app-current-panel").classList.add('hidden')
+        history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
       }
-      if (appKey.getMode() === 'production') {
-        if (!native.getInfo()) {
-          redirect();
-          return;
-        }
-      }
+      const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
+      header.listen('MDCTopAppBar:nav', handleNav);
+      header.root_.classList.add("hidden");
+      if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
       panel.classList.remove('hidden');
-      if (!initApp) {
-        document.getElementById('app-header').classList.remove('hidden')
-        return
-      };
-
+      if(EMAIL_REAUTH) {
+        history.pushState(['reportView'],null,null);
+        history.pushState(['profileView'],null,null);
+        history.pushState(['emailUpdation'],null,null);
+        emailUpdation(false,function(){
+          EMAIL_REAUTH = false
+          history.back()
+        })
+        return;
+      }
+      
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
 
     });
   })
+  
 }
 
 function checkNetworkValidation() {
@@ -145,6 +182,8 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        console.log(authResult);
+      
         return false;
       },
       signInFailure: function (error) {
@@ -168,17 +207,239 @@ function firebaseUiConfig() {
   };
 }
 
+function initializeFirebaseUI() {
+  document.getElementById("app-header").classList.remove("hidden");
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Login</span>
+  `;
+  header = setHeader(backIcon, '');
+  header.listen('MDCTopAppBar:nav', handleNav);
+  firebaseUI = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
+  firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
+}
 
 
 function userSignedOut() {
   progressBar.close();
   document.getElementById("dialog-container").innerHTML = '';
+  document.getElementById('step-ui').innerHTML = '';
   document.getElementById("app-header").classList.add("hidden");
+  if (firebaseUI) {
+    firebaseUI.delete();
+  }
 
-  var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
-  ui.start(document.getElementById('login-container'), firebaseUiConfig());
+  const panel = document.getElementById('app-current-panel');
+  panel.innerHTML = `
+    <div class='slider' id='app-slider'>
+      <div class='slider-container'>
+        <div class='slider-content'>
+          <div class='graphic-container'>
+            <img src='./img/ic_launcher.png'>
+          </div>
+
+          <div class='text'>
+              <p class='mdc-typography--headline6 text-center mb-0'>
+                Welcome to Growthfile
+              </p>
+              <p class='mdc-typography--body1 text-center p-10'>
+                Mark attendance on Growthfile to avoid deductions in salary and expenses
+              </p>
+          </div>
+        </div>
+        
+
+      </div>
+    </div>
+    <div class="action-button-container">
+          <div class="submit-button-cont">
+              <div class='dot-container'>
+                <span class='dot active'></span>
+                <span class='dot'></span>
+                <span class='dot'></span>
+              </div>
+              <div class='mdc-typography--body1 mb-10'>
+                <div class='text-center'>
+                  <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
+                  <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
+                </div>
+              </div>
+              <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
+                  id='login-btn'>
+                  <div class="mdc-button__ripple"></div>
+                  
+                  <span class="mdc-button__label">Agree & Continue</span>
+              </button>
+          </div>
+        </div>
+  `;
+
+
+  const sliderEl = document.getElementById('app-slider');
+  const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
+  btn.root_.addEventListener('click', function () {
+    removeSwipe()
+    panel.innerHTML = '';
+    history.pushState(['login'], null, null);
+    initializeFirebaseUI();
+  })
+  
+  var interval = setInterval(function(){
+    sliderSwipe({
+      element:sliderEl,
+      direction:'right'
+    })
+  },sliderTimeout);
+  swipe(sliderEl, sliderSwipe);
 }
 
+
+
+
+function sliderSwipe(swipeEvent) {
+  const el = swipeEvent.element;
+  if (swipeEvent.direction === 'left') {
+    if (sliderIndex <= 1) {
+      sliderIndex = 3;
+    }
+    else {
+      sliderIndex--
+
+    }
+  }
+
+  if (swipeEvent.direction === 'right') {
+    if (sliderIndex >= 3) {
+      sliderIndex = 1;
+    }
+    else {
+      sliderIndex++
+    }
+  }
+
+  loadSlider(el);
+  [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
+    dotEl.classList.remove('active');
+    if (index == sliderIndex - 1) {
+      dotEl.classList.add('active')
+    }
+  })
+}
+
+function loadSlider(sliderEl) {
+
+  let sliderContent = '';
+
+  switch (sliderIndex) {
+    case 1:
+      sliderContent = `<div class='graphic-container'>
+      <img src='./img/ic_launcher.png'>
+    </div>
+
+    <div class='text'>
+        <p class='mdc-typography--headline6 text-center mb-0'>
+          Welcome to Growthfile
+        </p>
+        <p class='mdc-typography--body1 text-center p-10'>
+          Mark attendance on Growthfile to avoid deductions in salary and expenses
+        </p>
+    </div>`
+      break;
+    case 2:
+      sliderContent = `
+        <div class='icon-container'>
+          <i class='material-icons mdc-theme--primary'>room</i>
+
+        </div>
+        <div class='text-container'>
+          <ul class='slider-list'>
+            <li>Mark attendance on your phone</li>
+            <li>Branch, customer or unknown location</li>
+            <li>Calculate kilometres traveled</li>
+          </ul>
+        </div>
+        `
+
+      break;
+    case 3:
+
+      sliderContent = `
+        <div class='image-container'>
+            <img src='./img/currency_large.png' class='currency-primary'>
+        </div>
+        <div class='text-container'>
+        <ul class='slider-list'>
+            <li>Daily payment calculation</li>
+            <li>Online bank transfer</li>
+            <li>Offer letter, payslip & form 16</li>
+            
+        </ul>
+        </div>
+        `
+      break;
+  }
+  sliderEl.querySelector('.slider-content').innerHTML = sliderContent;
+}
+
+
+function loadingScreen() {
+  const panel = document.getElementById('app-current-panel');
+
+  const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
+
+  panel.innerHTML = `
+  <div class='splash-content' id='loading-screen'>
+
+      <div class='graphic-container'>
+        <img src='./img/ic_launcher.png'>
+      </div>
+  
+      <div class='text'>
+
+        <p class='mdc-typography--headline6 text-center mb-0'>
+            Growthfile is free to use for any employee of any company
+        </p>
+        <p class='mdc-typography--subtitle2 text-center'>
+          No more queries, disputes, delays or deductions from your monthly salary & other payments
+        </p>
+    </div>
+
+    <div class="showbox" id='start-load'>
+    <div class="loader">
+      <svg class="circular" viewBox="25 25 50 50">
+        <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
+      </svg>
+    </div>
+    <p class="mdc-typography--subtitle2 mdc-theme--primary"></p>
+  </div>
+    <div class='icon-cont mdc-layout-grid__inner mt-20'>
+        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
+          <div class='icon text-center'>
+            <i class='material-icons mdc-theme--primary'>room</i>
+            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Check-in</p>
+          </div>
+        </div>
+       
+        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
+          <div class='icon text-center'>
+            <img src='./img/currency.png' class='currency-primary'>
+            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Incentives</p>
+          </div>
+        </div>
+
+      </div>
+  </div>
+  `
+  const startLoad = document.getElementById('start-load')
+  let index = 0;
+  var interval = setInterval(function () {
+    if (index == texts.length - 1) {
+      clearInterval(interval)
+    };
+    startLoad.querySelector('p').textContent = texts[index]
+    index++;
+  }, index + 1 * 1000);
+
+}
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
@@ -213,79 +474,45 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
-
     console.log("run app")
-    const startLoad = document.querySelector('#start-load')
-    startLoad.classList.remove('hidden');
-
-    const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
-
-    let index = 0;
-    var interval = setInterval(function () {
-      if (index == texts.length - 1) {
-        clearInterval(interval)
-      };
-      startLoad.querySelector('p').textContent = texts[index]
-      index++;
-    }, index + 1 * 1000);
-
-
+    loadingScreen();
 
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
       registerToken: native.getFCMToken()
     }).then(function (res) {
-
-      if (res.response.updateClient) {
+      if (res.updateClient) {
         updateApp()
         return
       }
-      if (res.response.revokeSession) {
+      if (res.revokeSession) {
         revokeSession(true);
         return
       };
-
-      getRootRecord().then(function (rootRecord) {
-        if (!rootRecord.fromTime) {
-          requestCreator('Null').then(function () {
-            document.getElementById('start-load').classList.add('hidden')
-            history.pushState(['profileCheck'], null, null)
-            profileCheck();
-          }).catch(function (error) {
-            if (error.response.apiRejection) {
-              snacks(error.response.message, 'Okay')
-            }
-            handleError({
-              message: error.message,
-              body: error,
-            })
-          })
-          return;
+      let rootRecord;
+      const rootTx = db.transaction('root', 'readwrite');
+      const store = rootTx.objectStore('root');
+      store.get(dbName).onsuccess = function (transactionEvent) {
+        rootRecord = transactionEvent.target.result;
+        
+        rootRecord.linkedAccounts = res.linkedAccounts || [];
+        potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
+       
+        if (res.idProof) {
+          rootRecord.idProof = res.idProof
         }
-        document.getElementById('start-load').classList.add('hidden')
-        history.pushState(['profileCheck'], null, null)
-        profileCheck();
+        store.put(rootRecord);
 
+      }
+      rootTx.oncomplete = function () {
+        if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
+        initProfileView()
         runRead({
           read: '1'
         })
-      }).catch(function (error) {
-        handleError({
-          message: error.message,
-          body: JSON.stringify(error)
-        })
-      })
-    }).catch(function (error) {
-      if (error.response.apiRejection) {
-        snacks(error.response.message, 'Okay')
-        return;
       }
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error)
-      })
-    })
+    }).catch(console.error)
   }
   req.onerror = function () {
 
@@ -296,29 +523,20 @@ function startApp() {
   }
 }
 
+function initProfileView() {
+
+  document.getElementById('app-header').classList.remove('hidden')
+  history.pushState(['profileCheck'], null, null)
+  profileCheck();
+}
+
 
 
 function miniProfileCard(content, headerTitle, action) {
 
   return `<div class='mdc-card profile-update-init'>
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed' id='card-header'>
-    <div class='mdc-top-app-bar__row'>
-      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='card-header-start'>
-        ${headerTitle}
-      </section>
-    </div>
-    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed" id='card-progress'>
-      <div class="mdc-linear-progress__buffering-dots"></div>
-      <div class="mdc-linear-progress__buffer"></div>
-      <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-        <span class="mdc-linear-progress__bar-inner"></span>
-      </div>
-      <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-        <span class="mdc-linear-progress__bar-inner"></span>
-      </div>
-    </div>
-  </header>
-  <div class='content-area mdc-top-app-bar--fixed-adjust'>
+  
+  <div class='content-area'>
   <div id='primary-content'>
   
   ${content}
@@ -331,12 +549,29 @@ function miniProfileCard(content, headerTitle, action) {
 }
 
 
+function increaseStep(stepNumber) {
 
+  const prevNumber = stepNumber - 1;
+  if (prevNumber == 0) {
+    document.getElementById(`step${stepNumber}`).classList.add('is-active');
+    return;
+  }
+  document.getElementById(`step${prevNumber}`).classList.remove('is-active');
+  document.getElementById(`step${prevNumber}`).classList.add('is-complete');
+  document.getElementById(`step${stepNumber}`).classList.add('is-active');
+
+}
 
 function checkForPhoto() {
   const auth = firebase.auth().currentUser;
-  if (!auth.photoURL) {
-    const content = `
+  if (auth.photoURL) {
+    increaseStep(3)
+    checkForEmail();
+    return;
+  }
+
+  increaseStep(2)
+  const content = `
 
       <div class='photo-container'>
       <img src="./img/empty-user.jpg" id="image-update">
@@ -344,63 +579,89 @@ function checkForPhoto() {
         <span class="mdc-fab__icon material-icons mdc-theme--on-primary">camera</span>
         <input type='file' accept='image/jpeg;capture=camera' id='choose'>
       </button>
-
       </div>
-      <div class="view-container">
-      <div class="mdc-text-field mdc-text-field--with-leading-icon mb-10 mt-20">
-    <i class="material-icons mdc-text-field__icon mdc-theme--primary">account_circle</i>
-    <input class="mdc-text-field__input" value="${auth.displayName}" disabled>
-    <div class="mdc-line-ripple"></div>
-    <label class="mdc-floating-label mdc-floating-label--float-above">Name</label>
-  </div>
-
-  <div class="mdc-text-field mdc-text-field--with-leading-icon mt-0">
-    <i class="material-icons mdc-text-field__icon mdc-theme--primary">phone</i>
-    <input class="mdc-text-field__input" value="${auth.phoneNumber}" disabled>
-    <div class="mdc-line-ripple"></div>
-    <label class="mdc-floating-label mdc-floating-label--float-above">Phone</label>
-  </div>
-      </div>
-      </div>
+  
       `
-    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
-    const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-
-    document.getElementById('choose').addEventListener('change', function (evt) {
-
-      const files = document.getElementById('choose').files
-      if (!files.length) return;
-      const file = files[0];
-      var fileReader = new FileReader();
-      fileReader.onload = function (fileLoadEvt) {
-        const srcData = fileLoadEvt.target.result;
-        const image = new Image();
-        image.src = srcData;
-        image.onload = function () {
-          const newDataUrl = resizeAndCompressImage(image);
-          document.getElementById('image-update').src = newDataUrl;
-          progCard.open();
-          requestCreator('backblaze', {
-            'imageBase64': newDataUrl
-          }).then(function () {
-            progCard.close();
-            openMap();
-          }).catch(function (error) {
-            progCard.close();
-            snacks(error.response.message)
-          })
-        }
-      }
-      fileReader.readAsDataURL(file);
+  document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
+  document.getElementById('choose').addEventListener('change', function (evt) {
+    getImageBase64(evt).then(function (dataURL) {
+      document.getElementById('image-update').src = dataURL;
+      return requestCreator('backblaze', {
+        'imageBase64': dataURL
+      })
+    }).then(checkForEmail).catch(function (error) {
+      snacks(error.message)
     })
-    return
-  }
-  openMap();
+  })
 
 }
 
+function checkForEmail() {
 
-function resizeAndCompressImage(image) {
+  const auth = firebase.auth().currentUser;
+  if (auth.email && auth.emailVerified) {
+    increaseStep(4);
+    checkForId();
+    return
+  }
+
+
+  getRootRecord().then(function (record) {
+    if (record.skipEmail) {
+      increaseStep(4);
+      checkForId();
+      return
+    }
+    increaseStep(3)
+    emailUpdation(true, function () {
+
+      checkForId()
+    });
+
+  })
+}
+
+
+function checkEmptyIdProofs(record) {
+  if(!record.idProof) return true;
+  const keys =  Object.keys(record.idProof);
+  let isEmpty = false;
+  keys.forEach(function(key){
+    if(!record.idProof[key].number ||!record.idProof[key].front ||!record.idProof[key].back) {
+      isEmpty = true;
+      return;
+    }
+  })
+  return isEmpty;
+}
+function checkForId() {
+  getRootRecord().then(function (record) {
+  
+    if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
+      increaseStep(5);
+      checkForBankAccount();
+      return
+    };
+    increaseStep(4);
+    idProofView(checkForBankAccount);
+  })
+}
+
+
+function checkForBankAccount() {
+
+  getRootRecord().then(function (record) {
+    if (record.skipBankAccountAdd || record.linkedAccounts.length) {
+      openMap();
+      return;
+    }
+    increaseStep(5)
+    addNewBankAccount(openMap);
+  })
+}
+
+
+function resizeAndCompressImage(image,compressionFactor) {
   var canvas = document.createElement('canvas');
   const canvasDimension = new CanvasDimension(image.width, image.height);
   canvasDimension.setMaxHeight(screen.height)
@@ -410,7 +671,7 @@ function resizeAndCompressImage(image) {
   canvas.height = newDimension.height;
   var ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
-  const newDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+  const newDataUrl = canvas.toDataURL('image/jpeg', compressionFactor);
   return newDataUrl;
 
 }
@@ -448,20 +709,6 @@ CanvasDimension.prototype.getNewDimension = function () {
 
 
 
-function updateEmailButton() {
-  return `<div class="mdc-card__actions">
-<div class="mdc-card__action-icons"></div>
-<div class="mdc-card__action-buttons">
-
-<button class="mdc-button mdc-card__action mdc-card__action--button" id='addEmail'>
- <span class="mdc-button__label">UPDATE</span>
- <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-</button>
-</div>
-</div>`
-}
-
-
 function showReLoginDialog(heading, contentText) {
   const content = `<h3 class="mdc-typography--headline6 mdc-theme--primary">${contentText}</h3>`
   const dialog = new Dialog(heading, content).create();
@@ -472,48 +719,47 @@ function showReLoginDialog(heading, contentText) {
 
 }
 
+function getProfileCompletionTabs() {
+  const auth = firebase.auth().currentUser;
+  const dom = `<div class="step-container mdc-top-app-bar--fixed-adjust">
+  <div class="progress">
+    <div class="progress-track"></div>
+    <div id="step1" class="progress-step">
+      <i class='material-icons'>person</i>
+    </div>
+    <div id="step2" class="progress-step">
+      <i class='material-icons'>camera</i>
+    </div>
+    <div id="step3" class="progress-step">
+      <i class='material-icons'>email</i>
+    </div>
+    <div id="step4" class="progress-step">
+      <i class='material-icons'>verified_user</i>
+     </div>
+    <div id="step5" class="progress-step">
+      <i class='material-icons'>payment</i>
+    </div>
+  </div>
 
+</div>`
+  return dom
+}
 
 function profileCheck() {
   const auth = firebase.auth().currentUser;
+  document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
   if (!auth.displayName) {
-
-    const content = `
-    <div class="mdc-text-field mdc-text-field--outlined" id='name'>
-    <input class="mdc-text-field__input" required>
-    <div class="mdc-notched-outline">
-      <div class="mdc-notched-outline__leading"></div>
-      <div class="mdc-notched-outline__notch">
-        <label class="mdc-floating-label">Name</label>
-      </div>
-      <div class="mdc-notched-outline__trailing"></div>
-    </div>
-  </div>
-  `
-    const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
-  <span class="mdc-button__label">NEXT</span>
-  <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-  </button></div></div>`
-
-    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
-    const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-    const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
-    console.log(nameInput)
-    new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
-      if (!nameInput.value) {
-        nameInput.focus();
-        return;
-      }
-      progCard.open();
-      auth.updateProfile({
-        displayName: nameInput.value
-      }).then(checkForPhoto).catch(console.log)
-    })
+    document.getElementById("app-header").classList.remove('hidden');
+    increaseStep(1)
+    updateName(function () {
+     
+      checkForPhoto();
+    });
     return
-  }
-  checkForPhoto()
+  };
 
-
+  increaseStep(2)
+  checkForPhoto();
 }
 
 function areObjectStoreValid(names) {
@@ -781,45 +1027,40 @@ function getCheckInSubs() {
 }
 
 function openMap() {
-  document.getElementById('start-load').classList.remove('hidden');
-
-  hasDataInDB().then(function (data) {
-
-    if (!data) return showNoOfficeFound();
-
+  document.getElementById('app-header').classList.add("hidden")
+  document.getElementById('step-ui').innerHTML = ''
+  progressBar.open();
+  appLocation(3).then(function (geopoint) {
+    progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
-
       if (!Object.keys(checkInSubs).length) {
-        appLocation(3).then(function (geopoint) {
-          document.getElementById('start-load').classList.add('hidden');
-          ApplicationState.location = geopoint;
-          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-          getSuggestions()
-        }).catch(function (error) {
-          handleLocationError(error, true)
-        })
-        return
+        ApplicationState.location = geopoint;
+        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+          if(potentialAlternatePhoneNumbers.length) {
+            chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers,geopoint);
+            return
+          };
+          history.pushState(['searchOffice', geopoint], null, null)
+          return
       };
+
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       const oldState = localStorage.getItem('ApplicationState')
-      appLocation(3).then(function (geopoint) {
-          document.getElementById('start-load').classList.add('hidden');
-          if (!oldState) return mapView(geopoint);
-          const oldApplicationState = JSON.parse(oldState);
-          if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
-          const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
-          const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
-          if (isOlder || hasChangedLocation) return mapView(geopoint);
-          ApplicationState = oldApplicationState
-          return getSuggestions()
-        }).catch(function (error) {
-          handleLocationError(error, true)
-      })
+      if (!oldState) return mapView(geopoint);
+      const oldApplicationState = JSON.parse(oldState);
+      if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
+      const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
+      const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
+      if (isOlder || hasChangedLocation) return mapView(geopoint);
+      ApplicationState = oldApplicationState
+      history.pushState(['reportView'], null, null)
+      return reportView()
     })
+  }).catch(function (error) {
+    progressBar.close();
+    handleLocationError(error, true)
   })
 }
-
-
 
 function fillVenueInCheckInSub(sub, venue) {
   const vd = sub.venue[0];
@@ -837,5 +1078,5 @@ function fillVenueInCheckInSub(sub, venue) {
 
 
 function reloadPage() {
-  window.location.reload(true)
+  window.location.reload(true);
 }

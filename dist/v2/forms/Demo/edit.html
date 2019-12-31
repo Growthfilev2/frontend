@@ -70,6 +70,7 @@
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
                 customer.nativeControl_.innerHTML += result.string;
+                customer.nativeControl_.setAttribute('required','true')
                 document.querySelector('.customer-select-container').classList.remove('hidden')
 
             })
@@ -77,6 +78,7 @@
             getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
                 product.nativeControl_.innerHTML += result.string;
+                product.nativeControl_.setAttribute('required','true')
                 document.querySelector('.product-select-container').classList.remove('hidden')
 
             })
