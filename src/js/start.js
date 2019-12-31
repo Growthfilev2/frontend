@@ -6,72 +6,42 @@ var map;
 
 
 function chooseAlternativePhoneNumber(alternatePhoneNumbers,geopoint) {
-   
     const auth = firebase.auth().currentUser;
     const appEl = document.getElementById('app-current-panel');
-    appEl.innerHTML = `<div class='phone-number-choose'>
-            <div class='phone-number-choose-cont'>
+    appEl.innerHTML = `<div class='phone-number-choose ${alternatePhoneNumbers.length == 1 ? 'slider' :''}'>
+            <div class='phone-number-choose-cont ${alternatePhoneNumbers.length == 1 ? 'slider-container' :''}''>
                 <h1 class='mdc-typography--headline5 mb-0'>
                     Hello, ${auth.displayName}
                 </h1>
-                <p class='mdc-typography--body1'>We found other numbers you used with this device . Choose a phone number to proceed</p>
 
-                <ul class='mdc-list  mdc-list--two-line' id='phone-list'>
-                    ${createCheckBoxList({
-                        primaryText:auth.phoneNumber,
-                        secondaryText:'',
-                        index:0
-                    })}
-                    <li class='mdc-list-divider'></li>
+                ${alternatePhoneNumbers.length == 1 ? `<p class='mdc-typography--body1 pl-20 pr-20'>
+                We found another number <span class='mdc-theme--primary'><b>${alternatePhoneNumbers[0].phoneNumber}</b></span> you used with this device for Company <span class='mdc-theme--primary'><b>${alternatePhoneNumbers[0].office}</b></span>. Login with this phone number to proceed
+                </p>`:`<p class='mdc-typography--body1'>We found other numbers you used with this device . Login with any of these phone numbers to proceed</p>
+
+                <ul class='mdc-list  mdc-list--two-line' id='phone-list'>                   
                     ${alternatePhoneNumbers.map(function(data,index){
-                        return `${createCheckBoxList({
-                            primaryText:data.phoneNumber,
-                            secondaryText:data.office,
-                            index:index
-                        })}`
+                        return `<li class='mdc-list-item'>
+                        <span class="mdc-list-item__text">
+                          <span class="mdc-list-item__primary-text">${data.phoneNumber}</span>
+                          <span class="mdc-list-item__secondary-text mdc-theme--primary">Company : ${data.office}</span>
+                      </span>
+                      </li>`
                     }).join("")}
-                </ul>
+                </ul>`}
+              
             </div>
     </div>
-    ${actionButton('CONTINUE', 'confirm-phone-btn').outerHTML}
+    ${actionButton('RE-LOGIN', 'confirm-phone-btn').outerHTML}
     `
 
-    const list = document.getElementById('phone-list');
-    if(!list) return;
     const confirmBtn = document.getElementById("confirm-phone-btn");
     if(!confirmBtn) return;
-    const listInit = new mdc.list.MDCList(list);
-    console.log(listInit)
     new mdc.ripple.MDCRipple(confirmBtn);
-    listInit.listen('MDCList:action',function(listEvent){
-        if(!listInit.selectedIndex.length) {
-            confirmBtn.setAttribute('disabled',true);
-        }
-        else {
-            listInit.selectedIndex = [listEvent.detail.index]
-            confirmBtn.removeAttribute('disabled');
-            if(listEvent.detail.index == 0){
-                confirmBtn.textContent = 'Continue'
-            }
-            else {
-                confirmBtn.textContent = 'Confirm & re-login'
-            }
-        }
-    })
+    confirmBtn.addEventListener('click',revokeSession);
+    const list = document.getElementById('phone-list');
+    if(!list) return;
+
     
-    listInit.singleSelection = true;
-    listInit.selectedIndex = [0];
-    listInit.listElements[0].style.height = '48px';
-    confirmBtn.addEventListener('click',function(){
-        if(listInit.selectedIndex == 0) {
-            history.pushState(['searchOffice', geopoint], null, null)
-            searchOffice(geopoint);
-            return
-        }
-        
-        revokeSession();
-        return;
-    })
 }
 
 function searchOffice(geopoint = history.state[1]) {

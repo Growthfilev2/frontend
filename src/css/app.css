@@ -1077,6 +1077,6 @@ iframe {
 }
 
 
-.checkbox-list .mdc-list-item__secondary-text , .checkbox-list .mdc-list-item__primary-text {
+#phone-list .mdc-list-item__secondary-text , #phone-list .mdc-list-item__primary-text {
   text-align: left;
 }
