@@ -327,7 +327,7 @@ function expandPlaceBox() {
                 const list = new mdc.list.MDCList(document.getElementById('office-selection-list'));
                 list.singleSelection = true;
                 list.selectedIndex = [0]
-                let selectedListIndex;
+                let selectedListIndex = 0;  
                 
                 dialog.listen('MDCDialog:opened',function(openEvent){
                     list.layout();

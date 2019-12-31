@@ -1041,6 +1041,7 @@ function openMap() {
             return
           };
           history.pushState(['searchOffice', geopoint], null, null)
+          searchOffice(geopoint)
           return
       };
 
