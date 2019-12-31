@@ -1296,6 +1296,7 @@ function idProofView(callback) {
       },
       'pan': {
         'front': '',
+        'back':'',
         'number': ''
       }
     }
@@ -1313,81 +1314,46 @@ function idProofView(callback) {
     const panel = document.getElementById('app-current-panel');
     panel.innerHTML = `
   <div class='id-container app-padding'>
-  ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` :'' }
-    
-    
-
-    <div class='pan-container pb-10 ${showPan(ids) ? '' : 'hidden'}'>
-    <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter PAN card details</h3>
-      ${textFieldWithHelper({
-        id:'pan-number',
-        label:'Enter PAN Number',
-        value:ids.pan.number,
-        type:'text',
-        required:true,
-        classList:['mt-10','mb-10']
-      }).outerHTML}
-  
-    <div class='pan-images mdc-layout-grid__inner'>
-        <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
-          <div class='image-container'>
-            <img src='${ids.pan.front || './img/placeholder.png' }'  class='width-100' data-name="panFront"  data-valid="${ids.pan.front ? 'true' : 'false'}">
-            <div class='add-icon-cont'>
-              ${createFab('add_a_photo','pan-front-btn',{name:'panFront'}).outerHTML}
-            </div>
+    ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` :'' }
+    ${Object.keys(ids).map(function(idName,index){
+       return `<div class='${idName}-container pb-10'>
+          ${index ? '<hr></hr>' :''}
+          <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter ${idName.toUpperCase()} card details</h3>
+          ${textFieldWithHelper({
+              id:`${idName}-number`,
+              label:`Enter ${idName} Number`,
+              value:ids[idName].number,
+              type:'text',
+              required:true,
+              classList:['mt-10','mb-10']
+          }).outerHTML}
+          <div class='${idName}-images mdc-layout-grid__inner'>
+              ${Object.keys(ids[idName]).map(function(type){
+                  return `${type !=='number' ? `<div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
+                  <div class='image-container'>
+                    <img src='${ids[idName][type] || './img/placeholder.png' }'  class='width-100' data-name="${idName}${type}"  data-valid="${ids[idName][type] ? 'true' : 'false'}">
+                    <div class='add-icon-cont'>
+                      ${createFab('add_a_photo',`${idName}-${type}-btn`,{name:`${idName}${type}`},false).outerHTML}
+                    </div>
+                  </div>
+                  <div class="mdc-image-list__supporting">
+                    <span class="mdc-image-list__label">${idName.toUpperCase()} ${type.toUpperCase()}</span>
+                  </div>
+              </div>` :''}`
+              }).join("")}
           </div>
-          <div class="mdc-image-list__supporting">
-          <span class="mdc-image-list__label">PAN FRONT</span>
-        </div>
-        </div>
-        
-    </div>
-    <div class='aadhar-container ${showAadhar(ids) ? '' : 'hidden'}'>
-        <h3 class='mdc-typography--headline6 mdc-theme--primary'>Enter AADHAR card details</h3>
-        ${textFieldWithHelper({
-          id:'aadhar-number',
-          label:'Enter AADHAR card Number',
-          value:ids.aadhar.number,
-          type:'text',
-          required:true,
-          classList:['mt-10','mb-10']
-        }).outerHTML}
-      <div class='aadhar-images mdc-layout-grid__inner'>
-      <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
-      <div class='image-container'>
-        <img src='${ids.aadhar.front || './img/placeholder.png' }' class='width-100' data-name="aadharFront"  data-valid="${ids.aadhar.front ? 'true' : 'false'}">
-       
-        <div class='add-icon-cont'>
-          ${createFab('add_a_photo','aadhar-front-btn',{name:'aadharFront'}).outerHTML}
-        </div>
-      </div>
-      <div class="mdc-image-list__supporting">
-      <span class="mdc-image-list__label">AADHAR FRONT</span>
-    </div>
-    </div>
-    <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
-    <div class='image-container'>
-        <img src='${ids.aadhar.back || './img/placeholder.png' }' class='width-100' data-name="aadharBack" data-valid="${ids.aadhar.back ? 'true' : 'false'}">
-        <div class='add-icon-cont'>
-          ${createFab('add_a_photo','aadhar-back-btn',{name:'aadharBack'}).outerHTML}
-        </div>
-    </div>
-    <div class="mdc-image-list__supporting">
-      <span class="mdc-image-list__label">AADHAR BACK</span>
-    </div> 
-    </div>
-</div>
-      </div>
-    </div>
+        </div>` 
+    }).join("")}  
     </div>
     ${actionButton('UPDATE','submit-btn').outerHTML}
   `
-    
+
     const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
     const skipBtn = document.getElementById('skip-btn');
 
     [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function (el) {
+      el.classList.add('mdc-fab--mini')
       el.addEventListener('click', function () {
         if (parent.native.getName() === 'Android') {
           AndroidInterface.startCamera(el.dataset.name);
@@ -1420,10 +1386,11 @@ function idProofView(callback) {
       }
 
       ids.aadhar.number = aadharNumber.value.trim();
-      ids.aadhar.front = document.querySelector(`[data-name="aadharFront"]`).src;
-      ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
+      ids.aadhar.front = document.querySelector(`[data-name="aadharfront"]`).src;
+      ids.aadhar.back = document.querySelector(`[data-name="aadharback"]`).src;
       ids.pan.number = panNumber.value.trim();
-      ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
+      ids.pan.back = document.querySelector(`[data-name="panback"]`).src;
+      ids.pan.front = document.querySelector(`[data-name="panfront"]`).src;
 
       submitBtn.setAttribute('disabled', true)
       if (skipBtn) {
@@ -1469,7 +1436,7 @@ function idProofView(callback) {
 
 
 
-function aadharFront(base64) {
+function aadharfront(base64) {
   const img = document.querySelector(`[data-name="aadharFront"]`);
   if (img) {
     img.dataset.valid = true
@@ -1477,7 +1444,7 @@ function aadharFront(base64) {
   }
 }
 
-function aadharBack(base64) {
+function aadharback(base64) {
   const img = document.querySelector(`[data-name="aadharBack"]`);
   if (img) {
     img.dataset.valid = true
@@ -1485,7 +1452,7 @@ function aadharBack(base64) {
   }
 }
 
-function panFront(base64) {
+function panfront(base64) {
   const img = document.querySelector(`[data-name="panFront"]`);
   if (img) {
     img.dataset.valid = true
@@ -1493,3 +1460,10 @@ function panFront(base64) {
   }
 }
 
+function panback(base64) {
+  const img = document.querySelector(`[data-name="panback"]`);
+  if (img) {
+    img.dataset.valid = true
+    img.src = `data:image/jpg;base64,${base64}`
+  }
+}

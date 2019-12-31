@@ -9,11 +9,16 @@ function createElement(tagName, attrs) {
 }
 
 
-function createFab(icon, id = '', dataset = {}) {
+
+
+function createFab(icon, id = '', dataset = {},isAbsolute = true) {
     const button = createElement('button', {
-        className: 'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited',
+        className: 'mdc-fab  mdc-button--raised',
         id: id
     });
+    if(isAbsolute) {
+        button.classList.add('mdc-fab--exited','app-fab--absolute');
+    }
     const dataKeys = Object.keys(dataset);
     dataKeys.forEach(function (key) {
         button.dataset[key] = dataset[key];
