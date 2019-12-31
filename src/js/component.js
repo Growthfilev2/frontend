@@ -9,10 +9,16 @@ function createElement(tagName, attrs) {
 }
 
 
-function createFab(icon) {
+function createFab(icon, id = '', dataset = {}) {
     const button = createElement('button', {
-        className: 'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited'
+        className: 'mdc-fab mdc-fab--without-icon app-fab--absolute mdc-button--raised mdc-fab--exited',
+        id: id
+    });
+    const dataKeys = Object.keys(dataset);
+    dataKeys.forEach(function (key) {
+        button.dataset[key] = dataset[key];
     })
+
     const span = createElement('span', {
         className: 'mdc-fab__icon material-icons',
         textContent: icon
@@ -92,7 +98,7 @@ function Dialog(title, content, id) {
     this.title = title;
     this.content = content;
     this.id = id;
-    
+
 }
 
 
@@ -244,6 +250,43 @@ function textField(attr) {
   </div>`
 }
 
+function textFieldWithHelper(attr) {
+    const cont = createElement('div', {
+        className: 'text-field-container'
+    })
+    if (attr.classList) {
+        attr.classList.forEach(function (name) {
+            cont.classList.add(name)
+        });
+    }
+    cont.innerHTML = `
+    ${textField(attr)}
+    <div class="mdc-text-field-helper-line">
+      <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+    </div>
+`
+    return cont
+}
+
+function textAreaWithHelper(attr) {
+    const cont = createElement('div', {
+        className: 'text-field-container'
+    })
+    if (attr.classList) {
+
+        attr.classList.forEach(function (name) {
+            cont.classList.add(name)
+        });
+    }
+    cont.innerHTML = `
+    ${textArea(attr)}
+    <div class="mdc-text-field-helper-line">
+      <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+    </div>
+`
+    return cont
+}
+
 function textArea(attr) {
     return `<div class="mdc-text-field mdc-text-field--textarea" id="${attr.id}">
     <textarea  class="mdc-text-field__input" rows="4" cols="40" required="${attr.required}"></textarea>
@@ -352,7 +395,7 @@ function handleTouchMove(evt) {
 }
 
 
-function createCheckBoxList(name,index,preSelected) {
+function createCheckBoxList(name, index, preSelected) {
     return `<li class='mdc-list-item ${preSelected ? 'mdc-list-item--selected' :''}' ${preSelected ? 'aria-selected="true"' :''} tabindex="${preSelected ? "0" : "-1"}"  role="checkbox">
     ${name}
 <span class="mdc-list-item__graphic mdc-list-item__meta">

@@ -189,59 +189,38 @@ function addNewBankAccount(callback) {
   ${history.state[0] === 'profileCheck' ? `<button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` : ''}
   <div class='add-bank-container mt-20'>
 
-    <div class='text-field-container'>
-      ${textField({
-        id:'account-number',
-        label:'Bank Account Number',
-        disabled:false,
-        value:'',
-        type:'number',
-        required:true
-      })}
-      <div class="mdc-text-field-helper-line">
-        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
-      </div>
-    </div>
+    ${textFieldWithHelper({
+      id:'account-number',
+      label:'Bank Account Number',
+      disabled:false,
+      value:'',
+      type:'number',
+      required:true
+    }).outerHTML}
+    
+    ${textFieldWithHelper({
+      id:'account-number-re',
+      label:'Re-enter Bank Account Number',
+      disabled:false,
+      value:'',
+      type:'number',
+      required:true
+    }).outerHTML}
+      
+    ${textFieldWithHelper({
+      id:'ifsc',
+      label:'IFSC',
+      disabled:false,
+      value:'',
+      type:'text',
+      required:true
+    }).outerHTML}
 
-    <div class='text-field-container mt-10'>
-      ${textField({
-        id:'account-number-re',
-        label:'Re-enter Bank Account Number',
-        disabled:false,
-        value:'',
-        type:'number',
-        required:true
-      })}
-      <div class="mdc-text-field-helper-line">
-        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
-      </div>
-    </div>
-
-    <div class='text-field-container mt-10 mb-10'>
-      ${textField({
-        id:'ifsc',
-        label:'IFSC',
-        disabled:false,
-        value:'',
-        type:'text',
-        required:true
-      })}
-      <div class="mdc-text-field-helper-line">
-        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
-      </div>
-    </div>
-
-    <div class='text-field-container mb-10'>
-      ${textArea({
-        id:'address',
-        label:'Address',
-        required:true
-      })}
-      <div class="mdc-text-field-helper-line">
-        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
-      </div>
-    </div>
- 
+    ${textAreaWithHelper({
+      id:'address',
+      label:'Address',
+      required:true
+    }).outerHTML}
   </div>
   </div>
   ${actionButton('SUBMIT','submit-btn').outerHTML}
@@ -293,7 +272,7 @@ function addNewBankAccount(callback) {
       return;
     }
 
-    if(!validateIFSC(fields['IFSC'].value)) {
+    if (!validateIFSC(fields['IFSC'].value)) {
       setHelperInvalid(fields['IFSC']);
       fields['IFSC'].helperTextContent = `Invalid IFSC code`;
       return;
@@ -553,44 +532,6 @@ function createViewProfile() {
   })
 }
 
-function createEditProfile(name, email) {
-
-  return ` ${nameField(name)}
-
-  ${emailField(email,'This Will Be Used For Sending Reports')}
-    `
-}
-
-function nameField(name) {
-  return `<div class="mdc-typography mdc-typography--body2 p-10" id='card-body-edit'>
-  <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='name'>
-
-  <svg class='mdc-text-field__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
-      <input class="mdc-text-field__input" value="${name}">
-      <div class="mdc-line-ripple"></div>
-      <label class="mdc-floating-label ${name ? 'mdc-floating-label--float-above' :''}">Name</label>
-  </div>
-  <div class="mdc-text-field-helper-line">
-      <div id="username-helper-text" class="mdc-text-field-helper-text" aria-hidden="true">
-       This will be displayed on your public profile
-
-      </div>
-  </div>`
-}
-
-function emailField(email, label, setFocus) {
-  return `<div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='email'>
-  <svg class='mdc-text-field__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
-  <input class="mdc-text-field__input" type='email' value="${email}" autofocus=${setFocus ? 'true':'false'}>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label ${email ? 'mdc-floating-label--float-above' :''} ">Email</label>
-</div>
-<div class="mdc-text-field-helper-line">
-  <div id="username-helper-text" class="mdc-text-field-helper-text" aria-hidden="true">
-      ${label}
-  </div>
-</div>`
-}
 
 function addTabs(name) {
 

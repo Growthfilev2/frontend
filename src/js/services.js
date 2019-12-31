@@ -1047,24 +1047,15 @@ function updateName(callback) {
   document.getElementById('app-current-panel').innerHTML = `
   
   <div class='mdc-layout-grid change-name'>
-  <p class='mdc-typography--body1'>
-  Please provide your name
-  
-  </p>
-<div class="mdc-text-field mdc-text-field--outlined mt-10" id='name'>
-  <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName || ''}' type='text'  placeholder='Type your name here'>
- <div class="mdc-notched-outline">
-     <div class="mdc-notched-outline__leading"></div>
-     <div class="mdc-notched-outline__notch">
-           <label for='email' class="mdc-floating-label mdc-floating-label--float-above ">Name</label>
-     </div>
-     <div class="mdc-notched-outline__trailing"></div>
- </div>
-</div>
-<div class="mdc-text-field-helper-line">
-  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	">
-  </div>
-</div>
+    <p class='mdc-typography--body1'>
+        Please provide your name
+    </p>
+    ${textFieldWithHelper({
+      id:'name',
+      value:auth.displayName || '',
+      required:true,
+      label:'Name'
+    }).outerHTML}
   </div>
   <div  class='mb-10 mt-10'>
     ${actionButton('Update','name-btn').outerHTML}
@@ -1250,30 +1241,21 @@ function updateEmailDom(skipbtn, headings) {
   const email = firebase.auth().currentUser.email
   return `
   <div class='mdc-layout-grid update-email'>
-  ${skipbtn ? `<button class='mdc-button mt-10 mdc-button--raised' id='skip-btn'>
-  <span class='mdc-button__label mdc-theme--secondary'>SKIP<span>
-  </button>` :''}
+    ${skipbtn ? `<button class='mdc-button mt-10 mdc-button--raised' id='skip-btn'>
+    <span class='mdc-button__label mdc-theme--secondary'>SKIP<span>
+    </button>` :''}
 
-<h3 class='mdc-typography--headline6'>${headings.heading}</h3>
-<p class='report-rec mt-10 mdc-typography--body1'>
-Verify your email to receive  offer letter, salary slip, tax forms & other documents
-</p>
-
-<div class="mdc-text-field mdc-text-field--outlined mt-10" id='email'>
-  <input class="mdc-text-field__input" required value='${email || ''}' type='email'>
- <div class="mdc-notched-outline">
-     <div class="mdc-notched-outline__leading"></div>
-     <div class="mdc-notched-outline__notch">
-           <label for='email' class="mdc-floating-label ${email ? `mdc-floating-label--float-above` :''}">Email</label>
-     </div>
-     <div class="mdc-notched-outline__trailing"></div>
- </div>
-</div>
-<div class="mdc-text-field-helper-line">
-  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	">
-  </div>
-</div>
-
+    <h3 class='mdc-typography--headline6'>${headings.heading}</h3>
+    <p class='report-rec mt-10 mdc-typography--body1'>
+      Verify your email to receive  offer letter, salary slip, tax forms & other documents
+    </p>
+    ${textFieldWithHelper({
+      id:'email',
+      classList:['mt-10'],
+      value:email ||'',
+      type:'email',
+      label:'Email',
+    }).outerHTML}
 </div>
 <div  class='mb-10 mt-10'>
   ${actionButton(headings.btnText,'email-btn').outerHTML}
@@ -1314,7 +1296,6 @@ function idProofView(callback) {
       },
       'pan': {
         'front': '',
-        'back': '',
         'number': ''
       }
     }
@@ -1333,78 +1314,51 @@ function idProofView(callback) {
     panel.innerHTML = `
   <div class='id-container app-padding'>
   ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` :'' }
- 
+    
+    
+
     <div class='pan-container pb-10 ${showPan(ids) ? '' : 'hidden'}'>
     <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter PAN card details</h3>
-      <div class='text-field-container mt-10 mb-10'>
-        ${textField({
-          id:'pan-number',
-          label:'Enter PAN Number',
-          value:ids.pan.number,
-          type:'text',
-          required:true
-        })}
-        <div class="mdc-text-field-helper-line">
-          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
-        </div>
-    </div>
+      ${textFieldWithHelper({
+        id:'pan-number',
+        label:'Enter PAN Number',
+        value:ids.pan.number,
+        type:'text',
+        required:true,
+        classList:['mt-10','mb-10']
+      }).outerHTML}
+  
     <div class='pan-images mdc-layout-grid__inner'>
         <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
           <div class='image-container'>
             <img src='${ids.pan.front || './img/placeholder.png' }'  class='width-100' data-name="panFront"  data-valid="${ids.pan.front ? 'true' : 'false'}">
             <div class='add-icon-cont'>
-            <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-front-btn' data-name="panFront">
-              <div class="mdc-fab__ripple"></div>
-              <span class="mdc-fab__icon material-icons">add_a_photo</span>
-            </button>
+              ${createFab('add_a_photo','pan-front-btn',{name:'panFront'}).outerHTML}
             </div>
           </div>
           <div class="mdc-image-list__supporting">
           <span class="mdc-image-list__label">PAN FRONT</span>
         </div>
         </div>
-        <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
-        <div class='image-container'>
-            <img src='${ids.pan.back || './img/placeholder.png' }' class='width-100' data-name="panBack"  data-valid="${ids.pan.back ? 'true' : 'false'}">
-            
-            <div class='add-icon-cont'>
-            <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='pan-back-btn' data-name="panBack">
-              <div class="mdc-fab__ripple"></div>
-              <span class="mdc-fab__icon material-icons">add_a_photo</span>
-            </button>
-          </div>
-            
-        </div>
-        <div class="mdc-image-list__supporting">
-              <span class="mdc-image-list__label">PAN BACK</span>
-            </div> 
-        </div>
-    </div>
+        
     </div>
     <div class='aadhar-container ${showAadhar(ids) ? '' : 'hidden'}'>
         <h3 class='mdc-typography--headline6 mdc-theme--primary'>Enter AADHAR card details</h3>
-      <div class='text-field-container mt-10 mb-10'>
-        ${textField({
+        ${textFieldWithHelper({
           id:'aadhar-number',
           label:'Enter AADHAR card Number',
           value:ids.aadhar.number,
           type:'text',
-          required:true
-        })}
-        <div class="mdc-text-field-helper-line">
-          <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
-        </div>
-      </div>
+          required:true,
+          classList:['mt-10','mb-10']
+        }).outerHTML}
       <div class='aadhar-images mdc-layout-grid__inner'>
       <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
       <div class='image-container'>
         <img src='${ids.aadhar.front || './img/placeholder.png' }' class='width-100' data-name="aadharFront"  data-valid="${ids.aadhar.front ? 'true' : 'false'}">
        
         <div class='add-icon-cont'>
-        <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-front-btn' data-name="aadharFront">
-          <div class="mdc-fab__ripple"></div>
-          <span class="mdc-fab__icon material-icons">add_a_photo</span>
-        </button>
+          ${createFab('add_a_photo','aadhar-front-btn',{name:'aadharFront'}).outerHTML}
         </div>
       </div>
       <div class="mdc-image-list__supporting">
@@ -1414,29 +1368,21 @@ function idProofView(callback) {
     <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
     <div class='image-container'>
         <img src='${ids.aadhar.back || './img/placeholder.png' }' class='width-100' data-name="aadharBack" data-valid="${ids.aadhar.back ? 'true' : 'false'}">
-        
         <div class='add-icon-cont'>
-        <button class="mdc-fab mdc-button--raised mdc-fab--mini" aria-label="Favorite" id='aadhar-back-btn' data-name="aadharBack">
-          <div class="mdc-fab__ripple"></div>
-          <span class="mdc-fab__icon material-icons">add_a_photo</span>
-        </button>
-      </div>
-        
+          ${createFab('add_a_photo','aadhar-back-btn',{name:'aadharBack'}).outerHTML}
+        </div>
     </div>
     <div class="mdc-image-list__supporting">
-          <span class="mdc-image-list__label">AADHAR BACK</span>
-        </div> 
+      <span class="mdc-image-list__label">AADHAR BACK</span>
+    </div> 
     </div>
 </div>
       </div>
     </div>
-   
-       
     </div>
     ${actionButton('UPDATE','submit-btn').outerHTML}
-  
   `
-
+    
     const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
     const skipBtn = document.getElementById('skip-btn');
@@ -1444,9 +1390,7 @@ function idProofView(callback) {
     [...document.querySelectorAll('.id-container .mdc-fab')].forEach(function (el) {
       el.addEventListener('click', function () {
         if (parent.native.getName() === 'Android') {
-
           AndroidInterface.startCamera(el.dataset.name);
-
           return;
         }
         webkit.messageHandlers.startCamera.postMessage(el.dataset.name)
@@ -1480,7 +1424,6 @@ function idProofView(callback) {
       ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
       ids.pan.number = panNumber.value.trim();
       ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
-      ids.pan.back = document.querySelector(`[data-name="panBack"]`).src;
 
       submitBtn.setAttribute('disabled', true)
       if (skipBtn) {
@@ -1550,10 +1493,3 @@ function panFront(base64) {
   }
 }
 
-function panBack(base64) {
-  const img = document.querySelector(`[data-name="panBack"]`);
-  if (img) {
-    img.dataset.valid = true
-    img.src = `data:image/jpg;base64,${base64}`
-  }
-}
