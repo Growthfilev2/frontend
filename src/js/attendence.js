@@ -244,7 +244,7 @@ function getMonthlyData() {
         const cursor = event.target.result;
         if (!cursor) return;
 
-        if (!cursor.value.date || !cursor.value.month || !cursor.value.year) {
+        if (!cursor.value.date || !cursor.value.hasOwnProperty('month') || !cursor.value.year) {
           cursor.continue();
           return;
         }

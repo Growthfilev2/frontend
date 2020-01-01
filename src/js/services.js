@@ -506,8 +506,9 @@ function getSubscription(office, template) {
       results.forEach(function(result){
         const keys = Object.keys(result);
         keys.forEach(function(key){
-          if(!result[key]) {
-            corruptTempalte = result
+          if(key === 'report') return;
+          if(result[key] == undefined || result[key] == null) { 
+              corruptTempalte = result
           }
         })
       });
