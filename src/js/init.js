@@ -9,23 +9,22 @@ var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 
-window.addEventListener('error',function(event){
-  if(event.message.toLowerCase().indexOf('script error') > -1) {
+window.addEventListener('error', function (event) {
+  if (event.message.toLowerCase().indexOf('script error') > -1) {
     this.console.log(event)
-  }
-  else {
+  } else {
     handleError({
-      message:'global error :' + event.message,
-      body:{
-        lineno:event.lineno,
-        filename:event.filename,
-        colno:event.colno,
-        error:JSON.stringify({
-          stack:event.error.stack,
-          message:event.error.message
+      message: 'global error :' + event.message,
+      body: {
+        lineno: event.lineno,
+        filename: event.filename,
+        colno: event.colno,
+        error: JSON.stringify({
+          stack: event.error.stack,
+          message: event.error.message
         })
       }
-    })  
+    })
   }
 })
 
@@ -93,15 +92,15 @@ function getAndroidDeviceInformation() {
 
 window.onpopstate = function (event) {
   const nonRefreshViews = {
-    'mapView':true,
-    'userSignedOut':true,
-    'profileCheck':true,
-    'login':true,
-    'addView':true
+    'mapView': true,
+    'userSignedOut': true,
+    'profileCheck': true,
+    'login': true,
+    'addView': true
   }
   if (!event.state) return;
-  if(nonRefreshViews[event.state[0]]) return
- 
+  if (nonRefreshViews[event.state[0]]) return
+
   if (event.state[0] === 'reportView') {
     this.reportView(event.state[1])
     return;
@@ -110,7 +109,7 @@ window.onpopstate = function (event) {
     history.go(-1);
     return;
   };
-  if(window[event.state[0]]) {
+  if (window[event.state[0]]) {
     window[event.state[0]](event.state[1]);
   }
 }
@@ -145,23 +144,23 @@ function initializeApp() {
       if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
       panel.classList.remove('hidden');
-      if(EMAIL_REAUTH) {
-        history.pushState(['reportView'],null,null);
-        history.pushState(['profileView'],null,null);
-        history.pushState(['emailUpdation'],null,null);
-        emailUpdation(false,function(){
+      if (EMAIL_REAUTH) {
+        history.pushState(['reportView'], null, null);
+        history.pushState(['profileView'], null, null);
+        history.pushState(['emailUpdation'], null, null);
+        emailUpdation(false, function () {
           EMAIL_REAUTH = false
           history.back()
         })
         return;
       }
-      
+
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
 
     });
   })
-  
+
 }
 
 function checkNetworkValidation() {
@@ -184,7 +183,7 @@ function firebaseUiConfig() {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         console.log(authResult);
-      
+
         return false;
       },
       signInFailure: function (error) {
@@ -283,13 +282,13 @@ function userSignedOut() {
     history.pushState(['login'], null, null);
     initializeFirebaseUI();
   })
-  
-  var interval = setInterval(function(){
+
+  var interval = setInterval(function () {
     sliderSwipe({
-      element:sliderEl,
-      direction:'right'
+      element: sliderEl,
+      direction: 'right'
     })
-  },sliderTimeout);
+  }, sliderTimeout);
   swipe(sliderEl, sliderSwipe);
 }
 
@@ -301,8 +300,7 @@ function sliderSwipe(swipeEvent) {
   if (swipeEvent.direction === 'left') {
     if (sliderIndex <= 1) {
       sliderIndex = 3;
-    }
-    else {
+    } else {
       sliderIndex--
 
     }
@@ -311,8 +309,7 @@ function sliderSwipe(swipeEvent) {
   if (swipeEvent.direction === 'right') {
     if (sliderIndex >= 3) {
       sliderIndex = 1;
-    }
-    else {
+    } else {
       sliderIndex++
     }
   }
@@ -463,65 +460,71 @@ function startApp() {
       if (db.objectStoreNames.contains('reports')) {
         db.deleteObjectStore('reports')
       }
+      if (!db.objectStoreNames.contains('root')) {
+        createRootObjectStore(db, dbName, 0);
+      }
+
       var rootStore = req.transaction.objectStore('root')
       rootStore.get(dbName).onsuccess = function (rootEvent) {
         const record = rootEvent.target.result;
         record.fromTime = 0;
         rootStore.put(record);
       }
-      console.log('version upgrade')
     }
-  }
-  req.onsuccess = function () {
-    console.log("request success")
-    db = req.result;
-    console.log("run app")
-    loadingScreen();
 
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: '',
-      registerToken: native.getFCMToken()
-    }).then(function (res) {
-      if (res.updateClient) {
-        updateApp()
-        return
-      }
-      if (res.revokeSession) {
-        revokeSession(true);
-        return
-      };
-      let rootRecord;
-      const rootTx = db.transaction('root', 'readwrite');
-      const store = rootTx.objectStore('root');
-      store.get(dbName).onsuccess = function (transactionEvent) {
-        rootRecord = transactionEvent.target.result;
-        
-        rootRecord.linkedAccounts = res.linkedAccounts || [];
-        potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
-       
-        if (res.idProof) {
-          rootRecord.idProof = res.idProof
-        }
-        store.put(rootRecord);
-
-      }
-      rootTx.oncomplete = function () {
-        if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
-        initProfileView()
-        runRead({
-          read: '1'
-        })
-      }
-    }).catch(console.error)
+    console.log('version upgrade')
   }
-  req.onerror = function () {
+}
+req.onsuccess = function () {
+  console.log("request success")
+  db = req.result;
+  console.log("run app")
+  loadingScreen();
 
-    handleError({
-      message: `${req.error.name}`,
-      body: JSON.stringify(req.error.message)
-    })
-  }
+  requestCreator('now', {
+    device: native.getInfo(),
+    from: '',
+    registerToken: native.getFCMToken()
+  }).then(function (res) {
+    if (res.updateClient) {
+      updateApp()
+      return
+    }
+    if (res.revokeSession) {
+      revokeSession(true);
+      return
+    };
+    let rootRecord;
+    const rootTx = db.transaction('root', 'readwrite');
+    const store = rootTx.objectStore('root');
+    store.get(dbName).onsuccess = function (transactionEvent) {
+      rootRecord = transactionEvent.target.result;
+
+      rootRecord.linkedAccounts = res.linkedAccounts || [];
+      potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
+
+      if (res.idProof) {
+        rootRecord.idProof = res.idProof
+      }
+      store.put(rootRecord);
+
+    }
+    rootTx.oncomplete = function () {
+      if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
+      initProfileView()
+      runRead({
+        read: '1'
+      })
+    }
+  }).catch(console.error)
+}
+req.onerror = function () {
+
+  handleError({
+    message: `${req.error.name}`,
+    body: JSON.stringify(req.error.message)
+  })
+}
 }
 
 function initProfileView() {
@@ -590,7 +593,7 @@ function checkForPhoto() {
       return requestCreator('backblaze', {
         'imageBase64': dataURL
       })
-    }).then(function(){
+    }).then(function () {
       increaseStep(3)
       checkForEmail()
     }).catch(function (error) {
@@ -627,20 +630,21 @@ function checkForEmail() {
 
 
 function checkEmptyIdProofs(record) {
-  if(!record.idProof) return true;
-  const keys =  Object.keys(record.idProof);
+  if (!record.idProof) return true;
+  const keys = Object.keys(record.idProof);
   let isEmpty = false;
-  keys.forEach(function(key){
-    if(!record.idProof[key].number ||!record.idProof[key].front ||!record.idProof[key].back) {
+  keys.forEach(function (key) {
+    if (!record.idProof[key].number || !record.idProof[key].front || !record.idProof[key].back) {
       isEmpty = true;
       return;
     }
   })
   return isEmpty;
 }
+
 function checkForId() {
   getRootRecord().then(function (record) {
-  
+
     if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
       increaseStep(5);
       checkForBankAccount();
@@ -665,7 +669,7 @@ function checkForBankAccount() {
 }
 
 
-function resizeAndCompressImage(image,compressionFactor) {
+function resizeAndCompressImage(image, compressionFactor) {
   var canvas = document.createElement('canvas');
   const canvasDimension = new CanvasDimension(image.width, image.height);
   canvasDimension.setMaxHeight(screen.height)
@@ -756,7 +760,7 @@ function profileCheck() {
     document.getElementById("app-header").classList.remove('hidden');
     increaseStep(1)
     updateName(function () {
-     
+
       checkForPhoto();
     });
     return
@@ -930,12 +934,16 @@ function createObjectStores(db, uid) {
   children.createIndex('teamOffice', ['team', 'office'])
 
   createReportObjectStores(db)
+  createRootObjectStore(db, uid, 0)
+}
+
+function createRootObjectStore(db, uid, fromTime) {
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
   root.put({
     uid: uid,
-    fromTime: 0,
+    fromTime: fromTime,
     location: ''
   })
 }
@@ -1040,13 +1048,13 @@ function openMap() {
       if (!Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-          if(potentialAlternatePhoneNumbers.length) {
-            chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers,geopoint);
-            return
-          };
-          history.pushState(['searchOffice', geopoint], null, null)
-          searchOffice(geopoint)
+        if (potentialAlternatePhoneNumbers.length) {
+          chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
           return
+        };
+        history.pushState(['searchOffice', geopoint], null, null)
+        searchOffice(geopoint)
+        return
       };
 
       ApplicationState.officeWithCheckInSubs = checkInSubs;
