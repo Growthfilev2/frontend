@@ -221,7 +221,7 @@ function CenterControl(controlDiv) {
 }
 
 function expandPlaceBox() {
-
+    if(!placeService) return;
     placeService.getDetails({
         placeId: placeResult.place_id,
         fields: ['international_phone_number', 'photos']

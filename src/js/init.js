@@ -589,7 +589,10 @@ function checkForPhoto() {
       return requestCreator('backblaze', {
         'imageBase64': dataURL
       })
-    }).then(checkForEmail).catch(function (error) {
+    }).then(function(){
+      increaseStep(3)
+      checkForEmail()
+    }).catch(function (error) {
       snacks(error.message)
     })
   })
