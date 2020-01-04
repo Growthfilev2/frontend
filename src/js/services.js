@@ -1365,21 +1365,7 @@ function idProofView(callback) {
             <span class="mdc-image-list__label">PAN FRONT</span>
           </div>
         </div>
-        <div class='mdc-layout-grid__cell mdc-layout-grid__cell--span-2-phone'>
-        <div class='image-container'>
-            <img src='${ids.pan.back || './img/placeholder.png' }' class='width-100' data-name="panBack" data-valid="${ids.pan.back ? 'true' : 'false'}">
-            
-            <div class='add-icon-cont'>
-              <button class="mdc-fab mdc-fab--mini mdc-button--raised">
-                <span class="mdc-fab__icon material-icons">add_a_photo</span>
-                <input type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
-              </button>
-            </div>
-        </div>
-        <div class="mdc-image-list__supporting">
-          <span class="mdc-image-list__label">PAN BACK</span>
-        </div> 
-        </div>
+        >
     </div>
     <div class='aadhar-container ${showAadhar(ids) ? '' : 'hidden'}'>
         <h3 class='mdc-typography--headline6 mdc-theme--primary'>Enter AADHAR card details</h3>
@@ -1471,7 +1457,6 @@ function idProofView(callback) {
       ids.aadhar.front = document.querySelector(`[data-name="aadharFront"]`).src;
       ids.aadhar.back = document.querySelector(`[data-name="aadharBack"]`).src;
       ids.pan.number = panNumber.value.trim();
-      ids.pan.back = document.querySelector(`[data-name="panBack"]`).src;
       ids.pan.front = document.querySelector(`[data-name="panFront"]`).src;
 
       submitBtn.setAttribute('disabled', true)
