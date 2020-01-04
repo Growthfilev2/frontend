@@ -124,7 +124,7 @@
                 if (!((evt.keyCode > 95 && evt.keyCode < 106) ||
                         (evt.keyCode > 47 && evt.keyCode < 58) ||
                         evt.keyCode == 8)) {
-                    console.log("false")
+                    
                     return false;
                 }
             }
@@ -143,6 +143,7 @@
             getDropDownContent(subscriptionTemplate.office, 'claim-type', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
                 select.nativeControl_.innerHTML += result.string;
+                select.nativeControl_.setAttribute('required','true')
                 document.querySelector('.claim-type-select-container').classList.remove('hidden');
 
             })
