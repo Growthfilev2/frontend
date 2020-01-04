@@ -72,7 +72,7 @@ function sendFormToParent(formData) {
             Promise.all(prom).then(function (response) {
 
                 successDialog(`You Created a ${templateName}`);
-                // getSuggestions();
+                
                 reportView()
             }).catch(console.error)
             return;

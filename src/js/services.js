@@ -529,18 +529,6 @@ function emailReg(email) {
 }
 
 
-
-
-
-function getSuggestions() {
-  if (ApplicationState.knownLocation) {
-    getKnownLocationSubs().then(homeView);
-    return;
-  }
-  return getSubsWithVenue().then(homeView);
-
-}
-
 function getKnownLocationSubs() {
   return new Promise(function (resolve, reject) {
     const tx = db.transaction('subscriptions', 'readwrite');

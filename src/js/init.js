@@ -96,7 +96,8 @@ window.onpopstate = function (event) {
     'mapView':true,
     'userSignedOut':true,
     'profileCheck':true,
-    'login':true
+    'login':true,
+    'addView':true
   }
   if (!event.state) return;
   if(nonRefreshViews[event.state[0]]) return
@@ -1036,7 +1037,7 @@ function openMap() {
   appLocation(3).then(function (geopoint) {
     progressBar.close();
     getCheckInSubs().then(function (checkInSubs) {
-      if (!Object.keys(checkInSubs).length) {
+      if (Object.keys(checkInSubs).length) {
         ApplicationState.location = geopoint;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
           if(potentialAlternatePhoneNumbers.length) {
