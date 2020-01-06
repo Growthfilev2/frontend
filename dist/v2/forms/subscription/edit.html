@@ -4,10 +4,10 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -48,15 +48,16 @@
     </div>
 
     </div>
+    <script src="../external/js/material.min.js"></script>
 
     <script src="../js/common.js"></script>
 
     <script>
-        parent.window.mdc.autoInit();
+       window.mdc.autoInit();
 
         const addManagerBtn = document.getElementById('add-manager')
         const managerObject = {};
-        const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
+        const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
 
         function init(subscriptionTemplate) {
            

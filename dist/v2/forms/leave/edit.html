@@ -4,10 +4,9 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
-
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 
 </head>
 
@@ -52,21 +51,23 @@
                 </div>
             </div>
             <div class="action-button-container">
-                
-                    <div class="submit-button-cont">
-                        <input type="submit" value="Apply leave" class="mdc-button mdc-button--raised submit-btn"
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="Apply leave" class="mdc-button mdc-button--raised submit-btn"
                         data-mdc-auto-init="MDCRipple">
-                    </div>
                 </div>
+            </div>
         </div>
     </form>
+    <script src="../external/js/material.min.js"></script>
+
     <script src="../js/common.js"></script>
     <script>
-        parent.window.mdc.autoInit();
+        window.mdc.autoInit();
 
 
-        const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-        const reason = new parent.mdc.textField.MDCTextField(document.getElementById('reason'));
+        const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+        const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
         var formEl = document.getElementById('form');
 
         function init(subscriptionTemplate) {
@@ -86,7 +87,7 @@
 
             getDropDownContent(subscriptionTemplate.office, 'leave-type', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
-                select.nativeControl_.setAttribute('required','true')
+                select.nativeControl_.setAttribute('required', 'true')
                 select.nativeControl_.innerHTML += result.string;
                 document.querySelector('.leave-type-select-container').classList.remove('hidden');
             })
@@ -101,10 +102,11 @@
                 const newSchedule = getNewSchedule(subscriptionTemplate)
                 if (!newSchedule) return;
                 copy.schedule = newSchedule
-                if(copy.date) {
+                if (copy.date) {
                     delete copy.date
                 }
-                parent.sendFormToParent(copy)
+                window.parent.postMessage({body:copy,name:'sendFormToParent'},window.parent.location.origin);
+                // parent.sendFormToParent(copy)
             })
         }
     </script>

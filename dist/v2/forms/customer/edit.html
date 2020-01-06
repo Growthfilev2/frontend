@@ -4,10 +4,10 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -84,22 +84,22 @@
 
     </div>
 
-
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
     <script>
-        parent.window.mdc.autoInit();
+       window.mdc.autoInit();
         let customerContact = '';
         let cusomerSecondContact = ''
         const customerAuths = {}
 
         function init(subscriptionTemplate) {
-            const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-            customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
-            cusomerSecondContact = new parent.mdc.textField.MDCTextField(document.getElementById(
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+            customerContact = new mdc.textField.MDCTextField(document.getElementById('customer-contact'))
+            cusomerSecondContact = new mdc.textField.MDCTextField(document.getElementById(
                 'customer-second-contact'))
 
-            const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
-            const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
+            const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
+            const customerAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
             console.log(customerContact.foundation_.adapter_.getNativeInput())
 
             customerContact.input_.addEventListener('click', function () {

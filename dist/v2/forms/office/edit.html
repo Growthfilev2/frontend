@@ -4,10 +4,10 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -22,7 +22,7 @@
                         <div class="mdc-line-ripple"></div>
                     </div>
                     <div class="mdc-text-field-helper-line">
-                            <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+                        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
                     </div>
                 </div>
                 <div class="form-component">
@@ -84,22 +84,20 @@
         </div>
     </div>
     </div>
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
     <script>
-        parent.window.mdc.autoInit();
-        const address = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
-        const officeName = new parent.mdc.textField.MDCTextField(document.getElementById('office-name'))
-
+        window.mdc.autoInit();
+        const address = new mdc.textField.MDCTextField(document.getElementById('address'))
+        const officeName = new mdc.textField.MDCTextField(document.getElementById('office-name'))
         const managerBtn = document.getElementById('add-manager');
-        const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
+        const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
         let officeTemplate;
-       
+        
         managerBtn.addEventListener('click', function () {
-       
+
             callContact('getContactManager')
         });
-
-        
         function init(subscriptionTemplate) {
             officeTemplate = subscriptionTemplate;
             document.getElementById('submit-btn').addEventListener('click', function () {
@@ -108,12 +106,12 @@
             document.getElementById('submit-btn').setAttribute('disabled', 'true')
 
             document.getElementById('confirm-btn').addEventListener('click', function () {
-                if(!address.value) {
+                if (!address.value) {
                     setHelperInvalid(address);
                     address.helperTextContent = `Address Cannot Be Empty`
                     return;
                 }
-                if(!officeName.value) {
+                if (!officeName.value) {
                     setHelperInvalid(officeName);
                     officeName.helperTextContent = `Name Cannot Be Empty`
                     return;
@@ -127,6 +125,14 @@
             officeName.value = subscriptionTemplate.name;
         }
 
+        window.addEventListener('message', function (event) {
+            if(!originMatch(event.origin)) return;
+            init(event.data)
+
+        })
+        
+        
+
         function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
 
@@ -139,7 +145,7 @@
                     return;
                 }
             });
-            
+
             if (!officeTemplate['firstContact']) {
                 officeTemplate['firstContact'] = contactObject
                 li.dataset.type = 'firstContact'

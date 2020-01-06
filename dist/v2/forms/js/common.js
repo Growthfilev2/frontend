@@ -1,11 +1,18 @@
-function callContact(functionName) {
+function callContact(functionName) {    
+
     if (parent.native.getName() === 'Android') {
         AndroidInterface.getContact(functionName);
         return
     }
+    
     webkit.messageHandlers.getContact.postMessage(functionName);
 }
 
+
+function originMatch(origin) {
+    const origins = ['https://growthfile-207204.firebaseapp.com','https://growthfile.com','https://growthfile-testing.firebaseapp.com','http://localhost:5000','https://localhost']
+    return origins.indexOf(origin) > -1;
+}
 function createDate(dateObject) {
     console.log(dateObject)
     let month = dateObject.getMonth() + 1;

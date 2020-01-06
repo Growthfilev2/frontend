@@ -4,10 +4,10 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -99,11 +99,12 @@
 
     </div>
 
+    <script src="../external/js/material.min.js"></script>
 
     <script src="../js/common.js">
     </script>
     <script>
-        parent.window.mdc.autoInit();
+       window.mdc.autoInit();
 
         let listInit;
 
@@ -115,10 +116,10 @@
        
             initializeDates(subscriptionTemplate,createDate(new Date()))
 
-            const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'))
-            const product = new parent.mdc.select.MDCSelect(document.getElementById('product'))
-            const orderValue = new parent.mdc.textField.MDCTextField(document.getElementById('order-value'))
-            const instruction = new parent.mdc.textField.MDCTextField(document.getElementById('instruction'))
+            const customer = new mdc.select.MDCSelect(document.getElementById('customer'))
+            const product = new mdc.select.MDCSelect(document.getElementById('product'))
+            const orderValue = new mdc.textField.MDCTextField(document.getElementById('order-value'))
+            const instruction = new mdc.textField.MDCTextField(document.getElementById('instruction'))
 
 
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
@@ -140,7 +141,7 @@
                     product.listen('MDCSelect:change', function (evt) {
                         if (!evt.detail.value) return
                         const listEl = document.getElementById('product-amount-list')
-                        listInit = new parent.mdc.list.MDCList(listEl);
+                        listInit = new mdc.list.MDCList(listEl);
                         if (listEl.querySelector(`[data-product="${evt.detail.value}"]`)) return;
                         const li = createProductAmount(evt.detail.value)
                         li.querySelector('.mdc-list-item__graphic').onclick = function (event) {

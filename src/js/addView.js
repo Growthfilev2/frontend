@@ -7,13 +7,25 @@ function addView(sub) {
     header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         const frame = document.getElementById('form-iframe');
         if (!frame) return;
         frame.contentWindow.init(sub);
     })
 }
+
+function originMatch(origin) {
+    const origins = ['https://growthfile-207204.firebaseapp.com','https://growthfile.com','https://growthfile-testing.firebaseapp.com','http://localhost:5000','http://localhost']
+    return origins.indexOf(origin) > -1;
+}
+
+window.addEventListener('message',function(event){
+
+    if(!originMatch(event.origin)) return;
+    this.console.log(event.data);
+    window[event.data.name](event.data.body);
+})
 
 function sendOfficeData(requestBody) {
     appLocation(3).then(function (geopoint) {
