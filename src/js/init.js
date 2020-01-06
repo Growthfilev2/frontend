@@ -474,57 +474,57 @@ function startApp() {
 
     console.log('version upgrade')
   }
-}
-req.onsuccess = function () {
-  console.log("request success")
-  db = req.result;
-  console.log("run app")
-  loadingScreen();
 
-  requestCreator('now', {
-    device: native.getInfo(),
-    from: '',
-    registerToken: native.getFCMToken()
-  }).then(function (res) {
-    if (res.updateClient) {
-      updateApp()
-      return
-    }
-    if (res.revokeSession) {
-      revokeSession(true);
-      return
-    };
-    let rootRecord;
-    const rootTx = db.transaction('root', 'readwrite');
-    const store = rootTx.objectStore('root');
-    store.get(dbName).onsuccess = function (transactionEvent) {
-      rootRecord = transactionEvent.target.result;
+  req.onsuccess = function () {
+    console.log("request success")
+    db = req.result;
+    console.log("run app")
+    loadingScreen();
 
-      rootRecord.linkedAccounts = res.linkedAccounts || [];
-      potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
-
-      if (res.idProof) {
-        rootRecord.idProof = res.idProof
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: '',
+      registerToken: native.getFCMToken()
+    }).then(function (res) {
+      if (res.updateClient) {
+        updateApp()
+        return
       }
-      store.put(rootRecord);
+      if (res.revokeSession) {
+        revokeSession(true);
+        return
+      };
+      let rootRecord;
+      const rootTx = db.transaction('root', 'readwrite');
+      const store = rootTx.objectStore('root');
+      store.get(dbName).onsuccess = function (transactionEvent) {
+        rootRecord = transactionEvent.target.result;
 
-    }
-    rootTx.oncomplete = function () {
-      if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
-      initProfileView()
-      runRead({
-        read: '1'
-      })
-    }
-  }).catch(console.error)
-}
-req.onerror = function () {
+        rootRecord.linkedAccounts = res.linkedAccounts || [];
+        potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
 
-  handleError({
-    message: `${req.error.name}`,
-    body: JSON.stringify(req.error.message)
-  })
-}
+        if (res.idProof) {
+          rootRecord.idProof = res.idProof
+        }
+        store.put(rootRecord);
+
+      }
+      rootTx.oncomplete = function () {
+        if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
+        initProfileView()
+        runRead({
+          read: '1'
+        })
+      }
+    }).catch(console.error)
+  }
+  req.onerror = function () {
+    handleError({
+      message: `${req.error.name}`,
+      body: JSON.stringify(req.error.message)
+    })
+  }
+
 }
 
 function initProfileView() {
@@ -959,7 +959,6 @@ function redirect() {
     })
   });
 }
-
 
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
