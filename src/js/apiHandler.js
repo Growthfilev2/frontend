@@ -6,6 +6,11 @@ function getTime() {
   return Date.now()
 }
 
+function getWebWorkerVersion() {
+  const param = new URLSearchParams(self.location.search);
+  return Number(param.get('version'))
+}
+
 const requestFunctionCaller = {
   dm: dm,
   statusChange: statusChange,
@@ -58,6 +63,7 @@ function sendErrorRequestToMainThread(error) {
 }
 
 self.onmessage = function (event) {
+  this.console.log(self);
   meta = event.data.meta;
   const workerId = event.data.id
   if (event.data.type === 'geolocationApi') {
@@ -573,7 +579,23 @@ function updatePayments(paymentData = [], store) {
   // })
 }
 
-
+function updateMap(tx,location) {
+  if(!location.activityId) return;
+  const mapObjectStore = tx.objectStore('map')
+  const index = mapObjectStore.index('activityId');
+  index.openCursor(location.activityId).onsuccess = function(event){
+    const cursor = event.target.result;
+    if(!cursor) {
+      mapObjectStore.put(location);
+      return
+    }
+    let deleteReq = cursor.delete();
+    cursor.continue();
+    deleteReq.onsuccess = function(){
+      console.log('removed map')
+    }
+  }
+}
 function updateCalendar(activity, tx) {
   const calendarObjectStore = tx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
@@ -581,8 +603,7 @@ function updateCalendar(activity, tx) {
     const cursor = event.target.result
     if (!cursor) {
       activity.schedule.forEach(function (schedule) {
-        const startTime = schedule.startTime;
-        const endTime = schedule.endTime;
+     
         const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,
@@ -612,8 +633,7 @@ function updateCalendar(activity, tx) {
   }
 }
 
-// create attachment record with status,template and office values from activity
-// present inside activity object store.
+
 
 function putAttachment(activity, tx, param) {
 
@@ -768,21 +788,27 @@ function successResponse(read, param, db, resolve, reject) {
     }
   })
 
-
-  if (read.locations.length) {
-
-    const mapObjectStore = updateTx.objectStore('map')
-    var clearMap = mapObjectStore.clear();
-    clearMap.onsuccess = function () {
-      read.locations.forEach(function (location) {
-        mapObjectStore.add(location);
-      });
+  if(getWebWorkerVersion() !== 73) {
+    if (read.locations.length) {
+      const mapObjectStore = updateTx.objectStore('map')
+      var clearMap = mapObjectStore.clear();
+      clearMap.onsuccess = function () {
+        read.locations.forEach(function (location) {
+          mapObjectStore.add(location);
+        });
+      }
     }
   }
+  else {
+    read.locations.forEach(function (location) {
+      updateMap(updateTx,location)
+    });
+  }
+
 
   updateAttendance(read.attendances, attendaceStore)
   updateReimbursements(read.reimbursements, reimbursementStore)
-  updatePayments(read.payments, paymentStore)
+  updatePayments(read.payments, paymentStore);
   read.activities.forEach(function (activity) {
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
@@ -933,3 +959,4 @@ function updateIDB(config) {
     }
   })
 };
+
