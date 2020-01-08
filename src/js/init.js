@@ -79,6 +79,7 @@ let native = function () {
 }();
 
 
+
 function getAndroidDeviceInformation() {
   return JSON.stringify({
     'id': AndroidInterface.getId(),
@@ -1024,7 +1025,7 @@ function getCheckInSubs() {
       return resolve(checkInSubs)
     }
   })
-}
+};
 
 function openMap() {
   document.getElementById('app-header').classList.add("hidden")

@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <div class='forms' id='form'>
+    <form class='forms' id='form'>
         <div class="form-list">
 
             <div class="form-component pb-0" id='managers-cont'>
@@ -33,68 +33,105 @@
 
             <div class="action-button-container">
                 <div class="submit-button-cont">
-                    <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
-                        id='submit-btn'>
-                        <div class="mdc-button__ripple"></div>
-                       
-                        <span class="mdc-button__label">JOIN</span>
-                    </button>
-
+                    <input type="submit" value="join" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple" id="submit-btn">
                 </div>
             </div>
 
 
         </div>
-    </div>
+        </div>
 
-    </div>
-    <script src="../external/js/material.min.js"></script>
+        </form>
+        <script src="../external/js/material.min.js"></script>
 
-    <script src="../js/common.js"></script>
+        <script src="../js/common.js"></script>
 
-    <script>
-       window.mdc.autoInit();
+        <script>
+            window.mdc.autoInit();
 
-        const addManagerBtn = document.getElementById('add-manager')
-        const managerObject = {};
-        const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
+            const addManagerBtn = document.getElementById('add-manager')
+            const managerObject = {};
+            const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
+            var formEl = document.getElementById('form');
+            let currentContactsAdded = 0;
 
-        function init(subscriptionTemplate) {
-           
-            addManagerBtn.addEventListener('click', function () {
-              
-                callContact("getContactManager")
-            });
 
-            document.getElementById('submit-btn').addEventListener('click', function () {
-                const array = []
-                Object.keys(managerObject).forEach(function (number) {
-                    array.push(managerObject[number]);
+            function init(subscriptionTemplate) {
+
+                addManagerBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const contact = callContact("getContactManager")
+                    let field;
+                    if (contact) {
+                        field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'))
+                        field.label_.root_.textContent = 'Phone number'
+                        const remove = contact.querySelector('.mdc-icon-button');
+                        remove.addEventListener('click', function () {
+                            contact.remove();
+                            currentContactsAdded--
+                            toggleContactBtn()
+                        })
+                        document.getElementById("managers-cont").appendChild(contact);
+                        currentContactsAdded++
+                        toggleContactBtn()
+                        field.focus()
+                    }
+
+                });
+                formEl.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const array = [];
+                    [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
+                        if (!el.value) return;
+                       array.push({
+                            phoneNumber: el.value,
+                            displayName: '',
+                            email: ''
+                        })   
+                    });
+
+                    Object.keys(managerObject).forEach(function (number) {
+                        array.push(managerObject[number]);
+                    })
+                    subscriptionTemplate.share = array
+                    delete subscriptionTemplate.user
+                    console.log(subscriptionTemplate);
+                    window.parent.postMessage({
+                        body: subscriptionTemplate,
+                        name: 'sendSubscriptionData'
+                    }, window.parent.location.origin);
+
                 })
-                subscriptionTemplate.share = array
-                delete subscriptionTemplate.user
-                parent.sendSubscriptionData(subscriptionTemplate);
-            })
-        }
 
-        function setContactForManager(contactObject) {
-            if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
-            const li = createPhoneNumberLi(contactObject, false, function () {
-                delete managerObject[contactObject.phoneNumber];
-                addManagerBtn.classList.remove('hidden')
-                if (!managerList.listElements.length) {
+            }
+
+            function setContactForManager(contactObject) {
+                if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
+                const li = createPhoneNumberLi(contactObject, false, function () {
+                    delete managerObject[contactObject.phoneNumber];
+                    currentContactsAdded--
+                    toggleContactBtn()
+                });
+                currentContactsAdded++
+                managerList.root_.appendChild(li)
+                managerObject[contactObject.phoneNumber] = contactObject
+                toggleContactBtn()
+            }
+
+
+            function toggleContactBtn() {
+                if (!currentContactsAdded) {
                     document.querySelector('#managers-cont .inline-flex').appendChild(addManagerBtn);
+                    addManagerBtn.classList.remove('hidden');
+                } else {
+                    document.getElementById("managers-cont").appendChild(addManagerBtn);
+                    window.scrollTo(0, document.body.scrollHeight);
 
-                    return;
                 }
-            });
-            managerList.root_.appendChild(li)
-            managerObject[contactObject.phoneNumber] = contactObject
-            window.scrollTo(0, document.body.scrollHeight);
-            document.getElementById("managers-cont").appendChild(addManagerBtn);
 
-        }
-    </script>
+            }
+        </script>
 </body>
 
 </html>

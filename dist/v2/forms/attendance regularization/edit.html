@@ -57,9 +57,9 @@
 
         const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
         var formEl = document.getElementById('form');
-
+        
         function init(subscriptionTemplate) {
-            console.log(subscriptionTemplate)
+
             subscriptionTemplate.schedule.forEach(function (name) {
                 const startfield = document.querySelector(`[data-name="${name} start date"]`);
                 const endField = document.querySelector(`[data-name="${name} end date"]`);
@@ -75,7 +75,8 @@
                 if (!newSchedule) return;
                 copy.schedule = newSchedule
                 delete copy.date
-                parent.sendFormToParent(copy)
+                window.parent.postMessage({body:copy,name:'sendFormToParent'},window.parent.location.origin);
+                
             })
         }
     </script>

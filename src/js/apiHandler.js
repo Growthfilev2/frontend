@@ -58,6 +58,7 @@ function sendErrorRequestToMainThread(error) {
 }
 
 self.onmessage = function (event) {
+  console.log(event)
   meta = event.data.meta;
   const workerId = event.data.id
   if (event.data.type === 'geolocationApi') {

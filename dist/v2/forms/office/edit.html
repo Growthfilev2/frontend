@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <div class='forms' id='form'>
+    <form class='forms' id='form'>
         <div class="form-list">
             <div class="name-address-section">
                 <div class="form-component">
@@ -71,19 +71,14 @@
                 </div>
                 <div class="action-button-container">
                     <div class="submit-button-cont">
-                        <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
-                            id='submit-btn'>
-                            <div class="mdc-button__ripple"></div>
-
-                            <span class="mdc-button__label">Create Office</span>
-                        </button>
-
+                        <input type="submit" value="Create office" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple" id="submit-btn">
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    </div>
+    </form>
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
     <script>
@@ -92,20 +87,52 @@
         const officeName = new mdc.textField.MDCTextField(document.getElementById('office-name'))
         const managerBtn = document.getElementById('add-manager');
         const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
+        var formEl = document.getElementById('form');
         let officeTemplate;
-        
-        managerBtn.addEventListener('click', function () {
+        if (!deviceType) {
+            managerBtn.classList.add('hidden');
+            managerList.root_.classList.add('hidden');
 
-            callContact('getContactManager')
-        });
-        function init(subscriptionTemplate) {
-            officeTemplate = subscriptionTemplate;
-            document.getElementById('submit-btn').addEventListener('click', function () {
-                parent.sendOfficeData(officeTemplate);
+            [{name:'firstContact',label:'Primary contact'},{name:'secondContact',label:'Secondary contact'}].forEach(function(type){
+                const field = new mdc.textField.MDCTextField(textFieldTelephone({
+                    customClass: 'mt-10 contact-field',
+                    label: type.label,
+                    id: '',
+                    required: true
+                }));
+                document.getElementById('managers-cont').appendChild(field.root_)
+                field.input_.dataset.type = type.name;
+                // field.focus()
+            })
+        } else {
+            managerBtn.addEventListener('click', function (e) {
+                e.preventDefault()
+                callContact('getContactManager')
             });
             document.getElementById('submit-btn').setAttribute('disabled', 'true')
+        }
 
-            document.getElementById('confirm-btn').addEventListener('click', function () {
+        function init(subscriptionTemplate) {
+            officeTemplate = subscriptionTemplate;
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if(!deviceType) {
+                    [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
+                        officeTemplate[el.dataset.type] = {
+                            phoneNumber:el.value,
+                            email:'',
+                            displayName:''
+                        }
+                    });
+                }
+                window.parent.postMessage({
+                    body: officeTemplate,
+                    name: 'sendOfficeData'
+                }, window.parent.location.origin);
+            })
+               
+            document.getElementById('confirm-btn').addEventListener('click', function (e) {
+                e.preventDefault()
                 if (!address.value) {
                     setHelperInvalid(address);
                     address.helperTextContent = `Address Cannot Be Empty`
@@ -125,13 +152,6 @@
             officeName.value = subscriptionTemplate.name;
         }
 
-        window.addEventListener('message', function (event) {
-            if(!originMatch(event.origin)) return;
-            init(event.data)
-
-        })
-        
-        
 
         function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return

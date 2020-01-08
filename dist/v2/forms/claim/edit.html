@@ -134,11 +134,10 @@
 
             document.getElementById('add-photo').addEventListener('click', function () {
                 if (parent.native.getName() === 'Android') {
-                    AndroidInterface.startCamera("expenseClaimImage");
-
+                    parent.AndroidInterface.startCamera("expenseClaimImage");
                     return;
                 }
-                webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
+                parent.webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
             })
 
             getDropDownContent(subscriptionTemplate.office, 'claim-type', 'officeTemplate').then(function (result) {
@@ -164,8 +163,9 @@
                 if (!newSchedule) return
 
                 copy.schedule = newSchedule
+                window.parent.postMessage({body:copy,name:'sendFormToParent'},window.parent.location.origin);
 
-                parent.sendFormToParent(copy)
+                
             })
         }
     </script>

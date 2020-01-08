@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <form class='forms mdc-card' id='form'>
+    <form class='forms' id='form'>
         <div class="form-list">
             <div class="form-component">
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
@@ -24,25 +24,19 @@
                 </div>
             </div>
 
-            <div class="form-component">
-                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='customer-contact'>
-                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
-                        role="button">contacts</i>
-                    <input class="mdc-text-field__input" type="tel">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Customer Contact</label>
+            <div class="contact-container form-component">
+
+                <div class="inline-flex mb-10">
+                    <h1 class="mdc-typography--headline6 mdc-theme--primary">
+                        Customer contact
+                    </h1>
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini add-phone-fab" aria-label="Favorite"
+                        id='contact-btn' data-mdc-auto-init="MDCRipple">
+                        <div class="mdc-fab__ripple"></div>
+                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
+                    </button>
                 </div>
-            </div>
-            <div class="form-component">
-                <div class="mdc-text-field mdc-text-field--with-leading-icon hidden" data-mdc-auto-init="MDCTextField"
-                    id='customer-second-contact'>
-                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
-                        role="button">contacts</i>
-                    <input class="mdc-text-field__input" type="tel">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Secondary Contact</label>
-                </div>
+
             </div>
 
             <div class="form-component hidden customer-type-container">
@@ -73,55 +67,84 @@
 
 
             <div class="action-button-container">
-                
+
                 <div class="submit-button-cont">
                     <input type="submit" value="CREATE CUSTOMER" class="mdc-button mdc-button--raised submit-btn"
-                    data-mdc-auto-init="MDCRipple">
+                        data-mdc-auto-init="MDCRipple">
                 </div>
             </div>
+        </div>
     </form>
-    </div>
-
-    </div>
 
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
     <script>
-       window.mdc.autoInit();
+        window.mdc.autoInit();
         let customerContact = '';
         let cusomerSecondContact = ''
+        let subscriptionTemplate = ''
         const customerAuths = {}
+        const maxContacts = 2;
+        let currentContactsAdded = 1;
+        const contactBtn = document.getElementById('contact-btn')
+        let contactList;
 
         function init(subscriptionTemplate) {
-            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-            customerContact = new mdc.textField.MDCTextField(document.getElementById('customer-contact'))
-            cusomerSecondContact = new mdc.textField.MDCTextField(document.getElementById(
-                'customer-second-contact'))
+            console.log(deviceType);
 
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
             const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
             const customerAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
-            console.log(customerContact.foundation_.adapter_.getNativeInput())
+            if (!deviceType) {
+                const field = new mdc.textField.MDCTextField(textFieldTelephone({
+                    customClass: 'mt-10 contact-field',
+                    label: 'Primary contact',
+                    id: 'primary-contact',
+                    required: true
+                }));
+                field.focus()
+                field.input_.dataset.type = 'First Contact';
+                document.querySelector('.contact-container').appendChild(field.root_)
+            } else {
+                const ul = createElement('ul', {
+                    className: 'mdc-list mdc-list--two-line mdc-list--avatar-list',
+                    id: 'contact-list'
+                })
+                document.querySelector('.contact-container').appendChild(ul)
+                contactList = new mdc.list.MDCList(ul)
+                console.log(contactList)
+            }
 
-            customerContact.input_.addEventListener('click', function () {
-                if (parent.native.getName() === 'Android') {
-                    AndroidInterface.getContact("setContactForCustomer");
-                    return
+
+
+            contactBtn.addEventListener('click', function (e) {
+
+                e.preventDefault();
+
+                const contact = callContact('setContactForCustomer');
+                let field;
+                if (contact) {
+                    field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'))
+                    field.input_.dataset.type = 'Second Contact';
+
+                    const remove = contact.querySelector('.mdc-icon-button');
+                    remove.addEventListener('click', function () {
+                        contact.remove();
+                        currentContactsAdded--
+                        toggleContactBtn()
+                    })
+                    document.querySelector('.contact-container').appendChild(contact);
+                    field.focus()
                 }
-                webkit.messageHandlers.getContact.postMessage("setContactForCustomer");
-
+                currentContactsAdded++
+                toggleContactBtn()
 
             });
-            cusomerSecondContact.input_.addEventListener('click', function () {
-                if (parent.native.getName() === 'Android') {
-                    AndroidInterface.getContact("setContactForSecondCustomer");
-                    return
-                }
-                webkit.messageHandlers.getContact.postMessage("setContactForSecondCustomer");
-            });
+
             getDropDownContent(subscriptionTemplate.office, 'customer-type', 'officeTemplate').then(function (result) {
                 if (result.string) {
                     select.nativeControl_.innerHTML += result.string;
-                    select.nativeControl_.setAttribute('required','true')
+                    select.nativeControl_.setAttribute('required', 'true')
                     document.querySelector('.customer-type-container').classList.remove('hidden')
                 }
             })
@@ -134,8 +157,16 @@
                 const vd = subscriptionTemplate.venue[0];
                 copy.attachment.Name.value = customerName.value;
                 copy.attachment['Customer Type'].value = select.value;
-                copy.attachment['First Contact'].value = customerContact.value;
-                copy.attachment['Second Contact'].value = cusomerSecondContact.value;
+                if (!deviceType) {
+                    [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
+                        copy.attachment[el.dataset.type].value = el.value;
+                        customerAuths[el.value] = {
+                            phoneNumber: el.value,
+                            displayName: '',
+                            email: ''
+                        }
+                    });
+                }
                 copy.status = 'PENDING'
                 copy.venue = [{
                     venueDescriptor: vd,
@@ -148,21 +179,59 @@
                 }]
                 copy.share = []
                 copy.customerAuths = customerAuths
-                parent.sendFormToParent(copy)
+                console.log(customerAuths)
+                console.log(copy);
+
+                window.parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, window.parent.location.origin);
+
             })
         }
 
-        function setContact(contactObject, type) {
-            if (type === 'First Contact') {
-                customerContact.value = contactObject.phoneNumber;
-                customerAuths[type] = contactObject
+        function toggleContactBtn() {
 
-                cusomerSecondContact.root_.classList.remove('hidden')
+            if (currentContactsAdded == 2) {
+                contactBtn.classList.add('hidden')
+                return
             }
-            if (type === 'Second Contact') {
-                cusomerSecondContact.value = contactObject.phoneNumber;
-                customerAuths[type] = contactObject
+            if (currentContactsAdded < 2) {
+                contactBtn.classList.remove('hidden')
             }
+        }
+
+        function setContact(contactObject) {
+            if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
+
+            const li = createPhoneNumberLi(contactObject, false, function () {
+
+                subscriptionTemplate.attachment[li.dataset.type].value = '';
+                delete customerAuths[contactObject.phoneNumber]
+                contactBtn.classList.remove('hidden')
+                if (!contactList.listElements.length) {
+                    document.querySelector('.contact-container .inline-flex').appendChild(contactBtn);
+                    return;
+                }
+            });
+
+            if (!subscriptionTemplate.attachment['First Contact'].value) {
+                subscriptionTemplate.attachment['First Contact'].value = contactObject.phoneNumber
+                li.dataset.type = 'First Contact'
+            } else {
+                subscriptionTemplate.attachment['Second Contact'].value = contactObject.phoneNumber
+                li.dataset.type = 'Second Contact'
+            }
+            customerAuths[contactObject.phoneNumber] = contactObject
+
+            contactList.root_.appendChild(li)
+            document.querySelector(".contact-container").appendChild(contactBtn);
+            if (contactList.listElements.length == 2) {
+                contactBtn.classList.add('hidden')
+                return;
+            }
+
+
         }
     </script>
 </body>

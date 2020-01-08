@@ -1,18 +1,55 @@
-function callContact(functionName) {    
+let deviceType = ''
 
-    if (parent.native.getName() === 'Android') {
-        AndroidInterface.getContact(functionName);
-        return
+function callContact(functionName) {
+    switch(deviceType) {
+        case 'Android':
+            parent.AndroidInterface.getContact(functionName);
+            break;
+        case 'Ios':
+            parent.webkit.messageHandlers.getContact.postMessage(functionName);
+            break;
+        default:
+            return contactField();
     }
-    
-    webkit.messageHandlers.getContact.postMessage(functionName);
+
 }
 
+function contactField() {
+    const cont = createElement('div',{
+        className:'inline-flex mt-10'
+    })
+    const field = textFieldTelephone({
+        
+        label:'Secondary contact',
+        
+        customClass:'contact-field'
+    })
+    console.log(field.querySelector('input').required)
+    cont.appendChild(field)
+   
+    const button = createElement('button',{
+        className:'mdc-icon-button material-icons mdc-theme--error',
+        textContent:'remove'
+    })
 
+    new mdc.ripple.MDCRipple(button);
+    cont.appendChild(button);
+    return cont
+}
 function originMatch(origin) {
-    const origins = ['https://growthfile-207204.firebaseapp.com','https://growthfile.com','https://growthfile-testing.firebaseapp.com','http://localhost:5000','https://localhost']
+    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost']
     return origins.indexOf(origin) > -1;
 }
+
+window.addEventListener('message', function (event) {
+    if (!originMatch(event.origin)) return;
+    if(!deviceType) {
+        deviceType = event.data.deviceType
+    }    
+    window[event.data.name](event.data.body)
+})
+
+
 function createDate(dateObject) {
     console.log(dateObject)
     let month = dateObject.getMonth() + 1;
@@ -42,7 +79,7 @@ function showSecondDate(event, className, dataName) {
 
 
 function initializeDates(subscriptionTemplate, defaultDateString) {
-    
+
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);
@@ -109,7 +146,7 @@ function getDropDownContent(office, template, indexName) {
                 return;
             }
             const value = cursor.value.attachment.Name.value
-            if(name[value]) {
+            if (name[value]) {
                 cursor.continue();
                 return;
             }
@@ -158,7 +195,7 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function createPhoneNumberLi(contactObject,withoutIcon,callback) {
+function createPhoneNumberLi(contactObject, withoutIcon, callback) {
 
     const li = createElement('li', {
         className: 'mdc-list-item',
@@ -169,32 +206,50 @@ function createPhoneNumberLi(contactObject,withoutIcon,callback) {
         <span class="mdc-list-item__primary-text">${contactObject.displayName}</span>
         <span class="mdc-list-item__secondary-text">${contactObject.phoneNumber}</span>
     </span>`
-    if(withoutIcon) {
+    if (withoutIcon) {
         return li;
     }
-    const clearIcon = createElement('span',{
-        className:'mdc-list-item__meta material-icons mdc-theme--error',
-        textContent:'clear'
+    const clearIcon = createElement('span', {
+        className: 'mdc-list-item__meta material-icons mdc-theme--error',
+        textContent: 'clear'
     })
-    clearIcon.addEventListener('click',function(){
+    clearIcon.addEventListener('click', function (e) {
+        e.preventDefault();
         li.remove();
-        if(callback) {
+        if (callback) {
             callback();
         }
     })
-    li.appendChild(clearIcon);    
+    li.appendChild(clearIcon);
     return li
 }
 
 
 
-function setHelperInvalid(field,shouldShake = true) {
+function setHelperInvalid(field, shouldShake = true) {
     field.focus();
     field.foundation_.setValid(false);
     field.foundation_.adapter_.shakeLabel(shouldShake);
-  }
-  
-  function setHelperValid(field) {
+}
+
+function setHelperValid(field) {
     field.focus();
     field.foundation_.setValid(true);
-  }
+}
+
+
+function textFieldTelephone(attr) {
+    const textField = createElement('div',{
+        className:`${attr.customClass ? attr.customClass :''} mdc-text-field mdc-text-field--outlined ${attr.disabled ? 'mdc-text-field--disabled' :''} ${attr.label ? '' :'mdc-text-field--no-label'}`,
+        id:attr.id
+    })
+    textField.innerHTML = `<input class="mdc-text-field__input" value='${attr.value || ''}' type='tel' ${attr.disabled ? 'disabled':''} ${attr.required ? 'required':''}>
+    <div class="mdc-notched-outline">
+    <div class="mdc-notched-outline__leading"></div>
+    ${attr.label ?`<div class="mdc-notched-outline__notch">
+    <label for='tel' class="mdc-floating-label">${attr.label}</label>
+    </div>`  :''}
+    <div class="mdc-notched-outline__trailing"></div>
+    </div>`
+    return textField
+}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+
+<body>
+    <form class='forms' id='form'>
+        <div class="form-list">
+        
+
+            <div class="form-component">
+
+                <div class="form-component">
+                    <div class="mdc-select" id='product'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Choose Product</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                    <ul class="mdc-list" id='product-list'>
+
+                    </ul>
+                </div>
+
+
+            </div>
+
+            <div class="form-component hidden customer-container">
+
+                <div class="mdc-select" data-mdc-auto-init="MDCSelect">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label mdc-floating-label--float-above">Customer</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='remarks'>
+                    <textarea class="mdc-text-field__input" rows="4" cols="100" required="true"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Remarks</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="action-button-container">
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="CREATE CUSTOMER" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js"></script>
+    <script>
+        window.mdc.autoInit();
+        let customerContact = '';
+        let cusomerSecondContact = ''
+        let subscriptionTemplate = ''
+        const customerAuths = {}
+        const maxContacts = 2;
+        let currentContactsAdded = 1;
+        const contactBtn = document.getElementById('contact-btn')
+        let contactList;
+
+        function init(subscriptionTemplate) {
+            console.log(deviceType);
+
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+            const remarks = new mdc.textField.MDCTextField(document.getElementById('remarks'))
+        
+
+            getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+                if (result.string) {
+                    select.nativeControl_.innerHTML += result.string;
+                    select.nativeControl_.setAttribute('required', 'true')
+                    document.querySelector('.customer-type-container').classList.remove('hidden')
+                }
+            })
+
+            var formEl = document.getElementById('form');
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+            
+
+                window.parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, window.parent.location.origin);
+
+            })
+        }
+
+        
+    </script>
+</body>
+
+</html>

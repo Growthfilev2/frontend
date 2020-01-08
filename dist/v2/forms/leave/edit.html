@@ -70,6 +70,8 @@
         const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
         var formEl = document.getElementById('form');
 
+
+
         function init(subscriptionTemplate) {
             if (subscriptionTemplate.date) {
                 subscriptionTemplate.schedule.forEach(function (name) {
@@ -94,6 +96,9 @@
 
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
+                const tx = parent.db.transaction('calendar')
+                const store = tx.objectStore('calendar')
+               
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
                 const scheduleDescriptor = copy.schedule[0];
                 copy.attachment['Leave Type'].value = select.value;
@@ -105,8 +110,10 @@
                 if (copy.date) {
                     delete copy.date
                 }
-                window.parent.postMessage({body:copy,name:'sendFormToParent'},window.parent.location.origin);
-                // parent.sendFormToParent(copy)
+                window.parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, window.parent.location.origin);
             })
         }
     </script>
