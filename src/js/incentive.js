@@ -2,18 +2,11 @@ function incentiveView() {
     const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!sectionContent) return;
     sectionContent.innerHTML = incentiveDom();
-    const el = document.getElementById('incentive-view')
-    getSubscription('', 'customer').then(function (subs) {
+    const el = document.getElementById('incentive-view');
+    getReportSubscriptions('incentive').then(function(subs) {
         if (!subs.length) return;
         if (!el) return;
         el.appendChild(createTemplateButton(subs))
-    }).catch(function (error) {
-        handleError({
-            message: error.message,
-            body: {
-                stack: error.stack || '',
-            }
-        })
     })
 }
 

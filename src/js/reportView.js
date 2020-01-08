@@ -151,6 +151,27 @@ function generateCheckInVenueName(header) {
 }
 
 
+function getReportSubscriptions(name) {
+  return new Promise(function (resolve, reject) {
+    const result = []
+    const tx = db.transaction('subscriptions');
+    const store = tx.objectStore('subscriptions').index('report');
+    store.openCursor(name).onsuccess = function(event){
+      const cursor = event.target.result;
+      if(!cursor) return;
+      if(cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
+      }
+      result.push(cursor.value);
+      cursor.continue();
+    }
+    tx.oncomplete = function(){
+      resolve(result);
+    }
+  });
+}
+
 
 function getReportTabData() {
   return new Promise(function (resolve, reject) {
