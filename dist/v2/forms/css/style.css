@@ -296,3 +296,11 @@ body {
   float: right;
 
 }
+
+.product-card {
+  padding: 10px;
+}
+.product-container .field-cont {
+  padding-left: 10px;
+  padding-right: 10px;
+}

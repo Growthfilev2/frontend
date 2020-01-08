@@ -582,8 +582,7 @@ function updateCalendar(activity, tx) {
     const cursor = event.target.result
     if (!cursor) {
       activity.schedule.forEach(function (schedule) {
-        const startTime = schedule.startTime;
-        const endTime = schedule.endTime;
+       
         const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,

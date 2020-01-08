@@ -200,7 +200,7 @@ function firebaseUiConfig() {
       recaptchaParameters: {
         type: 'image', // 'audio'
         size: 'invisible', // 'invisible' or 'compact'
-        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
+        badge: 'inline' //' bottomright' or 'inline' applies to invisible.
       },
       defaultCountry: 'IN',
 

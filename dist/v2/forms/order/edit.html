@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <form class='forms mdc-card' id='form'>
+    <form class='forms' id='form'>
 
         <div class="form-list">
 
@@ -21,51 +21,24 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Select Customer</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
-            <div class="form-component schedules">
-                <p class="mdc-typography--body1 mdc-theme--primary mt-0 mb-0">Delivery Date</p>
-                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-start-date'>
-                    <input class="mdc-text-field__input" type="date" data-name='Delivery Date start date'>
-                    <label class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-
-                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-end-date'>
-                    <input class="mdc-text-field__input" type="date" data-name='Delivery Date end date'>
-                    <label class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
+                    <label class="mdc-floating-label">Customer</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
 
-            <div class="form-component schedules">
-                <p class="mdc-typography--body1 mdc-theme--primary  mt-0 mb-0">Payment Date</p>
-                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='payment-start-date'>
-                    <input class="mdc-text-field__input" type="date" data-name="Payment Date start date">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
-                </div>
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='payment-end-date'>
-                    <input class="mdc-text-field__input" type="date" data-name="Payment Date end date">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
-                </div>
-            </div>
 
-            <div class="product-select-container hidden">
-                <div class="form-component">
-                    <div class="mdc-select" id='product'>
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <select class="mdc-select__native-control">
-                            <option value="" selected></option>
-                        </select>
-                        <label class="mdc-floating-label">Choose Product</label>
-                        <div class="mdc-line-ripple"></div>
-                    </div>
-                    <ul class="mdc-list" id='product-amount-list'></ul>
+
+            <div class="form-component hidden product-container">
+                <div class="mdc-select"  id='product-select'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Product</label>
+                    <div class="mdc-line-ripple"></div>
                 </div>
+
+
             </div>
 
             <div class="form-component">
@@ -88,8 +61,12 @@
                     </div>
                 </div>
             </div>
-            <div class="form-component">
-                <input type="submit" value="Create Order" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
+            <div class="action-button-container">
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="SUBMIT" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple">
+                </div>
             </div>
     </form>
     </div>
@@ -101,20 +78,18 @@
     <script src="../js/common.js">
     </script>
     <script>
-       window.mdc.autoInit();
+        window.mdc.autoInit();
 
-        let listInit;
-
-
+        let subscriptionTemplate = ''
+        const productsChoosen = {};
 
         function init(subscriptionTemplate) {
 
             const formEl = document.getElementById('form');
-       
-            initializeDates(subscriptionTemplate,createDate(new Date()))
+
 
             const customer = new mdc.select.MDCSelect(document.getElementById('customer'))
-            const product = new mdc.select.MDCSelect(document.getElementById('product'))
+            const product = new mdc.select.MDCSelect(document.getElementById('product-select'))
             const orderValue = new mdc.textField.MDCTextField(document.getElementById('order-value'))
             const instruction = new mdc.textField.MDCTextField(document.getElementById('instruction'))
 
@@ -124,35 +99,41 @@
                 if (result.string) {
                     document.querySelector('.customer-select-container').classList.remove('hidden');
                     customer.nativeControl_.innerHTML += result.string
-                    customer.nativeControl_.setAttribute('required','true')
+                    customer.nativeControl_.setAttribute('required', 'true')
                 }
             });
 
             getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
-                if (result.string) {
-                    const el = document.querySelector('.product-select-container');
-                    el.classList.remove('hidden');
+                if (!result.string) return;
+                const el = document.querySelector('.product-container')
+                product.nativeControl_.innerHTML += result.string;
+                product.nativeControl_.setAttribute('required', 'true');
+                el.classList.remove('hidden')
 
-                    product.nativeControl_.innerHTML += result.string;
-                    product.nativeControl_.setAttribute('required','true')
-                    product.listen('MDCSelect:change', function (evt) {
-                        if (!evt.detail.value) return
-                        const listEl = document.getElementById('product-amount-list')
-                        listInit = new mdc.list.MDCList(listEl);
-                        if (listEl.querySelector(`[data-product="${evt.detail.value}"]`)) return;
-                        const li = createProductAmount(evt.detail.value)
-                        li.querySelector('.mdc-list-item__graphic').onclick = function (event) {
-                            removeList(event);
+                product.listen('MDCSelect:change', function (event) {
+                    console.log(event);
+                    if (!event.detail.index) return;
+                    if (document.querySelector(`[data-product-name="${event.detail.value}"]`)) return;
+                    const card = productCard(event.detail.value);
+                    card.querySelector('#remove-card').addEventListener('click', function (e) {
+                        e.preventDefault();
+                        card.remove();
 
-                            if (!listInit.listElements.length) {
-                                product.selectedIndex = 0;
-                            }
-                        }
-                        listEl.appendChild(li);
+                        delete productsChoosen[card.dataset.productName];
+                        console.log(productsChoosen)
                     })
+                    el.appendChild(card)
+                    productsChoosen[event.detail.value] = {
+                        "name": event.detail.value,
+                        "quantity": "",
+                        "rate": "",
+                        "date": "",
+                    }
 
-                }
-            });
+                    console.log(productsChoosen)
+                })
+            })
+
 
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -160,30 +141,37 @@
                 copy.attachment['Estimated Order Value'].value = orderValue.value;
                 copy.attachment['Special Instruction'].value = instruction.value;
                 copy.attachment['Customer'].value = customer.value
-                copy.share = []
+                copy.share = [];
+                [...document.querySelectorAll('.product-card')].forEach(function (el) {
+                    productsChoosen[el.dataset.productName].date = '';
+                    productsChoosen[el.dataset.productName].quantity = '';
+                    productsChoosen[el.dataset.productName].rate = '';
 
-                const newSchedule = getNewSchedule(subscriptionTemplate) 
-                if(!newSchedule) return;
-                copy.schedule = newSchedule 
+                    [...el.querySelectorAll('.mdc-text-field')].forEach(function (field) {
+                        const fieldDataset = field.dataset.productDetail;
+                        let value = field.querySelector('input').value
+                        if (fieldDataset === 'date') {
+                            value = value ? Date.parse(value) : "";
+                        }
+                        if (fieldDataset === 'quantity') {
+                            value = value ? Number(value) : "";
+                        }
 
-                const requestArray = []
-                
-                if (!listInit) {
-                    parent.sendFormToParent(copy)
-                    return
-                }
-                if (!listInit.listElements.length) {
-                    parent.sendFormToParent(copy)
-                    return
-                }
-                listInit.listElements.forEach(function (el) {
+                        productsChoosen[el.dataset.productName][fieldDataset] = value
+                    })
+                });
 
-                    copy.attachment['Product'].value = el.dataset.product;
-                    copy.attachment['Quantity'].value = Number(el.querySelector('input').value);
-                    requestArray.push(copy)
+                const array = []
+                const finalProducts = Object.keys(productsChoosen);
+                finalProducts.forEach(function (name) {
+                    array.push(productsChoosen[name])
                 })
-               
-                parent.sendFormToParent(requestArray)
+                copy.attachment.Products.value = array
+
+                window.parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, window.parent.location.origin);
             })
         }
     </script>
