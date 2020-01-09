@@ -788,7 +788,7 @@ function successResponse(read, param, db, resolve, reject) {
     }
   })
 
-  if(getWebWorkerVersion() !== 73) {
+  // if(getWebWorkerVersion() !== 73) {
     if (read.locations.length) {
       const mapObjectStore = updateTx.objectStore('map')
       var clearMap = mapObjectStore.clear();
@@ -798,12 +798,12 @@ function successResponse(read, param, db, resolve, reject) {
         });
       }
     }
-  }
-  else {
-    read.locations.forEach(function (location) {
-      updateMap(updateTx,location)
-    });
-  }
+  // }
+  // else {
+  //   read.locations.forEach(function (location) {
+  //     updateMap(updateTx,location)
+  //   });
+  // }
 
 
   updateAttendance(read.attendances, attendaceStore)
