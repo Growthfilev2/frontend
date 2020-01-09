@@ -53,7 +53,7 @@
     /* padding-left: 40px; */
 
 }
-.subscription-list  span{
+.subscription-list  span:not(.mdc-list-item__secondary-text){
     font-size: 20px;
     
 }

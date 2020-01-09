@@ -7,46 +7,13 @@ function addView(sub) {
     header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/order/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         const frame = document.getElementById('form-iframe');
         if (!frame) return;
         frame.contentWindow.postMessage({
             name: 'init',
-            body: {
-                "template": "order",
-                "statusOnCreate": "PENDING",
-                "canEditRule": "EMPLOYEE",
-                "hidden": 0,
-                "report": "incentive",
-                "office":"Stellar Medical",
-                "venue": [],
-                "schedule": [],
-                "attachment": {
-                    "Products": {
-                        "value": [{
-                            "name": "Product1 name",
-                            "quantity": 2,
-                            "rate": "",
-                            "date": "", // unix
-                        }],
-                        "type": "product"
-                    },
-                    "Customer": {
-                        "value": "",
-                        "type": "customer"
-                    },
-                    "Estimated Order Value": {
-                        "value": "",
-                        "type": "string"
-                    },
-                    "Special Instruction": {
-                        "value": "",
-                        "type": "string"
-                    }
-                },
-                "comment": "Template used for recording orders"
-            },
+            body: sub,
             deviceType: native.getName()
         }, window.location.href);
     })

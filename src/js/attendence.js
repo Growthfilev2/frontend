@@ -3,22 +3,13 @@ function attendanceView(yesterdayAttendanceRecord) {
 
   if (!sectionContent) return;
   sectionContent.innerHTML = attendanceDom();
-  
-  const el = document.getElementById('attendance-view')
-  getSubscription('', 'leave').then(function (subs) {
-    if (!subs.length) return;
-    if (!el) return;
-    
-    el.appendChild(createTemplateButton(subs))
-  }).catch(function (error) {
-    handleError({
-      message: error.message,
-      body: {
-        stack: error.stack || '',
-      }
-    })
-  })
 
+  const el = document.getElementById('attendance-view')
+  getReportSubscriptions('attendance').then(function (subs) {
+    if (!subs.length) return;
+    if (!el) return
+    el.appendChild(createTemplateButton(subs))
+  })
   getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (myCreds) {
     const officeEmployee = {}
     myCreds.forEach(function (cred) {
@@ -40,7 +31,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
       }
       return;
     }
-    
+
 
     let monthlyString = ''
     let month;
@@ -69,7 +60,7 @@ function createAttendanceCard(employeeRecord, yesterdayAttendanceRecord) {
 
   }).catch(function (error) {
     console.log(error)
-    
+
     handleError({
       message: error.message,
       body: {
@@ -140,7 +131,7 @@ function getMinimumDalyCount(data, employeeRecord) {
   if (!employeeRecord[data.office]) {
     return ` Count : ${data.addendum.length}`
   }
-  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Daily Activity Count')) return ` Count : ${data.addendum.length}`;
+  if (!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Daily Activity Count')) return ` Count : ${data.addendum.length}`;
   if (!employeeRecord[data.office].attachment['Minimum Daily Activity Count'].value) {
     return ` Count : ${data.addendum.length}`
   }
@@ -153,7 +144,7 @@ function getWorkingHoursText(data, employeeRecord) {
   const offices = Object.keys(employeeRecord);
   if (!offices.length) return ` Working hours :  ${hours}`;
   if (!employeeRecord[data.office]) return ` Working hours :  ${hours}`;
-  if(!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Working Hours')) return ` Working hours :  ${hours}`;
+  if (!employeeRecord[data.office].attachment.hasOwnProperty('Minimum Working Hours')) return ` Working hours :  ${hours}`;
   if (!employeeRecord[data.office].attachment['Minimum Working Hours'].value) return ` Working hours :  ${hours}`;
   return ` Working hours :  ${hours} / ${employeeRecord[data.office].attachment['Minimum Working Hours'].value} `
 }
@@ -263,8 +254,7 @@ function getMonthlyData() {
         }
         if (!cursor.value.hasOwnProperty('addendum')) {
           cursor.value.addendum = [];
-        }
-        else {
+        } else {
           cursor.value.addendum.sort(function (a, b) {
             return a.timestamp - b.timestamp
           })
