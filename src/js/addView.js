@@ -7,7 +7,7 @@ function addView(sub) {
     header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         const frame = document.getElementById('form-iframe');
         if (!frame) return;
@@ -15,7 +15,7 @@ function addView(sub) {
             name: 'init',
             body: sub,
             deviceType: native.getName()
-        }, window.location.href);
+        }, window.location.origin);
     })
 }
 
@@ -171,7 +171,7 @@ function setContactForCustomer(contactString) {
     const frame = document.getElementById('form-iframe')
     if (!frame) return;
     frame.contentWindow.postMessage({
-        name: 'contactDetails',
+        name: 'setContact',
         body: contactDetails
     }, window.location.href)
 }

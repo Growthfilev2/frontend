@@ -337,6 +337,7 @@ function reportTemplateSelectionDialog(subs) {
   bottomDialog(dialog, ul)
 
   ul.listen('MDCList:action', function (evt) {
+    console.log(evt)
     history.pushState(['addView'], null, null);
     addView(subs[evt.detail.index])
     dialog.close()

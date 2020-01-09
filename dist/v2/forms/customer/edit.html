@@ -88,10 +88,10 @@
         let currentContactsAdded = 1;
         const contactBtn = document.getElementById('contact-btn')
         let contactList;
-
+       
         function init(subscriptionTemplate) {
             console.log(deviceType);
-
+            subscriptionTemplate = subscriptionTemplate;
             const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
             const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
             const customerAddress = new mdc.textField.MDCTextField(document.getElementById('address'))

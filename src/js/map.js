@@ -19,6 +19,7 @@ function logReportEvent(name) {
   const deviceInfo = JSON.parse(native.getInfo());
   if(native.getName() === 'Android' && deviceInfo.appVersion == 14) {
     AndroidInterface.logEvent(name);
+    return;
   }
   try {
     webkit.messageHandlers.logEvent.postMessage(name)

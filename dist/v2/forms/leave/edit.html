@@ -11,11 +11,11 @@
 </head>
 
 <body>
-    <form class='forms mdc-card' id='form'>
+    <form class='forms' id='form'>
 
         <div class="form-list">
             <div class="form-component leave-type-select-container hidden">
-                <div class="mdc-select">
+                <div class="mdc-select" data-mdc-auto-init="MDCSelect">
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
@@ -64,8 +64,6 @@
     <script src="../js/common.js"></script>
     <script>
         window.mdc.autoInit();
-
-
         const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
         const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
         var formEl = document.getElementById('form');
