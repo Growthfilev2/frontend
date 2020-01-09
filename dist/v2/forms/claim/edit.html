@@ -4,10 +4,10 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -97,10 +97,11 @@
 
     </div>
 
+    <script src="../external/js/material.min.js"></script>
 
     <script src="../js/common.js"></script>
     <script>
-        parent.window.mdc.autoInit();
+       window.mdc.autoInit();
         let photo = '';
 
         function setExpenseImage(base64) {
@@ -114,9 +115,9 @@
 
 
         function init(subscriptionTemplate) {
-            const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-            const totalAmount = new parent.mdc.textField.MDCTextField(document.getElementById('total-amount'));
-            const details = new parent.mdc.textField.MDCTextField(document.getElementById('description'));
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+            const totalAmount = new mdc.textField.MDCTextField(document.getElementById('total-amount'));
+            const details = new mdc.textField.MDCTextField(document.getElementById('description'));
             console.log(totalAmount)
 
             totalAmount.input_.onkeydown = function (evt) {
@@ -124,7 +125,7 @@
                 if (!((evt.keyCode > 95 && evt.keyCode < 106) ||
                         (evt.keyCode > 47 && evt.keyCode < 58) ||
                         evt.keyCode == 8)) {
-                    
+                   
                     return false;
                 }
             }
@@ -133,11 +134,10 @@
 
             document.getElementById('add-photo').addEventListener('click', function () {
                 if (parent.native.getName() === 'Android') {
-                    AndroidInterface.startCamera("expenseClaimImage");
-
+                    parent.AndroidInterface.startCamera("expenseClaimImage");
                     return;
                 }
-                webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
+                parent.webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
             })
 
             getDropDownContent(subscriptionTemplate.office, 'claim-type', 'officeTemplate').then(function (result) {
@@ -164,8 +164,9 @@
                 if (!newSchedule) return
 
                 copy.schedule = newSchedule
+                window.parent.postMessage({body:copy,name:'sendFormToParent'},window.parent.location.origin);
 
-                parent.sendFormToParent(copy)
+                
             })
         }
     </script>

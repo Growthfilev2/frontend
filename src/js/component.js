@@ -134,8 +134,9 @@ Dialog.prototype.create = function (type) {
         contentContainer.innerHTML = this.content
     }
 
-
-    surface.appendChild(h2)
+    if(this.title) {
+        surface.appendChild(h2)
+    }
     surface.appendChild(contentContainer);
     if (type !== 'simple') {
 

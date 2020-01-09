@@ -4,19 +4,10 @@ function expenseView() {
     if (!sectionContent) return;
     sectionContent.innerHTML = reimDom();
     const el = document.getElementById('reim-view')
-    getSubscription('', 'claim').then(function (subs) {
+    getReportSubscriptions('reimbursement').then(function (subs) {
         if (!subs.length) return;
         if(!el) return
         el.appendChild(createTemplateButton(subs))
-    }).catch(function (error) {
-        console.log(error)
-        handleError({
-            message: error.message,
-            body: {
-                stack: error.stack || '',
-                error: error
-            }
-        })
     })
     
     getReimMonthlyData().then(function (reimbursementData) {

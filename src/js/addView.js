@@ -1,5 +1,5 @@
 function addView(sub) {
-
+    
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template === 'subscription' ? 'Add other contacts' : sub.template === 'users' ? 'Add people' : sub.template}</span>
     `
@@ -11,9 +11,26 @@ function addView(sub) {
     document.getElementById('form-iframe').addEventListener("load", ev => {
         const frame = document.getElementById('form-iframe');
         if (!frame) return;
-        frame.contentWindow.init(sub);
+        frame.contentWindow.postMessage({
+            name: 'init',
+            body: sub,
+            deviceType: native.getName()
+        }, window.location.href);
     })
 }
+
+function originMatch(origin) {
+    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost']
+    return origins.indexOf(origin) > -1;
+}
+
+window.addEventListener('message', function (event) {
+    console.log(event)
+    if (!originMatch(event.origin)) return;
+    this.console.log(event.data);
+    window[event.data.name](event.data.body);
+})
+
 
 function sendOfficeData(requestBody) {
     appLocation(3).then(function (geopoint) {
@@ -58,7 +75,6 @@ function sendSubscriptionData(formData) {
 
 function sendFormToParent(formData) {
     progressBar.open();
-
     const customerAuths = formData.customerAuths;
     delete formData.customerAuths;
     appLocation(3).then(function (geopoint) {
@@ -72,15 +88,15 @@ function sendFormToParent(formData) {
             Promise.all(prom).then(function (response) {
 
                 successDialog(`You Created a ${templateName}`);
-                
+            
                 reportView()
             }).catch(console.error)
             return;
         }
         requestCreator('create', formData, geopoint).then(function () {
-           console.log(formData)
-           
-           
+            console.log(formData)
+
+
             if (formData.report === 'attendance') {
                 if (formData.template === 'attendance regularization') {
                     successDialog(`You Applied for an AR`);
@@ -88,7 +104,7 @@ function sendFormToParent(formData) {
                     successDialog(`You Created a ${formData.template}`);
                 };
 
-                if(!formData.id) {
+                if (!formData.id) {
                     reportView()
                     return;
                 }
@@ -154,7 +170,10 @@ function setContactForCustomer(contactString) {
     const contactDetails = parseContact(contactString);
     const frame = document.getElementById('form-iframe')
     if (!frame) return;
-    frame.contentWindow.setContact(contactDetails, 'First Contact');
+    frame.contentWindow.postMessage({
+        name: 'contactDetails',
+        body: contactDetails
+    }, window.location.href)
 }
 
 function setContactForCustomerFailed(exceptionMessage) {
@@ -164,40 +183,23 @@ function setContactForCustomerFailed(exceptionMessage) {
     })
 }
 
-
 function getContactManager(contactString) {
     const contactDetails = parseContact(contactString);
     const frame = document.getElementById('form-iframe')
     if (!frame) return;
-    frame.contentWindow.setContactForManager(contactDetails);
-}
-
-
-
-function getContactSupervisors(contactString) {
-    const contactDetails = parseContact(contactString);
-    const frame = document.getElementById('form-iframe')
-    if (!frame) return;
-    frame.contentWindow.setContactForSupervisors(contactDetails);
-}
-
-function setContactForSecondCustomer(contactString) {
-    const contactDetails = parseContact(contactString);
-    const frame = document.getElementById('form-iframe')
-    if (!frame) return;
-    frame.contentWindow.setContact(contactDetails, 'Second Contact');
-}
-
-function setContactForSecondCustomerFailed(exceptionMessage) {
-    handleError({
-        message: exceptionMessage,
-        body: ''
-    })
+    frame.contentWindow.postMessage({
+        name: 'setContactForManager',
+        body: contactDetails
+    }, window.location.href);
 }
 
 
 function expenseClaimImage(base64) {
     const frame = document.getElementById('form-iframe')
     if (!frame) return;
-    frame.contentWindow.setExpenseImage(base64);
+    frame.contentWindow.postMessage({
+        name: 'setExpenseImage',
+        body: base64
+    }, window.location.href);
+   
 }

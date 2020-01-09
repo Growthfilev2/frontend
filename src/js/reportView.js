@@ -1,6 +1,6 @@
 function reportView(state, attendanceRecord) {
 
-  
+
   const panel = document.getElementById('app-current-panel');
   panel.classList.remove('mdc-theme--primary-bg')
   getReportTabData().then(function (reportTabs) {
@@ -72,7 +72,7 @@ function reportView(state, attendanceRecord) {
   })
 }
 
-function reportViewHeader(){
+function reportViewHeader() {
   let clearIcon = ''
   if (ApplicationState.nearByLocations.length > 1) {
     clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
@@ -149,6 +149,7 @@ function generateCheckInVenueName(header) {
     })
   }
 }
+
 
 
 
@@ -256,48 +257,41 @@ function showTabs(reportTabs) {
 }
 
 
-
-function getReportSubs(reportName) {
+function getReportSubscriptions(name) {
   return new Promise(function (resolve, reject) {
-    const subs = [];
-    const tx = db.transaction('subscriptions', 'readwrite');
-    const store = tx.objectStore('subscriptions')
-    var request = ''
-    if (store.indexNames.contains('report')) {
-      request = store.index('report')
-        .openCursor(IDBKeyRange.only(reportName))
-    } else {
-      request = store.openCursor();
-    }
-
-    request.onsuccess = function (event) {
+    const result = []
+    const tx = db.transaction('subscriptions');
+    const store = tx.objectStore('subscriptions').index('report');
+    store.openCursor(name).onsuccess = function (event) {
       const cursor = event.target.result;
-      if (!cursor) return
+      if (!cursor) return;
       if (cursor.value.status === 'CANCELLED') {
-        cursor.delete()
-        cursor.continue();
-        return;
-      }
-
-      if (cursor.value.report !== reportName) {
         cursor.continue();
         return;
       }
       if (cursor.value.template === 'attendance regularization') {
         cursor.continue();
-        return
+        return;
       }
-
-      subs.push(cursor.value)
+      result.forEach(function (sub, index, object) {
+        if (sub.office === cursor.value.office && sub.template === cursor.value.template) {
+          if (!sub.hasOwnProperty('timestamp') || !cursor.value.hasOwnProperty('timestamp')) {
+            object.splice(index, 1)
+          } else {
+            if (sub.timestamp < cursor.value.timestamp) {
+              object.splice(index, 1)
+            }
+          }
+        }
+      })
+      result.push(cursor.value);
       cursor.continue();
     }
     tx.oncomplete = function () {
-      return resolve(subs)
+      console.log(result)
+      resolve(result);
     }
-    tx.onerror = function () {
-      return reject(tx.error)
-    }
-  })
+  });
 }
 
 
@@ -325,19 +319,44 @@ function createTemplateButton(subs) {
   button.addEventListener('click', function () {
     if (subs.length == 1) {
       history.pushState(['addView'], null, null);
-      
       addView(subs[0])
       return
-    }
-    const dialog = new Dialog('Choose Office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
-    const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-    bottomDialog(dialog, ul)
+    };
 
-    ul.listen('MDCList:action', function (evt) {
-      history.pushState(['addView'], null, null);
-      addView(subs[evt.detail.index])
-      dialog.close()
-    })
+ 
+    reportTemplateSelectionDialog(subs)
   })
   return button;
+}
+
+
+function reportTemplateSelectionDialog(subs) {
+  
+  const dialog = new Dialog('', templateSelectionList(subs), 'choose-office-subscription').create('simple');
+  const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+  bottomDialog(dialog, ul)
+
+  ul.listen('MDCList:action', function (evt) {
+    history.pushState(['addView'], null, null);
+    addView(subs[evt.detail.index])
+    dialog.close()
+  })
+}
+
+function templateSelectionList(subs) {
+
+  return `<ul class='mdc-list subscription-list mdc-list--two-line' id='dialog-office'>
+     ${subs.map(function(sub){
+       return `<li class='mdc-list-item'>
+        <span class="mdc-list-item__text">
+          <span class="mdc-list-item__primary-text">${sub.template}</span>
+          <span class="mdc-list-item__secondary-text">${sub.office}</span>
+        </span>
+      
+       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+         keyboard_arrow_right
+       </span>
+       </li>`
+     }).join("")}
+     </ul>`
 }

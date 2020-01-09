@@ -4,14 +4,14 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
-    <div class='forms' id='form'>
+    <form class='forms' id='form'>
         <div class="form-list">
             <div class="name-address-section">
                 <div class="form-component">
@@ -22,7 +22,7 @@
                         <div class="mdc-line-ripple"></div>
                     </div>
                     <div class="mdc-text-field-helper-line">
-                            <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+                        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
                     </div>
                 </div>
                 <div class="form-component">
@@ -71,49 +71,74 @@
                 </div>
                 <div class="action-button-container">
                     <div class="submit-button-cont">
-                        <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
-                            id='submit-btn'>
-                            <div class="mdc-button__ripple"></div>
-
-                            <span class="mdc-button__label">Create Office</span>
-                        </button>
-
+                        <input type="submit" value="Create office" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple" id="submit-btn">
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    </div>
+    </form>
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
     <script>
-        parent.window.mdc.autoInit();
-        const address = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
-        const officeName = new parent.mdc.textField.MDCTextField(document.getElementById('office-name'))
-
+        window.mdc.autoInit();
+        const address = new mdc.textField.MDCTextField(document.getElementById('address'))
+        const officeName = new mdc.textField.MDCTextField(document.getElementById('office-name'))
         const managerBtn = document.getElementById('add-manager');
-        const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
+        const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
+        var formEl = document.getElementById('form');
         let officeTemplate;
-       
-        managerBtn.addEventListener('click', function () {
-           
-            callContact('getContactManager')
-        });
+        if (!deviceType) {
+            managerBtn.classList.add('hidden');
+            managerList.root_.classList.add('hidden');
 
-        
-        function init(subscriptionTemplate) {
-            officeTemplate = subscriptionTemplate;
-            document.getElementById('submit-btn').addEventListener('click', function () {
-                parent.sendOfficeData(officeTemplate);
+            [{name:'firstContact',label:'Primary contact'},{name:'secondContact',label:'Secondary contact'}].forEach(function(type){
+                const field = new mdc.textField.MDCTextField(textFieldTelephone({
+                    customClass: 'mt-10 contact-field',
+                    label: type.label,
+                    id: '',
+                    required: true
+                }));
+                document.getElementById('managers-cont').appendChild(field.root_)
+                field.input_.dataset.type = type.name;
+                // field.focus()
+            })
+        } else {
+            managerBtn.addEventListener('click', function (e) {
+                e.preventDefault()
+                callContact('getContactManager')
             });
             document.getElementById('submit-btn').setAttribute('disabled', 'true')
+        }
 
-            document.getElementById('confirm-btn').addEventListener('click', function () {
-                if(!address.value) {
+        function init(subscriptionTemplate) {
+            officeTemplate = subscriptionTemplate;
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if(!deviceType) {
+                    [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
+                        officeTemplate[el.dataset.type] = {
+                            phoneNumber:el.value,
+                            email:'',
+                            displayName:''
+                        }
+                    });
+                }
+                window.parent.postMessage({
+                    body: officeTemplate,
+                    name: 'sendOfficeData'
+                }, window.parent.location.origin);
+            })
+               
+            document.getElementById('confirm-btn').addEventListener('click', function (e) {
+                e.preventDefault()
+                if (!address.value) {
                     setHelperInvalid(address);
                     address.helperTextContent = `Address Cannot Be Empty`
                     return;
                 }
-                if(!officeName.value) {
+                if (!officeName.value) {
                     setHelperInvalid(officeName);
                     officeName.helperTextContent = `Name Cannot Be Empty`
                     return;
@@ -127,6 +152,7 @@
             officeName.value = subscriptionTemplate.name;
         }
 
+
         function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
 
@@ -139,7 +165,7 @@
                     return;
                 }
             });
-            
+
             if (!officeTemplate['firstContact']) {
                 officeTemplate['firstContact'] = contactObject
                 li.dataset.type = 'firstContact'

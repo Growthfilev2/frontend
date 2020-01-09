@@ -1,10 +1,58 @@
+let deviceType = ''
+
 function callContact(functionName) {
-    if (parent.native.getName() === 'Android') {
-        AndroidInterface.getContact(functionName);
-        return
+    switch (deviceType) {
+        case 'Android':
+            parent.AndroidInterface.getContact(functionName);
+            break;
+        case 'Ios':
+            parent.webkit.messageHandlers.getContact.postMessage(functionName);
+            break;
+        default:
+            return textFieldRemovable('tel', 'Secondary contact');
     }
-    webkit.messageHandlers.getContact.postMessage(functionName);
+
 }
+
+function textFieldRemovable(type, label) {
+    const cont = createElement('div', {
+        className: 'inline-flex mt-10'
+    })
+    let field;
+    if (type === 'tel') {
+        field = textFieldTelephone({
+            label: label,
+            customClass: 'contact-field'
+        })
+    } else {
+        field = textField({
+            label: label,
+            type: type
+        })
+    }
+    cont.appendChild(field)
+    const button = createElement('button', {
+        className: 'mdc-icon-button material-icons mdc-theme--error',
+        textContent: 'remove'
+    })
+    new mdc.ripple.MDCRipple(button);
+    cont.appendChild(button);
+    return cont
+}
+
+function originMatch(origin) {
+    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost']
+    return origins.indexOf(origin) > -1;
+}
+
+window.addEventListener('message', function (event) {
+    if (!originMatch(event.origin)) return;
+    if (!deviceType) {
+        deviceType = event.data.deviceType
+    }
+    window[event.data.name](event.data.body)
+})
+
 
 function createDate(dateObject) {
     console.log(dateObject)
@@ -35,7 +83,7 @@ function showSecondDate(event, className, dataName) {
 
 
 function initializeDates(subscriptionTemplate, defaultDateString) {
-    
+
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);
@@ -102,7 +150,7 @@ function getDropDownContent(office, template, indexName) {
                 return;
             }
             const value = cursor.value.attachment.Name.value
-            if(name[value]) {
+            if (name_object[value]) {
                 cursor.continue();
                 return;
             }
@@ -151,7 +199,7 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function createPhoneNumberLi(contactObject,withoutIcon,callback) {
+function createPhoneNumberLi(contactObject, withoutIcon, callback) {
 
     const li = createElement('li', {
         className: 'mdc-list-item',
@@ -162,32 +210,194 @@ function createPhoneNumberLi(contactObject,withoutIcon,callback) {
         <span class="mdc-list-item__primary-text">${contactObject.displayName}</span>
         <span class="mdc-list-item__secondary-text">${contactObject.phoneNumber}</span>
     </span>`
-    if(withoutIcon) {
+    if (withoutIcon) {
         return li;
     }
-    const clearIcon = createElement('span',{
-        className:'mdc-list-item__meta material-icons mdc-theme--error',
-        textContent:'clear'
+    const clearIcon = createElement('span', {
+        className: 'mdc-list-item__meta material-icons mdc-theme--error',
+        textContent: 'clear'
     })
-    clearIcon.addEventListener('click',function(){
+    clearIcon.addEventListener('click', function (e) {
+        e.preventDefault();
         li.remove();
-        if(callback) {
+        if (callback) {
             callback();
         }
     })
-    li.appendChild(clearIcon);    
+    li.appendChild(clearIcon);
     return li
 }
 
 
 
-function setHelperInvalid(field,shouldShake = true) {
+function setHelperInvalid(field, shouldShake = true) {
     field.focus();
     field.foundation_.setValid(false);
     field.foundation_.adapter_.shakeLabel(shouldShake);
-  }
-  
-  function setHelperValid(field) {
+}
+
+function setHelperValid(field) {
     field.focus();
     field.foundation_.setValid(true);
-  }
+}
+
+
+function textFieldTelephone(attr) {
+    const textField = createElement('div', {
+        className: `${attr.customClass ? attr.customClass :''} mdc-text-field mdc-text-field--outlined ${attr.disabled ? 'mdc-text-field--disabled' :''} ${attr.label ? '' :'mdc-text-field--no-label'}`,
+        id: attr.id
+    })
+    textField.innerHTML = `<input class="mdc-text-field__input" value='${attr.value || ''}' type='tel' ${attr.disabled ? 'disabled':''} ${attr.required ? 'required':''}>
+    <div class="mdc-notched-outline">
+    <div class="mdc-notched-outline__leading"></div>
+    ${attr.label ?`<div class="mdc-notched-outline__notch">
+    <label for='tel' class="mdc-floating-label">${attr.label}</label>
+    </div>`  :''}
+    <div class="mdc-notched-outline__trailing"></div>
+    </div>`
+    return textField
+}
+
+
+function textField(attr) {
+    const div = createElement('div', {
+        className: `mdc-text-field mdc-text-field--outlined full-width ${attr.leadingIcon ? 'mdc-text-field--with-leading-icon' :''} ${attr.trailingIcon ? 'mdc-text-field--with-trailing-icon' :''} ${attr.disabled ? 'mdc-text-field--disabled' :''}`,
+        id: attr.id
+    })
+    div.innerHTML = `
+    ${attr.leadingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.leadingIcon}</i>`:''}
+    <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="${attr.type || 'text'}" class="mdc-text-field__input" value="${attr.value || ''}"  ${attr.required ? 'required' :''}  ${attr.disabled ? 'disabled':''} >
+    ${attr.trailingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.trailingIcon}</i>` :''}
+    
+    <div class="mdc-notched-outline">
+      <div class="mdc-notched-outline__leading"></div>
+      <div class="mdc-notched-outline__notch">
+        <label  class="mdc-floating-label">${attr.label}</label>
+      </div>
+      <div class="mdc-notched-outline__trailing"></div>
+    </div>
+  `
+    return div
+}
+
+function productCard(productName) {
+    const productFields = [{
+        name: 'Quantity',
+        icon: 'add',
+        type: 'quantity'
+    },{
+        name: 'Rate',
+        icon: 'add',
+        type: 'rate'
+    },{
+        name: 'Date',
+        icon: 'event',
+        type: 'date'
+    }];
+
+    const card = createElement('div', {
+        className: 'mdc-card mdc-card--outlined product-card mt-10'
+    })
+    card.dataset.productName = productName;
+    const heading = createElement('div', {
+        className: 'inline-flex'
+    })
+    heading.appendChild(createElement('h1', {
+        className: 'mdc-typography--headline6 mt-0 mb-0',
+        textContent: productName
+    }))
+    const removeCardIcon = createElement('button', {
+        className: 'mdc-icon-button material-icons mdc-theme--error',
+        textContent: 'delete',
+        style: 'margin-left:auto',
+        id:'remove-card'
+    });
+
+    heading.appendChild(removeCardIcon);
+    const primary = createElement('div', {
+        className: ''
+    })
+    const chipCont = createElement('div', {
+        className: 'chip-cont'
+    })
+    const fieldCont = createElement('div', {
+        className: 'field-cont'
+    })
+
+
+
+ 
+    const chipSet = createElement('div', {
+        className: 'mdc-chip-set mdc-chip-set--choice'
+    })
+    chipSet.role = 'grid';
+    productFields.forEach(function(type){
+        chipSet.appendChild(createChip(type))
+    })
+    
+    chipCont.appendChild(chipSet);
+
+    const chipSetInit = new mdc.chips.MDCChipSet(chipSet);
+    chipSetInit.listen('MDCChip:interaction', function (event) {
+        event.preventDefault();
+        console.log(chipSetInit)
+        console.log(event);
+        const selectedChip = document.getElementById(event.detail.chipId)
+        selectedChip.classList.add('hidden')
+        let field;
+        
+        
+        if (selectedChip.dataset.type === 'quantity') {
+            field = textFieldRemovable('number', 'Quantity');
+        }
+        if (selectedChip.dataset.type === 'rate') {
+            field = textFieldRemovable('number', 'Rate');
+            field.querySelector('input').setAttribute('min',1);
+            field.querySelector('input').setAttribute('step','any');
+            field.querySelector('input').onkeydown = function(evt){
+                console.log(evt.keyCode)
+                if(evt.keyCode == 190) return true;
+                if (!((evt.keyCode > 95 && evt.keyCode < 106) ||
+                        (evt.keyCode > 47 && evt.keyCode < 58) ||
+                        evt.keyCode == 8)) {
+                    return false;
+                }
+            }
+        }
+        if (selectedChip.dataset.type === 'date') {
+            field = textFieldRemovable('date', 'Date');
+        };
+
+        field.querySelector('.mdc-icon-button').addEventListener('click',function(e){
+            e.preventDefault();
+            selectedChip.classList.remove('hidden')
+            field.remove();
+        })
+        fieldCont.appendChild(field);
+        const fieldInit =  new mdc.textField.MDCTextField(field.querySelector('.mdc-text-field'));
+        fieldInit.root_.dataset.productDetail = selectedChip.dataset.type;
+        fieldInit.focus();
+
+    });
+
+
+    card.appendChild(heading)
+    primary.appendChild(chipCont)
+    primary.appendChild(fieldCont)
+    card.appendChild(primary);
+    return card;
+}
+
+function createChip(attr) {
+    const chip = createElement('div', {
+        className: 'mdc-chip'
+    })
+    chip.role = 'row';
+    chip.dataset.type = attr.type
+    chip.innerHTML = `<div class="mdc-chip__ripple"></div>
+    <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">${attr.icon}</i>
+    <span role="gridcell">
+      <span role="button" tabindex="0" class="mdc-chip__text">${attr.name}</span>
+    </span>`
+    return chip
+}

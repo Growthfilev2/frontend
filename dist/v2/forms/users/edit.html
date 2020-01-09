@@ -4,14 +4,14 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
-    <div class='forms' id='form'>
+    <form class='forms' id='form'>
         <div class="form-list">
 
             <div class="form-component pb-0" id='managers-cont'>
@@ -33,47 +33,70 @@
 
             <div class="action-button-container">
                 <div class="submit-button-cont">
-                    <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
-                        id='submit-btn'>
-                        <div class="mdc-button__ripple"></div>
-                       
-                        <span class="mdc-button__label">SUBMIT</span>
-                    </button>
-
+                    <input type="submit" value="submit" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple" id="submit-btn">
                 </div>
             </div>
-
-
         </div>
-    </div>
-
-    </div>
-
+        </div>
+    </form>
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
-
     <script>
-        parent.window.mdc.autoInit();
+        window.mdc.autoInit();
 
         const addManagerBtn = document.getElementById('add-manager')
         const managerObject = {};
-        const managerList = new parent.mdc.list.MDCList(document.getElementById('manager-list'))
+        const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
+        var formEl = document.getElementById('form');
+        let currentContactsAdded = 0;
 
         function init(subscriptionTemplate) {
-           
-            addManagerBtn.addEventListener('click', function () {
-              
-                callContact("getContactManager")
+
+            addManagerBtn.addEventListener('click', function (e) {
+
+                e.preventDefault();
+                const contact = callContact("getContactManager")
+                let field;
+                if (contact) {
+                    field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'))
+                    field.label_.root_.textContent = 'Phone number'
+                    const remove = contact.querySelector('.mdc-icon-button');
+                    remove.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        contact.remove();
+                        currentContactsAdded--
+                        toggleContactBtn()
+                    })
+                    document.getElementById("managers-cont").appendChild(contact);
+                    currentContactsAdded++
+                    toggleContactBtn()
+                    field.focus()
+                }
             });
 
-            document.getElementById('submit-btn').addEventListener('click', function () {
-                const array = []
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const array = [];
+                [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
+                    if (!el.value) return;
+                    array.push({
+                        phoneNumber: el.value,
+                        displayName: '',
+                        email: ''
+                    })
+                });
+
                 Object.keys(managerObject).forEach(function (number) {
                     array.push(managerObject[number]);
                 })
                 subscriptionTemplate.phoneNumbers = array
-               
                 delete subscriptionTemplate.template;
-                parent.sendUsersData(subscriptionTemplate);
+                window.parent.postMessage({
+                    body: subscriptionTemplate,
+                    name: 'sendUsersData'
+                }, window.parent.location.origin);
+
             })
         }
 
@@ -81,17 +104,25 @@
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
             const li = createPhoneNumberLi(contactObject, false, function () {
                 delete managerObject[contactObject.phoneNumber];
-                addManagerBtn.classList.remove('hidden')
-                if (!managerList.listElements.length) {
-                    document.querySelector('#managers-cont .inline-flex').appendChild(addManagerBtn);
-                    return;
-                }
+                currentContactsAdded--
+                toggleContactBtn()
             });
+            currentContactsAdded++
             managerList.root_.appendChild(li)
             managerObject[contactObject.phoneNumber] = contactObject
-            window.scrollTo(0, document.body.scrollHeight);
-            document.getElementById("managers-cont").appendChild(addManagerBtn);
+            toggleContactBtn()
+        }
 
+
+        function toggleContactBtn() {
+            if (!currentContactsAdded) {
+                document.querySelector('#managers-cont .inline-flex').appendChild(addManagerBtn);
+                addManagerBtn.classList.remove('hidden');
+            } else {
+                document.getElementById("managers-cont").appendChild(addManagerBtn);
+                window.scrollTo(0, document.body.scrollHeight);
+
+            }
         }
     </script>
 </body>

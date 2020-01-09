@@ -4,9 +4,9 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -57,12 +57,14 @@
             </div>
         </div>
     </form>
+    <script src="../external/js/material.min.js"></script>
+
     <script src="../js/common.js"></script>
     <script>
-        parent.window.mdc.autoInit();
+       window.mdc.autoInit();
 
-        const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'));
-        const product = new parent.mdc.select.MDCSelect(document.getElementById('product'));
+        const customer = new mdc.select.MDCSelect(document.getElementById('customer'));
+        const product = new mdc.select.MDCSelect(document.getElementById('product'));
 
         var formEl = document.getElementById('form');
         function init(subscriptionTemplate) {

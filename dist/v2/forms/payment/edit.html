@@ -4,10 +4,10 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -56,17 +56,17 @@
 
     </div>
 
-
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js">
     </script>
     <script>
-        parent.window.mdc.autoInit();
+       window.mdc.autoInit();
 
         function init(subscriptionTemplate) {
             
-            const amount = new parent.mdc.select.MDCSelect(document.getElementById('amount'))
-            const paymentMode = new parent.mdc.select.MDCSelect(document.getElementById('payment-mode'))
-            const ref = new parent.mdc.textField.MDCTextField(document.getElementById('ref-number'))
+            const amount = new mdc.select.MDCSelect(document.getElementById('amount'))
+            const paymentMode = new mdc.select.MDCSelect(document.getElementById('payment-mode'))
+            const ref = new mdc.textField.MDCTextField(document.getElementById('ref-number'))
           
 
             const tx = parent.db.transaction(['children'])

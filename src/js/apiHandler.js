@@ -63,7 +63,7 @@ function sendErrorRequestToMainThread(error) {
 }
 
 self.onmessage = function (event) {
-  this.console.log(self);
+  console.log(event)
   meta = event.data.meta;
   const workerId = event.data.id
   if (event.data.type === 'geolocationApi') {
@@ -603,7 +603,7 @@ function updateCalendar(activity, tx) {
     const cursor = event.target.result
     if (!cursor) {
       activity.schedule.forEach(function (schedule) {
-     
+       
         const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,
