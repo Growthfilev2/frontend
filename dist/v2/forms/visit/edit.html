@@ -65,7 +65,7 @@
     </form>
 
     <script src="../external/js/material.min.js"></script>
-    <script src="../js/common.js"></script>
+    <script src="../js/common.js?version=1"></script>
     <script>
         window.mdc.autoInit();
 
@@ -152,7 +152,7 @@
                     array.push(productsChoosen[name])
                 })
                 copy.attachment.Products.value = array
-              
+                copy.share = []
                 parent.postMessage({
                     body: copy,
                     name: 'sendFormToParent'

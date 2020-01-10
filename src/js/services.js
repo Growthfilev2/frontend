@@ -76,10 +76,7 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    // return resolve({
-    //   latitude:22,
-    //   longitude:77
-    // })
+   
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -244,7 +241,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=73');
+const apiHandler = new Worker('js/apiHandler.js?version=84');
 
 function requestCreator(requestType, requestBody, geopoint) {
   var auth = firebase.auth().currentUser;
