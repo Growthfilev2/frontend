@@ -64,13 +64,14 @@
     <script src="../js/common.js"></script>
     <script>
         window.mdc.autoInit();
-        const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-        const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
+
         var formEl = document.getElementById('form');
 
 
 
         function init(subscriptionTemplate) {
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+            const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
             if (subscriptionTemplate.date) {
                 subscriptionTemplate.schedule.forEach(function (name) {
                     const startfield = document.querySelector(`[data-name="${name} start date"]`);
@@ -84,7 +85,6 @@
             } else {
                 initializeDates(subscriptionTemplate, createDate(getTommorowDate()))
             }
-
             getDropDownContent(subscriptionTemplate.office, 'leave-type', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
                 select.nativeControl_.setAttribute('required', 'true')
@@ -96,7 +96,7 @@
                 e.preventDefault();
                 const tx = parent.db.transaction('calendar')
                 const store = tx.objectStore('calendar')
-               
+
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
                 const scheduleDescriptor = copy.schedule[0];
                 copy.attachment['Leave Type'].value = select.value;
@@ -108,10 +108,10 @@
                 if (copy.date) {
                     delete copy.date
                 }
-                window.parent.postMessage({
+               parent.postMessage({
                     body: copy,
                     name: 'sendFormToParent'
-                }, window.parent.location.origin);
+                }, parentOrigin);
             })
         }
     </script>

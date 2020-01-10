@@ -46,9 +46,9 @@
                     <label for="input" class="mdc-floating-label">Amount</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
-                
+
             </div>
-            
+
             <div class="form-component">
                 <div style="
                     display: inline-flex;
@@ -86,12 +86,12 @@
             </div>
 
             <div class="action-button-container">
-                
-                    <div class="submit-button-cont">
-                        <input type="submit" value="CREATE CLAIM" class="mdc-button mdc-button--raised submit-btn"
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="CREATE CLAIM" class="mdc-button mdc-button--raised submit-btn"
                         data-mdc-auto-init="MDCRipple">
-                    </div>
                 </div>
+            </div>
     </form>
     </div>
 
@@ -101,7 +101,7 @@
 
     <script src="../js/common.js"></script>
     <script>
-       window.mdc.autoInit();
+        window.mdc.autoInit();
         let photo = '';
 
         function setExpenseImage(base64) {
@@ -121,11 +121,11 @@
             console.log(totalAmount)
 
             totalAmount.input_.onkeydown = function (evt) {
-                if(evt.keyCode == 190) return true;
+                if (evt.keyCode == 190) return true;
                 if (!((evt.keyCode > 95 && evt.keyCode < 106) ||
                         (evt.keyCode > 47 && evt.keyCode < 58) ||
                         evt.keyCode == 8)) {
-                   
+
                     return false;
                 }
             }
@@ -143,7 +143,7 @@
             getDropDownContent(subscriptionTemplate.office, 'claim-type', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
                 select.nativeControl_.innerHTML += result.string;
-                select.nativeControl_.setAttribute('required','true')
+                select.nativeControl_.setAttribute('required', 'true')
                 document.querySelector('.claim-type-select-container').classList.remove('hidden');
 
             })
@@ -164,9 +164,12 @@
                 if (!newSchedule) return
 
                 copy.schedule = newSchedule
-                window.parent.postMessage({body:copy,name:'sendFormToParent'},window.parent.location.origin);
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
 
-                
+
             })
         }
     </script>

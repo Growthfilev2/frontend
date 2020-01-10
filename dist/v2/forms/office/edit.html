@@ -5,7 +5,8 @@
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../external/css/material.min.css" rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+        integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
@@ -43,7 +44,7 @@
                 <div class="action-button-container">
                     <div class="submit-button-cont">
                         <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
-                            id='confirm-btn'>
+                            type="button" id='confirm-btn'>
                             <div class="mdc-button__ripple"></div>
 
                             <span class="mdc-button__label">CONFIRM</span>
@@ -68,17 +69,22 @@
                     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list " id='manager-list'
                         data-mdc-auto-init="MDCList">
                     </ul>
+
                 </div>
                 <div class="action-button-container">
                     <div class="submit-button-cont">
                         <input type="submit" value="Create office" class="mdc-button mdc-button--raised submit-btn"
-                        data-mdc-auto-init="MDCRipple" id="submit-btn">
+                            data-mdc-auto-init="MDCRipple" id="submit-btn">
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+        </div>
     </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
     <script>
@@ -89,48 +95,41 @@
         const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
         var formEl = document.getElementById('form');
         let officeTemplate;
-        if (!deviceType) {
-            managerBtn.classList.add('hidden');
-            managerList.root_.classList.add('hidden');
-
-            [{name:'firstContact',label:'Primary contact'},{name:'secondContact',label:'Secondary contact'}].forEach(function(type){
-                const field = new mdc.textField.MDCTextField(textFieldTelephone({
-                    customClass: 'mt-10 contact-field',
-                    label: type.label,
-                    id: '',
-                    required: true
-                }));
-                document.getElementById('managers-cont').appendChild(field.root_)
-                field.input_.dataset.type = type.name;
-                // field.focus()
-            })
-        } else {
-            managerBtn.addEventListener('click', function (e) {
-                e.preventDefault()
-                callContact('getContactManager')
-            });
-            document.getElementById('submit-btn').setAttribute('disabled', 'true')
-        }
+        const itis = {}
+        const hiddenInput = document.getElementById('hidden-tel')
 
         function init(subscriptionTemplate) {
+
             officeTemplate = subscriptionTemplate;
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
-                if(!deviceType) {
-                    [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
-                        officeTemplate[el.dataset.type] = {
-                            phoneNumber:el.value,
-                            email:'',
-                            displayName:''
+                let areAllNumberValid = true
+                if (!deviceType) {
+                    Object.keys(itis).forEach(function (name) {
+                        const iti = itis[name]['iti'];
+                        const mdc = itis[name]['mdc']
+                        const phoneNumberValidity = isPhoneNumberValid(iti)
+                        if (!phoneNumberValidity.valid) {
+                            setHelperInvalid(mdc);
+                            mdc.helperTextContent = phoneNumberValidity.message;
+                            areAllNumberValid = false;
+                            return;
+                        }
+                        officeTemplate[name] = {
+                            phoneNumber: iti.getNumber(intlTelInputUtils.numberFormat.E164),
+                            email: '',
+                            displayName: ''
                         }
                     });
                 }
-                window.parent.postMessage({
-                    body: officeTemplate,
-                    name: 'sendOfficeData'
-                }, window.parent.location.origin);
+                if(areAllNumberValid) {
+                   parent.postMessage({
+                        body: officeTemplate,
+                        name: 'sendOfficeData'
+                    }, parentOrigin);
+                }
             })
-               
+
             document.getElementById('confirm-btn').addEventListener('click', function (e) {
                 e.preventDefault()
                 if (!address.value) {
@@ -143,15 +142,56 @@
                     officeName.helperTextContent = `Name Cannot Be Empty`
                     return;
                 }
-                document.querySelector('.name-address-section').classList.add('hidden')
-                document.querySelector('.manager-section').classList.remove('hidden')
+
                 officeTemplate.registeredOfficeAddress = address.value;
                 officeTemplate.name = officeName.value;
+                showOfficeForm();
             })
             address.value = subscriptionTemplate.registeredOfficeAddress
             officeName.value = subscriptionTemplate.name;
         }
 
+        function showOfficeForm() {
+
+            document.querySelector('.name-address-section').classList.add('hidden')
+            document.querySelector('.manager-section').classList.remove('hidden')
+            if (!deviceType) {
+                managerBtn.classList.add('hidden');
+                managerList.root_.classList.add('hidden');
+                [{
+                    name: 'firstContact',
+                    placeholder: 'Primary contact'
+                }, {
+                    name: 'secondContact',
+                    placeholder: 'Secondary contact'
+                }].forEach(function (type) {
+                    const cont = textFieldTelephoneWithHelper({
+                        customClass: 'mt-10 contact-field',
+                        placeholder: type.placeholder,
+                        id: '',
+                        required: true
+                    });
+
+                    const field = new mdc.textField.MDCTextField(cont.querySelector('.mdc-text-field'));
+                    document.getElementById('managers-cont').appendChild(cont)
+                    field.input_.dataset.type = type.name;
+                    const initField = phoneFieldInit(field.input_);
+                    itis[type.name] = {
+                        'mdc': field,
+                        'iti': initField
+                    }
+
+                })
+            } else {
+
+                managerBtn.addEventListener('click', function (e) {
+                    e.preventDefault()
+
+                    callContact('getContactManager')
+                });
+                document.getElementById('submit-btn').setAttribute('disabled', 'true')
+            }
+        }
 
         function setContactForManager(contactObject) {
             if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
@@ -166,6 +206,9 @@
                 }
             });
 
+            li.dataset.number = contactObject.phoneNumber
+
+            managerList.root_.appendChild(li)
             if (!officeTemplate['firstContact']) {
                 officeTemplate['firstContact'] = contactObject
                 li.dataset.type = 'firstContact'
@@ -173,7 +216,7 @@
                 officeTemplate['secondContact'] = contactObject
                 li.dataset.type = 'secondContact'
             }
-            managerList.root_.appendChild(li)
+
             document.getElementById("managers-cont").appendChild(managerBtn);
             if (managerList.listElements.length == 2) {
                 managerBtn.classList.add('hidden')

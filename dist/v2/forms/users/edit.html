@@ -5,7 +5,8 @@
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../external/css/material.min.css" rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+    integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
@@ -42,15 +43,19 @@
     </form>
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+    integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+    integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
     <script>
         window.mdc.autoInit();
 
         const addManagerBtn = document.getElementById('add-manager')
         const managerObject = {};
+        const itis = {};
         const managerList = new mdc.list.MDCList(document.getElementById('manager-list'))
         var formEl = document.getElementById('form');
         let currentContactsAdded = 0;
-
         function init(subscriptionTemplate) {
 
             addManagerBtn.addEventListener('click', function (e) {
@@ -60,17 +65,24 @@
                 let field;
                 if (contact) {
                     field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'))
-                    field.label_.root_.textContent = 'Phone number'
+                    field.input_.placeholder = 'Phone nummber'
                     const remove = contact.querySelector('.mdc-icon-button');
                     remove.addEventListener('click', function (e) {
                         e.preventDefault();
                         contact.remove();
+                        delete itis[Number(contact.dataset.fieldNumber)];
                         currentContactsAdded--
                         toggleContactBtn()
                     })
                     document.getElementById("managers-cont").appendChild(contact);
                     currentContactsAdded++
-                    toggleContactBtn()
+                    contact.dataset.fieldNumber = currentContactsAdded;
+                    toggleContactBtn();
+                    const initField = phoneFieldInit(field.input_);
+                    itis[currentContactsAdded] = {
+                        'mdc': field,
+                        'iti': initField
+                    }
                     field.focus()
                 }
             });
@@ -78,13 +90,23 @@
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const array = [];
-                [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
-                    if (!el.value) return;
+                let areAllNumberValid = true;
+                Object.keys(itis).forEach(function (name) {
+                    const iti = itis[name]['iti'];
+                    const mdc = itis[name]['mdc'];
+                    const phoneNumberValidity = isPhoneNumberValid(iti)
+                    if (!phoneNumberValidity.valid) {
+                        setHelperInvalid(mdc);
+                        mdc.helperTextContent = phoneNumberValidity.message;
+                        areAllNumberValid = false;
+                        return;
+                    }
                     array.push({
-                        phoneNumber: el.value,
+                        phoneNumber: iti.getNumber(intlTelInputUtils.numberFormat.E164),
                         displayName: '',
                         email: ''
                     })
+
                 });
 
                 Object.keys(managerObject).forEach(function (number) {
@@ -92,10 +114,13 @@
                 })
                 subscriptionTemplate.phoneNumbers = array
                 delete subscriptionTemplate.template;
-                window.parent.postMessage({
-                    body: subscriptionTemplate,
-                    name: 'sendUsersData'
-                }, window.parent.location.origin);
+                if(areAllNumberValid) {
+
+                    parent.postMessage({
+                        body: subscriptionTemplate,
+                        name: 'sendUsersData'
+                    }, parentOrigin);
+                }
 
             })
         }

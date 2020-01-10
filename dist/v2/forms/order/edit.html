@@ -168,10 +168,10 @@
                 })
                 copy.attachment.Products.value = array
 
-                window.parent.postMessage({
+                postMessage({
                     body: copy,
                     name: 'sendFormToParent'
-                }, window.parent.location.origin);
+                }, parentOrigin);
             })
         }
     </script>

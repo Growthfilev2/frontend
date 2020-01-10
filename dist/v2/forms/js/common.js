@@ -1,5 +1,5 @@
 let deviceType = ''
-
+let parentOrigin = ''
 function callContact(functionName) {
     switch (deviceType) {
         case 'Android':
@@ -9,19 +9,19 @@ function callContact(functionName) {
             parent.webkit.messageHandlers.getContact.postMessage(functionName);
             break;
         default:
-            return textFieldRemovable('tel', 'Secondary contact');
+            return textFieldRemovable('tel','','Secondary contact');
     }
 
 }
 
-function textFieldRemovable(type, label) {
+function textFieldRemovable(type, label,placeholder) {
     const cont = createElement('div', {
         className: 'inline-flex mt-10'
     })
     let field;
     if (type === 'tel') {
-        field = textFieldTelephone({
-            label: label,
+        field = textFieldTelephoneWithHelper({
+            placeholder:placeholder,
             customClass: 'contact-field'
         })
     } else {
@@ -50,6 +50,7 @@ window.addEventListener('message', function (event) {
     if (!deviceType) {
         deviceType = event.data.deviceType
     }
+    parentOrigin = event.origin
     window[event.data.name](event.data.body)
 })
 
@@ -241,13 +242,49 @@ function setHelperValid(field) {
     field.foundation_.setValid(true);
 }
 
+const phoneFieldInit = (input,dropEl,hiddenInput) => {
+  
+    return intlTelInput(input, {
+        initialCountry: "IN",
+        formatOnDisplay: true,
+        separateDialCode: true,
+        dropdownContainer:dropEl || null,
+        hiddenInput:hiddenInput || "",
+        nationalMode:false
+    });
+  };
+
+  const getPhoneFieldErrorMessage = (code) => {
+    let message = ''
+    switch (code) {
+        case 1:
+            message = 'Please enter a correct country code';
+            break;
+
+        case 2:
+            message = 'Number is too short';
+            break;
+        case 3:
+            message = 'Number is too long';
+            break;
+        case 4:
+            message = 'Invalid Number'
+            break;
+
+        default:
+            message = ''
+            break
+    }
+    return message;
+}
+  
 
 function textFieldTelephone(attr) {
     const textField = createElement('div', {
         className: `${attr.customClass ? attr.customClass :''} mdc-text-field mdc-text-field--outlined ${attr.disabled ? 'mdc-text-field--disabled' :''} ${attr.label ? '' :'mdc-text-field--no-label'}`,
         id: attr.id
     })
-    textField.innerHTML = `<input class="mdc-text-field__input" value='${attr.value || ''}' type='tel' ${attr.disabled ? 'disabled':''} ${attr.required ? 'required':''}>
+    textField.innerHTML = `<input placeholder="${attr.placeholder || 'Phone number'}" class="mdc-text-field__input" value='${attr.value || ''}' type='tel' ${attr.disabled ? 'disabled':''} ${attr.required ? 'required':''}>
     <div class="mdc-notched-outline">
     <div class="mdc-notched-outline__leading"></div>
     ${attr.label ?`<div class="mdc-notched-outline__notch">
@@ -400,4 +437,43 @@ function createChip(attr) {
       <span role="button" tabindex="0" class="mdc-chip__text">${attr.name}</span>
     </span>`
     return chip
+}
+
+
+function textFieldTelephoneWithHelper(attr) {
+    const cont = createElement('div', {
+        className: 'text-field-container'
+    })
+    if (attr.classList) {
+        attr.classList.forEach(function (name) {
+            cont.classList.add(name)
+        });
+    }
+    cont.innerHTML = `
+    ${textFieldTelephone(attr).outerHTML}
+    <div class="mdc-text-field-helper-line">
+      <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+    </div>
+`
+    return cont
+}
+
+
+function isPhoneNumberValid(iti) {
+    var errorCode = iti.getValidationError();
+    
+    const result = {
+        message:'',
+        valid:false
+    }
+    if(errorCode)  {
+        result.message = getPhoneFieldErrorMessage(errorCode);
+        return result
+    }
+    if(!iti.isValidNumber()){
+        result.message = 'Invalid number';
+        return result
+    }
+    result.valid = true;
+    return result;
 }

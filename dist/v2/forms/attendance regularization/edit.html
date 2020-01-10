@@ -16,13 +16,17 @@
 
             <div class="form-component schedules">
                 <p class="mdc-typography--body1 mdc-theme--primary  mt-0 mb-0">Regularization Dates</label>
-                    <div class="mdc-text-field mdc-text-field--disabled" data-mdc-auto-init="MDCTextField" id='start-date'>
-                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates start date" disabled>
+                    <div class="mdc-text-field mdc-text-field--disabled" data-mdc-auto-init="MDCTextField"
+                        id='start-date'>
+                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates start date"
+                            disabled>
                         <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <div class="mdc-text-field mdc-text-field--disabled" data-mdc-auto-init="MDCTextField" id='end-date'>
-                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates end date" disabled>
+                    <div class="mdc-text-field mdc-text-field--disabled" data-mdc-auto-init="MDCTextField"
+                        id='end-date'>
+                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates end date"
+                            disabled>
                         <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
@@ -42,28 +46,28 @@
                 </div>
             </div>
             <div class="action-button-container">
-                
-                    <div class="submit-button-cont">
-                        <input type="submit" value="Apply AR" class="mdc-button mdc-button--raised submit-btn"
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="Apply AR" class="mdc-button mdc-button--raised submit-btn"
                         data-mdc-auto-init="MDCRipple">
-                    </div>
                 </div>
+            </div>
         </div>
     </form>
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
     <script>
-       window.mdc.autoInit();
+        window.mdc.autoInit();
 
         const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
         var formEl = document.getElementById('form');
-        
+
         function init(subscriptionTemplate) {
 
             subscriptionTemplate.schedule.forEach(function (name) {
                 const startfield = document.querySelector(`[data-name="${name} start date"]`);
                 const endField = document.querySelector(`[data-name="${name} end date"]`);
-                startfield.value = endField.value  = createDate(new Date(subscriptionTemplate.date))
+                startfield.value = endField.value = createDate(new Date(subscriptionTemplate.date))
             });
 
             formEl.addEventListener('submit', function (e) {
@@ -75,8 +79,11 @@
                 if (!newSchedule) return;
                 copy.schedule = newSchedule
                 delete copy.date
-                window.parent.postMessage({body:copy,name:'sendFormToParent'},window.parent.location.origin);
-                
+               parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+
             })
         }
     </script>

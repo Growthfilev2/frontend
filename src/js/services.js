@@ -76,7 +76,10 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-   
+    // return resolve({
+    //   latitude:22,
+    //   longitude:77
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -263,21 +266,18 @@ function requestCreator(requestType, requestBody, geopoint) {
 
 
   if (!geopoint) return executeRequest(requestGenerator);
-
   return getRootRecord().then(function (rootRecord) {
     const time = fetchCurrentTime(rootRecord.serverTime);
     requestGenerator.body['timestamp'] = time
     requestGenerator.body['geopoint'] = geopoint;
     if (requestBody.template === 'check-in') {
       ApplicationState.lastCheckInCreated = time
-    }
+    };
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
     console.log('sending', requestGenerator);
     return executeRequest(requestGenerator);
   });
-
 }
-
 
 function executeRequest(requestGenerator) {
   const auth = firebase.auth().currentUser;

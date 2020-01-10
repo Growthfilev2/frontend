@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../external/css/material.min.css" rel="stylesheet">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+        integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
 
@@ -78,33 +79,44 @@
 
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
     <script>
         window.mdc.autoInit();
         let customerContact = '';
         let cusomerSecondContact = ''
         let subscriptionTemplate = ''
         const customerAuths = {}
+        const itis = {}
         const maxContacts = 2;
         let currentContactsAdded = 1;
         const contactBtn = document.getElementById('contact-btn')
         let contactList;
-       
-        function init(subscriptionTemplate) {
+
+        function init(template) {
             console.log(deviceType);
-            subscriptionTemplate = subscriptionTemplate;
+            subscriptionTemplate = template;
             const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
             const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
             const customerAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
             if (!deviceType) {
-                const field = new mdc.textField.MDCTextField(textFieldTelephone({
+                const cont = textFieldTelephoneWithHelper({
                     customClass: 'mt-10 contact-field',
-                    label: 'Primary contact',
-                    id: 'primary-contact',
+                    placeholder: 'Primary contact',
+                    id: 'primary-contac',
                     required: true
-                }));
-                field.focus()
+                });
+                const field = new mdc.textField.MDCTextField(cont.querySelector('.mdc-text-field'));
+                document.querySelector('.contact-container').appendChild(cont)
                 field.input_.dataset.type = 'First Contact';
-                document.querySelector('.contact-container').appendChild(field.root_)
+                const initField = phoneFieldInit(field.input_);
+                itis['First Contact'] = {
+                    'mdc': field,
+                    'iti': initField
+                }
+                field.focus()
             } else {
                 const ul = createElement('ul', {
                     className: 'mdc-list mdc-list--two-line mdc-list--avatar-list',
@@ -124,21 +136,27 @@
                 const contact = callContact('setContactForCustomer');
                 let field;
                 if (contact) {
-                    field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'))
+
+                    const field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'));
                     field.input_.dataset.type = 'Second Contact';
+                    const initField = phoneFieldInit(field.input_);
+                    itis['Second Contact'] = {
+                        'mdc': field,
+                        'iti': initField
+                    }
+                    field.focus()
 
                     const remove = contact.querySelector('.mdc-icon-button');
                     remove.addEventListener('click', function () {
                         contact.remove();
                         currentContactsAdded--
+                        delete itis['Second Contact']
                         toggleContactBtn()
                     })
                     document.querySelector('.contact-container').appendChild(contact);
-                    field.focus()
                 }
                 currentContactsAdded++
                 toggleContactBtn()
-
             });
 
             getDropDownContent(subscriptionTemplate.office, 'customer-type', 'officeTemplate').then(function (result) {
@@ -157,15 +175,34 @@
                 const vd = subscriptionTemplate.venue[0];
                 copy.attachment.Name.value = customerName.value;
                 copy.attachment['Customer Type'].value = select.value;
+                let areAllNumberValid = true
+                // copy.attachment[el.dataset.type].value = el.value;
+                // customerAuths[el.value] = {
+                //     phoneNumber: el.value,
+                //     displayName: '',
+                //     email: ''
+                // }
                 if (!deviceType) {
-                    [...document.querySelectorAll('.contact-field input')].forEach(function (el) {
-                        copy.attachment[el.dataset.type].value = el.value;
-                        customerAuths[el.value] = {
-                            phoneNumber: el.value,
+
+                    Object.keys(itis).forEach(function (name) {
+                        const iti = itis[name]['iti'];
+                        const mdc = itis[name]['mdc'];
+
+                        const phoneNumberValidity = isPhoneNumberValid(iti)
+                        if (!phoneNumberValidity.valid) {
+                            setHelperInvalid(mdc);
+                            mdc.helperTextContent = phoneNumberValidity.message;
+                            areAllNumberValid = false;
+                            return;
+                        }
+                        const number = iti.getNumber(intlTelInputUtils.numberFormat.E164)
+                        copy.attachment[name].value = number
+                        customerAuths[number] = {
+                            phoneNumber: number,
                             displayName: '',
                             email: ''
                         }
-                    });
+                    })
                 }
                 copy.status = 'PENDING'
                 copy.venue = [{
@@ -181,15 +218,15 @@
                 copy.customerAuths = customerAuths
                 console.log(customerAuths)
                 console.log(copy);
+                if (areAllNumberValid) {
 
-                window.parent.postMessage({
-                    body: copy,
-                    name: 'sendFormToParent'
-                }, window.parent.location.origin);
-
+                   parent.postMessage({
+                        body: copy,
+                        name: 'sendFormToParent'
+                    }, parentOrigin);
+                }
             })
         }
-
         function toggleContactBtn() {
 
             if (currentContactsAdded == 2) {
