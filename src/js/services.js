@@ -1348,7 +1348,7 @@ function idProofView(callback) {
             <span class="mdc-image-list__label">PAN FRONT</span>
           </div>
         </div>
-        >
+        
     </div>
     <div class='aadhar-container ${showAadhar(ids) ? '' : 'hidden'}'>
         <h3 class='mdc-typography--headline6 mdc-theme--primary'>Enter AADHAR card details</h3>

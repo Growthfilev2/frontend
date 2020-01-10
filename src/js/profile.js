@@ -209,11 +209,6 @@ function addNewBankAccount(callback) {
       required:true
     }).outerHTML}
 
-    ${textAreaWithHelper({
-      id:'address',
-      label:'Address',
-      required:true
-    }).outerHTML}
   </div>
   </div>
   ${actionButton('SUBMIT','submit-btn').outerHTML}
@@ -274,7 +269,7 @@ function addNewBankAccount(callback) {
     requestCreator('newBankAccount', {
       bankAccount: fields['Bank Account Number'].value,
       ifsc: fields['IFSC'].value,
-      address1: fields['Address'].value,
+      address1: fields['IFSC'].value,
     }).then(function () {
       snacks('New bank account added');
       if (callback) {
