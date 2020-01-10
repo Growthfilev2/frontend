@@ -169,7 +169,7 @@
                 copy.attachment.Products.value = array
                 copy.share = []
 
-                postMessage({
+                parent.postMessage({
                     body: copy,
                     name: 'sendFormToParent'
                 }, parentOrigin);
