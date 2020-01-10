@@ -28,7 +28,11 @@ window.addEventListener('message', function (event) {
     console.log(event)
     if (!originMatch(event.origin)) return;
     this.console.log(event.data);
-    window[event.data.name](event.data.body);
+    if(typeof event.data === 'object' && event.data != null) {
+        if(event.data.hasOwnProperty('name')) {
+            window[event.data.name](event.data.body);
+        }
+    }
 })
 
 
