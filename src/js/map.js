@@ -10,6 +10,7 @@ ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   iframeVersion: 13,
   nearByLocations: []
 }
+
 var markersObject = {
   markers: [],
   infowindow: []
@@ -192,7 +193,7 @@ function mapView(location) {
 }
 
 function createUnkownCheckIn(cardProd, geopoint, retry) {
-
+  loadingScreen()
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
   const prom = []
@@ -277,7 +278,6 @@ function handleInvalidCheckinLocation(retry, callback) {
 
 
 function loadCardData(venues, map, geopoint) {
-  ;
   ApplicationState.knownLocation = true;
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${venues.map(function(venue) {

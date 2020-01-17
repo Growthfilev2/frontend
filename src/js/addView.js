@@ -11,6 +11,8 @@ function addView(sub) {
     document.getElementById('form-iframe').addEventListener("load", ev => {
         const frame = document.getElementById('form-iframe');
         if (!frame) return;
+      
+
         frame.contentWindow.postMessage({
             name: 'init',
             body: sub,
@@ -33,7 +35,7 @@ window.addEventListener('message', function (event) {
             window[event.data.name](event.data.body);
         }
     }
-})
+});
 
 
 function sendOfficeData(requestBody) {
@@ -76,6 +78,7 @@ function sendSubscriptionData(formData) {
         });
     }).catch(handleLocationError);
 }
+
 
 function sendFormToParent(formData) {
     progressBar.open();
@@ -152,7 +155,24 @@ function sendFormToParent(formData) {
             reportView()
 
             return;
-        }).catch(console.error)
+        }).catch(function(err){
+            if(formData.report === 'attendance' && err.code == 400) {
+                if (!formData.id) return;
+                const tx = db.transaction('attendance');
+                const store = tx.objectStore('attendance')
+                store.get(formData.id).onsuccess = function (event) {
+                    const record = event.target.result;
+                    if (!record) return;
+                    handleError({
+                        message:'IDB record',
+                        body:record
+                    })
+                }
+                tx.oncomplete = function () {
+
+                }
+            }   
+        })
 
     }).catch(handleLocationError)
 }
