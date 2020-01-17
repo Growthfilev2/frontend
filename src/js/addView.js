@@ -156,7 +156,7 @@ function sendFormToParent(formData) {
 
             return;
         }).catch(function(err){
-            if(formData.report === 'attendance' && err.code == 400) {
+            if(formData.report === 'attendance' && err.body.code == 400) {
                 if (!formData.id) return;
                 const tx = db.transaction('attendance');
                 const store = tx.objectStore('attendance')
