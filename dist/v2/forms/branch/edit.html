@@ -16,9 +16,9 @@
         <div class="form-list">
             <div class="form-component">
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='customer-name'>
+                    id='branch-name'>
                     <input class=" mdc-text-field__input" type="text" id="" required>
-                    <label for="input" class="mdc-floating-label" id="cc">Customer Name</label>
+                    <label for="input" class="mdc-floating-label" id="cc">Branch Name</label>
                     <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
                         id="logo">perm_identity</i>
                     <div class="mdc-line-ripple"></div>
@@ -29,7 +29,7 @@
 
                 <div class="inline-flex mb-10">
                     <h1 class="mdc-typography--headline6 mdc-theme--primary">
-                        Customer contact
+                        Branch contact
                     </h1>
                     <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini add-phone-fab" aria-label="Favorite"
                         id='contact-btn' data-mdc-auto-init="MDCRipple">
@@ -40,18 +40,7 @@
 
             </div>
 
-            <div class="form-component hidden customer-type-container">
-
-                <div class="mdc-select" data-mdc-auto-init="MDCSelect">
-                    <i class="mdc-select__dropdown-icon"></i>
-                    <select class="mdc-select__native-control">
-                        <option value="" selected></option>
-                    </select>
-                    <label class="mdc-floating-label mdc-floating-label--float-above">Customer Type</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
-
+            
             <div class="form-component">
                 <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='address'>
                     <textarea class="mdc-text-field__input" rows="4" cols="100" required="true"></textarea>
@@ -70,7 +59,7 @@
             <div class="action-button-container">
 
                 <div class="submit-button-cont">
-                    <input type="submit" value="CREATE CUSTOMER" class="mdc-button mdc-button--raised submit-btn"
+                    <input type="submit" value="CREATE branch" class="mdc-button mdc-button--raised submit-btn"
                         data-mdc-auto-init="MDCRipple">
                 </div>
             </div>
@@ -85,24 +74,24 @@
         integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
     <script>
         window.mdc.autoInit();
-        let customerContact = '';
-        let cusomerSecondContact = ''
+        let branchContact = '';
         let subscriptionTemplate = ''
-        const customerAuths = {}
+      
         const itis = {}
         const maxContacts = 2;
         let currentContactsAdded = 1;
         const contactBtn = document.getElementById('contact-btn')
         let contactList;
-        const select = new mdc.select.MDCSelect(document.querySelector(".mdc-select"))
+
         function init(template) {
             console.log(deviceType);
             subscriptionTemplate = template;
-            const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
-            const customerAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
-            customerName.value = subscriptionTemplate.attachment['Name'].value;
-            customerAddress.value = subscriptionTemplate.venue[0].address;
-
+          
+            const branchName = new mdc.textField.MDCTextField(document.getElementById('branch-name'))
+            const branchAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
+            branchName.value = template.attachment['Name'].value;
+            branchAddress.value = template.venue[0].address;
+            
             if (!deviceType) {
                 document.querySelector('.action-button-container .submit-button-cont').style.position = 'relative';
                 const cont = textFieldTelephoneWithHelper({
@@ -114,8 +103,6 @@
                 const field = new mdc.textField.MDCTextField(cont.querySelector('.mdc-text-field'));
                 document.querySelector('.contact-container').appendChild(cont)
                 field.input_.dataset.type = 'First Contact';
-                field.value = subscriptionTemplate.attachment['First Contact'].value;
-
                 const initField = phoneFieldInit(field.input_);
                 itis['First Contact'] = {
                     'mdc': field,
@@ -138,13 +125,12 @@
 
                 e.preventDefault();
 
-                const contact = callContact('setContactForCustomer');
+                const contact = callContact('setContactForbranch');
                 let field;
                 if (contact) {
 
                     const field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'));
                     field.input_.dataset.type = 'Second Contact';
-                    field.value = subscriptionTemplate.attachment['Second Contact'].value;
                     const initField = phoneFieldInit(field.input_);
                     itis['Second Contact'] = {
                         'mdc': field,
@@ -165,30 +151,17 @@
                 toggleContactBtn()
             });
 
-            if (template.customerTypes.length) {
-                select.nativeControl_.setAttribute('required', 'true')
-                template.customerTypes.forEach((value) => {
-                    const option = createElement('option', {
-                        value: value,
-                        textContent: value
-                    })
-                    select.nativeControl_.appendChild(option);
-                })
-                select.value = subscriptionTemplate.attachment['Customer Type'].value
-                document.querySelector('.customer-type-container').classList.remove('hidden')
-            }
-
+          
             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
             var formEl = document.getElementById('form');
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
                 const vd = subscriptionTemplate.venue[0];
-                copy.attachment.Name.value = customerName.value;
-
-                copy.attachment['Customer Type'].value = select.value;
+                copy.attachment.Name.value = branchName.value;
+              
                 let areAllNumberValid = true
-               
+              
                 if (!deviceType) {
 
                     Object.keys(itis).forEach(function (name) {
@@ -204,22 +177,15 @@
                         }
                         const number = iti.getNumber(intlTelInputUtils.numberFormat.E164)
                         copy.attachment[name].value = number
-                        customerAuths[number] = {
-                            phoneNumber: number,
-                            displayName: '',
-                            email: ''
-                        }
+                      
                     })
                 }
                 copy.status = 'PENDING'
-                copy.venue[0].address = customerAddress.value;
-                copy.venue[0].location = customerName.value
-                
-
+                copy.venue[0].address = branchAddress.value;
+                copy.venue[0].location = branchName.value
                 copy.share = []
-                copy.customerAuths = customerAuths
-                delete copy.customerTypes;
-                console.log(customerAuths)
+                delete copy.branchTypes;
+              
                 console.log(copy);
                 if (areAllNumberValid) {
 
@@ -249,7 +215,7 @@
             const li = createPhoneNumberLi(contactObject, false, function () {
 
                 subscriptionTemplate.attachment[li.dataset.type].value = '';
-                delete customerAuths[contactObject.phoneNumber]
+               
                 contactBtn.classList.remove('hidden')
                 if (!contactList.listElements.length) {
                     document.querySelector('.contact-container .inline-flex').appendChild(contactBtn);
@@ -264,7 +230,7 @@
                 subscriptionTemplate.attachment['Second Contact'].value = contactObject.phoneNumber
                 li.dataset.type = 'Second Contact'
             }
-            customerAuths[contactObject.phoneNumber] = contactObject
+          
 
             contactList.root_.appendChild(li)
             document.querySelector(".contact-container").appendChild(contactBtn);

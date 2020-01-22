@@ -21,6 +21,10 @@ function addView(sub) {
     })
 }
 
+function resizeFrame() {
+
+}
+
 function originMatch(origin) {
     const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost','https://growthfilev2-0.firebaseapp.com']
     return origins.indexOf(origin) > -1;
@@ -156,7 +160,7 @@ function sendFormToParent(formData) {
 
             return;
         }).catch(function(err){
-            if(formData.report === 'attendance' && err.code == 400) {
+            if(formData.report === 'attendance' && err.body.code == 400) {
                 if (!formData.id) return;
                 const tx = db.transaction('attendance');
                 const store = tx.objectStore('attendance')

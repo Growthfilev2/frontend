@@ -200,7 +200,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
   offices.forEach(function (office) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
-    prom.push(requestCreator('create', fillVenueInCheckInSub(copy, ''), geopoint))
+    prom.push(requestCreator('create', fillVenueInSub(copy, ''), geopoint))
   })
 
   if (cardProd) {
@@ -313,7 +313,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     cardProd.open();
   }
 
-  requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue), geopoint).then(function () {
+  requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
 
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
@@ -519,7 +519,7 @@ function setFilePath(base64,retry) {
     sub.attachment.Comment.value = textValue;
     sub.share = []
 
-    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
+    requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
     
       history.pushState(['reportView'], null, null)
       reportView()

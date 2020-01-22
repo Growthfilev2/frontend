@@ -1023,6 +1023,10 @@ function getCheckInSubs() {
       .onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
+        if(!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
+          cursor.continue();
+          return;
+        }
         if (checkInSubs[cursor.value.office]) {
           if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
             checkInSubs[cursor.value.office] = cursor.value;
@@ -1075,7 +1079,8 @@ function openMap() {
   })
 }
 
-function fillVenueInCheckInSub(sub, venue) {
+function fillVenueInSub(sub, venue) {
+
   const vd = sub.venue[0];
   sub.venue = [{
     geopoint: {
