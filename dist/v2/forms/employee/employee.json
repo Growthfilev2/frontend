@@ -1,0 +1,114 @@
+{
+    "comment": "Employees are created to record information for all the employees working for a company whose paid account has been created.",
+    "statusOnCreate": "CONFIRMED",
+    "timestamp": 1563180301393,
+    "venue": [],
+    "hidden": 1,
+    "canEditRule": "ADMIN",
+    "schedule": [],
+    "attachment": {
+        "Name": {
+            "type": "string",
+            "value": ""
+        },
+        "Department": {
+            "type": "department",
+            "value": ""
+        },
+        "Task Specialization": {
+            "type": "string",
+            "value": ""
+        },
+        "Start Point Longitude": {
+            "type": "number",
+            "value": ""
+        },
+        "Base Location": {
+            "type": "branch",
+            "value": ""
+        },
+        "First Supervisor": {
+            "type": "phoneNumber",
+            "value": ""
+        },
+        "Second Supervisor": {
+            "type": "phoneNumber",
+            "value": ""
+        },
+        "Third Supervisor": {
+            "type": "phoneNumber",
+            "value": ""
+        },
+        "Product Specialization": {
+            "type": "string",
+            "value": ""
+        },
+        "Minimum Working Hours": {
+            "value": "",
+            "type": "number"
+        },
+        "Daily End Time": {
+            "value": "",
+            "type": "HH:MM"
+        },
+        "Monthly Off Days": {
+            "type": "number",
+            "value": ""
+        },
+        "Designation": {
+            "type": "string",
+            "value": ""
+        },
+        "Maximum Advance Amount Given": {
+            "type": "number",
+            "value": ""
+        },
+        "Employee Based In Customer Location": {
+            "type": "boolean",
+            "value": ""
+        },
+        "Minimum Daily Activity Count": {
+            "value": "",
+            "type": "number"
+        },
+        "Start Point Latitude": {
+            "type": "number",
+            "value": ""
+        },
+        "Employee Code": {
+            "type": "string",
+            "value": ""
+        },
+       
+        "Daily Start Time": {
+            "type": "HH:MM",
+            "value": ""
+        },
+        "Scheduled Only": {
+            "type": "boolean",
+            "value": ""
+        },
+        "KM Daily Limit": {
+            "type": "string",
+            "value": ""
+        },
+        "Employee Contact": {
+            "type": "phoneNumber",
+            "value": ""
+        },
+        "KM Rate": {
+            "type": "string",
+            "value": ""
+        },
+       
+        "Location Validation Check": {
+            "type": "boolean",
+            "value": ""
+        },
+        "Region": {
+            "type": "region",
+            "value": ""
+        }
+    },
+    "name": "employee"
+}

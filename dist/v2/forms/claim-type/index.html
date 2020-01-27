@@ -1,0 +1,71 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="../css/forms.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+    <form id='iframe-form'>
+
+        <section class="attachment-section section-block">
+            <div class="text-field-block">
+
+                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField">
+                    <i class="material-icons mdc-text-field__icon">person</i>
+                    <input class="mdc-text-field__input" id="name-input" required data-field='Name'>
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Name</label>
+                </div>
+            </div>
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                    <input class="mdc-text-field__input" id="monthly-limit-input" required type="number" autofocus
+                        data-field='Monthly Limit'>
+                    <div class="mdc-line-ripple"></div>
+                    <label for="monthly-limit-input" class="mdc-floating-label">Monthly Limit</label>
+                </div>
+            </div>
+        </section>
+        <section class="form-actionable section-block">
+                <div class="form-buttons">
+                    <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+                </div>
+        </section>
+    </form>
+
+    <script src="../js/forms.js"></script>
+    <script>
+        let template;
+
+        function init(dataObject) {
+
+            template = dataObject.template;
+            const copy = JSON.parse(JSON.stringify(template))
+            var form = document.getElementById('iframe-form');
+            document.getElementById('name-input').value = template.attachment.Name.value
+            document.getElementById(
+                'monthly-limit-input').value = template.attachment['Monthly Limit'].value;
+            
+            window.mdc.autoInit();
+            parent.resizeFrame();
+            
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+                copy.attachment.Name.value = document.getElementById('name-input').value;
+                copy.attachment['Monthly Limit'].value = Number(document.getElementById(
+                    'monthly-limit-input').value);
+                parent.window.getIframeFormData(copy);
+            })
+        }
+        
+    </script>
+
+</body>
+
+</html>

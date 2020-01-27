@@ -12,7 +12,6 @@ function callContact(functionName) {
         default:
             return textFieldRemovable('tel','','Secondary contact');
     }
-
 }
 
 function textFieldRemovable(type, label,placeholder) {
@@ -458,7 +457,6 @@ function textFieldTelephoneWithHelper(attr) {
 `
     return cont
 }
-
 
 function isPhoneNumberValid(iti) {
     var errorCode = iti.getValidationError();

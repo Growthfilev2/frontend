@@ -1,0 +1,85 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="../css/forms.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+    <form id='iframe-form'>
+
+        <section class="attachment-section section-block">
+            <div class="text-field-block">
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                    <input class="mdc-text-field__input" id="name-input" required data-field='Name'>
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Name</label>
+                </div>
+            </div>
+            <div class="text-field-block">
+                <div class="mdc-select">
+                    <div class="mdc-select__anchor demo-width-class">
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <div class="mdc-select__selected-text"></div>
+                        <span class="mdc-floating-label">Specialized</span>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+
+                    <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
+                        <ul class="mdc-list">
+                            <li class="mdc-list-item" data-value="False" aria-selected="true">
+                                false
+                            </li>
+                            <li class="mdc-list-item" data-value="True">
+                                true
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+        <section class="form-actionable section-block">
+            <div class="form-buttons">
+                <button class="mdc-button" type="button" data-mdc-auto-init="MDCRipple" id='cancel-form'>
+                    CANCEL
+                </button>
+                <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+            </div>
+            </div>
+    </form>
+
+    <script src="../js/forms.js"></script>
+    <script>
+        let template;
+
+        function init(dataObject) {
+            template = dataObject.template;
+            const copy = JSON.parse(JSON.stringify(template));
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'))
+            select.value = template.attachment['Specialized'].value
+            document.getElementById('name-input').value = template.attachment.Name.value;
+            var form = document.getElementById('iframe-form');
+            window.mdc.autoInit();
+            parent.resizeFrame();
+
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+                copy.attachment.Name.value = document.getElementById('name-input').value;
+                copy.attachment['Specialized'].value = Boolean(select.value)
+                parent.window.getIframeFormData(copy);
+            })
+
+        }
+    </script>
+
+</body>
+
+</html>
