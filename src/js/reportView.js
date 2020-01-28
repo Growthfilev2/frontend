@@ -319,7 +319,7 @@ function createTemplateButton(subs) {
   button.addEventListener('click', function () {
     if (subs.length == 1) {
       history.pushState(['addView'], null, null);
-      addView(subs[0])
+      addView(subs[0],subs[0].customerTypes)
       return
     };
 
@@ -339,7 +339,7 @@ function reportTemplateSelectionDialog(subs) {
   ul.listen('MDCList:action', function (evt) {
     console.log(evt)
     history.pushState(['addView'], null, null);
-    addView(subs[evt.detail.index])
+    addView(subs[evt.detail.index],subs[evt.detail.index].customerTypes)
     dialog.close()
   })
 }

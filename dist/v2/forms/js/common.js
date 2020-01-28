@@ -51,7 +51,7 @@ window.addEventListener('message', function (event) {
         deviceType = event.data.deviceType
     }
     parentOrigin = event.origin
-    window[event.data.name](event.data.body)
+    window[event.data.name](event.data.template,event.data.body)
 })
 
 

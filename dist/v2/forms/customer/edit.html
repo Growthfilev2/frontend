@@ -70,7 +70,7 @@
             <div class="action-button-container">
 
                 <div class="submit-button-cont">
-                    <input type="submit" value="CREATE CUSTOMER" class="mdc-button mdc-button--raised submit-btn"
+                    <input type="submit" value="SUBMIT" class="mdc-button mdc-button--raised submit-btn"
                         data-mdc-auto-init="MDCRipple">
                 </div>
             </div>
@@ -78,7 +78,7 @@
     </form>
 
     <script src="../external/js/material.min.js"></script>
-    <script src="../js/common.js?version=1"></script>
+    <script src="../js/common.js?version=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
         integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
@@ -95,7 +95,7 @@
         const contactBtn = document.getElementById('contact-btn')
         let contactList;
         const select = new mdc.select.MDCSelect(document.querySelector(".mdc-select"))
-        function init(template) {
+        function init(template,customerTypes) {
             console.log(deviceType);
             subscriptionTemplate = template;
             const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
@@ -165,9 +165,9 @@
                 toggleContactBtn()
             });
 
-            if (template.customerTypes.length) {
+            if (customerTypes.length) {
                 select.nativeControl_.setAttribute('required', 'true')
-                template.customerTypes.forEach((value) => {
+                customerTypes.forEach((value) => {
                     const option = createElement('option', {
                         value: value,
                         textContent: value
@@ -218,7 +218,7 @@
 
                 copy.share = []
                 copy.customerAuths = customerAuths
-                delete copy.customerTypes;
+               
                 console.log(customerAuths)
                 console.log(copy);
                 if (areAllNumberValid) {

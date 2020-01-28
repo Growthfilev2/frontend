@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-    <link href="../css/forms.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -25,7 +25,7 @@
             </div>
             <div class="text-field-block">
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
-                    <input class="mdc-text-field__input" id="monthly-limit-input" required type="number" autofocus
+                    <input class="mdc-text-field__input" id="monthly-limit-input" required type="number"
                         data-field='Monthly Limit'>
                     <div class="mdc-line-ripple"></div>
                     <label for="monthly-limit-input" class="mdc-floating-label">Monthly Limit</label>
@@ -39,28 +39,31 @@
         </section>
     </form>
 
-    <script src="../js/forms.js"></script>
+    <script src="../js/common.js?version=2"></script>
     <script>
-        let template;
+       
 
-        function init(dataObject) {
+        function init(template) {
 
-            template = dataObject.template;
+          
             const copy = JSON.parse(JSON.stringify(template))
             var form = document.getElementById('iframe-form');
-            document.getElementById('name-input').value = template.attachment.Name.value
+            document.getElementById('name-input').value = copy.attachment.Name.value
             document.getElementById(
-                'monthly-limit-input').value = template.attachment['Monthly Limit'].value;
+                'monthly-limit-input').value = copy.attachment['Monthly Limit'].value;
             
             window.mdc.autoInit();
-            parent.resizeFrame();
+             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
             
             form.addEventListener("submit", function (evt) {
                 evt.preventDefault();
                 copy.attachment.Name.value = document.getElementById('name-input').value;
                 copy.attachment['Monthly Limit'].value = Number(document.getElementById(
                     'monthly-limit-input').value);
-                parent.window.getIframeFormData(copy);
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);(copy);
             })
         }
         

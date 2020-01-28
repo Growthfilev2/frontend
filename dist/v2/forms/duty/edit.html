@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-    <link href="../css/forms.css" rel="stylesheet" type="text/css">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
         integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
 </head>
@@ -137,7 +137,7 @@
         </section>
     </form>
 
-    <script src="../js/forms.js"></script>
+    <script src="../js/common.js?version=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
         integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
@@ -152,11 +152,11 @@
         const superVisorField = document.querySelector(`[data-field="Supervisor"]`);
         let iti = phoneFieldInit(superVisorField);
 
-        function init(dataObject) {
-            template =  dataObject.data.template;
-            initEmployeeAdd(dataObject.data.employee);
-            initCustomerAdd(dataObject.data.customers)
-            initDutyDetailsAdd(dataObject.data);
+        function init(subscription,dataObject) {
+            template =  subscription
+            initEmployeeAdd(dataObject.employee);
+            initCustomerAdd(dataObject.customers)
+            initDutyDetailsAdd(dataObject);
 
             window.mdc.autoInit();
             document.getElementById('iframe-form').addEventListener('submit', function (evt) {
@@ -201,7 +201,7 @@
         function initEmployeeAdd(employees) {
             const ul = document.getElementById('employee-list')
             loadEmployees(employees, ul);
-            parent.resizeFrame()
+             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
             employeeList = new mdc.list.MDCList(ul)
 
             employeeSearchField.input_.addEventListener('input', function (evt) {
@@ -217,7 +217,7 @@
         function initCustomerAdd(customers) {
             const ul = document.getElementById('customer-list')
             loadCustomers(customers, ul)
-            parent.resizeFrame();
+             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
             customerList = new mdc.list.MDCList(ul);
 
             customerList.listen('MDCList:action', function (event) {
