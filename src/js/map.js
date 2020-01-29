@@ -18,13 +18,13 @@ var markersObject = {
 
 function logReportEvent(name) {
   const deviceInfo = JSON.parse(native.getInfo());
-  if(native.getName() === 'Android' && deviceInfo.appVersion == 14) {
+  if (native.getName() === 'Android' && deviceInfo.appVersion == 14) {
     AndroidInterface.logEvent(name);
     return;
   }
   try {
     webkit.messageHandlers.logEvent.postMessage(name)
-  }catch(e) {
+  } catch (e) {
     console.log(e)
   }
   return;
@@ -32,7 +32,7 @@ function logReportEvent(name) {
 
 function failureScreen(error, callback) {
 
-  
+
   document.getElementById('app-header').classList.add('hidden')
 
   document.getElementById('app-current-panel').innerHTML = `
@@ -62,7 +62,12 @@ function handleLocationError(error, onAppOpen) {
   if (document.getElementById('selection-box-prog')) {
     document.getElementById('selection-box-prog').classList.add('mdc-linear-progress--closed')
   }
-
+  passFormData({
+    name: 'toggleSubmit',
+    template: '',
+    body: '',
+    deviceType: native.getName()
+  })
   switch (error.message) {
     case 'THRESHOLD EXCEED':
       if (history.state)
@@ -75,7 +80,7 @@ function handleLocationError(error, onAppOpen) {
           message: 'You Are Currently Offline. Please Check Your Internet Connection',
           icon: 'wifi_off',
           title: 'BROKEN INTERNET CONNECTION'
-        }, function(){
+        }, function () {
           loadingScreen();
           openMap();
         });
@@ -84,14 +89,14 @@ function handleLocationError(error, onAppOpen) {
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
-      
+
     case 'TURN ON YOUR WIFI':
       if (onAppOpen) {
         failureScreen({
           message: 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location',
           icon: 'wifi_off',
           title: 'TURN ON YOUR WIFI'
-        }, function(){
+        }, function () {
           loadingScreen();
           openMap();
         });
@@ -114,7 +119,7 @@ function handleLocationError(error, onAppOpen) {
           message: 'There was a problem in detecting your location. Please try again later',
           icon: 'location_off',
           title: 'Failed To Detect Location'
-        }, function(){
+        }, function () {
           loadingScreen();
           openMap();
         });
@@ -210,13 +215,12 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
 
     if (cardProd) {
       cardProd.close()
-    }
-   ;
+    };
 
     successDialog('Check-In Created')
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    
+
 
     history.pushState(['reportView'], null, null)
     logReportEvent('report');
@@ -235,7 +239,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
     if (cardProd) {
       cardProd.close()
     }
-    
+
   })
 }
 
@@ -266,7 +270,7 @@ function handleInvalidCheckinLocation(retry, callback) {
       window.removeEventListener('iosLocation', _iosLocation, true);
     }, true);
   } catch (e) {
-    
+
     failureScreen({
       message: 'There was a problem in detecting your location.',
       icon: 'location_off',
@@ -330,7 +334,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
       });
       return
     };
-   
+
     if (cardProd) {
       cardProd.close()
     };
@@ -459,7 +463,7 @@ function setFilePathFailed(error) {
   snacks(error);
 }
 
-function setFilePath(base64,retry) {
+function setFilePath(base64, retry) {
 
   // const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   //  setHeader( backIcon, '');
@@ -520,11 +524,11 @@ function setFilePath(base64,retry) {
     sub.share = []
 
     requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
-    
+
       history.pushState(['reportView'], null, null)
       reportView()
       successDialog('Check-In Created')
-    }).catch(function(error){
+    }).catch(function (error) {
       if (error.message === 'Invalid check-in') {
         handleInvalidCheckinLocation(retry, function (newGeopoint) {
           ApplicationState.location = newGeopoint;

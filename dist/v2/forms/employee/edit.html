@@ -200,7 +200,7 @@
             </div>
     </form>
 
-    <script src="../js/common.js?version=2"></script>
+    <script src="../js/common.js?version=3"></script>
     <script>
       
 
@@ -281,7 +281,8 @@
                 parent.postMessage({
                     body: copy,
                     name: 'sendFormToParent'
-                }, parentOrigin);(copy);
+                }, parentOrigin);
+                toggleSubmit()
             })
         }
     </script>

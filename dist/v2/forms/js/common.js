@@ -55,6 +55,18 @@ window.addEventListener('message', function (event) {
 })
 
 
+function toggleSubmit() {
+    var submit = document.querySelector('form input[type="submit"]');
+    if(submit.disabled) {
+        submit.disabled = false;
+    }
+    else {
+        submit.disabled = true
+    }
+}
+
+
+
 function createDate(dateObject) {
     console.log(dateObject)
     let month = dateObject.getMonth() + 1;

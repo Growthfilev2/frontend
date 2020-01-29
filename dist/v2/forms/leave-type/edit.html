@@ -43,30 +43,34 @@
             </div>
     </form>
 
-    <script src="../js/common.js?version=2"></script>
+    <script src="../js/common.js?version=3"></script>
     <script>
         function init(template) {
-           
-                const copy = JSON.parse(JSON.stringify(template))
-                var form = document.getElementById('iframe-form');
-                document.getElementById('name-input').value = copy.attachment.Name.value
-                document.getElementById(
-                    'annual-limit-input').value = copy.attachment['Annual Limit'].value
-                    
-                    window.mdc.autoInit();
-                     parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
-                form.addEventListener("submit", function (evt) {
-                    evt.preventDefault();
-                    copy.attachment.Name.value = document.getElementById('name-input').value;
-                    copy.attachment['Annual Limit'].value = Number(document.getElementById(
-                        'annual-limit-input').value);
 
-                    parent.postMessage({
+            const copy = JSON.parse(JSON.stringify(template))
+            var form = document.getElementById('iframe-form');
+            document.getElementById('name-input').value = copy.attachment.Name.value
+            document.getElementById(
+                'annual-limit-input').value = copy.attachment['Annual Limit'].value
+
+            window.mdc.autoInit();
+            parent.postMessage({
+                name: 'resizeFrame',
+                body: document.body.scrollHeight + 'px'
+            }, parentOrigin);;
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+                copy.attachment.Name.value = document.getElementById('name-input').value;
+                copy.attachment['Annual Limit'].value = Number(document.getElementById(
+                    'annual-limit-input').value);
+
+                parent.postMessage({
                     body: copy,
                     name: 'sendFormToParent'
-                }, parentOrigin);(copy);
-                })
-             
+                }, parentOrigin);
+                toggleSubmit()
+            })
+
         }
     </script>
 

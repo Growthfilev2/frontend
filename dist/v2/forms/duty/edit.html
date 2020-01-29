@@ -45,7 +45,7 @@
                             <div class="mdc-text-field mdc-text-field--with-leading-icon"
                                 data-mdc-auto-init="MDCTextField" id='customer-search-field'>
                                 <i class="material-icons mdc-text-field__icon">search</i>
-                                <input class="mdc-text-field__input"  data-field='Name'>
+                                <input class="mdc-text-field__input" data-field='Name'>
                                 <div class="mdc-line-ripple"></div>
                                 <label class="mdc-floating-label">Search Location</label>
                             </div>
@@ -72,7 +72,7 @@
                         </div>
                         <div class="mdc-text-field-helper-line">
                             <div class="mdc-text-field-helper-text"></div>
-                          </div>
+                        </div>
                     </div>
 
                     <div class="schedule-container" data-schedule-name="Duty">
@@ -137,7 +137,7 @@
         </section>
     </form>
 
-    <script src="../js/common.js?version=2"></script>
+    <script src="../js/common.js?version=3"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
         integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
@@ -152,8 +152,8 @@
         const superVisorField = document.querySelector(`[data-field="Supervisor"]`);
         let iti = phoneFieldInit(superVisorField);
 
-        function init(subscription,dataObject) {
-            template =  subscription
+        function init(subscription, dataObject) {
+            template = subscription
             initEmployeeAdd(dataObject.employee);
             initCustomerAdd(dataObject.customers)
             initDutyDetailsAdd(dataObject);
@@ -161,47 +161,57 @@
             window.mdc.autoInit();
             document.getElementById('iframe-form').addEventListener('submit', function (evt) {
                 evt.preventDefault();
-                if(!employeeList.selectedIndex.length)  {
+                if (!employeeList.selectedIndex.length) {
                     parent.showSnacksApiResponse('Please choose atleast 1 employee')
                     return
                 }
-                if(customerList.selectedIndex == -1) {
+                if (customerList.selectedIndex == -1) {
                     parent.showSnacksApiResponse('Please choose atleast 1 location')
                     return;
                 }
-                if(!iti.isValidNumber()) {
-                    const superField = new mdc.textField.MDCTextField(document.getElementById('supervisor-field'));
+                if (!iti.isValidNumber()) {
+                    const superField = new mdc.textField.MDCTextField(document.getElementById(
+                        'supervisor-field'));
                     setHelperInvalid(superField);
                     superField.helperTextContent = 'Please enter a valid number';
                     return;
-                }   
+                }
                 employeeList.selectedIndex.forEach((index) => {
-                    template.attachment.Include.value += ','+dataObject.data.employee[index].attachment['Phone Number'].value
+                    template.attachment.Include.value += ',' + dataObject.data.employee[index]
+                        .attachment['Phone Number'].value
                 })
-                template.attachment.Location.value = dataObject.data.customers[customerList.selectedIndex].venue[0].location
+                template.attachment.Location.value = dataObject.data.customers[customerList.selectedIndex]
+                    .venue[0].location
                 template.attachment.Supervisor.value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
                 const newSchedule = getNewSchedule(template)
                 template.attachment['Duty Type'].value = dutyTypeSelect.value;
-                if(newSchedule) {
+                if (newSchedule) {
                     console.log(newSchedule)
                     console.log(template)
                     template.share = []
                     template.schedule = newSchedule
-                    parent.getIframeFormData(template,true);
+                    parent.postMessage({
+                        body: template,
+                        name: 'sendFormToParent'
+                    }, parentOrigin)
+                    toggleSubmit()
                 }
 
             })
         }
 
 
-        function validateForm () {
+        function validateForm() {
 
         }
 
         function initEmployeeAdd(employees) {
             const ul = document.getElementById('employee-list')
             loadEmployees(employees, ul);
-             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
+            parent.postMessage({
+                name: 'resizeFrame',
+                body: document.body.scrollHeight + 'px'
+            }, parentOrigin);
             employeeList = new mdc.list.MDCList(ul)
 
             employeeSearchField.input_.addEventListener('input', function (evt) {
@@ -210,14 +220,17 @@
                 initializeEmployeeSearch(inputValue.toLowerCase(), employeeList)
             })
 
-           
+
 
         }
 
         function initCustomerAdd(customers) {
             const ul = document.getElementById('customer-list')
             loadCustomers(customers, ul)
-             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
+            parent.postMessage({
+                name: 'resizeFrame',
+                body: document.body.scrollHeight + 'px'
+            }, parentOrigin);;
             customerList = new mdc.list.MDCList(ul);
 
             customerList.listen('MDCList:action', function (event) {
@@ -298,7 +311,7 @@
 
             initializeDates(template, createDate(new Date()), createTime(new Date()));
 
-            
+
         }
 
 

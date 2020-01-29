@@ -40,7 +40,7 @@
             </div>
     </form>
 
-    <script src="../js/common.js?version=2"></script>
+    <script src="../js/common.js?version=3"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
         integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
@@ -55,6 +55,7 @@
             const iti = phoneFieldInit(field.input_);
              parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
             form.addEventListener("submit", function (evt) {
+
                 evt.preventDefault();
                 if (!iti.isValidNumber()) {
                     setHelperInvalid(field)
@@ -71,6 +72,7 @@
                     body: copy,
                     name: 'sendFormToParent'
                 }, parentOrigin);(template);
+                toggleSubmit()
             })
             
         }

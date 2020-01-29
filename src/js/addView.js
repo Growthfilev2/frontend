@@ -1,5 +1,5 @@
-function addView(sub,body) {
-    
+function addView(sub, body) {
+
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template === 'subscription' ? 'Add other contacts' : sub.template === 'users' ? 'Add people' : sub.template}</span>
     `
@@ -9,17 +9,19 @@ function addView(sub,body) {
     document.getElementById('app-current-panel').innerHTML = `
         <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
-        const frame = document.getElementById('form-iframe');
-        if (!frame) return;
-      
-
-        frame.contentWindow.postMessage({
+        passFormData({
             name: 'init',
             template: sub,
-            body:body,
+            body: body,
             deviceType: native.getName()
-        }, window.location.origin);
+        });
     })
+}
+
+function passFormData(data) {
+    const frame = document.getElementById('form-iframe');
+    if (!frame) return;
+    frame.contentWindow.postMessage(data, window.location.origin);
 }
 
 function resizeFrame() {
@@ -27,7 +29,7 @@ function resizeFrame() {
 }
 
 function originMatch(origin) {
-    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost','https://growthfilev2-0.firebaseapp.com']
+    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost', 'https://growthfilev2-0.firebaseapp.com']
     return origins.indexOf(origin) > -1;
 }
 
@@ -35,8 +37,8 @@ window.addEventListener('message', function (event) {
     console.log(event)
     if (!originMatch(event.origin)) return;
     this.console.log(event.data);
-    if(typeof event.data === 'object' && event.data != null) {
-        if(event.data.hasOwnProperty('name')) {
+    if (typeof event.data === 'object' && event.data != null) {
+        if (event.data.hasOwnProperty('name')) {
             window[event.data.name](event.data.body);
         }
     }
@@ -48,7 +50,14 @@ function sendOfficeData(requestBody) {
         requestCreator('createOffice', requestBody, geopoint).then(function () {
             successDialog(`Office created successfully`);
             giveSubscriptionInit(requestBody.name);
-        }).catch(console.error)
+        }).catch(function(error){
+            passFormData({
+                name:'toggleSubmit',
+                template:'',
+                body:'',
+                deviceType: native.getName()
+            })
+        })
     }).catch(handleLocationError);
 }
 
@@ -57,7 +66,14 @@ function sendUsersData(formData) {
         requestCreator('checkIns', formData, geopoint).then(function (response) {
             history.back();
             successDialog('')
-        }).catch(console.error);
+        }).catch(function(error){
+            passFormData({
+                name:'toggleSubmit',
+                template:'',
+                body:'',
+                deviceType: native.getName()
+            })
+        });
 
     }).catch(handleLocationError);
 }
@@ -80,7 +96,14 @@ function sendSubscriptionData(formData) {
             rootTx.oncomplete = function () {
                 reloadPage();
             }
-        });
+        }).catch(function(error){
+            passFormData({
+                name:'toggleSubmit',
+                template:'',
+                body:'',
+                deviceType: native.getName()
+            })
+        })
     }).catch(handleLocationError);
 }
 
@@ -100,7 +123,7 @@ function sendFormToParent(formData) {
             Promise.all(prom).then(function (response) {
 
                 successDialog(`You Created a ${templateName}`);
-            
+
                 reportView()
             }).catch(console.error)
             return;
@@ -160,8 +183,14 @@ function sendFormToParent(formData) {
             reportView()
 
             return;
-        }).catch(function(err){
-            if(formData.report === 'attendance' && err.body.code == 400) {
+        }).catch(function (err) {
+            passFormData({
+                name:'toggleSubmit',
+                template:'',
+                body:'',
+                deviceType: native.getName()
+            })
+            if (formData.report === 'attendance' && err.body.code == 400) {
                 if (!formData.id) return;
                 const tx = db.transaction('attendance');
                 const store = tx.objectStore('attendance')
@@ -169,14 +198,14 @@ function sendFormToParent(formData) {
                     const record = event.target.result;
                     if (!record) return;
                     handleError({
-                        message:'IDB record',
-                        body:record
+                        message: 'IDB record',
+                        body: record
                     })
                 }
                 tx.oncomplete = function () {
 
                 }
-            }   
+            }
         })
 
     }).catch(handleLocationError)
@@ -230,5 +259,5 @@ function expenseClaimImage(base64) {
         name: 'setExpenseImage',
         body: base64
     }, window.location.origin);
-   
+
 }
