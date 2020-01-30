@@ -233,7 +233,7 @@ function menuItemMap(item, geopoint) {
 function textFieldTelephone(attr) {
     return `
     <div class="${attr.customClass ? attr.customClass :''} mdc-text-field mdc-text-field--outlined  mt-10 ${attr.disabled ? 'mdc-text-field--disabled' :''} ${attr.label ? '' :'mdc-text-field--no-label'}" id='${attr.id}'>
-    <input class="mdc-text-field__input" value='${attr.value}' type='tel' ${attr.disabled ? 'disabled':''}>
+    <input class="mdc-text-field__input" value='${attr.value || ''}' type='tel' ${attr.disabled ? 'disabled':''} ${attr.required ? 'required':''}>
     <div class="mdc-notched-outline">
     <div class="mdc-notched-outline__leading"></div>
     ${attr.label ?`<div class="mdc-notched-outline__notch">
@@ -451,4 +451,25 @@ function createCheckBoxList(attr) {
       </div>
 </span>
 </li>`
+}
+
+
+
+function textFieldTelephoneWithHelper(attr) {
+    const cont = createElement('div', {
+        className: 'text-field-container'
+    })
+    if (attr.classList) {
+        attr.classList.forEach(function (name) {
+            cont.classList.add(name)
+        });
+    }
+    cont.innerHTML = `
+    ${textFieldTelephone(attr)}
+    <div class="mdc-text-field-helper-line">
+      <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+    </div>
+`
+    console.log(cont)
+    return cont
 }

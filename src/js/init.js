@@ -379,10 +379,10 @@ function loadSlider(sliderEl) {
 }
 
 
-function loadingScreen() {
+function loadingScreen(texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']) {
   const panel = document.getElementById('app-current-panel');
 
-  const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
+ 
 
   panel.innerHTML = `
   <div class='splash-content' id='loading-screen'>

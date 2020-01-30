@@ -1,6 +1,4 @@
 function profileView() {
-  const lastSignInTime = moment(firebase.auth().currentUser.metadata.lastSignInTime).format("dddd, MMMM Do YYYY, h:mm:ss a");
-  const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
 
@@ -73,7 +71,7 @@ function createBaseDetails() {
   <li class='mdc-list-item'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
     ${auth.phoneNumber}
-    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['changePhoneNumber'],null,null);changePhoneNumber()">edit</span>
+    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="phoneNumberChangeUI()">edit</span>
   </li>
   <li class='mdc-list-item'>
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
@@ -229,7 +227,7 @@ function addNewBankAccount(callback) {
 
   fields['Re-enter Bank Account Number'].input_.addEventListener('input', function () {
     if (fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
-      setHelperInvalid(fields['Re-enter Bank Account Number'], false)
+      setHelperInvalid(fields['Re-enter Bank Account Number'], '')
       submitBtn.root_.setAttribute('disabled', 'true')
     } else {
       setHelperValid(fields['Re-enter Bank Account Number'])
@@ -247,22 +245,20 @@ function addNewBankAccount(callback) {
       const label = labels[index]
       const field = fields[label];
       if (!field.value) {
-        setHelperInvalid(field)
-        field.helperTextContent = `${label} Cannot Be Empty`
+        setHelperInvalid(field, `${label} Cannot Be Empty`)
+
         return
       }
       field.helperTextContent = ''
     }
 
     if (fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
-      setHelperInvalid(fields['Re-enter Bank Account Number'])
-      field.helperTextContent = `Bank Account number do not match`;
+      setHelperInvalid(fields['Re-enter Bank Account Number'], `Bank Account number do not match`)
       return;
     }
 
     if (!validateIFSC(fields['IFSC'].value)) {
-      setHelperInvalid(fields['IFSC']);
-      fields['IFSC'].helperTextContent = `Invalid IFSC code`;
+      setHelperInvalid(fields['IFSC'], `Invalid IFSC code`);
       return;
     }
 
@@ -303,114 +299,124 @@ function addNewBankAccount(callback) {
   });
 }
 
+function phoneNumberChangeUI() {
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Change phone number</span>
+  `
+  setHeader(backIcon, '');
+  document.getElementById("app-current-panel").innerHTML = `
+  <div class='change-phone-number-ui mdc-layout-grid mt-20'>
+      <div class='icon-container'>
+        <div class='mdc-theme--primary icons'>
+          <i class='material-icons'>sim_card</i>
+          <i class='material-icons'>arrow_right_alt</i>
+          <i class='material-icons'>sim_card</i>
+        </div>
+      </div>
+      <div class='text-container'>
+        <h3 class='mdc-typography--headline6'>Changing your phone number will migrate all your data to new number</h3>
+        <p class='mdc-typography--body1'>
+        Please confirm that you are able to receive SMS  at your new number.
+        </p>
+      </div>
+  </div>
+  ${actionButton('CONFIRM','confirm-btn').outerHTML}
+  `
+  document.getElementById('confirm-btn').addEventListener('click', function () {
+    history.pushState(['changePhoneNumber'], null, null);
+    changePhoneNumber();
+  })
+}
 
 function changePhoneNumber() {
   const auth = firebase.auth().currentUser;
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Phone number</span>
-  `
-  setHeader(backIcon, '');
-  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number'>
+
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid change-phone-number mt-20'>
   
-  <div class='change-number-form full-width'>
-    <div class='old-phone-number-container'>
-      ${textFieldTelephone({
-        disabled:true,
-        value:auth.phoneNumber,
-        label:'Current phone number',
-        id:'old-phone-number',
-        customClass:'full-width'
-      })}
-    </div>
-    <h3 class='mdc-typography--body1'>Enter your new phone number with country code</h3>
-    <div class='new-phone-number-container full-width'>
-      <span class="mdc-typography--headline5 plus-synbol">+</span>
-      ${textFieldTelephone({
-        disable:false,
-        value:'91',
-        id:'new-phone-number-country-code',
-        customClass:'country-code'
-      })}
-     
-      ${textFieldTelephone({
-        disable:false,
-        value:'',
-        label:'New phone number',
-        id:'new-phone-number',
-        customClass:'new-number-field full-width'
-      })}
-     
-    </div>
-  
-    <div class="mdc-theme--error mt-10"	id='change-number-helper'></div>
+    <div class='change-number-form full-width'>
+      <div class='old-phone-number-container'>
+          ${textFieldTelephone({
+            disabled:true,
+            value:auth.phoneNumber,
+            label:'Current phone number',
+            id:'old-phone-number',
+            customClass:'full-width'
+          })}
+      </div>
+      <h3 class='mdc-typography--body1'>Enter your new phone number</h3>
+        <div class='new-phone-number-container full-width'>
+          ${textFieldTelephoneWithHelper({
+              id:'new-phone-number',
+              customClass:'new-number-field full-width',
+              required:true
+          }).outerHTML}  
+        </div>
     </div>
   </div>
   ${actionButton('Update','change-number-btn').outerHTML}
   `
 
-  const oldNumber = new mdc.textField.MDCTextField(document.getElementById("old-phone-number"))
-  const newNumber = new mdc.textField.MDCTextField(document.getElementById("new-phone-number"));
-  const countryCode = new mdc.textField.MDCTextField(document.getElementById('new-phone-number-country-code'))
-  newNumber.focus();
+  const oldNumberField = new mdc.textField.MDCTextField(document.getElementById("old-phone-number"))
+  const newNumberField = new mdc.textField.MDCTextField(document.getElementById("new-phone-number"));
+  const iti = phoneFieldInit(newNumberField.input_);
+
   const submitBtn = document.getElementById('change-number-btn');
 
   submitBtn.addEventListener("click", function () {
-    document.getElementById("change-number-helper").textContent = ''
-    if (!countryCode.value) {
-      setHelperInvalid(countryCode)
-      document.getElementById("change-number-helper").textContent = 'Please Enter a country code';
-      return;
-    }
-    if (!newNumber.value) {
-      setHelperInvalid(newNumber)
-      document.getElementById("change-number-helper").textContent = 'Please Enter your new mobile number';
-      return;
-    }
-    const newNumberValue = '+' + countryCode.value + newNumber.value;
-
-    if (oldNumber.value === newNumberValue) {
-      setHelperInvalid(newNumber)
-      document.getElementById("change-number-helper").textContent = 'Current phone number cannot be same as new phone number';
+    if (!iti.isValidNumber()) {
+      setHelperInvalid(newNumberField, 'Please enter a correct number');
       return;
     }
 
-    console.log(newNumberValue)
-    const dialog = showReLoginDialog('Change Phone Number', `On clicking RE-LOGIN you will be logged out of the app. Login in again with ${newNumber.value} to change your phone number`);
+    const newNumber = iti.getNumber(intlTelInputUtils.numberFormat.E164)
+    if (oldNumberField.value === newNumber) {
+      setHelperInvalid(newNumberField, 'New number cannot be similar to old number')
+      return;
+    }
+
+    const dialog = new Dialog('Change Phone Number', `Are you sure you want to change your phone number ?`).create();
+    dialog.buttons_[1].textContent = 'CONFIRM';
     dialog.listen('MDCDialog:closed', function (evt) {
-      if (evt.detail.action !== 'accept') return;;
-      const submitDialog = new Dialog('Please Wait', `<h3 class='mdc-typography--body1 mdc-theme--primary'>Do not close the app while transition is taking place.</h3>`).create('simple');
-      submitDialog.open();
-      console.log(submitDialog)
-      submitDialog.scrimClickAction = '';
+      if (evt.detail.action !== 'accept') return;
       appLocation(3).then(function (geopoint) {
+        loadingScreen(['Phone number change is in progress']);
+        document.getElementById('app-header').classList.add('hidden')
         requestCreator('changePhoneNumber', {
-          newPhoneNumber: newNumberValue
+          newPhoneNumber: newNumber
         }, geopoint).then(function (response) {
-          setTimeout(function () {
-            window.location.reload();
-          }, 5000)
-          console.log(response)
+          const tx = db.transaction('root', 'readwrite');
+          const store = tx.objectStore('root')
+          store.get(auth.uid).onsuccess = function (e) {
+            const record = e.target.result;
+            record.fromTime = 0;
+            store.put(record)
+          }
+          tx.oncomplete = function () {
+            reloadPage();
+          }
         }).catch(function (error) {
-
-          submitDialog.close();
-          document.getElementById('app-current-panel').classList.remove('freeze')
-
+          document.getElementById('app-header').classList.remove('hidden')
+          history.back();
         })
       }).catch(handleLocationError)
     })
+    dialog.open()
   })
 
 }
 
-function setHelperInvalid(field, shouldShake = true) {
+function setHelperInvalid(field, message) {
   field.focus();
   field.foundation_.setValid(false);
-  field.foundation_.adapter_.shakeLabel(shouldShake);
+  field.foundation_.adapter_.shakeLabel(true);
+
+  field.helperTextContent = message
 }
 
 function setHelperValid(field) {
   field.focus();
   field.foundation_.setValid(true);
+  field.helperTextContent = ''
 }
 
 function createUserDetails() {

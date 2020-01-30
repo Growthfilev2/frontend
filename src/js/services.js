@@ -76,7 +76,7 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    
+   
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -1068,8 +1068,7 @@ function updateName(callback) {
   nameField.focus();
   document.getElementById('name-btn').addEventListener('click', function () {
     if (!nameField.value) {
-      setHelperInvalid(nameField)
-      nameField.helperTextContent = 'Name Cannot Be Left Blank';
+      setHelperInvalid(nameField,'Name Cannot Be Left Blank')
       return;
     }
     progressBar.open();
@@ -1133,8 +1132,7 @@ function emailUpdation(skip, callback) {
   document.getElementById('email-btn').addEventListener('click', function () {
 
     if (!emailReg(emailField.value)) {
-      setHelperInvalid(emailField)
-      emailField.helperTextContent = 'Enter A Valid Email Id';
+      setHelperInvalid(emailField,'Enter A Valid Email Id')
       return;
     };
 
@@ -1151,8 +1149,7 @@ function emailUpdation(skip, callback) {
         return
       }
       progressBar.close()
-      setHelperInvalid(emailField)
-      emailField.helperTextContent = 'New Email Cannot Be Same As Previous Email';
+      setHelperInvalid(emailField,'New Email Cannot Be Same As Previous Email')
       return
     }
 
@@ -1419,14 +1416,12 @@ function idProofView(callback) {
     submitBtn.addEventListener("click", function () {
 
       if (!isPossiblyValidAadharNumber(aadharNumber.value.trim())) {
-        setHelperInvalid(aadharNumber);
-        aadharNumber.helperTextContent = 'Please enter a valid AADHAR number'
+        setHelperInvalid(aadharNumber, 'Please enter a valid AADHAR number');
         return;
       }
 
       if (!isPossiblyValidPan(panNumber.value.trim())) {
-        setHelperInvalid(panNumber);
-        panNumber.helperTextContent = 'Please enter a valid PAN number'
+        setHelperInvalid(panNumber,'Please enter a valid PAN number');
         return;
       };
       const validImagesLength = [...document.querySelectorAll(`[data-valid="false"]`)].length;
@@ -1528,3 +1523,16 @@ function getDropDownContent(office, template, indexName) {
 
     })
 }
+
+
+const phoneFieldInit = (input,dropEl,hiddenInput) => {
+  
+    return intlTelInput(input, {
+        initialCountry: "IN",
+        formatOnDisplay: true,
+        separateDialCode: true,
+        dropdownContainer:dropEl || null,
+        hiddenInput:hiddenInput || "",
+        nationalMode:false
+    });
+  };

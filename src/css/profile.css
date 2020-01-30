@@ -130,7 +130,24 @@
     border-bottom-style: solid;
     border-bottom-color: #e0e0e0;
 }
-
+.change-phone-number-ui .icon-container {
+    margin: 0 auto;
+    width: 150px;
+    height: 150px;
+    background-color: #cccccc70;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+}
+.change-phone-number-ui .icon-container .icons {
+    font-size: 35px;
+    display: block;
+    margin: 0 auto;
+    width: auto;
+}
+.change-phone-number-ui .icon-container .icons i{
+    font-size: inherit;
+}
 .change-phone-number,.change-name {
     max-width: 640px;
 }
@@ -140,12 +157,11 @@
     align-items: center;
     
 }
+.change-number-form .new-phone-number-container .text-field-container {
+    width: 100%;
+}
 .change-number-form .plus-synbol {
     color: gray;
-    margin-right: 10px;
-}
-.change-number-form .new-phone-number-container .country-code {
-    max-width: 100px;
     margin-right: 10px;
 }
 
