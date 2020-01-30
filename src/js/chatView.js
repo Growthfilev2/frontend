@@ -295,7 +295,7 @@ function readLatestChats(initList) {
         const chatsEl = document.getElementById('chats')
         const contactsEl = document.getElementById('all-contacts');
         const chatsCont = document.querySelector('.chats-container')
-        if(chatsCont) {
+        if (chatsCont) {
             chatsCont.classList.remove("hidden")
         }
         if (!chatsEl) return
@@ -461,7 +461,7 @@ function enterChat(userRecord) {
                 <form class="conversation-compose">
                   <div class="input-space-left"></div>
                                     
-                  <input class="input-msg" data-name="dm" data-param="assignee" data-param-value="${userRecord.mobile}" name="input" placeholder="Type a message" autocomplete="off"  id='comment-input'>
+                  <input class="input-msg"  name="input" placeholder="Type a message" autocomplete="off"  id='comment-input'>
                   <div class="input-space-right"></div>
                   <button class="send" id='comment-send'>
                       <div class="circle">
@@ -631,9 +631,6 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
         let items = [{
             name: 'View',
             icon: 'info'
-        }, {
-            name: 'Reply',
-            icon: 'reply'
         }];
         if (activity.canEdit) {
             items.push({
@@ -661,9 +658,6 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                 case 'View':
                     showViewDialog(heading, activity, 'view-form')
                     break;
-                case 'Reply':
-                    reply(activity)
-                    break;
                 case 'Share':
                     share(activity)
                     break;
@@ -684,17 +678,6 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
 
 }
 
-function reply(activity) {
-    const input = document.querySelector('.conversation-compose input')
-    input.dispatchEvent(new Event('focus'));
-    input.focus()
-    input.placeholder = 'Type your reply'
-    if (input) {
-        input.dataset.name = 'comment'
-        input.dataset.param = 'activityId'
-        input.dataset.paramValue = activity.activityId
-    };
-}
 
 function showViewDialog(heading, activity, id) {
 
@@ -1226,32 +1209,22 @@ function getUserChats(userRecord) {
         form.addEventListener('submit', function (e) {
 
             e.preventDefault();
+
             var input = e.target.input;
             const val = input.value;
             if (!val) return;
-
-
-            const param = input.dataset.param
-            const paramValue = input.dataset.paramValue
-            const requestBody = {
-                comment: val
-            }
-            requestBody[param] = paramValue
-
+            document.getElementById('comment-send').disabled = true
             appLocation(3).then(function (geopoint) {
-                requestCreator(input.dataset.name, requestBody, geopoint).then(function () {
+                requestCreator('dm', {
+                    comment: val,
+                    assignee: userRecord.mobile
+                }, geopoint).then(function () {
                     parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                     setBottomScroll();
                     input.value = ''
-
-                    input.dataset.name = 'dm';
-                    input.dataset.param = 'assignee'
-                    input.dataset.paramValue = userRecord.mobile
-                    input.placeholder = 'Type a message'
+                    document.getElementById('comment-send').disabled = false
                 }).catch(function (error) {
-                    input.value = ''
-
-                    snacks(error.message);
+                    document.getElementById('comment-send').disabled = false
                 })
             }).catch(handleLocationError)
         });

@@ -76,7 +76,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-   
+   return resolve({
+     latitude:22,
+     longitude:77,
+     lastLocationTime:Date.now()
+   })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -306,7 +310,7 @@ function executeRequest(requestGenerator) {
       } else {
         const resolve = workerResolves[event.data.id];
         if (resolve) {
-          if (event.data.response.hasOwnProperty('reloadApp') && !event.data.response.reloadApp) {
+          if(event.data.response.hasOwnProperty('reloadApp') && !event.data.response.reloadApp)  {
             delete event.data.response.reloadApp;
           }
           resolve(event.data.response);
@@ -498,19 +502,19 @@ function getSubscription(office, template) {
     index.getAll(range).onsuccess = function (event) {
       const results = event.target.result;
       var corruptTempalte;
-      results.forEach(function (result) {
+      results.forEach(function(result){
         const keys = Object.keys(result);
-        keys.forEach(function (key) {
-          if (key === 'report') return;
-          if (result[key] == undefined || result[key] == null) {
-            corruptTempalte = result
+        keys.forEach(function(key){
+          if(key === 'report') return;
+          if(result[key] == undefined || result[key] == null) { 
+              corruptTempalte = result
           }
         })
       });
-      if (corruptTempalte) {
+      if(corruptTempalte) {
         handleError({
-          message: 'Template field having null values',
-          body: JSON.stringify(corruptTempalte)
+          message:'Template field having null values',
+          body:JSON.stringify(corruptTempalte)
         })
       }
       return resolve(event.target.result)
@@ -1068,7 +1072,7 @@ function updateName(callback) {
   nameField.focus();
   document.getElementById('name-btn').addEventListener('click', function () {
     if (!nameField.value) {
-      setHelperInvalid(nameField, 'Name Cannot Be Left Blank')
+      setHelperInvalid(nameField,'Name Cannot Be Left Blank')
       return;
     }
     progressBar.open();
@@ -1132,7 +1136,7 @@ function emailUpdation(skip, callback) {
   document.getElementById('email-btn').addEventListener('click', function () {
 
     if (!emailReg(emailField.value)) {
-      setHelperInvalid(emailField, 'Enter A Valid Email Id')
+      setHelperInvalid(emailField,'Enter A Valid Email Id')
       return;
     };
 
@@ -1149,7 +1153,7 @@ function emailUpdation(skip, callback) {
         return
       }
       progressBar.close()
-      setHelperInvalid(emailField, 'New Email Cannot Be Same As Previous Email')
+      setHelperInvalid(emailField,'New Email Cannot Be Same As Previous Email')
       return
     }
 
@@ -1394,7 +1398,7 @@ function idProofView(callback) {
     </div>
     ${actionButton('UPDATE','submit-btn').outerHTML}
   `
-
+    
     const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
     const skipBtn = document.getElementById('skip-btn');
@@ -1404,7 +1408,7 @@ function idProofView(callback) {
 
         getImageBase64(evt).then(function (dataURL) {
           const parentImg = el.closest('.image-container').querySelector('img')
-          if (!parentImg) return;
+          if(!parentImg) return;
           parentImg.src = `${dataURL}`;
           parentImg.dataset.valid = true
         });
@@ -1421,7 +1425,7 @@ function idProofView(callback) {
       }
 
       if (!isPossiblyValidPan(panNumber.value.trim())) {
-        setHelperInvalid(panNumber, 'Please enter a valid PAN number');
+        setHelperInvalid(panNumber,'Please enter a valid PAN number');
         return;
       };
       const validImagesLength = [...document.querySelectorAll(`[data-valid="false"]`)].length;
@@ -1488,50 +1492,51 @@ function idProofView(callback) {
 
 
 function getDropDownContent(office, template, indexName) {
-  return new Promise(function (resolve, reject) {
-    const data = []
-    const name_object = {}
-    const tx = parent.db.transaction(['children'])
-    let keyRange = ''
-    if (office) {
-      keyRange = IDBKeyRange.only([office, template])
-    } else {
-      keyRange = IDBKeyRange.only(template)
-    }
-    tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      const value = cursor.value.attachment.Name.value
-      if (name_object[value]) {
-        cursor.continue();
-        return;
-      }
-      name_object[value] = true;
-      data.push(value);
+    return new Promise(function (resolve, reject) {
+        const data = []
+        const name_object = {}
+        const tx = parent.db.transaction(['children'])
+        let keyRange = ''
+        if(office) {
+           keyRange = IDBKeyRange.only([office, template])
+        }
+        else {
+          keyRange = IDBKeyRange.only(template)
+        }
+        tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
+            const cursor = event.target.result;
+            if (!cursor) return;
+            if (cursor.value.status === 'CANCELLED') {
+                cursor.continue();
+                return;
+            }
+            const value = cursor.value.attachment.Name.value
+            if (name_object[value]) {
+                cursor.continue();
+                return;
+            }
+            name_object[value] = true;
+            data.push(value);
 
+            
+            cursor.continue();
+        }
+        tx.oncomplete = function () {
+            return resolve(data)
+        }
 
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-      return resolve(data)
-    }
-
-  })
+    })
 }
 
 
-const phoneFieldInit = (input, dropEl, hiddenInput) => {
-
-  return intlTelInput(input, {
-    initialCountry: "IN",
-    formatOnDisplay: true,
-    separateDialCode: true,
-    dropdownContainer: dropEl || null,
-    hiddenInput: hiddenInput || "",
-    nationalMode: false
-  });
-};
+const phoneFieldInit = (input,dropEl,hiddenInput) => {
+  
+    return intlTelInput(input, {
+        initialCountry: "IN",
+        formatOnDisplay: true,
+        separateDialCode: true,
+        dropdownContainer:dropEl || null,
+        hiddenInput:hiddenInput || "",
+        nationalMode:false
+    });
+  };
