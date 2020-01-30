@@ -50,11 +50,11 @@ function sendOfficeData(requestBody) {
         requestCreator('createOffice', requestBody, geopoint).then(function () {
             successDialog(`Office created successfully`);
             giveSubscriptionInit(requestBody.name);
-        }).catch(function(error){
+        }).catch(function (error) {
             passFormData({
-                name:'toggleSubmit',
-                template:'',
-                body:'',
+                name: 'toggleSubmit',
+                template: '',
+                body: '',
                 deviceType: native.getName()
             })
         })
@@ -66,11 +66,11 @@ function sendUsersData(formData) {
         requestCreator('checkIns', formData, geopoint).then(function (response) {
             history.back();
             successDialog('')
-        }).catch(function(error){
+        }).catch(function (error) {
             passFormData({
-                name:'toggleSubmit',
-                template:'',
-                body:'',
+                name: 'toggleSubmit',
+                template: '',
+                body: '',
                 deviceType: native.getName()
             })
         });
@@ -96,11 +96,11 @@ function sendSubscriptionData(formData) {
             rootTx.oncomplete = function () {
                 reloadPage();
             }
-        }).catch(function(error){
+        }).catch(function (error) {
             passFormData({
-                name:'toggleSubmit',
-                template:'',
-                body:'',
+                name: 'toggleSubmit',
+                template: '',
+                body: '',
                 deviceType: native.getName()
             })
         })
@@ -113,37 +113,13 @@ function sendFormToParent(formData) {
     const customerAuths = formData.customerAuths;
     delete formData.customerAuths;
     appLocation(3).then(function (geopoint) {
-        if (Array.isArray(formData)) {
-            const prom = []
-            const templateName = formData[0].template
-            formData.forEach(function (form) {
-                prom.push(requestCreator('create', form, geopoint))
-            })
 
-            Promise.all(prom).then(function (response) {
-
-                successDialog(`You Created a ${templateName}`);
-
-                reportView()
-            }).catch(console.error)
-            return;
-        }
         requestCreator('create', formData, geopoint).then(function () {
             console.log(formData)
+            successDialog(`You Created a ${formData.template}`);
 
 
-            if (formData.report === 'attendance') {
-                if (formData.template === 'attendance regularization') {
-                    successDialog(`You Applied for an AR`);
-                } else {
-                    successDialog(`You Created a ${formData.template}`);
-                };
-
-                if (!formData.id) {
-                    reportView()
-                    return;
-                }
-
+            if (formData.report === 'attendance' && formData.id) {
                 const tx = db.transaction('attendance', 'readwrite');
                 const store = tx.objectStore('attendance')
                 store.get(formData.id).onsuccess = function (event) {
@@ -156,10 +132,8 @@ function sendFormToParent(formData) {
                     reportView()
                 }
                 return;
-            }
+            };
 
-
-            successDialog(`You Created a ${formData.template}`);
 
             if (formData.template === 'customer') {
                 ApplicationState.knownLocation = true;
@@ -173,6 +147,7 @@ function sendFormToParent(formData) {
                     longitude: formData.venue[0].geopoint.longitude
                 }
                 localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
+
                 Object.keys(customerAuths).forEach(function (customerNumber) {
                     requestCreator('updateAuth', customerAuths[customerNumber], geopoint).then(function (response) {
                         console.log(response)
@@ -180,14 +155,12 @@ function sendFormToParent(formData) {
                 })
             }
 
-            reportView()
-
-            return;
+            return reportView()
         }).catch(function (err) {
             passFormData({
-                name:'toggleSubmit',
-                template:'',
-                body:'',
+                name: 'toggleSubmit',
+                template: '',
+                body: '',
                 deviceType: native.getName()
             })
             if (formData.report === 'attendance' && err.body.code == 400) {
@@ -202,9 +175,7 @@ function sendFormToParent(formData) {
                         body: record
                     })
                 }
-                tx.oncomplete = function () {
-
-                }
+                tx.oncomplete = function () {};
             }
         })
 

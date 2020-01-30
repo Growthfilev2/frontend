@@ -158,7 +158,6 @@ function initializeApp() {
 
       localStorage.setItem('error', JSON.stringify({}));
       checkNetworkValidation();
-
     });
   })
 
