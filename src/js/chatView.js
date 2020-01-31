@@ -25,40 +25,54 @@ function chatView() {
 
 
     sectionContent.innerHTML = chatDom();
-    firebase.auth().currentUser.getIdTokenResult().then(function (idTokenResult) {
-        const isUserAdminOfOffice = isAdmin(idTokenResult);
-        if (!isUserAdminOfOffice) return;
-        const addContactBtn = createFab('person_add');
+    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription('', 'customer')]).then(function (results) {
+        console.log(results);
+        let adminOffices = [];
+        if (isAdmin(results[0])) {
+            adminOffices = results[0].claims.admin
+        }
+        const customerSubscriptions = results[1];
+        if (!adminOffices.length && !customerSubscriptions.length) return;
 
+        const addContactBtn = createFab('add');
         document.querySelector('.user-chats').appendChild(addContactBtn);
-
         addContactBtn.addEventListener('click', function () {
-
-            if (idTokenResult.claims.admin.length == 1) {
-                history.pushState(['addView'], null, null);
-                addView({
-                    template: 'users',
-                    phoneNumbers: [],
-                    office: idTokenResult.claims.admin[0]
+            const dialogData = [];
+            adminOffices.forEach(office => {
+                dialogData.push({
+                    template: 'Add People',
+                    office: office
                 })
-                return;
-            }
+            });
 
-            const dialog = new Dialog('Choose Office', officeSelectionList(idTokenResult.claims.admin), 'choose-office-subscription').create('simple');
+            const mergedArray = [...dialogData, ...customerSubscriptions];
+            const dialog = new Dialog('', templateSelectionList(mergedArray), 'choose-office-subscription').create('simple');
             const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(dialog, ul)
-
+            bottomDialog(dialog, ul);
             ul.listen('MDCList:action', function (event) {
                 dialog.close()
-                history.pushState(['addView'], null, null);
-                addView({
-                    template: 'users',
-                    phoneNumbers: [],
-                    office: idTokenResult.claims.admin[event.detail.index]
-                })
+                if(mergedArray[event.detail.index].template === 'Add People') {
+                    history.pushState(['addView'], null, null);
+                    addView({
+                        template: 'users',
+                        phoneNumbers: [],
+                        office: mergedArray[event.detail.index].office
+                    })
+                    return
+                }
+                getDropDownContent(mergedArray[event.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                    history.pushState(['addView'], null, null);
+                    const sub = mergedArray[event.detail.index]
+                    fillVenueInSub(sub,{
+                        latitude:ApplicationState.location.latitude,
+                        longitude:ApplicationState.location.longitude
+                    });
+                    addView(sub,customerTypes);
+                });
             })
-        })
-    });
+        });
+    })
+    
     readLatestChats(true);
 }
 

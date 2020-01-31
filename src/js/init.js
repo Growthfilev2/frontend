@@ -382,7 +382,7 @@ function loadSlider(sliderEl) {
 function loadingScreen(texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']) {
   const panel = document.getElementById('app-current-panel');
 
- 
+
 
   panel.innerHTML = `
   <div class='splash-content' id='loading-screen'>
@@ -881,7 +881,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
 
   const subscriptions = db.createObjectStore('subscriptions', {
-    autoIncrement: true
+    keyPath: activityId
   })
 
   subscriptions.createIndex('office', 'office')
@@ -890,7 +890,6 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
   subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
-  subscriptions.createIndex('count', 'count');
   subscriptions.createIndex('report', 'report');
 
   const calendar = db.createObjectStore('calendar', {
@@ -903,22 +902,18 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-    calendar.createIndex('onLeave', ['template', 'status', 'office']);
+  calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
-    autoIncrement: true,
+    keyPath: activityId,
   })
 
-  map.createIndex('activityId', 'activityId')
   map.createIndex('location', 'location')
   map.createIndex('latitude', 'latitude')
   map.createIndex('longitude', 'longitude')
-  map.createIndex('nearby', ['status', 'hidden'])
-  map.createIndex('byOffice', ['office', 'location'])
   map.createIndex('bounds', ['latitude', 'longitude'])
   map.createIndex('office', 'office');
   map.createIndex('status', 'status');
-  map.createIndex('selection', ['office', 'status', 'location']);
 
   const children = db.createObjectStore('children', {
     keyPath: 'activityId'
@@ -1022,7 +1017,7 @@ function getCheckInSubs() {
       .onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        if(!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
+        if (!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
           cursor.continue();
           return;
         }
@@ -1059,7 +1054,7 @@ function openMap() {
         searchOffice(geopoint)
         return
       };
-
+      
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       const oldState = localStorage.getItem('ApplicationState')
       if (!oldState) return mapView(geopoint);
