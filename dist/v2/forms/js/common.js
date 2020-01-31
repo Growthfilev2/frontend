@@ -50,8 +50,13 @@ window.addEventListener('message', function (event) {
     if (!deviceType) {
         deviceType = event.data.deviceType
     }
-    parentOrigin = event.origin
-    window[event.data.name](event.data.template,event.data.body)
+    parentOrigin = event.origin;
+    if(event.data.template) {
+        window[event.data.name](event.data.template,event.data.body)
+    }
+    else {
+        window[event.data.name](event.data.body)
+    }
 })
 
 

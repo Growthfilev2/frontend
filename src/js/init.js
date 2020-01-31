@@ -881,7 +881,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
 
   const subscriptions = db.createObjectStore('subscriptions', {
-    keyPath: activityId
+    autoIncrement: true
   })
 
   subscriptions.createIndex('office', 'office')
@@ -890,6 +890,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
   subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
+  subscriptions.createIndex('count', 'count');
   subscriptions.createIndex('report', 'report');
 
   const calendar = db.createObjectStore('calendar', {
@@ -902,18 +903,22 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-  calendar.createIndex('onLeave', ['template', 'status', 'office']);
+    calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
-    keyPath: activityId,
+    autoIncrement: true,
   })
 
+  map.createIndex('activityId', 'activityId')
   map.createIndex('location', 'location')
   map.createIndex('latitude', 'latitude')
   map.createIndex('longitude', 'longitude')
+  map.createIndex('nearby', ['status', 'hidden'])
+  map.createIndex('byOffice', ['office', 'location'])
   map.createIndex('bounds', ['latitude', 'longitude'])
   map.createIndex('office', 'office');
   map.createIndex('status', 'status');
+  map.createIndex('selection', ['office', 'status', 'location']);
 
   const children = db.createObjectStore('children', {
     keyPath: 'activityId'
