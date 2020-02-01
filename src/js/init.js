@@ -2,7 +2,7 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-let DB_VERSION = 30;
+let DB_VERSION = 31;
 var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
@@ -450,27 +450,25 @@ function startApp() {
       })
       return;
     };
-    if (!evt.oldVersion) {
-      createObjectStores(db, dbName)
-    } else {
-      createReportObjectStores(db);
-      if (db.objectStoreNames.contains('list')) {
-        db.deleteObjectStore('list')
-      }
-      if (db.objectStoreNames.contains('reports')) {
-        db.deleteObjectStore('reports')
-      }
-      if (!db.objectStoreNames.contains('root')) {
-        createRootObjectStore(db, dbName, 0);
-      }
-
-      var rootStore = req.transaction.objectStore('root')
-      rootStore.get(dbName).onsuccess = function (rootEvent) {
-        const record = rootEvent.target.result;
-        record.fromTime = 0;
-        rootStore.put(record);
-      }
+    switch (evt.oldVersion) {
+      case 0:
+        createObjectStores(db, dbName)
+        break;
+      case 30:
+        createSubscriptionObjectStore(db);
+        createMapObjectStore(db);
+        createCalendarObjectStore(db);
+        break;
     }
+
+
+    var rootStore = req.transaction.objectStore('root')
+    rootStore.get(dbName).onsuccess = function (rootEvent) {
+      const record = rootEvent.target.result;
+      record.fromTime = 0;
+      rootStore.put(record);
+    }
+
 
     console.log('version upgrade')
   }
@@ -810,6 +808,109 @@ function getEmployeeDetails(range, indexName) {
   })
 }
 
+function createObjectStores(db, uid) {
+
+  const activity = db.createObjectStore('activity', {
+    keyPath: 'activityId'
+  })
+
+  activity.createIndex('timestamp', 'timestamp')
+  activity.createIndex('office', 'office')
+  activity.createIndex('hidden', 'hidden')
+  activity.createIndex('template', 'template');
+  activity.createIndex('status', 'status')
+
+  const users = db.createObjectStore('users', {
+    keyPath: 'mobile'
+  })
+
+  users.createIndex('displayName', 'displayName')
+  users.createIndex('isUpdated', 'isUpdated')
+  users.createIndex('count', 'count')
+  users.createIndex('mobile', 'mobile')
+  users.createIndex('timestamp', 'timestamp')
+  users.createIndex('NAME_SEARCH', 'NAME_SEARCH')
+  const addendum = db.createObjectStore('addendum', {
+    autoIncrement: true
+  })
+
+  addendum.createIndex('activityId', 'activityId')
+  addendum.createIndex('user', 'user');
+  addendum.createIndex('key', 'key')
+  addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
+
+
+  createSubscriptionObjectStore(db)
+
+  createCalendarObjectStore(db);
+  createMapObjectStore(db)
+
+  const children = db.createObjectStore('children', {
+    keyPath: 'activityId'
+  })
+
+  children.createIndex('template', 'template');
+  children.createIndex('office', 'office');
+  children.createIndex('templateStatus', ['template', 'status']);
+  children.createIndex('officeTemplate', ['office', 'template']);
+  children.createIndex('employees', 'employee');
+  children.createIndex('employeeOffice', ['employee', 'office'])
+  children.createIndex('team', 'team')
+  children.createIndex('teamOffice', ['team', 'office'])
+
+  createReportObjectStores(db)
+  createRootObjectStore(db, uid, 0)
+}
+
+function createCalendarObjectStore(db) {
+  if (db.objectStoreNames.contains('calendar')) {
+    db.deleteObjectStore('calendar')
+  }
+  const calendar = db.createObjectStore('calendar', {
+    autoIncrement: true
+  })
+
+  calendar.createIndex('activityId', 'activityId')
+  calendar.createIndex('timestamp', 'timestamp')
+  calendar.createIndex('start', 'start')
+  calendar.createIndex('end', 'end')
+  calendar.createIndex('templateOffice', ['template', 'office']);
+
+}
+
+function createSubscriptionObjectStore(db) {
+  if (db.objectStoreNames.contains('subscriptions')) {
+    db.deleteObjectStore('subscriptions')
+  }
+  const subscriptions = db.createObjectStore('subscriptions', {
+    keyPath: 'activityId'
+  })
+  subscriptions.createIndex('office', 'office')
+  subscriptions.createIndex('template', 'template')
+  subscriptions.createIndex('officeTemplate', ['office', 'template'])
+  subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
+  subscriptions.createIndex('templateStatus', ['template', 'status'])
+  subscriptions.createIndex('status', 'status');
+  subscriptions.createIndex('report', 'report');
+}
+
+function createMapObjectStore(db) {
+  if (db.objectStoreNames.contains('map')) {
+    db.deleteObjectStore('map')
+  }
+  const map = db.createObjectStore('map', {
+    keyPath: 'activityId'
+  })
+  map.createIndex('location', 'location')
+  map.createIndex('latitude', 'latitude')
+  map.createIndex('longitude', 'longitude')
+  map.createIndex('byOffice', ['office', 'location'])
+  map.createIndex('bounds', ['latitude', 'longitude'])
+  map.createIndex('office', 'office');
+  map.createIndex('status', 'status');
+}
+
+
 function createReportObjectStores(db) {
   if (!db.objectStoreNames.contains('attendance')) {
 
@@ -849,93 +950,6 @@ function createReportObjectStores(db) {
 
 }
 
-function createObjectStores(db, uid) {
-
-  const activity = db.createObjectStore('activity', {
-    keyPath: 'activityId'
-  })
-
-  activity.createIndex('timestamp', 'timestamp')
-  activity.createIndex('office', 'office')
-  activity.createIndex('hidden', 'hidden')
-  activity.createIndex('template', 'template');
-  activity.createIndex('status', 'status')
-
-  const users = db.createObjectStore('users', {
-    keyPath: 'mobile'
-  })
-
-  users.createIndex('displayName', 'displayName')
-  users.createIndex('isUpdated', 'isUpdated')
-  users.createIndex('count', 'count')
-  users.createIndex('mobile', 'mobile')
-  users.createIndex('timestamp', 'timestamp')
-  users.createIndex('NAME_SEARCH', 'NAME_SEARCH')
-  const addendum = db.createObjectStore('addendum', {
-    autoIncrement: true
-  })
-
-  addendum.createIndex('activityId', 'activityId')
-  addendum.createIndex('user', 'user');
-  addendum.createIndex('key', 'key')
-  addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
-
-  const subscriptions = db.createObjectStore('subscriptions', {
-    autoIncrement: true
-  })
-
-  subscriptions.createIndex('office', 'office')
-  subscriptions.createIndex('template', 'template')
-  subscriptions.createIndex('officeTemplate', ['office', 'template'])
-  subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
-  subscriptions.createIndex('templateStatus', ['template', 'status'])
-  subscriptions.createIndex('status', 'status');
-  subscriptions.createIndex('count', 'count');
-  subscriptions.createIndex('report', 'report');
-
-  const calendar = db.createObjectStore('calendar', {
-    autoIncrement: true
-  })
-
-  calendar.createIndex('activityId', 'activityId')
-  calendar.createIndex('timestamp', 'timestamp')
-  calendar.createIndex('start', 'start')
-  calendar.createIndex('end', 'end')
-  calendar.createIndex('office', 'office')
-  calendar.createIndex('urgent', ['status', 'hidden']),
-    calendar.createIndex('onLeave', ['template', 'status', 'office']);
-
-  const map = db.createObjectStore('map', {
-    autoIncrement: true,
-  })
-
-  map.createIndex('activityId', 'activityId')
-  map.createIndex('location', 'location')
-  map.createIndex('latitude', 'latitude')
-  map.createIndex('longitude', 'longitude')
-  map.createIndex('nearby', ['status', 'hidden'])
-  map.createIndex('byOffice', ['office', 'location'])
-  map.createIndex('bounds', ['latitude', 'longitude'])
-  map.createIndex('office', 'office');
-  map.createIndex('status', 'status');
-  map.createIndex('selection', ['office', 'status', 'location']);
-
-  const children = db.createObjectStore('children', {
-    keyPath: 'activityId'
-  })
-
-  children.createIndex('template', 'template');
-  children.createIndex('office', 'office');
-  children.createIndex('templateStatus', ['template', 'status']);
-  children.createIndex('officeTemplate', ['office', 'template']);
-  children.createIndex('employees', 'employee');
-  children.createIndex('employeeOffice', ['employee', 'office'])
-  children.createIndex('team', 'team')
-  children.createIndex('teamOffice', ['team', 'office'])
-
-  createReportObjectStores(db)
-  createRootObjectStore(db, uid, 0)
-}
 
 function createRootObjectStore(db, uid, fromTime) {
   const root = db.createObjectStore('root', {
@@ -1059,7 +1073,7 @@ function openMap() {
         searchOffice(geopoint)
         return
       };
-      
+
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       const oldState = localStorage.getItem('ApplicationState')
       if (!oldState) return mapView(geopoint);

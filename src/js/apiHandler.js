@@ -26,8 +26,8 @@ const requestFunctionCaller = {
   subscription: createSubscription,
   createOffice: createOffice,
   searchOffice: searchOffice,
-  checkIns:checkIns,
-  idProof:idProof
+  checkIns: checkIns,
+  idProof: idProof
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -306,7 +306,7 @@ function searchOffice(body, meta) {
   return http(req)
 }
 
-function checkIns(body,meta) {
+function checkIns(body, meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}services/checkIns`,
@@ -317,7 +317,7 @@ function checkIns(body,meta) {
   return http(req)
 }
 
-function idProof(body,meta) {
+function idProof(body, meta) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}services/idProof`,
@@ -326,7 +326,7 @@ function idProof(body,meta) {
     timeout: null
   }
   return http(req)
- 
+
 }
 
 function createSubscription(body, meta) {
@@ -579,23 +579,24 @@ function updatePayments(paymentData = [], store) {
   // })
 }
 
-function updateMap(tx,location) {
-  if(!location.activityId) return;
+function updateMap(tx, location) {
+  if (!location.activityId) return;
   const mapObjectStore = tx.objectStore('map')
   const index = mapObjectStore.index('activityId');
-  index.openCursor(location.activityId).onsuccess = function(event){
+  index.openCursor(location.activityId).onsuccess = function (event) {
     const cursor = event.target.result;
-    if(!cursor) {
+    if (!cursor) {
       mapObjectStore.put(location);
       return
     }
     let deleteReq = cursor.delete();
     cursor.continue();
-    deleteReq.onsuccess = function(){
+    deleteReq.onsuccess = function () {
       console.log('removed map')
     }
   }
 }
+
 function updateCalendar(activity, tx) {
   const calendarObjectStore = tx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
@@ -603,7 +604,7 @@ function updateCalendar(activity, tx) {
     const cursor = event.target.result
     if (!cursor) {
       activity.schedule.forEach(function (schedule) {
-       
+
         const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,
@@ -633,7 +634,11 @@ function updateCalendar(activity, tx) {
   }
 }
 
+function putMap(location, updateTx) {
+  const mapObjectStore = updateTx.objectStore('map')
+  mapObjectStore.put(location);
 
+}
 
 function putAttachment(activity, tx, param) {
 
@@ -649,10 +654,10 @@ function putAttachment(activity, tx, param) {
   const myNumber = param.user.phoneNumber
 
   if (activity.template === 'employee') {
-    if(activity.attachment.hasOwnProperty('Employee Contact')) {
+    if (activity.attachment.hasOwnProperty('Employee Contact')) {
       commonSet.employee = activity.attachment['Employee Contact'].value
     }
-    if(activity.attachment.hasOwnProperty('Phone Number')) {
+    if (activity.attachment.hasOwnProperty('Phone Number')) {
       commonSet.employee = activity.attachment['Phone Number'].value
     }
     if (activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
@@ -699,33 +704,10 @@ function removeActivityFromDB(id, updateTx) {
 
 }
 
-function updateSubscription(subscription, tx, fromTime) {
+function putSubscription(subscription, tx) {
   const store = tx.objectStore('subscriptions');
-  const index = store.index('officeTemplate');
+  store.put(subscription);
 
-  if (subscription.template === 'check-in' && fromTime !== 0) {
-    index.get([subscription.office, subscription.template]).onsuccess = function (event) {
-      const record = event.target.result;
-      if (record) {
-        reloadApp = false
-      } else {
-        reloadApp = true;
-      }
-    }
-  }
-
-  index.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
-    const cursor = event.target.result;
-    if (!cursor) {
-      store.put(subscription)
-      return;
-    };
-    const deleteReq = cursor.delete();
-    cursor.continue();
-    deleteReq.onsuccess = function () {
-      console.log('deleted')
-    }
-  }
 }
 
 
@@ -788,22 +770,10 @@ function successResponse(read, param, db, resolve, reject) {
     }
   })
 
-  // if(getWebWorkerVersion() !== 73) {
-    if (read.locations.length) {
-      const mapObjectStore = updateTx.objectStore('map')
-      var clearMap = mapObjectStore.clear();
-      clearMap.onsuccess = function () {
-        read.locations.forEach(function (location) {
-          mapObjectStore.add(location);
-        });
-      }
-    }
-  // }
-  // else {
-  //   read.locations.forEach(function (location) {
-  //     updateMap(updateTx,location)
-  //   });
-  // }
+
+  read.locations.forEach(function (location) {
+    putMap(location, updateTx);
+  });
 
 
   updateAttendance(read.attendances, attendaceStore)
@@ -812,7 +782,7 @@ function successResponse(read, param, db, resolve, reject) {
   read.activities.forEach(function (activity) {
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
-    activity.activityName = activity.activityName
+    
     activityObjectStore.put(activity);
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
@@ -867,12 +837,21 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
 
-  read.templates.forEach(function (subscription) {
-    if (subscription.status !== 'CANCELLED') {
-      updateSubscription(subscription, updateTx, read.fromTime)
-    }
+  if (read.products) {
+    read.products.forEach(function (product) {
+      putAttachment(product, updateTx, param);
+    })
+  }
 
+  read.templates.forEach(function (subscription) {
+    if (subscription.status === 'CANCELLED') return;
+    putSubscription(subscription, updateTx);
+    if (subscription.template === 'check-in' && read.fromTime !== 0) {
+      reloadApp = true;
+    }
   })
+
+
 
   updateRoot(read, updateTx, param.user.uid, counter);
   updateTx.oncomplete = function () {
@@ -959,4 +938,3 @@ function updateIDB(config) {
     }
   })
 };
-
