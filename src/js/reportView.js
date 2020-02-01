@@ -319,7 +319,7 @@ function createTemplateButton(subs) {
   button.addEventListener('click', function () {
     if(subs.length == 1){
       history.pushState(['addView'], null, null);
-      addView(subs[0],subs[0].customerTypes)
+      addView(subs[0])
       return
     }
     const dialog = new Dialog('', templateSelectionList(subs), 'choose-office-subscription').create('simple');
@@ -328,7 +328,7 @@ function createTemplateButton(subs) {
   
     ul.listen('MDCList:action', function (evt) {
       history.pushState(['addView'], null, null);
-      addView(subs[evt.detail.index],subs[evt.detail.index].customerTypes)
+      addView(subs[evt.detail.index])
       dialog.close()
     })
   })
