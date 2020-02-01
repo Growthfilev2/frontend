@@ -841,7 +841,6 @@ function createObjectStores(db, uid) {
 
 
   createSubscriptionObjectStore(db)
-
   createCalendarObjectStore(db);
   createMapObjectStore(db)
 
