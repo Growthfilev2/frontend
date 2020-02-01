@@ -320,7 +320,6 @@ function createTemplateButton(subs) {
     if(subs.length == 1){
       history.pushState(['addView'], null, null);
       addView(subs[0],subs[0].customerTypes)
-      dialog.close()
       return
     }
     const dialog = new Dialog('', templateSelectionList(subs), 'choose-office-subscription').create('simple');
