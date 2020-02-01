@@ -222,7 +222,7 @@
                 console.log(customerAuths)
                 console.log(copy);
                 if (areAllNumberValid) {
-
+                    delete copy.customerTypes;
                     parent.postMessage({
                         body: copy,
                         name: 'sendFormToParent'

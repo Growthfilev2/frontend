@@ -317,12 +317,17 @@ function toggleReportCard(selector) {
 function createTemplateButton(subs) {
   const button = createFab('add')
   button.addEventListener('click', function () {
+    if(subs.length == 1){
+      history.pushState(['addView'], null, null);
+      addView(subs[0],subs[0].customerTypes)
+      dialog.close()
+      return
+    }
     const dialog = new Dialog('', templateSelectionList(subs), 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
     bottomDialog(dialog, ul)
   
     ul.listen('MDCList:action', function (evt) {
-      console.log(evt)
       history.pushState(['addView'], null, null);
       addView(subs[evt.detail.index],subs[evt.detail.index].customerTypes)
       dialog.close()
