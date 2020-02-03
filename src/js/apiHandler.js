@@ -574,9 +574,9 @@ function updateReimbursements(reimbursementData = [], store) {
 }
 
 function updatePayments(paymentData = [], store) {
-  // paymentData.forEach(function(value) {
-  //     store.put(value)
-  // })
+  paymentData.forEach(function(value) {
+      store.put(value)
+  })
 }
 
 function updateMap(tx, location) {
