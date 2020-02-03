@@ -420,6 +420,7 @@ function productCard(productName) {
         }
         if (selectedChip.dataset.type === 'date') {
             field = textFieldRemovable('date', 'Date');
+            field.querySelector('input').value = createDate(new Date())
         };
 
         field.querySelector('.mdc-icon-button').addEventListener('click',function(e){
