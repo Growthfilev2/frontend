@@ -241,7 +241,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=84');
+const apiHandler = new Worker('js/apiHandler.js?version=97');
 
 function requestCreator(requestType, requestBody, geopoint) {
   var auth = firebase.auth().currentUser;
