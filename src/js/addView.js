@@ -7,7 +7,7 @@ function addView(sub, body) {
     header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/growthfile-frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         passFormData({
             name: 'init',
@@ -228,6 +228,16 @@ function expenseClaimImage(base64) {
     if (!frame) return;
     frame.contentWindow.postMessage({
         name: 'setExpenseImage',
+        body: base64
+    }, window.location.origin);
+
+}
+
+function callImage(base64) {
+    const frame = document.getElementById('form-iframe')
+    if (!frame) return;
+    frame.contentWindow.postMessage({
+        name: 'setCallImage',
         body: base64
     }, window.location.origin);
 

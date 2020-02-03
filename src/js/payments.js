@@ -100,8 +100,7 @@ function paymentCard(timestamp, office, paymentData) {
             ${paymentData[timestamp][office].map(function(payment){
                 return `
                 <div class='amount ${payment.details.status === 'CANCELLED' ? 'mdc-theme--error':''}'>
-                    <div class='mdc-typography--subtitle2'>${payment.details.account}</div>
-                    <div class='mdc-typography--caption'>${payment.details.ifsc}</div>
+                    <div class='mdc-typography--subtitle2 capitalize'>${payment._type}</div>
                     <div class='mdc-typography--headline6 ${payment.details.status === 'CANCELLED' ?'' :'mdc-theme--primary'}'>${payment.details.status === 'CANCELLED' ? 0 : convertAmountToCurrency(payment.details.amount,payment.currency) || ''}</div>
                     <div class='mdc-typography--caption'>${payment.details.status || ''}</div>
                     ${payment.details.cycleStart && payment.details.cycleEnd ? `<div class='mdc-typography--caption'>${moment(payment.details.cycleStart,"Do MMM YYYY").format("DD/MM/YY")} - ${moment(payment.details.cycleEnd,"Do MMM YYYY").format("DD/MM/YY")}</div>` :''} 
@@ -112,6 +111,7 @@ function paymentCard(timestamp, office, paymentData) {
         </div>
     </div>`
 }
+
 
 function calculateTotalPayment(data) {
     let total = 0;

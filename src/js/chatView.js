@@ -25,14 +25,15 @@ function chatView() {
 
 
     sectionContent.innerHTML = chatDom();
-    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription('', 'customer')]).then(function (results) {
+    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription('', 'customer'),getSubscription('', 'call')]).then(function (results) {
         console.log(results);
         let adminOffices = [];
         if (isAdmin(results[0])) {
             adminOffices = results[0].claims.admin
         }
         const customerSubscriptions = results[1];
-        if (!adminOffices.length && !customerSubscriptions.length) return;
+        const callSubscriptions = results[2]
+        if (!adminOffices.length && !customerSubscriptions.length && !callSubscriptions.length) return;
 
         const addContactBtn = createFab('add');
         document.querySelector('.user-chats').appendChild(addContactBtn);
@@ -45,7 +46,7 @@ function chatView() {
                 })
             });
 
-            const mergedArray = [...dialogData, ...customerSubscriptions];
+            const mergedArray = [...dialogData, ...customerSubscriptions, ...callSubscriptions];
             const dialog = new Dialog('', templateSelectionList(mergedArray), 'choose-office-subscription').create('simple');
             const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
             bottomDialog(dialog, ul);
@@ -60,15 +61,20 @@ function chatView() {
                     })
                     return
                 }
-                getDropDownContent(mergedArray[event.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                    history.pushState(['addView'], null, null);
-                    const sub = mergedArray[event.detail.index]
-                    fillVenueInSub(sub,{
-                        latitude:ApplicationState.location.latitude,
-                        longitude:ApplicationState.location.longitude
+                const sub = mergedArray[event.detail.index]
+                if(mergedArray[event.detail.index].template === 'customer') {
+                    getDropDownContent(mergedArray[event.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                        history.pushState(['addView'], null, null);
+                        fillVenueInSub(sub,{
+                            latitude:ApplicationState.location.latitude,
+                            longitude:ApplicationState.location.longitude
+                        });
+                        addView(sub,customerTypes);
                     });
-                    addView(sub,customerTypes);
-                });
+                    return
+                }
+                history.pushState(['addView'], null, null);
+                addView(sub)
             })
         });
     })
