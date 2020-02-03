@@ -802,6 +802,15 @@ iframe {
 }
 
 
+.PENDING {
+  color: yellow;
+}
+.CONFIRMED { 
+  color: green;
+}
+.CANCELLED {
+  color: red;
+}
 
 
 
