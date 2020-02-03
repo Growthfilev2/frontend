@@ -25,15 +25,15 @@ function chatView() {
 
 
     sectionContent.innerHTML = chatDom();
-    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription('', 'customer'),getSubscription('', 'call')]).then(function (results) {
+    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription('', 'customer')]).then(function (results) {
         console.log(results);
         let adminOffices = [];
         if (isAdmin(results[0])) {
             adminOffices = results[0].claims.admin
         }
         const customerSubscriptions = results[1];
-        const callSubscriptions = results[2]
-        if (!adminOffices.length && !customerSubscriptions.length && !callSubscriptions.length) return;
+
+        if (!adminOffices.length && !customerSubscriptions.length) return;
 
         const addContactBtn = createFab('add');
         document.querySelector('.user-chats').appendChild(addContactBtn);
@@ -46,13 +46,13 @@ function chatView() {
                 })
             });
 
-            const mergedArray = [...dialogData, ...customerSubscriptions, ...callSubscriptions];
+            const mergedArray = [...dialogData, ...customerSubscriptions];
             const dialog = new Dialog('', templateSelectionList(mergedArray), 'choose-office-subscription').create('simple');
             const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
             bottomDialog(dialog, ul);
             ul.listen('MDCList:action', function (event) {
                 dialog.close()
-                if(mergedArray[event.detail.index].template === 'Add People') {
+                if (mergedArray[event.detail.index].template === 'Add People') {
                     history.pushState(['addView'], null, null);
                     addView({
                         template: 'users',
@@ -62,23 +62,20 @@ function chatView() {
                     return
                 }
                 const sub = mergedArray[event.detail.index]
-                if(mergedArray[event.detail.index].template === 'customer') {
-                    getDropDownContent(mergedArray[event.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                        history.pushState(['addView'], null, null);
-                        fillVenueInSub(sub,{
-                            latitude:ApplicationState.location.latitude,
-                            longitude:ApplicationState.location.longitude
-                        });
-                        addView(sub,customerTypes);
+
+                getDropDownContent(mergedArray[event.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                    history.pushState(['addView'], null, null);
+                    fillVenueInSub(sub, {
+                        latitude: ApplicationState.location.latitude,
+                        longitude: ApplicationState.location.longitude
                     });
-                    return
-                }
-                history.pushState(['addView'], null, null);
-                addView(sub)
+                    addView(sub, customerTypes);
+                });
+            
             })
         });
     })
-    
+
     readLatestChats(true);
 }
 
@@ -1021,6 +1018,22 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
 
     if (attachmentName === 'Include') {
         return ''
+    }
+    if(activityRecord.attachment[attachmentName].type === 'product') {
+        return `<div class='products-container'>
+            <p class='mdc-typography--subtitle2 mb-0'>Products : </p>
+            ${activityRecord.attachment[attachmentName].value.map(function(product){
+                return `<p class='mt-0 mb-0 mdc-theme--subtitle1'>${product.name}</p>
+                <div class='details mdc-theme--caption' style='margin-left:20px'>
+                    ${product.date ? `<div> Date : ${moment(product.date).format('D MMM h[:]mm A')}</div>`:''}
+                    ${product.quantity ? `<div>Quantity : ${product.quantity}</div>` :''}
+                    ${product.rate ? `<div>Rate : ${product.rate}</div>` :''}
+                </div>
+                `
+            }).join("")}
+        </div>
+        `
+    
     }
     return `<h1 class="mdc-typography--subtitle1 mt-0">
         ${attachmentName} : ${activityRecord.attachment[attachmentName].value}

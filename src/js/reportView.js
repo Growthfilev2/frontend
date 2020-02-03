@@ -211,8 +211,9 @@ function getReportTabData() {
       }
     })
     reportTx.oncomplete = function () {
-      getSubscription('', 'customer').then(function (customerTemplates) {
-        if (customerTemplates.length) {
+      Promise.all([getReportSubscriptions('incentive'), getSubscription('', 'call')]).then(function (results) {
+        const merged = [...results[0],...results[1]];
+        if (merged.length) {
           reportTabData.push({
             name: 'Incentives',
             icon: './img/currency.png',
@@ -317,7 +318,7 @@ function toggleReportCard(selector) {
 function createTemplateButton(subs) {
   const button = createFab('add')
   button.addEventListener('click', function () {
-    if(subs.length == 1){
+    if (subs.length == 1) {
       history.pushState(['addView'], null, null);
       addView(subs[0])
       return
@@ -325,7 +326,7 @@ function createTemplateButton(subs) {
     const dialog = new Dialog('', templateSelectionList(subs), 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
     bottomDialog(dialog, ul)
-  
+
     ul.listen('MDCList:action', function (evt) {
       history.pushState(['addView'], null, null);
       addView(subs[evt.detail.index])

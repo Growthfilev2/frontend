@@ -3,11 +3,11 @@ function incentiveView() {
     if (!sectionContent) return;
     sectionContent.innerHTML = incentiveDom();
     const el = document.getElementById('incentive-view');
-    getReportSubscriptions('incentive').then(function (subs) {
-        if (!subs.length) return;
-        if (!el) return;
-        el.appendChild(createTemplateButton(subs))
-        
+    Promise.all([getReportSubscriptions('incentive'), getSubscription('', 'call')]).then(function (results) {
+        const merged = [...results[0],...results[1]];
+        if(!merged.length) return;
+        if(!el) return;
+        el.appendChild(createTemplateButton(merged))
     })
 }
 
