@@ -26,6 +26,8 @@
     ``` cd /var/www/html ```
     * Windows   
     ``` cd C:\Users\${accountName}\inetpub\wwwroot\ ```
+     * MAC
+    ```cd /Library/Webserver/Documents/```
 
 2. Create a new folder and cd into it 
     * ``` mkdir frontend && cd frontend```
