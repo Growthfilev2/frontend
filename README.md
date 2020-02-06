@@ -1,24 +1,5 @@
 # Front End application for Growthfile
 
-## File structure
-```
-|   index.html
-|   .gitignore
-|   package.json
-|   README.md
-|
-+---css
-|   |   conversation.css
-|
-+---js
-|   |   apiHandler.js
-|   |   conversation.js
-|   |   init.js
-|   |   panel.js
-|   |   services.js
-|
-```
-
 ## Installation
 
 1. ```cd``` into the localhost directory of your system
@@ -37,10 +18,13 @@
 git clone https://github.com/Growthfilev2/frontend.git
 ```
 
-4. install dependencies
+4. Install dependencies
 ```
 npm install
 ```
+
+5. Running in development mode
+Change ```this.mode = 'dev' ``` in ```src/js/config.js``` and change google map keys in both ```src/index.html``` & ```dist/v2/index.html``` with development key
 
 
 
