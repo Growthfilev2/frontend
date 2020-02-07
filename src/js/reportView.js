@@ -69,7 +69,7 @@ function reportView(state, attendanceRecord) {
 
     tabList.activateTab(state);
 
-  })
+  }).catch(handleError)
 }
 
 function reportViewHeader() {
@@ -225,7 +225,10 @@ function getReportTabData() {
       })
     }
     reportTx.onerror = function () {
-      return reject(tx.error)
+      return reject({
+        message:reportTx.error.message,
+        body:JSON.stringify(reportTx.error)
+      })
     }
   })
 }
