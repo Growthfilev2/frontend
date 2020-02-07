@@ -135,6 +135,8 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
+        // event
+        logReportEvent("In Slider");
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
@@ -182,8 +184,10 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        debugger;
         console.log(authResult);
-
+        // event 
+        logReportEvent("In Auth")
         return false;
       },
       signInFailure: function (error) {
@@ -216,6 +220,7 @@ function initializeFirebaseUI() {
   header.listen('MDCTopAppBar:nav', handleNav);
   firebaseUI = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
+  
 }
 
 

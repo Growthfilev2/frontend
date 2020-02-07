@@ -1,9 +1,10 @@
 function AppKeys() {
-    this.mode = 'production'
+    this.mode = 'dev'
 }
 AppKeys.prototype.getMode = function () {
     return this.mode
 }
+
 AppKeys.prototype.getMapKey = function () {
     if (this.mode === 'production') {
         return "AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo";
