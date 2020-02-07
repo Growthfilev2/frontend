@@ -223,7 +223,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
 
 
     history.pushState(['reportView'], null, null)
-    logReportEvent('In Reports');
+    logReportEvent('IN Reports');
     reportView()
   }).catch(function (error) {
 
