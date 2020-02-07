@@ -845,6 +845,13 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.templates.forEach(function (subscription) {
     if (subscription.status === 'CANCELLED') return;
+    if(!subscription.activityId) {
+      instant({
+        message:'activityId missing from template object',
+        body:subscription
+      })
+      return;
+    }
     putSubscription(subscription, updateTx);
     if (subscription.template === 'check-in' && read.fromTime !== 0) {
       reloadApp = true;
