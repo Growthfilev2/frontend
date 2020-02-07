@@ -135,7 +135,7 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
-        // event
+      
         logReportEvent("IN Slider");
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
@@ -183,10 +183,7 @@ function firebaseUiConfig() {
 
   return {
     callbacks: {
-      signInSuccessWithAuthResult: function (authResult) {
-        debugger;
-        console.log(authResult);
-        // event 
+      signInSuccessWithAuthResult: function (authResult) {     
         logReportEvent("IN Auth")
         return false;
       },

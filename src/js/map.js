@@ -323,7 +323,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     history.pushState(['reportView'], null, null)
-    logReportEvent('report');
+    logReportEvent('IN Reports');
     reportView();
   }).catch(function (error) {
     if (error.message === 'Invalid check-in') {
