@@ -849,7 +849,7 @@ function successResponse(read, param, db, resolve, reject) {
       instant({
         message:'activityId missing from template object',
         body:subscription
-      })
+      },param)
       return;
     }
     putSubscription(subscription, updateTx);
