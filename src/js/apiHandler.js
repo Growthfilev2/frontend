@@ -853,9 +853,9 @@ function successResponse(read, param, db, resolve, reject) {
       return;
     }
     putSubscription(subscription, updateTx);
-    if (subscription.template === 'check-in' && read.fromTime !== 0) {
-      reloadApp = true;
-    }
+    // if (subscription.template === 'check-in' && read.fromTime !== 0) {
+    //    reloadApp = true;
+    // }
   })
 
 

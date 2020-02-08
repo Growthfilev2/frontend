@@ -7,7 +7,7 @@ function addView(sub, body) {
     header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         passFormData({
             name: 'init',
@@ -78,13 +78,15 @@ function sendUsersData(formData) {
     }).catch(handleLocationError);
 }
 
-function sendSubscriptionData(formData) {
-    appLocation(3).then(function (geopoint) {
-        requestCreator('subscription', formData, geopoint).then(function (response) {
-            ApplicationState.createdSubscription = true;
+function sendSubscriptionData(formData,geopoint) {
+   const prom = geopoint ?  Promise.resolve(geopoint) : appLocation(3);
+    prom.then(function(coord){
+        requestCreator('subscription', formData, coord).then(function (response) {
+         
+
             localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
             document.getElementById('app-header').classList.add('hidden');
-            loadingScreen();
+            loadingScreen(['Generating Reports']);
             const rootTx = db.transaction(['root'], 'readwrite');
             const store = rootTx.objectStore('root')
             const uid = firebase.auth().currentUser.uid
@@ -94,8 +96,12 @@ function sendSubscriptionData(formData) {
                 store.put(record)
             }
             rootTx.oncomplete = function () {
-                reloadPage();
-            }
+               loadingScreen(['Getting Data','Generating Reports'])
+               requestCreator('Null').then(function(){
+                   openMap();
+               }).catch(console.error)
+             
+            };
         }).catch(function (error) {
             passFormData({
                 name: 'toggleSubmit',
@@ -104,7 +110,8 @@ function sendSubscriptionData(formData) {
                 deviceType: native.getName()
             })
         })
-    }).catch(handleLocationError);
+    }).catch(handleLocationError)
+    
 }
 
 

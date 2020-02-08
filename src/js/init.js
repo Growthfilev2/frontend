@@ -8,6 +8,13 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
+var deepLinkQuery;
+
+
+function parseDynamicLink(link) {
+  const url = new URL(link);
+  deepLinkQuery = new URLSearchParams(url.search);
+}
 
 window.addEventListener('error', function (event) {
   if (event.message.toLowerCase().indexOf('script error') > -1) {
@@ -118,6 +125,7 @@ window.onpopstate = function (event) {
 
 function initializeApp() {
   window.addEventListener('load', function () {
+
     firebase.initializeApp(appKey.getKeys())
     progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
@@ -135,7 +143,7 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
-      
+
         logReportEvent("IN Slider");
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
@@ -183,7 +191,7 @@ function firebaseUiConfig() {
 
   return {
     callbacks: {
-      signInSuccessWithAuthResult: function (authResult) {     
+      signInSuccessWithAuthResult: function (authResult) {
         logReportEvent("IN Auth")
         return false;
       },
@@ -217,7 +225,7 @@ function initializeFirebaseUI() {
   header.listen('MDCTopAppBar:nav', handleNav);
   firebaseUI = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
-  
+
 }
 
 
@@ -409,7 +417,7 @@ function loadingScreen(texts = ['Loading Growthfile', 'Getting Your Data', 'Crea
         <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
       </svg>
     </div>
-    <p class="mdc-typography--subtitle2 mdc-theme--primary"></p>
+    <p class="mdc-typography--headline6 mdc-theme--primary"></p>
   </div>
     <div class='icon-cont mdc-layout-grid__inner mt-20'>
         <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
@@ -1060,37 +1068,96 @@ function openMap() {
   document.getElementById('app-header').classList.add("hidden")
   document.getElementById('step-ui').innerHTML = ''
   progressBar.open();
-  appLocation(3).then(function (geopoint) {
+  Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount()]).then(function (result) {
+    const geopoint = result[0];
+    const tokenResult = result[1];
+    const checkInSubs = result[2];
+    const totalRecords = result[3];
+    const auth = firebase.auth().currentUser;
+    console.log(checkInSubs);
     progressBar.close();
-    getCheckInSubs().then(function (checkInSubs) {
-      if (!Object.keys(checkInSubs).length) {
-        ApplicationState.location = geopoint;
-        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        if (potentialAlternatePhoneNumbers.length) {
-          chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
-          return
-        };
-        history.pushState(['searchOffice', geopoint], null, null)
-        searchOffice(geopoint)
-        return
-      };
+    if (isAdmin(tokenResult)) {
+      handleLocationForMap(geopoint, checkInSubs)
+      return
+    }
+    if (Object.keys(checkInSubs).length) {
+      handleLocationForMap(geopoint, checkInSubs);
+      return;
+    }
+    if (totalRecords) {
+      handleLocationForMap(geopoint, checkInSubs);
+      return;
+    }
 
-      ApplicationState.officeWithCheckInSubs = checkInSubs;
-      const oldState = localStorage.getItem('ApplicationState')
-      if (!oldState) return mapView(geopoint);
-      const oldApplicationState = JSON.parse(oldState);
-      if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
-      const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
-      const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
-      if (isOlder || hasChangedLocation) return mapView(geopoint);
-      ApplicationState = oldApplicationState
-      history.pushState(['reportView'], null, null)
-      return reportView()
-    })
+    if (deepLinkQuery) {
+      const action = deepLinkQuery.get('action')
+      if (action && action === 'get-subscription') {
+        sendSubscriptionData({
+          "share": [{
+            phoneNumber: auth.phoneNumber,
+            displayName: auth.displayName,
+            email: auth.email
+          }],
+          "template": "subscription",
+          "office": deepLinkQuery.get('office')
+        }, geopoint)
+      }
+      return
+    }
+    ApplicationState.location = geopoint;
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    if (potentialAlternatePhoneNumbers.length) {
+      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
+      return
+    };
+    history.pushState(['searchOffice', geopoint], null, null)
+    searchOffice(geopoint)
   }).catch(function (error) {
-    progressBar.close();
-    handleLocationError(error, true)
+    console.log(error)
+    handleError({
+      message: error.message,
+      body: error
+    })
   })
+
+}
+
+function checkIDBCount() {
+  return new Promise(function (resolve, reject) {
+    let totalCount = 0;
+    const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
+    const tx = db.transaction(storeNames)
+    storeNames.forEach(function (name) {
+      const store = tx.objectStore(name)
+      const req = store.count();
+      req.onsuccess = function () {
+        totalCount += req.result
+      }
+    })
+    tx.oncomplete = function () {
+      return resolve(totalCount)
+    }
+    tx.onerror = function () {
+      return reject({
+        message: tx.error.message,
+        body: tx.error
+      })
+    }
+  })
+}
+
+function handleLocationForMap(geopoint, checkInSubs) {
+  ApplicationState.officeWithCheckInSubs = checkInSubs;
+  const oldState = localStorage.getItem('ApplicationState')
+  if (!oldState) return mapView(geopoint);
+  const oldApplicationState = JSON.parse(oldState);
+  if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
+  const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
+  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
+  if (isOlder || hasChangedLocation) return mapView(geopoint);
+  ApplicationState = oldApplicationState
+  history.pushState(['reportView'], null, null)
+  return reportView()
 }
 
 function fillVenueInSub(sub, venue) {

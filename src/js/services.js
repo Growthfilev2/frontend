@@ -392,16 +392,12 @@ function handleComponentUpdation(readResponse) {
 
   if (readResponse.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
-
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    })
-
+    });
   }
   if (!history.state) return;
-
   switch (history.state[0]) {
-
 
     case 'enterChat':
       if (!readResponse.addendum.length) return;
@@ -413,10 +409,7 @@ function handleComponentUpdation(readResponse) {
       break;
 
     case 'reportView':
-
       reportView(history.state[1]);
-
-
       break;
     default:
       console.log("no refresh")
