@@ -481,6 +481,13 @@ function getSubscription(office, template) {
     const subscription = tx.objectStore('subscriptions')
     let range;
     let index;
+    if(!office && !template) {
+      subscription.getAll().onsuccess = function(e) {
+        return resolve(event.target.result)
+      }
+      return;
+    }
+    
     if (office) {
       index = subscription.index('validSubscription')
       range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
@@ -1032,9 +1039,7 @@ function getDropDownContent(office, template, indexName) {
                 return;
             }
             name_object[value] = true;
-            data.push(value);
-
-            
+            data.push(value);            
             cursor.continue();
         }
         tx.oncomplete = function () {

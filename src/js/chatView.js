@@ -25,23 +25,34 @@ function chatView() {
 
 
     sectionContent.innerHTML = chatDom();
-    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription('', 'customer')]).then(function (results) {
-        console.log(results);
-        let adminOffices = [];
-        if (isAdmin(results[0])) {
-            adminOffices = results[0].claims.admin
-        }
-        const customerSubscriptions = results[1];
 
-        if (!adminOffices.length && !customerSubscriptions.length) return;
+    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription()]).then(function (results) {
+        console.log(results);
+        const tokenResult = result[0];
+        const subscriptions = results[1];
+        let offices = [];
+        let customerSubscriptions = [];
+        if (isAdmin(tokenResult)) {
+            offices = tokenResult.claims.admin
+        }
+        subscriptions.forEach(function (subscription) {
+            if (subscription.template === 'customer') {
+                customerSubscriptions.push(subscription);
+            }
+            if (offices.indexOf(subscription.office) > -1) return;
+            offices.push(subscription.office)
+        })
+
+        if (!offices.length) return;
+
 
         const addContactBtn = createFab('add');
         document.querySelector('.user-chats').appendChild(addContactBtn);
         addContactBtn.addEventListener('click', function () {
             const dialogData = [];
-            adminOffices.forEach(office => {
+            offices.forEach(office => {
                 dialogData.push({
-                    template: 'Add People',
+                    template: 'Add users',
                     office: office
                 })
             });
@@ -53,12 +64,11 @@ function chatView() {
             ul.listen('MDCList:action', function (event) {
                 dialog.close()
                 if (mergedArray[event.detail.index].template === 'Add People') {
-                    history.pushState(['addView'], null, null);
-                    addView({
-                        template: 'users',
-                        phoneNumbers: [],
-                        office: mergedArray[event.detail.index].office
-                    })
+                    history.pushState(['share'],null,null);
+                    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+                    <span class="mdc-top-app-bar__title">Share</span>`
+                    const header = setHeader(backIcon, '');
+                    giveSubscriptionInit(mergedArray[event.detail.index].office);
                     return
                 }
                 const sub = mergedArray[event.detail.index]
@@ -71,7 +81,7 @@ function chatView() {
                     });
                     addView(sub, customerTypes);
                 });
-            
+
             })
         });
     })
@@ -1019,7 +1029,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
     if (attachmentName === 'Include') {
         return ''
     }
-    if(activityRecord.attachment[attachmentName].type === 'product') {
+    if (activityRecord.attachment[attachmentName].type === 'product') {
         return `<div class='products-container'>
             <p class='mdc-typography--subtitle2 mb-0'>Products : </p>
             ${activityRecord.attachment[attachmentName].value.map(function(product){
@@ -1033,7 +1043,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
             }).join("")}
         </div>
         `
-    
+
     }
     return `<h1 class="mdc-typography--subtitle1 mt-0">
         ${attachmentName} : ${activityRecord.attachment[attachmentName].value}

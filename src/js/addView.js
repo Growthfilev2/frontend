@@ -49,7 +49,8 @@ function sendOfficeData(requestBody) {
     appLocation(3).then(function (geopoint) {
         requestCreator('createOffice', requestBody, geopoint).then(function () {
             successDialog(`Office created successfully`);
-            giveSubscriptionInit(requestBody.name);
+            history.pushState(['share'],null,null);
+            giveSubscriptionInit(requestBody.name,true);
         }).catch(function (error) {
             passFormData({
                 name: 'toggleSubmit',

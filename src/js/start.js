@@ -5,7 +5,7 @@ var placeSearchField;
 var map;
 
 
-function chooseAlternativePhoneNumber(alternatePhoneNumbers,geopoint) {
+function chooseAlternativePhoneNumber(alternatePhoneNumbers, geopoint) {
     const auth = firebase.auth().currentUser;
     const appEl = document.getElementById('app-current-panel');
     appEl.innerHTML = `<div class='phone-number-choose ${alternatePhoneNumbers.length == 1 ? 'slider' :''}'>
@@ -35,13 +35,13 @@ function chooseAlternativePhoneNumber(alternatePhoneNumbers,geopoint) {
     `
 
     const confirmBtn = document.getElementById("confirm-phone-btn");
-    if(!confirmBtn) return;
+    if (!confirmBtn) return;
     new mdc.ripple.MDCRipple(confirmBtn);
-    confirmBtn.addEventListener('click',revokeSession);
+    confirmBtn.addEventListener('click', revokeSession);
     const list = document.getElementById('phone-list');
-    if(!list) return;
+    if (!list) return;
 
-    
+
 }
 
 function searchOffice(geopoint = history.state[1]) {
@@ -139,15 +139,15 @@ var searchDebounde = debounce(function (event) {
     placeRequesParam.query = value;
     const ulEl = document.getElementById('place-query-ul');
     let ul;
-    if(ulEl) {
-      ul = new mdc.list.MDCList(ulEl)
+    if (ulEl) {
+        ul = new mdc.list.MDCList(ulEl)
     }
     var infowindow = new google.maps.InfoWindow();
     progressBar.open();
 
     placeService = new google.maps.places.PlacesService(map)
     placeService.findPlaceFromQuery(placeRequesParam, function (results, status) {
-        if(ul) {
+        if (ul) {
             ul.root_.innerHTML = ''
         }
         progressBar.close();
@@ -165,7 +165,7 @@ var searchDebounde = debounce(function (event) {
                 const li = searchPlaceResultList(resultVal.name, resultVal.formatted_address);
                 li.addEventListener('click', function () {
                     placeResult = resultVal
-                    if(ul) {
+                    if (ul) {
                         ul.root_.innerHTML = ''
                     }
                     placeSearchField.value = placeResult.name
@@ -173,7 +173,7 @@ var searchDebounde = debounce(function (event) {
                     createPlaceMarker(infowindow)
 
                 });
-                if(ul) {
+                if (ul) {
                     ul.root_.appendChild(li);
 
                 }
@@ -188,7 +188,7 @@ var searchDebounde = debounce(function (event) {
             lat: geopoint.latitude,
             lng: geopoint.longitude
         });
-        if(ul) {
+        if (ul) {
 
             ul.root_.appendChild(createLi(`No result found for "${value}"`));
         }
@@ -221,7 +221,7 @@ function CenterControl(controlDiv) {
 }
 
 function expandPlaceBox() {
-    if(!placeService) return;
+    if (!placeService) return;
     placeService.getDetails({
         placeId: placeResult.place_id,
         fields: ['international_phone_number', 'photos']
@@ -298,11 +298,11 @@ function expandPlaceBox() {
                 query: placeResult.place_id
             }).then(function (searchResponse) {
 
-                if(!searchResponse.length) {    
-                   
+                if (!searchResponse.length) {
+
                     createOfficeInit(confirmFab);
-                    
-                    
+
+
                     return;
                 };
 
@@ -322,34 +322,33 @@ function expandPlaceBox() {
                 dialog.buttons_[0].textContent = 'cancel'
                 dialog.buttons_[0].style.marginRight = 'inherit'
                 dialog.buttons_[1].textContent = 'JOIN';
-              
+
 
                 const list = new mdc.list.MDCList(document.getElementById('office-selection-list'));
                 list.singleSelection = true;
                 list.selectedIndex = [0]
-                let selectedListIndex = 0;  
-                
-                dialog.listen('MDCDialog:opened',function(openEvent){
+                let selectedListIndex = 0;
+
+                dialog.listen('MDCDialog:opened', function (openEvent) {
                     list.layout();
-                    list.listen('MDCList:action',function(listEvent){
+                    list.listen('MDCList:action', function (listEvent) {
                         console.log(listEvent);
                         console.log(list)
-                        if(!list.selectedIndex.length) {
+                        if (!list.selectedIndex.length) {
                             selectedListIndex = null;
-                            dialog.buttons_[1].setAttribute('disabled','true')
-                        }
-                        else {
+                            dialog.buttons_[1].setAttribute('disabled', 'true')
+                        } else {
                             selectedListIndex = listEvent.detail.index;
                             list.selectedIndex = [listEvent.detail.index]
                             dialog.buttons_[1].removeAttribute('disabled')
                         }
                     });
-                    const notFoundBtn = dialogButton('not found ? ','not-found')
+                    const notFoundBtn = dialogButton('not found ? ', 'not-found')
 
-                    dialog.container_.querySelector('footer').insertBefore(notFoundBtn,dialog.buttons_[1]);
+                    dialog.container_.querySelector('footer').insertBefore(notFoundBtn, dialog.buttons_[1]);
                     notFoundBtn.style.color = 'black'
                     notFoundBtn.style.marginRight = 'auto'
-                    notFoundBtn.addEventListener('click',function(){
+                    notFoundBtn.addEventListener('click', function () {
                         createOfficeInit(confirmFab)
                     });
                 })
@@ -358,7 +357,9 @@ function expandPlaceBox() {
                         confirmFab.classList.remove('mdc-fab--exited')
                         return;
                     }
-                    giveSubscriptionInit(searchResponse[selectedListIndex].name);                    
+                    history.pushState(['share'], null, null);
+
+                    giveSubscriptionInit(searchResponse[selectedListIndex].name,true);
                 })
             }).catch(function (error) {
                 console.log(error)
@@ -404,29 +405,28 @@ function createOfficeInit(confirmFab) {
     <div class='terms-cont'>
         ${createCheckBox('office-checkbox')}
     </div>`
-    var dialog = new Dialog(`${placeResult.name} not found`,content).create();
+    var dialog = new Dialog(`${placeResult.name} not found`, content).create();
     dialog.buttons_[0].textContent = 'cancel'
     dialog.buttons_[1].textContent = 'create new company';
-    dialog.buttons_[1].setAttribute('disabled','true')
+    dialog.buttons_[1].setAttribute('disabled', 'true')
     dialog.open();
-     
+
     const form = new mdc.formField.MDCFormField(dialog.content_.querySelector('.mdc-form-field'))
     const chckBox = new mdc.checkbox.MDCCheckbox(dialog.content_.querySelector('.mdc-checkbox'))
     form.input = chckBox;
     form.label_.innerHTML = `I agree to <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
     <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>`
 
-    chckBox.listen('change',function(){
-        if(chckBox.checked) {
+    chckBox.listen('change', function () {
+        if (chckBox.checked) {
             dialog.buttons_[1].removeAttribute('disabled')
+        } else {
+            dialog.buttons_[1].setAttribute('disabled', 'true')
         }
-        else {
-            dialog.buttons_[1].setAttribute('disabled','true')
-        }
-    })   
+    })
 
-    dialog.listen('MDCDialog:closed',function(dialogEvent){
-        if(dialogEvent.detail.action !== 'accept') {
+    dialog.listen('MDCDialog:closed', function (dialogEvent) {
+        if (dialogEvent.detail.action !== 'accept') {
             confirmFab.classList.remove('mdc-fab--exited')
             return;
         }
@@ -444,20 +444,63 @@ function createOfficeInit(confirmFab) {
     })
 }
 
-function giveSubscriptionInit(name = placeResult.name) {
-    const template = {
-        "assignees": [],
-        "template": "subscription",
-        "office": name
-    };
-    if(history.state[0] === 'addView') {
-          history.replaceState(['addView'],null,null);
-    } 
-    else {
-        history.pushState(['addView'], null, null);
+function giveSubscriptionInit(name = placeResult.name,isActionable) {
+    const device = JSON.parse(native.getInfo());
+    if (Number(device.appVersion) <= 15) {
+        const template = {
+            "assignees": [],
+            "template": "subscription",
+            "office": name
+        };
+        if (history.state[0] === 'addView') {
+            history.replaceState(['addView'], null, null);
+        } else {
+            history.pushState(['addView'], null, null);
+        }
+        addView(template);
+        return
     }
-    addView(template);
+
+    const el = document.getElementById('app-current-panel')
+    el.innerHTML = '';
+
+    createDynamicLinkSocialTags(name).then(function (socialInfo) {
+        createDynamiclink(name, socialInfo).then(function (link) {
+            el.appendChild(shareWidget(link, name));
+            if(!isActionable) return;
+            const action = actionButton('Next');
+            action.addEventListener('click', function () {
+                window.location.reload();
+            })
+            el.appendChild(action)
+        })
+    })
+
 }
+
+function createDynamicLinkSocialTags(office) {
+    return new Promise(function (resolve, reject) {
+
+        const socialInfo = {
+            "socialTitle": `${office} @Growthfile`,
+            "socialDescription": "No More Conflicts On Attendance & Leaves. Record Them Automatically!",
+            "socialImageLink": 'https://growthfile-207204.firebaseapp.com/v2/img/ic_launcher.png'
+        }
+        const tx = db.transaction('children');
+        const index = tx.objectStore('children').index('officeTemplate');
+        index.get(IDBKeyRange.only([name, 'office'])).onsuccess = function (e) {
+            const record = e.target.result;
+            if (!record) return;
+            socialInfo.socialImageLink = record.attachment['Company Logo'].value;
+
+        }
+        tx.oncomplete = function () {
+            resolve(socialInfo);
+        }
+    })
+}
+
+
 
 function loadImageInPlaceBox(src) {
     const el = document.querySelector('.expand-box .mdc-card__media');

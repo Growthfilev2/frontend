@@ -287,10 +287,20 @@ function userSignedOut() {
   const sliderEl = document.getElementById('app-slider');
   const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
   btn.root_.addEventListener('click', function () {
-    removeSwipe()
-    panel.innerHTML = '';
-    history.pushState(['login'], null, null);
-    initializeFirebaseUI();
+    // removeSwipe()
+    // panel.innerHTML = '';
+    // history.pushState(['login'], null, null);
+    webkit.messageHandlers.share.postMessage({
+      link:'https://growthfile.page.link/DxcgjL1aBzcn49xC8',
+      shareText:'Share this link https://growthfile.page.link/DxcgjL1aBzcn49xC8',
+      type:'text/plain',
+      email:{
+        cc:'help@growthfile.com',
+        subject:'nice',
+        body:'very nice'
+      }
+    })
+    // initializeFirebaseUI();
   })
 
   var interval = setInterval(function () {
@@ -1068,7 +1078,8 @@ function openMap() {
   document.getElementById('app-header').classList.add("hidden")
   document.getElementById('step-ui').innerHTML = ''
   progressBar.open();
-  Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount()]).then(function (result) {
+  const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
+  Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]).then(function (result) {
     const geopoint = result[0];
     const tokenResult = result[1];
     const checkInSubs = result[2];
@@ -1122,12 +1133,12 @@ function openMap() {
 
 }
 
-function checkIDBCount() {
+function checkIDBCount(storeNames) {
   return new Promise(function (resolve, reject) {
     let totalCount = 0;
-    const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
     const tx = db.transaction(storeNames)
     storeNames.forEach(function (name) {
+      if(!db.objectStoreNames.contains(name)) return;
       const store = tx.objectStore(name)
       const req = store.count();
       req.onsuccess = function () {
@@ -1179,3 +1190,4 @@ function fillVenueInSub(sub, venue) {
 function reloadPage() {
   window.location.reload(true);
 }
+

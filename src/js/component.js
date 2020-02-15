@@ -473,3 +473,115 @@ function textFieldTelephoneWithHelper(attr) {
     console.log(cont)
     return cont
 }
+
+
+
+
+const createDynamiclink  = (urlParam,socialInfo) => {
+    return new Promise((resolve, reject) => {
+        const param = new URLSearchParams(urlParam);
+        let office;
+        if(param.get('office')){
+            office = decodeURI(param.get('office'))
+        }
+        const storedLinks = JSON.parse(localStorage.getItem('storedLinks'));
+        if (storedLinks && storedLinks[office]) {
+             return resolve(storedLinks[office])
+        }
+
+        fetch(`https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${appKeys.getMapKey()}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                "dynamicLinkInfo": {
+                    "domainUriPrefix": "https://growthfile.page.link",
+                    "link": `https://growthfile-207204.firebaseapp.com/v2/${urlParam}`,
+                    "androidInfo": {
+                        "androidPackageName": "com.growthfile.growthfileNew",
+                        "androidMinPackageVersionCode": "15",
+                    },
+                    "navigationInfo": {
+                        "enableForcedRedirect": true,
+                      },
+                    "iosInfo": {
+                        "iosBundleId": "com.Growthfile.GrowthfileNewApp",
+                        "iosAppStoreId": "1441388774",
+                    },
+                    "desktopInfo":{
+                        "desktopFallbackLink": "https://www.growthfile.com/welcome.html"
+                    },
+                    "socialMetaTagInfo": socialInfo,
+                },
+                "suffix": {
+                    "option": "UNGUESSABLE"
+                }
+            }),
+            headers: {
+                'Content-type': 'application/json',
+            }
+        }).then(response => {
+            return response.json()
+        }).then(function (url) {
+            const linkObject = {}
+            linkObject[param.get('office')] = url.shortLink;
+
+            localStorage.setItem('storedLinks', JSON.stringify(linkObject));
+
+            resolve(url.shortLink)
+
+        })
+    });
+}
+
+
+
+const shareWidget = (link, office) => {
+    const auth = firebase.auth().currentUser;
+    const shareText = `Hi ${auth.displayName} from ${office} wants you to use Growthfile to mark daily attendance, apply for leave and regularize attendance. To download please click.`
+    const el = createElement('div', {
+        className: 'share-widget'
+    })
+    el.appendChild(createElement('h1', {
+        className: 'mdc-typography--headline6 mb-10 mt-0',
+        textContent: 'Invite users to download'
+    }))
+
+    const linkManager = createElement('div', {
+        className: 'link-manager'
+    })
+    const input = createElement('input', {
+        className: 'link-manager-input',
+        readOnly: true,
+        type: 'text',
+        value: link
+    })
+
+    linkManager.appendChild(input)
+
+    const socialContainer = createElement("div", {
+        className: 'social-container mdc-layout-grid__inner pt-10 pb-10'
+    })
+    const button = createButton('Share');
+    button.addEventListener('click',function(){
+        if(native.getName() === 'Android') {
+            AndroidInterface.openShareWidget(link,shareText);
+            return;
+        }
+        webkit.messageHandlers.openShareWidget.postMessage(link,shareText);
+    })
+    socialContainer.appendChild(button);
+    el.appendChild(linkManager)
+    el.appendChild(socialContainer)
+    return el;
+}
+
+const parseURL = () => {
+    const search = window.location.search;
+    if (!search) return;
+    const param = new URLSearchParams(search);
+    return param;
+
+}
+
+const encodeString = (string) => {
+    return encodeURIComponent(string)
+}
