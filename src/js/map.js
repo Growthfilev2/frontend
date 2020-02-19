@@ -18,7 +18,7 @@ var markersObject = {
 
 function logReportEvent(name) {
   const deviceInfo = JSON.parse(native.getInfo());
-  if (native.getName() === 'Android' && deviceInfo.appVersion == 14) {
+  if (native.getName() === 'Android' && deviceInfo.appVersion >= 14) {
     AndroidInterface.logEvent(name);
     return;
   }

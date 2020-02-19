@@ -461,7 +461,18 @@ function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
 
 function giveSubscriptionInit(name = placeResult.name, skip) {
     if(isDeviceVersionLower(16,9)) {
-        window.location.reload();
+        const template = {
+            "assignees": [],
+            "template": "subscription",
+            "office": name
+        };
+        if(history.state[0] === 'addView') {
+              history.replaceState(['addView'],null,null);
+        } 
+        else {
+            history.pushState(['addView'], null, null);
+        }
+        addView(template);
         return
     };
     
@@ -490,7 +501,9 @@ function giveSubscriptionInit(name = placeResult.name, skip) {
             progressBar.close();
             el.appendChild(shareWidget(link, name));
         }).catch(function(error){
-            window.location.reload();
+            if(skip) {
+                window.location.reload();
+            }
             handleError({
                 message:error.message,
                 body:JSON.stringify(error)
