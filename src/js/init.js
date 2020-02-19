@@ -10,7 +10,68 @@ var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 var deepLinkQuery;
 
+function setFirebaseAnalyticsUserId(id) {
+  if(window.AndroidInterface) {
+    window.AndroidInterface.setFirebaseAnalyticsUserId(id)
+    return
+  }
+  if(window.messageHandlers && window.messageHandlers.firebaseAnalytics) {
+    window.messageHandlers.firebaseAnalytics.postMessage({
+      command:'setFirebaseAnalyticsUserId',
+      id:id
+    })
+    return
+  }
+  console.log('No native apis found');
+}
 
+function logFirebaseAnlyticsEvent(name, params) {
+  if (!name) {
+    return;
+  }
+
+  if (window.AndroidInterface) {
+    // Call Android interface
+    window.AndroidInterface.logFirebaseAnlyticsEvent(name, JSON.stringify(params));
+  } else if (window.webkit
+      && window.webkit.messageHandlers
+      && window.webkit.messageHandlers.firebaseAnalytics) {
+    // Call iOS interface
+    var message = {
+      name: name,
+      parameters: params,
+      command:'logFirebaseAnlyticsEvent'
+    };
+    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
+  } else {
+    // No Android or iOS interface found
+    console.log("No native APIs found.");
+  }
+}
+
+function setFirebaseAnalyticsUserProperty(name, value) {
+  if (!name || !value) {
+    return;
+  }
+
+  if (window.AndroidInterface) {
+    // Call Android interface
+    window.AndroidInterface.setFirebaseAnalyticsUserProperty(name, value);
+  } else if (window.webkit
+      && window.webkit.messageHandlers
+      && window.webkit.messageHandlers.firebaseAnalytics) {
+    // Call iOS interface
+    var message = {
+      command:'setFirebaseAnalyticsUserProperty',
+      name: name,
+      value: value
+   };
+    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
+  } else {
+    // No Android or iOS interface found
+    console.log("No native APIs found.");
+  }
+}
 
 /**
  * long dynamic link intercepted by device containing query parameters
