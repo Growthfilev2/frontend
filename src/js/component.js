@@ -529,7 +529,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
 
             resolve(url.shortLink)
 
-        })
+        }).catch(reject)
     });
 }
 

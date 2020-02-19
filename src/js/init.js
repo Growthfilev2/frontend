@@ -37,14 +37,14 @@ function linkSharedComponent(componentValue) {
  * @param {String} wifiString 
  */
 function updatedWifiScans(wifiString) {
-  console.log("updated wifi",wifiString)
+  console.log("updated wifi", wifiString)
 };
 
 /**
  * Global error logger
  */
 
- window.addEventListener('error', function (event) {
+window.addEventListener('error', function (event) {
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
   handleError({
     message: 'global error :' + event.message,
@@ -137,7 +137,7 @@ window.onpopstate = function (event) {
     'profileCheck': true,
     'login': true,
     'addView': true,
-    'share':true
+    'share': true
   }
   if (!event.state) return;
   if (nonRefreshViews[event.state[0]]) return
@@ -1218,17 +1218,17 @@ function reloadPage() {
 
 
 function updateFromTime(fromTime) {
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
 
-    const keyPath = firebase.auth().currentUser;
-    const tx =db.transaction('root');
+    const keyPath = firebase.auth().currentUser.uid;
+    const tx = db.transaction('root');
     const store = tx.objectStore('root');
-    store.get(keyPath).onsuccess = function(e) {
+    store.get(keyPath).onsuccess = function (e) {
       const record = e.target.result;
       record.fromTime = fromTime
     }
-    tx.oncomplete = function() {
-      resolve(true)  
+    tx.oncomplete = function () {
+      resolve(true)
     }
   })
 }

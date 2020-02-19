@@ -454,19 +454,16 @@ function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
     const device = JSON.parse(native.getInfo());
 
     if (native.getName() === 'Android') {
-        return Number(device.appVersion) <= requiredVersionAndroid
+        return Number(device.appVersion) < requiredVersionAndroid
     }
-    return Number(device.appVersion) <= requiredVersionIos;
+    return Number(device.appVersion) < requiredVersionIos;
 }
 
 function giveSubscriptionInit(name = placeResult.name, skip) {
     if(isDeviceVersionLower(16,9)) {
-
-        
-
-
+        window.location.reload();
         return
-    }
+    };
     const el = document.getElementById('app-current-panel')
     el.innerHTML = '';
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -491,6 +488,12 @@ function giveSubscriptionInit(name = placeResult.name, skip) {
         createDynamiclink(`?action=get-subscription&office=${name}`, socialInfo).then(function (link) {
             progressBar.close();
             el.appendChild(shareWidget(link, name));
+        }).catch(function(error){
+            window.location.reload();
+            handleError({
+                message:error.message,
+                body:JSON.stringify(error)
+            })
         })
     })
 

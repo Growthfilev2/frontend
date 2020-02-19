@@ -62,8 +62,8 @@ function reportView(state, attendanceRecord) {
 
     if (state == null) {
       if (reportTabs.length > 2) {
-        // return tabList.activateTab(2)
-        return tabList.activateTab(0)
+        return tabList.activateTab(2)
+        // return tabList.activateTab(0)
       }
       return tabList.activateTab(0)
     }
@@ -162,14 +162,16 @@ function getReportTabData() {
       icon: 'person_add',
       view: 'chatView',
       index: 0,
-    }, {
-      name: 'Photo Check-In',
-      id: 'photo-check-in',
-      icon: 'add_a_photo',
-      view: 'snapView',
-      index: 1
     }];
-
+    if(Object.keys(ApplicationState.officeWithCheckInSubs).length) {
+      reportTabData.push({
+        name: 'Photo Check-In',
+        id: 'photo-check-in',
+        icon: 'add_a_photo',
+        view: 'snapView',
+        index: 1
+      })
+    }
     const names = ['attendance', 'reimbursement', 'payment']
     const reportTx = db.transaction(names);
 

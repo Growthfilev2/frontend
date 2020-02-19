@@ -51,20 +51,27 @@ function sendOfficeData(requestBody) {
 
         return requestCreator('createOffice', requestBody, geopoint).then(function () {
             successDialog(`Office created successfully`);
-            requestCreator('subscription', {
-                "share": [{
-                    phoneNumber: auth.phoneNumber,
-                    displayName: auth.displayName,
-                    email: auth.email
-                }],
-                "template": "subscription",
-                "office": requestBody.office
-            }, geopoint).then(function (response) {
-                return updateFromTime(0)
-            }).then(function () {
-                history.pushState(['share'], null, null);
-                giveSubscriptionInit(requestBody.office, true);
-            })
+            progressBar.open();
+            setTimeout(function(){
+                requestCreator('subscription', {
+                    "share": [{
+                        phoneNumber: auth.phoneNumber,
+                        displayName: auth.displayName,
+                        email: auth.email
+                    }],
+                    "template": "subscription",
+                    "office": requestBody.name
+                }, geopoint).then(function (response) {
+                    return updateFromTime(0)
+                }).then(function () {
+                    progressBar.close();
+                    history.pushState(['share'], null, null);
+                    giveSubscriptionInit(requestBody.office, true);
+                }).catch(function(error){
+                    progressBar.close();
+                    snacks(error.message);
+                })
+            },3000)
         }).catch(function (error) {
             passFormData({
                 name: 'toggleSubmit',
