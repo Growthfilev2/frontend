@@ -46,6 +46,23 @@ body {
 
 }
 
+.mdc-top-app-bar {
+  padding-top:20px;
+  /* Status bar height on iOS 11.0 */
+  padding-top: constant(safe-area-inset-top);
+  /* Status bar height on iOS 11+ */
+  padding-top: env(safe-area-inset-top);
+}
+@media (max-width:599px) {
+  .mdc-top-app-bar--fixed-adjust {
+    padding-top:calc(56px + 20px);
+    /* Status bar height on iOS 11.0 */
+    padding-top: calc(56px +constant(safe-area-inset-top));
+    /* Status bar height on iOS 11+ */
+    padding-top:calc(56px + env(safe-area-inset-top))
+  }
+}
+
 #app-current-panel {
   position: relative;
 }

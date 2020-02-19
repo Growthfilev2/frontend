@@ -460,7 +460,7 @@ function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
 }
 
 function giveSubscriptionInit(name = placeResult.name, skip) {
-    if(isDeviceVersionLower(16,9)) {
+    if(isDeviceVersionLower(17,9)) {
         const template = {
             "assignees": [],
             "template": "subscription",
