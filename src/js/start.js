@@ -464,6 +464,7 @@ function giveSubscriptionInit(name = placeResult.name, skip) {
         window.location.reload();
         return
     };
+    
     const el = document.getElementById('app-current-panel')
     el.innerHTML = '';
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
