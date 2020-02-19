@@ -62,7 +62,8 @@ function reportView(state, attendanceRecord) {
 
     if (state == null) {
       if (reportTabs.length > 2) {
-        return tabList.activateTab(2)
+        // return tabList.activateTab(2)
+        return tabList.activateTab(0)
       }
       return tabList.activateTab(0)
     }
@@ -342,7 +343,6 @@ function createTemplateButton(subs) {
 
 
 function templateSelectionList(subs) {
-
   return `<ul class='mdc-list subscription-list mdc-list--two-line' id='dialog-office'>
      ${subs.map(function(sub){
        return `<li class='mdc-list-item'>
@@ -357,4 +357,4 @@ function templateSelectionList(subs) {
        </li>`
      }).join("")}
      </ul>`
-}
+};

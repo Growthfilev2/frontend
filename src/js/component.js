@@ -134,7 +134,7 @@ Dialog.prototype.create = function (type) {
         contentContainer.innerHTML = this.content
     }
 
-    if(this.title) {
+    if (this.title) {
         surface.appendChild(h2)
     }
     surface.appendChild(contentContainer);
@@ -248,13 +248,13 @@ function textFieldTelephone(attr) {
 function textField(attr) {
     return `<div class="mdc-text-field mdc-text-field--outlined full-width ${attr.leadingIcon ? 'mdc-text-field--with-leading-icon' :''} ${attr.trailingIcon ? 'mdc-text-field--with-trailing-icon' :''} ${attr.disabled ? 'mdc-text-field--disabled' :''}" id='${attr.id}'>
     ${attr.leadingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.leadingIcon}</i>`:''}
-    <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="${attr.type || 'text'}" class="mdc-text-field__input" value="${attr.value || ''}"  required="${attr.required || 'false'}" ${attr.disabled ? 'disabled':''} >
+    <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="${attr.type || 'text'}" class="mdc-text-field__input" value="${attr.value || ''}" ${attr.required ? 'required' :''} ${attr.disabled ? 'disabled':''} ${attr.readonly ? 'readonly' :''} >
     ${attr.trailingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.trailingIcon}</i>` :''}
     
-    <div class="mdc-notched-outline">
+    <div class="mdc-notched-outline ${attr.label ? '' :'mdc-notched-outline--no-label'}">
       <div class="mdc-notched-outline__leading"></div>
       <div class="mdc-notched-outline__notch">
-        <label  class="mdc-floating-label">${attr.label}</label>
+        <label  class="mdc-floating-label">${attr.label ? attr.label : ''}</label>
       </div>
       <div class="mdc-notched-outline__trailing"></div>
     </div>
@@ -477,36 +477,37 @@ function textFieldTelephoneWithHelper(attr) {
 
 
 
-const createDynamiclink  = (urlParam,socialInfo) => {
+const createDynamiclink = (urlParam, socialInfo) => {
     return new Promise((resolve, reject) => {
         const param = new URLSearchParams(urlParam);
         let office;
-        if(param.get('office')){
+        console.log(param.get('office'))
+        if (param.get('office')) {
             office = decodeURI(param.get('office'))
         }
         const storedLinks = JSON.parse(localStorage.getItem('storedLinks'));
         if (storedLinks && storedLinks[office]) {
-             return resolve(storedLinks[office])
+            return resolve(storedLinks[office])
         }
 
-        fetch(`https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${appKeys.getMapKey()}`, {
+        fetch(`https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${appKey.getMapKey()}`, {
             method: 'POST',
             body: JSON.stringify({
                 "dynamicLinkInfo": {
                     "domainUriPrefix": "https://growthfile.page.link",
-                    "link": `https://growthfile-207204.firebaseapp.com/v2/${urlParam}`,
+                    "link": `https://growthfilev2-0.firebaseapp.com/v2/${urlParam}`,
                     "androidInfo": {
                         "androidPackageName": "com.growthfile.growthfileNew",
                         "androidMinPackageVersionCode": "15",
                     },
                     "navigationInfo": {
                         "enableForcedRedirect": true,
-                      },
+                    },
                     "iosInfo": {
                         "iosBundleId": "com.Growthfile.GrowthfileNewApp",
                         "iosAppStoreId": "1441388774",
                     },
-                    "desktopInfo":{
+                    "desktopInfo": {
                         "desktopFallbackLink": "https://www.growthfile.com/welcome.html"
                     },
                     "socialMetaTagInfo": socialInfo,
@@ -536,41 +537,59 @@ const createDynamiclink  = (urlParam,socialInfo) => {
 
 const shareWidget = (link, office) => {
     const auth = firebase.auth().currentUser;
-    const shareText = `Hi ${auth.displayName} from ${office} wants you to use Growthfile to mark daily attendance, apply for leave and regularize attendance. To download please click.`
+    const shareText = `Hi ${auth.displayName} from ${office} wants you to use Growthfile to mark daily attendance, apply for leave and regularize attendance. To download please click `
     const el = createElement('div', {
         className: 'share-widget'
     })
-    el.appendChild(createElement('h1', {
-        className: 'mdc-typography--headline6 mb-10 mt-0',
+    const grid = createElement('div',{
+        className:'mdc-layout-grid'
+    })
+    const iconContainer = createElement('div',{
+        className:'icon-container'
+    })
+    iconContainer.appendChild(createElement('i',{
+        className:'material-icons share-icon mdc-theme--primary',
+        textContent:'share'
+    }))
+    grid.appendChild(iconContainer)
+    grid.appendChild(createElement('h3', {
+        className: 'mdc-typography--headline4 mb-10',
         textContent: 'Invite users to download'
+    }))
+    grid.appendChild(createElement('p',{
+        className:'mdc-typography--headline6',
+        textContent:'Share this link with people to add them to '+office
     }))
 
     const linkManager = createElement('div', {
         className: 'link-manager'
     })
-    const input = createElement('input', {
-        className: 'link-manager-input',
-        readOnly: true,
-        type: 'text',
-        value: link
+    const shortLinkPath = new URL(link).pathname
+    linkManager.innerHTML = textField({
+        value:shortLinkPath.slice(1,shortLinkPath.length),
+        trailingIcon:'file_copy',
+        readonly:true,
     })
+    const field = new mdc.textField.MDCTextField(linkManager.querySelector('.mdc-text-field'))
+    console.log(field)
+    field.trailingIcon_.root_.addEventListener('click',function(){
+        const tempInput = createElement('input',{
+            value:shareText+link
+        })
+        document.body.appendChild(tempInput)
+        copyRegionToClipboard(tempInput)
+        tempInput.remove();
 
-    linkManager.appendChild(input)
+    })
+    const button = actionButton('Share')
 
-    const socialContainer = createElement("div", {
-        className: 'social-container mdc-layout-grid__inner pt-10 pb-10'
+    button.querySelector('button').addEventListener('click', function () {
+        callShareInterface(link,shareText);
+
     })
-    const button = createButton('Share');
-    button.addEventListener('click',function(){
-        if(native.getName() === 'Android') {
-            AndroidInterface.openShareWidget(link,shareText);
-            return;
-        }
-        webkit.messageHandlers.openShareWidget.postMessage(link,shareText);
-    })
-    socialContainer.appendChild(button);
-    el.appendChild(linkManager)
-    el.appendChild(socialContainer)
+    grid.appendChild(linkManager)
+    el.appendChild(grid)
+    el.appendChild(button)
     return el;
 }
 
@@ -584,4 +603,30 @@ const parseURL = () => {
 
 const encodeString = (string) => {
     return encodeURIComponent(string)
+}
+
+const callShareInterface = (link,shareText) => {
+    const shareObject = {
+        link: link,
+        shareText: shareText+link,
+        type: 'text/plain',
+        email: {
+            cc: 'help@growthfile.com',
+            subject: 'nice',
+            body: 'very nice'
+        }
+    }
+    if(native.getName() === 'Android') {
+        AndroidInterface.share(JSON.stringify(shareObject))
+        return
+    }
+    webkit.messageHandlers.share.postMessage(shareObject);
+}
+
+
+const copyRegionToClipboard = (el) => {
+    el.select();
+    el.setSelectionRange(0, 9999);
+    document.execCommand("copy")
+    snacks('Link copied')
 }

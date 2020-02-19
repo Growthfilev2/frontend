@@ -11,6 +11,8 @@ function getWebWorkerVersion() {
   return Number(param.get('version'))
 }
 
+
+
 const requestFunctionCaller = {
   dm: dm,
   statusChange: statusChange,
@@ -177,8 +179,7 @@ function http(request) {
         }
         xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')
       }
-    }
-
+    };
     xhr.send(request.body || null)
   })
 }
@@ -229,9 +230,7 @@ function instant(error, meta) {
     body: error,
     token: meta.user.token
   }
-  http(req).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  http(req).then(console.log).catch(console.log)
 }
 
 
@@ -340,71 +339,6 @@ function createSubscription(body, meta) {
   return http(req)
 }
 
-function geolocationApi(body, meta, retry) {
-
-  return new Promise(function (resolve, reject) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + meta.key, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 400) {
-          if (retry > 0) {
-            setTimeout(function () {
-              retry = retry - 1
-              geolocationApi(body, meta, retry).then(resolve).catch(reject)
-            }, 1000)
-          } else {
-            return reject({
-              message: JSON.parse(xhr.response).error.message,
-              body: {
-                geolocationResponse: JSON.parse(xhr.response),
-                geolocationBody: body
-              },
-            });
-          }
-          return
-        }
-
-        const response = JSON.parse(xhr.response);
-        if (!response) {
-          if (retry > 0) {
-            setTimeout(function () {
-              retry = retry - 1
-              geolocationApi(body, meta, retry).then(resolve).catch(reject)
-            }, 1000)
-          } else {
-            return reject({
-              message: 'Response From geolocation Api ' + response,
-              body: body
-            })
-          }
-          return
-        }
-        return resolve({
-          latitude: response.location.lat,
-          longitude: response.location.lng,
-          accuracy: response.accuracy,
-          provider: body,
-          lastLocationTime: Date.now()
-        });
-      }
-    };
-    xhr.onerror = function () {
-      if (retry > 0) {
-        setTimeout(function () {
-          retry = retry - 1
-          geolocationApi(body, meta, retry).then(resolve).catch(reject)
-        }, 1000)
-      } else {
-        return reject({
-          message: xhr
-        })
-      }
-    }
-    xhr.send(JSON.stringify(body));
-  });
-}
 
 function dm(body, meta) {
   console.log(body)
@@ -471,12 +405,76 @@ function create(requestBody, meta) {
 }
 
 
+function geolocationApi(body, meta, retry) {
+
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + meta.key, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 400) {
+          if (retry > 0) {
+            setTimeout(function () {
+              retry = retry - 1
+              geolocationApi(body, meta, retry).then(resolve).catch(reject)
+            }, 1000)
+          } else {
+            return reject({
+              message: JSON.parse(xhr.response).error.message,
+              body: {
+                geolocationResponse: JSON.parse(xhr.response),
+                geolocationBody: body
+              },
+            });
+          }
+          return
+        }
+
+        const response = JSON.parse(xhr.response);
+        if (!response) {
+          if (retry > 0) {
+            setTimeout(function () {
+              retry = retry - 1
+              geolocationApi(body, meta, retry).then(resolve).catch(reject)
+            }, 1000)
+          } else {
+            return reject({
+              message: 'Response From geolocation Api ' + response,
+              body: body
+            })
+          }
+          return
+        }
+        return resolve({
+          latitude: response.location.lat,
+          longitude: response.location.lng,
+          accuracy: response.accuracy,
+          provider: body,
+          lastLocationTime: Date.now()
+        });
+      }
+    };
+    xhr.onerror = function () {
+      if (retry > 0) {
+        setTimeout(function () {
+          retry = retry - 1
+          geolocationApi(body, meta, retry).then(resolve).catch(reject)
+        }, 1000)
+      } else {
+        return reject({
+          message: xhr
+        })
+      }
+    }
+    xhr.send(JSON.stringify(body));
+  });
+}
+
 function removeFromOffice(offices, meta, db) {
   return new Promise(function (resolve, reject) {
-
     const deleteTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity'], 'readwrite');
     deleteTx.oncomplete = function () {
-
       const rootTx = db.transaction(['root'], 'readwrite')
       const rootStore = rootTx.objectStore('root')
       rootStore.get(meta.user.uid).onsuccess = function (event) {
@@ -533,8 +531,6 @@ function removeByIndex(index, range) {
   }
 }
 
-
-
 function updateAuth(body, meta) {
   const req = {
     method: 'POST',
@@ -547,7 +543,6 @@ function updateAuth(body, meta) {
 }
 
 function backblaze(body, meta) {
-
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}services/images`,
@@ -579,23 +574,6 @@ function updatePayments(paymentData = [], store) {
   })
 }
 
-function updateMap(tx, location) {
-  if (!location.activityId) return;
-  const mapObjectStore = tx.objectStore('map')
-  const index = mapObjectStore.index('activityId');
-  index.openCursor(location.activityId).onsuccess = function (event) {
-    const cursor = event.target.result;
-    if (!cursor) {
-      mapObjectStore.put(location);
-      return
-    }
-    let deleteReq = cursor.delete();
-    cursor.continue();
-    deleteReq.onsuccess = function () {
-      console.log('removed map')
-    }
-  }
-}
 
 function updateCalendar(activity, tx) {
   const calendarObjectStore = tx.objectStore('calendar')

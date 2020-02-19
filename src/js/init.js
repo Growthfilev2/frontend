@@ -11,30 +11,60 @@ var potentialAlternatePhoneNumbers;
 var deepLinkQuery;
 
 
+
+/**
+ * long dynamic link intercepted by device containing query parameters
+ * @param {string} link 
+ */
+
 function parseDynamicLink(link) {
   const url = new URL(link);
   deepLinkQuery = new URLSearchParams(url.search);
+
 }
 
-window.addEventListener('error', function (event) {
-  if (event.message.toLowerCase().indexOf('script error') > -1) {
-    this.console.log(event)
-  } else {
-    handleError({
-      message: 'global error :' + event.message,
-      body: {
-        lineno: event.lineno,
-        filename: event.filename,
-        colno: event.colno,
-        error: JSON.stringify({
-          stack: event.error.stack,
-          message: event.error.message
-        })
-      }
-    })
-  }
+/**
+ * 
+ * @param {string} componentValue 
+ * package name of app through thich link was shared
+ */
+function linkSharedComponent(componentValue) {
+  console.log(componentValue);
+
+}
+/**
+ * 
+ * @param {String} wifiString 
+ */
+function updatedWifiScans(wifiString) {
+  console.log("updated wifi",wifiString)
+};
+
+/**
+ * Global error logger
+ */
+
+ window.addEventListener('error', function (event) {
+  if (event.message.toLowerCase().indexOf('script error') > -1) return;
+  handleError({
+    message: 'global error :' + event.message,
+    body: {
+      lineno: event.lineno,
+      filename: event.filename,
+      colno: event.colno,
+      error: JSON.stringify({
+        stack: event.error.stack,
+        message: event.error.message
+      })
+    }
+  })
 })
 
+/**
+ * 
+ * @param {Event} source 
+ *  load placeholder user image if image url fails to load 
+ */
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -85,7 +115,9 @@ let native = function () {
 }();
 
 
-
+/**
+ * Call different JNI Android Methods to access device information
+ */
 function getAndroidDeviceInformation() {
   return JSON.stringify({
     'id': AndroidInterface.getId(),
@@ -104,7 +136,8 @@ window.onpopstate = function (event) {
     'userSignedOut': true,
     'profileCheck': true,
     'login': true,
-    'addView': true
+    'addView': true,
+    'share':true
   }
   if (!event.state) return;
   if (nonRefreshViews[event.state[0]]) return
@@ -287,20 +320,14 @@ function userSignedOut() {
   const sliderEl = document.getElementById('app-slider');
   const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
   btn.root_.addEventListener('click', function () {
-    // removeSwipe()
-    // panel.innerHTML = '';
-    // history.pushState(['login'], null, null);
-    webkit.messageHandlers.share.postMessage({
-      link:'https://growthfile.page.link/DxcgjL1aBzcn49xC8',
-      shareText:'Share this link https://growthfile.page.link/DxcgjL1aBzcn49xC8',
-      type:'text/plain',
-      email:{
-        cc:'help@growthfile.com',
-        subject:'nice',
-        body:'very nice'
-      }
-    })
-    // initializeFirebaseUI();
+    removeSwipe()
+    panel.innerHTML = '';
+    history.pushState(['login'], null, null);
+    // callShareInterface(
+    //   'https://growthfile.page.link/DxcgjL1aBzcn49xC8',
+    //   'Share this link https://growthfile.page.link/DxcgjL1aBzcn49xC8');
+
+    initializeFirebaseUI();
   })
 
   var interval = setInterval(function () {
@@ -746,7 +773,6 @@ function showReLoginDialog(heading, contentText) {
 }
 
 function getProfileCompletionTabs() {
-  const auth = firebase.auth().currentUser;
   const dom = `<div class="step-container mdc-top-app-bar--fixed-adjust">
   <div class="progress">
     <div class="progress-track"></div>
@@ -1138,7 +1164,7 @@ function checkIDBCount(storeNames) {
     let totalCount = 0;
     const tx = db.transaction(storeNames)
     storeNames.forEach(function (name) {
-      if(!db.objectStoreNames.contains(name)) return;
+      if (!db.objectStoreNames.contains(name)) return;
       const store = tx.objectStore(name)
       const req = store.count();
       req.onsuccess = function () {
@@ -1172,7 +1198,6 @@ function handleLocationForMap(geopoint, checkInSubs) {
 }
 
 function fillVenueInSub(sub, venue) {
-
   const vd = sub.venue[0];
   sub.venue = [{
     geopoint: {
@@ -1191,3 +1216,19 @@ function reloadPage() {
   window.location.reload(true);
 }
 
+
+function updateFromTime(fromTime) {
+  return new Promise(function(resolve,reject){
+
+    const keyPath = firebase.auth().currentUser;
+    const tx =db.transaction('root');
+    const store = tx.objectStore('root');
+    store.get(keyPath).onsuccess = function(e) {
+      const record = e.target.result;
+      record.fromTime = fromTime
+    }
+    tx.oncomplete = function() {
+      resolve(true)  
+    }
+  })
+}

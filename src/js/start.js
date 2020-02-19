@@ -57,8 +57,6 @@ function searchOffice(geopoint = history.state[1]) {
             autocomplete:'organization'
         })}
       <div class='search-result-container'>
-        
-        
          <ul class='mdc-list mdc-list--two-line mdc-list--avatar-list' id='place-query-ul'>
          </ul>
       </div>
@@ -156,7 +154,7 @@ var searchDebounde = debounce(function (event) {
             if (results.length == 1) {
                 placeResult = results[0]
                 createPlaceMarker(infowindow);
-                showPlaceBox(map);
+                showPlaceBox(geopoint);
                 return;
             }
 
@@ -169,7 +167,7 @@ var searchDebounde = debounce(function (event) {
                         ul.root_.innerHTML = ''
                     }
                     placeSearchField.value = placeResult.name
-                    showPlaceBox(map);
+                    showPlaceBox(geopoint);
                     createPlaceMarker(infowindow)
 
                 });
@@ -220,8 +218,9 @@ function CenterControl(controlDiv) {
     controlDiv.appendChild(controlUI);
 }
 
-function expandPlaceBox() {
+function expandPlaceBox(geopoint) {
     if (!placeService) return;
+    const auth = firebase.auth().currentUser;
     placeService.getDetails({
         placeId: placeResult.place_id,
         fields: ['international_phone_number', 'photos']
@@ -356,10 +355,17 @@ function expandPlaceBox() {
                     if (dialogEvent.detail.action !== 'accept') {
                         confirmFab.classList.remove('mdc-fab--exited')
                         return;
-                    }
-                    history.pushState(['share'], null, null);
+                    };
 
-                    giveSubscriptionInit(searchResponse[selectedListIndex].name,true);
+                    sendSubscriptionData({
+                        "share": [{
+                            phoneNumber: auth.phoneNumber,
+                            displayName: auth.displayName,
+                            email: auth.email
+                        }],
+                        "template": "subscription",
+                        "office": searchResponse[selectedListIndex].name
+                    }, geopoint)
                 })
             }).catch(function (error) {
                 console.log(error)
@@ -444,35 +450,47 @@ function createOfficeInit(confirmFab) {
     })
 }
 
-function giveSubscriptionInit(name = placeResult.name,isActionable) {
+function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
     const device = JSON.parse(native.getInfo());
-    if (Number(device.appVersion) <= 15) {
-        const template = {
-            "assignees": [],
-            "template": "subscription",
-            "office": name
-        };
-        if (history.state[0] === 'addView') {
-            history.replaceState(['addView'], null, null);
-        } else {
-            history.pushState(['addView'], null, null);
-        }
-        addView(template);
+
+    if (native.getName() === 'Android') {
+        return Number(device.appVersion) <= requiredVersionAndroid
+    }
+    return Number(device.appVersion) <= requiredVersionIos;
+}
+
+function giveSubscriptionInit(name = placeResult.name, skip) {
+    if(isDeviceVersionLower(16,9)) {
+
+        
+
+
         return
     }
-
     const el = document.getElementById('app-current-panel')
     el.innerHTML = '';
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">Invite users</span>
+    `
+    let header;
+    if (skip) {
+        const skipBtn = createButton('NEXT', 'skip-header');
+        header = setHeader(backIcon, skipBtn.outerHTML);
+        document.getElementById('skip-header').addEventListener('click', function () {
+            window.location.reload();
+        })
+    } else {
+        header = setHeader(backIcon, '');
+    }
+
+    header.root_.classList.remove('hidden')
+
+    progressBar.open()
 
     createDynamicLinkSocialTags(name).then(function (socialInfo) {
-        createDynamiclink(name, socialInfo).then(function (link) {
+        createDynamiclink(`?action=get-subscription&office=${name}`, socialInfo).then(function (link) {
+            progressBar.close();
             el.appendChild(shareWidget(link, name));
-            if(!isActionable) return;
-            const action = actionButton('Next');
-            action.addEventListener('click', function () {
-                window.location.reload();
-            })
-            el.appendChild(action)
         })
     })
 
@@ -516,7 +534,7 @@ function clearPlaceCustomControl() {
 }
 
 
-function showPlaceBox() {
+function showPlaceBox(geopoint) {
     console.log(placeResult)
     clearPlaceCustomControl()
     var centerControlDiv = document.createElement('div');
@@ -526,14 +544,14 @@ function showPlaceBox() {
     placeSearchField.input_.blur()
     centerControlDiv.addEventListener('click', function () {
         history.pushState(['expandPlaceBox'], null, null);
-        expandPlaceBox();
+        expandPlaceBox(geopoint);
 
     })
     swipe(centerControlDiv, function (swipeEvent) {
         console.log(swipeEvent)
         if (swipeEvent.direction === 'up') {
             history.pushState(['expandPlaceBox'], null, null);
-            expandPlaceBox();
+            expandPlaceBox(geopoint);
             removeSwipe()
         }
     });

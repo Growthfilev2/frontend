@@ -28,7 +28,7 @@ function chatView() {
 
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription()]).then(function (results) {
         console.log(results);
-        const tokenResult = result[0];
+        const tokenResult = results[0];
         const subscriptions = results[1];
         let offices = [];
         let customerSubscriptions = [];
@@ -63,11 +63,8 @@ function chatView() {
             bottomDialog(dialog, ul);
             ul.listen('MDCList:action', function (event) {
                 dialog.close()
-                if (mergedArray[event.detail.index].template === 'Add People') {
+                if (mergedArray[event.detail.index].template === 'Add users') {
                     history.pushState(['share'],null,null);
-                    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-                    <span class="mdc-top-app-bar__title">Share</span>`
-                    const header = setHeader(backIcon, '');
                     giveSubscriptionInit(mergedArray[event.detail.index].office);
                     return
                 }

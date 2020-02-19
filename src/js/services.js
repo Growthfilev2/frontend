@@ -3,8 +3,8 @@ const workerRejects = {};
 let workerMessageIds = 0;
 
 function isWifiRequired() {
-  if (native.getName() !== 'Android') return false;
-  if (AndroidInterface.isWifiOn()) return false;
+  if (native.getName() !== 'Android') return;
+  if (AndroidInterface.isWifiOn()) return;
 
   const deviceInfo = JSON.parse(native.getInfo());
   const requiredWifiDevices = {
@@ -13,7 +13,7 @@ function isWifiRequired() {
   }
 
   if (requiredWifiDevices[deviceInfo.deviceBrand]) return true;
-  return false;
+  return;
 
 }
 
@@ -30,7 +30,7 @@ function handleError(error) {
   console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message))
-    error.device = localStorage.getItem('deviceInfo');
+  error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   return requestCreator('instant', JSON.stringify(error))
@@ -76,7 +76,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-   
+    // return resolve({
+    //   latitude:22,
+    //   longitude:77,
+    //   lastLocationTime:Date.now()
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -371,7 +375,6 @@ function revokeSession() {
 function officeRemovalSuccess(data) {
   const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
   officeRemoveDialog.open();
-  officeRemoveDialog.listen('MDCDialog:closed', function () {});
   return
 }
 
@@ -385,11 +388,9 @@ function updateIosLocation(geopointIos) {
 
 function handleComponentUpdation(readResponse) {
   console.log(readResponse)
-  if (readResponse.reloadApp) {
-    reloadPage();
-    return;
-  }
-
+  if (readResponse.reloadApp) return reloadPage()
+  
+  
   if (readResponse.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
@@ -662,10 +663,8 @@ function emailUpdation(skip, callback) {
       setHelperInvalid(emailField,'Enter A Valid Email Id')
       return;
     };
-
-
     progressBar.open();
-
+    
     if (auth.email) {
       if (emailField.value !== auth.email) {
         emailUpdate(emailField.value, callback)

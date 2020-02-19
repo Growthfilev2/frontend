@@ -46,11 +46,25 @@ window.addEventListener('message', function (event) {
 
 
 function sendOfficeData(requestBody) {
+    const auth = firebase.auth().currentUser;
     appLocation(3).then(function (geopoint) {
-        requestCreator('createOffice', requestBody, geopoint).then(function () {
+
+        return requestCreator('createOffice', requestBody, geopoint).then(function () {
             successDialog(`Office created successfully`);
-            history.pushState(['share'],null,null);
-            giveSubscriptionInit(requestBody.name,true);
+            requestCreator('subscription', {
+                "share": [{
+                    phoneNumber: auth.phoneNumber,
+                    displayName: auth.displayName,
+                    email: auth.email
+                }],
+                "template": "subscription",
+                "office": requestBody.office
+            }, geopoint).then(function (response) {
+                return updateFromTime(0)
+            }).then(function () {
+                history.pushState(['share'], null, null);
+                giveSubscriptionInit(requestBody.office, true);
+            })
         }).catch(function (error) {
             passFormData({
                 name: 'toggleSubmit',
@@ -79,11 +93,11 @@ function sendUsersData(formData) {
     }).catch(handleLocationError);
 }
 
-function sendSubscriptionData(formData,geopoint) {
-   const prom = geopoint ?  Promise.resolve(geopoint) : appLocation(3);
-    prom.then(function(coord){
+function sendSubscriptionData(formData, geopoint) {
+    const prom = geopoint ? Promise.resolve(geopoint) : appLocation(3);
+    prom.then(function (coord) {
         requestCreator('subscription', formData, coord).then(function (response) {
-         
+
 
             localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
             document.getElementById('app-header').classList.add('hidden');
@@ -97,11 +111,11 @@ function sendSubscriptionData(formData,geopoint) {
                 store.put(record)
             }
             rootTx.oncomplete = function () {
-               loadingScreen(['Getting Data','Generating Reports'])
-               requestCreator('Null').then(function(){
-                   openMap();
-               }).catch(console.error)
-             
+                loadingScreen(['Getting Data', 'Generating Reports'])
+                requestCreator('Null').then(function () {
+                    openMap();
+                }).catch(console.error)
+
             };
         }).catch(function (error) {
             passFormData({
@@ -112,7 +126,7 @@ function sendSubscriptionData(formData,geopoint) {
             })
         })
     }).catch(handleLocationError)
-    
+
 }
 
 
