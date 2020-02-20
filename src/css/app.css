@@ -65,6 +65,8 @@ body {
 
 #app-current-panel {
   position: relative;
+  max-width: 1120px;
+  margin:  0 auto;
 }
 
 .app-padding {

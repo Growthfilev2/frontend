@@ -770,7 +770,10 @@ function checkForBankAccount() {
       return;
     }
     increaseStep(5)
-    addNewBankAccount(openMap);
+    addNewBankAccount(function(){
+      loadingScreen();
+      openMap()
+    });
   })
 }
 

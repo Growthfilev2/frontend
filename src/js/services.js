@@ -637,9 +637,14 @@ function emailUpdation(skip, callback) {
   const auth = firebase.auth().currentUser;
   const headings = getEmailViewHeading(auth)
   let backIcon = '';
+  let actionBtn = ''
+  if(skip) {
+    actionBtn = createButton('SKIP', 'skip-header').outerHTML;
+  }
   if (history.state[0] === 'profileCheck') {
     backIcon = `
     <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
+    
     `
   } else {
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -647,10 +652,10 @@ function emailUpdation(skip, callback) {
     `
   }
 
-  const header = setHeader(backIcon, '');
+  const header = setHeader(backIcon, actionBtn);
   header.root_.classList.remove('hidden');
 
-  document.getElementById('app-current-panel').innerHTML = updateEmailDom(skip, headings)
+  document.getElementById('app-current-panel').innerHTML = updateEmailDom(headings)
   const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
   emailField.focus();
   document.getElementById('email-btn').addEventListener('click', function () {
@@ -679,7 +684,7 @@ function emailUpdation(skip, callback) {
     return
   });
 
-  const skipbtn = document.getElementById('skip-btn')
+  const skipbtn = document.getElementById('skip-header')
   if (!skipbtn) return;
 
   new mdc.ripple.MDCRipple(skipbtn)
@@ -759,13 +764,11 @@ function handleEmailError(error) {
 
 
 
-function updateEmailDom(skipbtn, headings) {
+function updateEmailDom(headings) {
   const email = firebase.auth().currentUser.email
   return `
   <div class='mdc-layout-grid update-email'>
-    ${skipbtn ? `<button class='mdc-button mt-10 mdc-button--raised' id='skip-btn'>
-    <span class='mdc-button__label mdc-theme--secondary'>SKIP<span>
-    </button>` :''}
+
 
     <h3 class='mdc-typography--headline6'>${headings.heading}</h3>
     <p class='report-rec mt-10 mdc-typography--body1'>
@@ -825,21 +828,21 @@ function idProofView(callback) {
     }
 
     let backIcon = ''
+    let actionBtn = ''
     if (history.state[0] === 'profileCheck') {
       backIcon = ' <span class="mdc-top-app-bar__title">Add ID Proof</span>'
+      actionBtn = createButton('SKIP','skip-header').outerHTML
     } else {
       backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add ID Proof</span>
     `
     }
-    setHeader(backIcon, '');
+    setHeader(backIcon, actionBtn);
 
     const panel = document.getElementById('app-current-panel');
     panel.innerHTML = `
   <div class='id-container app-padding'>
-  ${history.state[0] === 'profileCheck' ? ` <button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` :'' }
-    
-    
+  
 
     <div class='pan-container pb-10 ${showPan(ids) ? '' : 'hidden'}'>
     <h3 class='mdc-typography--headline6 mdc-theme--primary'> Enter PAN card details</h3>
@@ -919,7 +922,7 @@ function idProofView(callback) {
     
     const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
-    const skipBtn = document.getElementById('skip-btn');
+    const skipBtn = document.getElementById('skip-header');
 
     [...document.querySelectorAll('.id-container .mdc-fab input')].forEach(function (el) {
       el.addEventListener('change', function (evt) {

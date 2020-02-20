@@ -166,18 +166,19 @@ function validateIFSC(string) {
 function addNewBankAccount(callback) {
   const auth = firebase.auth().currentUser
   let backIcon = ''
+  let actionBtn = ''
   if (history.state[0] === 'profileCheck') {
-    backIcon = '<span class="mdc-top-app-bar__title">Add New Bank Account</span>';
+    backIcon = '<span class="mdc-top-app-bar__title">Add bank account</span>';
+    actionBtn = createButton('SKIP','skip-header').outerHTML;
   } else {
 
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Add New Bank Account</span>
+    <span class="mdc-top-app-bar__title">Add Bank Account</span>
     `
   }
-  setHeader(backIcon, '');
+  setHeader(backIcon, actionBtn);
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
-  ${history.state[0] === 'profileCheck' ? `<button class='mdc-button mdc-button--raised' id='skip-btn'>SKIP</button>` : ''}
   <div class='add-bank-container mt-20'>
 
     ${textFieldWithHelper({
@@ -276,7 +277,7 @@ function addNewBankAccount(callback) {
     }).catch(console.error)
   });
 
-  const skipBtn = document.getElementById('skip-btn');
+  const skipBtn = document.getElementById('skip-header');
   if (!skipBtn) return;
   new mdc.ripple.MDCRipple(skipBtn);
   skipBtn.addEventListener('click', function () {
