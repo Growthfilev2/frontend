@@ -495,7 +495,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
             body: JSON.stringify({
                 "dynamicLinkInfo": {
                     "domainUriPrefix": "https://growthfile.page.link",
-                    "link": `https://growthfilev2-0.firebaseapp.com/v2/${urlParam}`,
+                    "link": `https://growthfile-207204.firebaseapp.com/v2/${urlParam}`,
                     "androidInfo": {
                         "androidPackageName": "com.growthfile.growthfileNew",
                         "androidMinPackageVersionCode": "15",
