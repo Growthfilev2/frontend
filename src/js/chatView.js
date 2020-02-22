@@ -280,9 +280,11 @@ function getOtherContacts() {
         if (!contactsEl) return;
         if (!currentContacts) {
             contactsEl.innerHTML = 'No Contacts Found'
-            return
-        };
-        contactsEl.innerHTML = currentContacts;
+            
+        }
+        else {
+            contactsEl.innerHTML = currentContacts;
+        }
         contactsUl = new mdc.list.MDCList(contactsEl);
         initializeContactList(contactsUl)
 
@@ -327,9 +329,10 @@ function readLatestChats(initList) {
             chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
                 <p class='text-center'>Choose From Below or Search</p>
                 `
-            return;
         }
-        chatsEl.innerHTML = currentChats
+        else {
+            chatsEl.innerHTML = currentChats
+        }
         if (!initList) return;
         chatsUl = new mdc.list.MDCList(chatsEl);
         initializeChatList(chatsUl);
