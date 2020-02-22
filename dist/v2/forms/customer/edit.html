@@ -109,7 +109,8 @@
                     customClass: 'mt-10 contact-field',
                     placeholder: 'Primary contact',
                     id: 'primary-contac',
-                    required: true
+                    required: false,
+                    value:subscriptionTemplate.attachment['First Contact'].value || ''
                 });
                 const field = new mdc.textField.MDCTextField(cont.querySelector('.mdc-text-field'));
                 document.querySelector('.contact-container').appendChild(cont)

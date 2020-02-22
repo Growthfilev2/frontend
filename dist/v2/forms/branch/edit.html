@@ -98,7 +98,8 @@
                     customClass: 'mt-10 contact-field',
                     placeholder: 'Primary contact',
                     id: 'primary-contac',
-                    required: true
+                    value:subscriptionTemplate.attachment['First Contact'].value || '',
+                    required: false
                 });
                 const field = new mdc.textField.MDCTextField(cont.querySelector('.mdc-text-field'));
                 document.querySelector('.contact-container').appendChild(cont)
@@ -131,6 +132,7 @@
 
                     const field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'));
                     field.input_.dataset.type = 'Second Contact';
+                    field.value = subscriptionTemplate.attachment['Second Contact'].value;
                     const initField = phoneFieldInit(field.input_);
                     itis['Second Contact'] = {
                         'mdc': field,

@@ -612,8 +612,8 @@ const callShareInterface = (link,shareText) => {
         type: 'text/plain',
         email: {
             cc: 'help@growthfile.com',
-            subject: 'nice',
-            body: 'very nice'
+            subject: 'Download this app',
+            body: ''
         }
     }
     if(native.getName() === 'Android') {
