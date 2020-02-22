@@ -63,7 +63,7 @@ function reportView(state, attendanceRecord) {
     if (state == null) {
       if (reportTabs.length > 2) {
         return tabList.activateTab(2)
-        // return tabList.activateTab(0)
+     
       }
       return tabList.activateTab(0)
     }
