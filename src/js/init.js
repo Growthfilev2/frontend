@@ -91,7 +91,10 @@ function parseDynamicLink(link) {
  */
 function linkSharedComponent(componentValue) {
   console.log(componentValue);
-
+  logFirebaseAnlyticsEvent('share',{
+    sharedComponentName:componentValue,
+    deviceType:native.getName(),
+  });
 }
 /**
  * 
