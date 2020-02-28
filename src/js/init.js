@@ -92,8 +92,9 @@ function parseDynamicLink(link) {
 function linkSharedComponent(componentValue) {
   console.log(componentValue);
   logFirebaseAnlyticsEvent('share', {
-    sharedComponentName: componentValue,
+    content_type: componentValue,
     deviceType: native.getName(),
+    item_id:''
   });
 }
 /**
@@ -289,7 +290,10 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        logReportEvent("IN Auth")
+        logReportEvent("login");
+        logFirebaseAnlyticsEvent("login",{
+          method:firebase.auth.PhoneAuthProvider.PROVIDER_ID
+        })
         return false;
       },
       signInFailure: function (error) {
@@ -591,7 +595,6 @@ function startApp() {
     db = req.result;
     console.log("run app")
     loadingScreen();
-
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
@@ -975,7 +978,7 @@ function createObjectStores(db, uid) {
   children.createIndex('teamOffice', ['team', 'office'])
 
   createReportObjectStores(db)
-  // createRootObjectStore(db, uid, 0)
+  createRootObjectStore(db, uid, 0)
 }
 
 function createCalendarObjectStore(db) {
