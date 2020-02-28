@@ -11,14 +11,14 @@ var potentialAlternatePhoneNumbers;
 var deepLinkQuery;
 
 function setFirebaseAnalyticsUserId(id) {
-  if(window.AndroidInterface) {
+  if (window.AndroidInterface) {
     window.AndroidInterface.setFirebaseAnalyticsUserId(id)
     return
   }
-  if(window.messageHandlers && window.messageHandlers.firebaseAnalytics) {
+  if (window.messageHandlers && window.messageHandlers.firebaseAnalytics) {
     window.messageHandlers.firebaseAnalytics.postMessage({
-      command:'setFirebaseAnalyticsUserId',
-      id:id
+      command: 'setFirebaseAnalyticsUserId',
+      id: id
     })
     return
   }
@@ -33,14 +33,14 @@ function logFirebaseAnlyticsEvent(name, params) {
   if (window.AndroidInterface) {
     // Call Android interface
     window.AndroidInterface.logFirebaseAnlyticsEvent(name, JSON.stringify(params));
-  } else if (window.webkit
-      && window.webkit.messageHandlers
-      && window.webkit.messageHandlers.firebaseAnalytics) {
+  } else if (window.webkit &&
+    window.webkit.messageHandlers &&
+    window.webkit.messageHandlers.firebaseAnalytics) {
     // Call iOS interface
     var message = {
       name: name,
       parameters: params,
-      command:'logFirebaseAnlyticsEvent'
+      command: 'logFirebaseAnlyticsEvent'
     };
     window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
   } else {
@@ -57,15 +57,15 @@ function setFirebaseAnalyticsUserProperty(name, value) {
   if (window.AndroidInterface) {
     // Call Android interface
     window.AndroidInterface.setFirebaseAnalyticsUserProperty(name, value);
-  } else if (window.webkit
-      && window.webkit.messageHandlers
-      && window.webkit.messageHandlers.firebaseAnalytics) {
+  } else if (window.webkit &&
+    window.webkit.messageHandlers &&
+    window.webkit.messageHandlers.firebaseAnalytics) {
     // Call iOS interface
     var message = {
-      command:'setFirebaseAnalyticsUserProperty',
+      command: 'setFirebaseAnalyticsUserProperty',
       name: name,
       value: value
-   };
+    };
     window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
   } else {
     // No Android or iOS interface found
@@ -91,9 +91,9 @@ function parseDynamicLink(link) {
  */
 function linkSharedComponent(componentValue) {
   console.log(componentValue);
-  logFirebaseAnlyticsEvent('share',{
-    sharedComponentName:componentValue,
-    deviceType:native.getName(),
+  logFirebaseAnlyticsEvent('share', {
+    sharedComponentName: componentValue,
+    deviceType: native.getName(),
   });
 }
 /**
@@ -572,13 +572,15 @@ function startApp() {
         break;
     }
 
+    if (db.objectStoreNames.contains('root')) {
+      var rootStore = req.transaction.objectStore('root')
+      rootStore.get(dbName).onsuccess = function (rootEvent) {
+        const record = rootEvent.target.result;
+        record.fromTime = 0;
+        rootStore.put(record);
+      }
+    };
 
-    var rootStore = req.transaction.objectStore('root')
-    rootStore.get(dbName).onsuccess = function (rootEvent) {
-      const record = rootEvent.target.result;
-      record.fromTime = 0;
-      rootStore.put(record);
-    }
 
 
     console.log('version upgrade')
@@ -775,7 +777,7 @@ function checkForBankAccount() {
       return;
     }
     increaseStep(5)
-    addNewBankAccount(function(){
+    addNewBankAccount(function () {
       loadingScreen();
       openMap()
     });
@@ -973,7 +975,7 @@ function createObjectStores(db, uid) {
   children.createIndex('teamOffice', ['team', 'office'])
 
   createReportObjectStores(db)
-  createRootObjectStore(db, uid, 0)
+  // createRootObjectStore(db, uid, 0)
 }
 
 function createCalendarObjectStore(db) {
