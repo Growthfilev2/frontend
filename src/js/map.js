@@ -304,6 +304,7 @@ function loadCardData(venues, map, geopoint) {
     if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd, geopoint);
     focusMarker(map, markersObject, evt.detail.index)
     cardProd.open();
+
     const selectedVenue = venues[evt.detail.index];
     createKnownCheckIn(selectedVenue, '', geopoint);
   })
@@ -592,8 +593,10 @@ function getOrientation(image) {
 function focusMarker(map, markersObject, index) {
   const marker = markersObject.markers[index];
   const info = markersObject.infowindow[index];
-  info.setContent(`<span>${marker.title}</span>`)
-  info.open(map, marker)
+  if (info) {
+    info.setContent(`<span>${marker.title}</span>`)
+    info.open(map, marker)
+  }
   map.panTo(marker.position);
   map.setZoom(18);
 }

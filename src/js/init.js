@@ -706,6 +706,8 @@ function checkForPhoto() {
       increaseStep(3)
       checkForEmail()
     }).catch(function (error) {
+      increaseStep(3)
+      checkForEmail()
       snacks(error.message)
     })
   })
