@@ -1181,3 +1181,25 @@ iframe {
   font-size: 16px;
   color: white;
 }
+
+
+.office-registeration {
+  text-align: center;
+  width: 100%;
+
+  
+}
+.office-registeration .terms-cont {
+  text-align: left;
+}
+
+@media (min-width:480px) {
+  .office-registeration .text {
+    max-width: 80%;
+    display: block;
+    margin: 0 auto;
+  }
+  .office-registeration .terms-cont {
+    text-align: center;
+  }
+}

@@ -83,7 +83,7 @@ function appLocation(maxRetry) {
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
         return resolve(geopoint);
       }
-
+      
       if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
@@ -241,9 +241,13 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=104');
+const apiHandler = new Worker('js/apiHandler.js?version=105');
 
 function requestCreator(requestType, requestBody, geopoint) {
+  const extralRequest = {
+    'geocode':true,
+    'geolocationApi':true
+  }
   var auth = firebase.auth().currentUser;
   var requestGenerator = {
     type: requestType,
@@ -256,8 +260,9 @@ function requestCreator(requestType, requestBody, geopoint) {
         photoURL: auth.photoURL,
         phoneNumber: auth.phoneNumber,
       },
-      key: appKey.getMapKey(),
+      mapKey: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl(),
+      authorization : extralRequest[requestType] ? false : true
     },
   };
 

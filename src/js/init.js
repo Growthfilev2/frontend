@@ -9,6 +9,7 @@ var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 var deepLinkQuery;
+var isAdmin = false
 
 function setFirebaseAnalyticsUserId(id) {
   if (window.AndroidInterface) {
@@ -92,9 +93,8 @@ function parseDynamicLink(link) {
 function linkSharedComponent(componentValue) {
   console.log(componentValue);
   logFirebaseAnlyticsEvent('share', {
-    content_type: componentValue,
-    deviceType: native.getName(),
-    item_id:''
+    method: componentValue,
+    content_type: 'text'
   });
 }
 /**
@@ -228,7 +228,6 @@ function initializeApp() {
     progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-    // header =  new mdc.topAppBar.MDCTopAppBar(this.document.getElementById('app-header'))
 
 
     const panel = this.document.getElementById('app-current-panel');
@@ -265,6 +264,7 @@ function initializeApp() {
       }
 
       localStorage.setItem('error', JSON.stringify({}));
+      localStorage.removeItem('storedLinks');
       checkNetworkValidation();
     });
   })
@@ -290,9 +290,29 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        logReportEvent("login");
-        logFirebaseAnlyticsEvent("login",{
-          method:firebase.auth.PhoneAuthProvider.PROVIDER_ID
+
+        if (!authResult.additionalUserInfo.isNewUser) {
+          logReportEvent("login");
+          logFirebaseAnlyticsEvent("login", {
+            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
+          })
+          return false
+        };
+
+        firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
+          const sign_up_params = {
+            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+            isAdmin: 0
+          }
+          if (isAdmin(tokenResult)) {
+            isAdmin = true
+            sign_up_params.isAdmin = 1
+            logReportEvent("Sign Up Admin");
+          } else {
+            logReportEvent("Sign Up");
+          }
+
+          logFirebaseAnlyticsEvent("sign_up", sign_up_params)
         })
         return false;
       },
@@ -688,6 +708,9 @@ function checkForPhoto() {
     return;
   }
 
+  logReportEvent("Profile Completion Photo")
+  logFirebaseAnlyticsEvent("profile_completion_photo")
+
   increaseStep(2)
   const content = `
 
@@ -735,9 +758,11 @@ function checkForEmail() {
       checkForId();
       return
     }
+    
+  logReportEvent("Profile Completion Email")
+  logFirebaseAnlyticsEvent("profile_completion_email")
     increaseStep(3)
     emailUpdation(true, function () {
-
       checkForId()
     });
 
@@ -766,6 +791,8 @@ function checkForId() {
       checkForBankAccount();
       return
     };
+    logReportEvent("Profile Completion Id")
+    logFirebaseAnlyticsEvent("profile_completion_id")
     increaseStep(4);
     idProofView(checkForBankAccount);
   })
@@ -779,6 +806,9 @@ function checkForBankAccount() {
       openMap();
       return;
     }
+    logReportEvent("Profile Completion bank account")
+    logFirebaseAnlyticsEvent("profile_completion_bank_account")
+    
     increaseStep(5)
     addNewBankAccount(function () {
       loadingScreen();
@@ -875,10 +905,11 @@ function profileCheck() {
   const auth = firebase.auth().currentUser;
   document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
   if (!auth.displayName) {
+    logReportEvent("Profile Completion Name")
+    logFirebaseAnlyticsEvent("profile_completion_name")
     document.getElementById("app-header").classList.remove('hidden');
     increaseStep(1)
     updateName(function () {
-
       checkForPhoto();
     });
     return
@@ -1203,6 +1234,7 @@ function openMap() {
     if (deepLinkQuery) {
       const action = deepLinkQuery.get('action')
       if (action && action === 'get-subscription') {
+
         sendSubscriptionData({
           "share": [{
             phoneNumber: auth.phoneNumber,
@@ -1221,8 +1253,9 @@ function openMap() {
       chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
       return
     };
-    history.pushState(['searchOffice', geopoint], null, null)
-    searchOffice(geopoint)
+
+    history.pushState(['createOfficeScreen', geopoint], null, null)
+    createOfficeScreen(geopoint)
   }).catch(function (error) {
     console.log(error)
     handleError({
@@ -1266,7 +1299,8 @@ function handleLocationForMap(geopoint, checkInSubs) {
   const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
   if (isOlder || hasChangedLocation) return mapView(geopoint);
-  ApplicationState = oldApplicationState
+  ApplicationState = oldApplicationState;
+  logReportEvent('IN ReportsView');
   history.pushState(['reportView'], null, null)
   return reportView()
 }

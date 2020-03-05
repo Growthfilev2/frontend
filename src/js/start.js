@@ -403,51 +403,58 @@ function isAdmin(idTokenResult) {
     return true;
 }
 
+function createOfficeScreen(geopoint) {
+    document.getElementById('app-header').classList.add("hidden")
+    const appEl = document.getElementById('app-current-panel')
+    appEl.classList.remove('mdc-top-app-bar--fixed-adjust')
+    appEl.innerHTML = `<div class='office-registeration mdc-layout-grid'>
+        <div class='graphic-container'>
+            <img src='./img/ic_launcher.png'>
+        </div>
+        <div class='text mdc-typography--body1'>
+            <h3 class='mdc-typography--headline6'>Welcome to Growthfile</h3>
+            <p>Before continuing please agree to Growthfile's privacy policy & terms or use</p>
+            <div class='terms-cont'>
+                ${createCheckBox('office-checkbox',`I agree to Growthfile <a href='./legal.html#privacy-policy' class='no-underline'>Privacy Policy</a> &
+                <a href='./legal.html#terms-of-use-administrator' class='no-underline'>Terms of use</a>`)}
+            </div>
+        </div>
+    </div>
+    ${actionButton('Register your company','register-btn').outerHTML}
+    `
 
-function createOfficeInit(confirmFab) {
-    const content = `
-    <p>Are you sure you want to  create a new company ?</p>
-    <p>Before continuing please agree to Growthfile's privacy policy & terms or use</p>
-    <div class='terms-cont'>
-        ${createCheckBox('office-checkbox')}
-    </div>`
-    var dialog = new Dialog(`${placeResult.name} not found`, content).create();
-    dialog.buttons_[0].textContent = 'cancel'
-    dialog.buttons_[1].textContent = 'create new company';
-    dialog.buttons_[1].setAttribute('disabled', 'true')
-    dialog.open();
-
-    const form = new mdc.formField.MDCFormField(dialog.content_.querySelector('.mdc-form-field'))
-    const chckBox = new mdc.checkbox.MDCCheckbox(dialog.content_.querySelector('.mdc-checkbox'))
+    const registerBtn = document.getElementById('register-btn')
+    registerBtn.setAttribute('disabled', 'true')
+    const form = new mdc.formField.MDCFormField(document.querySelector('.mdc-form-field'))
+    const chckBox = new mdc.checkbox.MDCCheckbox(document.querySelector('.mdc-checkbox'))
     form.input = chckBox;
-    form.label_.innerHTML = `I agree to <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
-    <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>`
-
     chckBox.listen('change', function () {
         if (chckBox.checked) {
-            dialog.buttons_[1].removeAttribute('disabled')
+            registerBtn.removeAttribute('disabled')
         } else {
-            dialog.buttons_[1].setAttribute('disabled', 'true')
+            registerBtn.setAttribute('disabled', 'true')
         }
     })
-
-    dialog.listen('MDCDialog:closed', function (dialogEvent) {
-        if (dialogEvent.detail.action !== 'accept') {
-            confirmFab.classList.remove('mdc-fab--exited')
-            return;
-        }
-
-        const template = {
-            'template': 'office',
-            'firstContact': '',
-            'secondContact': '',
-            'name': placeResult.name,
-            'placeId': placeResult.place_id,
-            'registeredOfficeAddress': placeResult.formatted_address,
-        }
-        history.pushState(['addView'], null, null);
-        addView(template);
+    registerBtn.addEventListener('click', function () {
+        appEl.classList.add('mdc-top-app-bar--fixed-adjust')
+        createOfficeInit(geopoint);
     })
+
+}
+
+function createOfficeInit(geopoint) {
+
+    const template = {
+        'template': 'office',
+        'firstContact': '',
+        'secondContact': '',
+        'name': '',
+        'placeId': '',
+        'registeredOfficeAddress': '',
+    }
+    history.pushState(['addView'], null, null);
+    addView(template);
+
 }
 
 function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
@@ -459,23 +466,24 @@ function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
     return Number(device.appVersion) < requiredVersionIos;
 }
 
-function giveSubscriptionInit(name = placeResult.name, skip) {
-    if(isDeviceVersionLower(17,9)) {
+function giveSubscriptionInit(name, skip) {
+    if (isDeviceVersionLower(17, 9)) {
+        debugger
         const template = {
             "assignees": [],
             "template": "subscription",
             "office": name
         };
-        if(history.state[0] === 'addView') {
-              history.replaceState(['addView'],null,null);
-        } 
-        else {
+        if (history.state[0] === 'addView') {
+            history.replaceState(['addView'], null, null);
+        } else {
             history.pushState(['addView'], null, null);
         }
         addView(template);
         return
     };
-    
+    debugger
+
     const el = document.getElementById('app-current-panel')
     el.innerHTML = '';
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -484,7 +492,7 @@ function giveSubscriptionInit(name = placeResult.name, skip) {
     let header;
     if (skip) {
         const skipBtn = createButton('NEXT', 'skip-header');
-        header = setHeader(backIcon, skipBtn.outerHTML);
+        header = setHeader('', skipBtn.outerHTML);
         document.getElementById('skip-header').addEventListener('click', function () {
             window.location.reload();
         })
@@ -492,21 +500,21 @@ function giveSubscriptionInit(name = placeResult.name, skip) {
         header = setHeader(backIcon, '');
     }
 
+
+
     header.root_.classList.remove('hidden')
-
     progressBar.open()
-
     createDynamicLinkSocialTags(name).then(function (socialInfo) {
         createDynamiclink(`?action=get-subscription&office=${name}`, socialInfo).then(function (link) {
             progressBar.close();
             el.appendChild(shareWidget(link, name));
-        }).catch(function(error){
-            if(skip) {
+        }).catch(function (error) {
+            if (skip) {
                 window.location.reload();
             }
             handleError({
-                message:error.message,
-                body:JSON.stringify(error)
+                message: error.message,
+                body: JSON.stringify(error)
             })
         })
     })

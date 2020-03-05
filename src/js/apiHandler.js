@@ -29,7 +29,8 @@ const requestFunctionCaller = {
   createOffice: createOffice,
   searchOffice: searchOffice,
   checkIns: checkIns,
-  idProof: idProof
+  idProof: idProof,
+
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -75,6 +76,19 @@ self.onmessage = function (event) {
       error.id = workerId;
       self.postMessage(error);
     });
+    return
+  }
+  if(event.data.type === 'geocode') {
+    this.http({
+      method: 'GET',
+      url: `https://maps.googleapis.com/maps/api/geocode/json?${event.data.body}&key=${meta.mapKey}`,
+      body: null,
+    },false).then(function(response){
+      sendSuccessRequestToMainThread(response, workerId)
+    }).catch(function (error) {
+      error.id = workerId;
+      self.postMessage(error);
+    })
     return
   }
 
@@ -146,13 +160,15 @@ function handleNow(eventData, db) {
 
 // Performs XMLHTTPRequest for the API's.
 
-function http(request) {
+function http(request,authorization = true) {
   return new Promise(function (resolve, reject) {
     const xhr = new XMLHttpRequest()
     xhr.open(request.method, request.url, true)
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
-    xhr.setRequestHeader('Content-Type', 'application/json')
-    xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
+    if(authorization) {
+      xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+      xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
+    }
     if (request.method !== 'GET') {
       if (request.timeout) {
         xhr.timeout = request.timeout;
@@ -325,8 +341,9 @@ function idProof(body, meta) {
     timeout: null
   }
   return http(req)
-
 }
+
+
 
 function createSubscription(body, meta) {
   const req = {
@@ -405,11 +422,12 @@ function create(requestBody, meta) {
 }
 
 
+
 function geolocationApi(body, meta, retry) {
 
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + meta.key, true);
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + meta.mapKey, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {

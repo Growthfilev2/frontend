@@ -490,7 +490,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
             return resolve(storedLinks[office])
         }
 
-        fetch(`https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${appKey.getMapKey()}`, {
+        fetch(`https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${appKey.getKeys().apiKey}`, {
             method: 'POST',
             body: JSON.stringify({
                 "dynamicLinkInfo": {
@@ -509,6 +509,15 @@ const createDynamiclink = (urlParam, socialInfo) => {
                     },
                     "desktopInfo": {
                         "desktopFallbackLink": "https://www.growthfile.com/welcome.html"
+                    },
+                    "analyticsInfo": {
+                        "googlePlayAnalytics": {
+                            "utmSource": "employeeApp",
+                            "utmMedium": "Referral",
+                            "utmCampaign": "share_link",
+                            "utmTerm": "share_link+create",
+                            "utmContent": "Share",
+                        }
                     },
                     "socialMetaTagInfo": socialInfo,
                 },

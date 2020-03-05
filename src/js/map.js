@@ -223,6 +223,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
 
 
     history.pushState(['reportView'], null, null)
+    logReportEvent('IN ReportsView');
     logReportEvent('IN Reports');
     reportView()
   }).catch(function (error) {
@@ -324,6 +325,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     history.pushState(['reportView'], null, null)
+    logReportEvent('IN ReportsView');
     logReportEvent('IN Reports');
     reportView();
   }).catch(function (error) {
