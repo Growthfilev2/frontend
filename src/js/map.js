@@ -225,6 +225,7 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
     history.pushState(['reportView'], null, null)
     logReportEvent('IN ReportsView');
     logReportEvent('IN Reports');
+    logFirebaseAnlyticsEvent("report_view")
     reportView()
   }).catch(function (error) {
 
@@ -327,6 +328,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     history.pushState(['reportView'], null, null)
     logReportEvent('IN ReportsView');
     logReportEvent('IN Reports');
+    logFirebaseAnlyticsEvent("report_view")
     reportView();
   }).catch(function (error) {
     if (error.message === 'Invalid check-in') {

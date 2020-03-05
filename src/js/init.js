@@ -9,7 +9,7 @@ var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 var deepLinkQuery;
-var isAdmin = false
+
 
 function setFirebaseAnalyticsUserId(id) {
   if (window.AndroidInterface) {
@@ -228,8 +228,6 @@ function initializeApp() {
     progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
     snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
     topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-
-
     const panel = this.document.getElementById('app-current-panel');
 
     if (!window.Worker && !window.indexedDB) {
@@ -240,12 +238,12 @@ function initializeApp() {
 
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
-
         logReportEvent("IN Slider");
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
       }
+
       const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
       header.listen('MDCTopAppBar:nav', handleNav);
       header.root_.classList.add("hidden");
@@ -305,12 +303,11 @@ function firebaseUiConfig() {
             isAdmin: 0
           }
           if (isAdmin(tokenResult)) {
-            isAdmin = true
             sign_up_params.isAdmin = 1
             logReportEvent("Sign Up Admin");
           } else {
             logReportEvent("Sign Up");
-          }
+          };
 
           logFirebaseAnlyticsEvent("sign_up", sign_up_params)
         })
@@ -808,7 +805,7 @@ function checkForBankAccount() {
     }
     logReportEvent("Profile Completion bank account")
     logFirebaseAnlyticsEvent("profile_completion_bank_account")
-    
+
     increaseStep(5)
     addNewBankAccount(function () {
       loadingScreen();
@@ -1216,9 +1213,12 @@ function openMap() {
     const checkInSubs = result[2];
     const totalRecords = result[3];
     const auth = firebase.auth().currentUser;
-    console.log(checkInSubs);
+    
+    setFirebaseAnalyticsUserProperty("hasCheckin",Object.keys(checkInSubs).length ? "true":"false");
+    setFirebaseAnalyticsUserProperty("isAdmin",isAdmin(tokenResult) ? "true":"false");
     progressBar.close();
     if (isAdmin(tokenResult)) {
+      
       handleLocationForMap(geopoint, checkInSubs)
       return
     }
@@ -1301,6 +1301,7 @@ function handleLocationForMap(geopoint, checkInSubs) {
   if (isOlder || hasChangedLocation) return mapView(geopoint);
   ApplicationState = oldApplicationState;
   logReportEvent('IN ReportsView');
+  logFirebaseAnlyticsEvent("report_view")
   history.pushState(['reportView'], null, null)
   return reportView()
 }
