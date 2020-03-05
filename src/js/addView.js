@@ -47,74 +47,86 @@ window.addEventListener('message', function (event) {
 
 function sendOfficeData(requestBody) {
     const auth = firebase.auth().currentUser;
-    requestCreator('geocode', `address=${encodeURIComponent(requestBody.registeredOfficeAddress)}`).then(function (response) {
-        if (response.status !== "OK") {
-            snacks('Error occured please try again later')
-            passFormData({
-                name: 'toggleSubmit',
-                template: '',
-                body: '',
-                deviceType: native.getName()
-            })
-            return
-        }
-        if (!response.results.length) {
-            snacks('No such address found')
-            passFormData({
-                name: 'toggleSubmit',
-                template: '',
-                body: '',
-                deviceType: native.getName()
-            })
-            return
-        }
-
-        requestBody.placeId = response.results[0].place_id
-        appLocation(3).then(function (geopoint) {
-
-            return requestCreator('createOffice', requestBody, geopoint).then(function () {
-                successDialog(`Office created successfully`);
-                logReportEvent('Office Created')
-                logFirebaseAnlyticsEvent('office_created',{
-                    item_location_id:requestBody.placeId,
-                });
-
-                progressBar.open();
-                setTimeout(function () {
-                    requestCreator('subscription', {
-                        "share": [{
-                            phoneNumber: auth.phoneNumber,
-                            displayName: auth.displayName,
-                            email: auth.email
-                        }],
-                        "template": "subscription",
-                        "office": requestBody.name
-                    }, geopoint).then(function (response) {
-                        return updateFromTime(0)
-                    }).then(function () {
-                        progressBar.close();
-                        history.pushState(['share'], null, null);
-                        giveSubscriptionInit(requestBody.name, true);
-                    }).catch(function (error) {
-                        progressBar.close();
-                        snacks(error.message);
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+        'address': requestBody.registeredOfficeAddress
+    }, function (geocodeResults, status) {
+        if (status == 'OK' && geocodeResults.length) {
+            requestBody.placeId = geocodeResults[0].place_id
+            appLocation(3).then(function (geopoint) {
+    
+                return requestCreator('createOffice', requestBody, geopoint).then(function () {
+                    successDialog(`Office created successfully`);
+                    logReportEvent('Office Created')
+                    logFirebaseAnlyticsEvent('office_created', {
+                        item_location_id: requestBody.placeId,
+                    });
+    
+                    progressBar.open();
+                    setTimeout(function () {
+                        requestCreator('subscription', {
+                            "share": [{
+                                phoneNumber: auth.phoneNumber,
+                                displayName: auth.displayName,
+                                email: auth.email
+                            }],
+                            "template": "subscription",
+                            "office": requestBody.name
+                        }, geopoint).then(function (response) {
+                            return updateFromTime(0)
+                        }).then(function () {
+                            progressBar.close();
+                            history.pushState(['share'], null, null);
+                            giveSubscriptionInit(requestBody.name, true);
+                        }).catch(function (error) {
+                            progressBar.close();
+                            snacks(error.message);
+                        })
+                    }, 3000)
+                }).catch(function (error) {
+                    console.log(error)
+                    passFormData({
+                        name: 'toggleSubmit',
+                        template: '',
+                        body: '',
+                        deviceType: native.getName()
                     })
-                }, 3000)
-            }).catch(function (error) {
-                console.log(error)
-                passFormData({
-                    name: 'toggleSubmit',
-                    template: '',
-                    body: '',
-                    deviceType: native.getName()
+                    if (error.message === `Office with the name '${requestBody.name}' already exists`) {
+    
+                    }
                 })
-                if (error.message === `Office with the name '${requestBody.name}' already exists`) {
-                    
-                }
-            })
-        }).catch(handleLocationError);
+            }).catch(handleLocationError);
+            return
+        }
+        snacks('No such address found')
+        passFormData({
+            name: 'toggleSubmit',
+            template: '',
+            body: '',
+            deviceType: native.getName()
+        })
 
-    }).catch(console.error);
+    })
+    // requestCreator('geocode', `address=${encodeURIComponent(requestBody.registeredOfficeAddress)}`).then(function (response) {
+    //     if (response.status !== "OK") {
+    //         snacks('Error occured please try again later')
+    //         passFormData({
+    //             name: 'toggleSubmit',
+    //             template: '',
+    //             body: '',
+    //             deviceType: native.getName()
+    //         })
+    //         return
+    //     }
+    //     if (!response.results.length) {
+    //         snacks('No such address found')
+
+    //         return
+    //     }
+
+       
+
+    // }).catch(console.error);
 
 }
 

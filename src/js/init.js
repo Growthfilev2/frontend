@@ -244,6 +244,8 @@ function initializeApp() {
         return;
       }
 
+
+
       const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
       header.listen('MDCTopAppBar:nav', handleNav);
       header.root_.classList.add("hidden");
@@ -300,7 +302,7 @@ function firebaseUiConfig() {
         firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
           const sign_up_params = {
             method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-            isAdmin: 0
+            'isAdmin': 0
           }
           if (isAdmin(tokenResult)) {
             sign_up_params.isAdmin = 1
@@ -641,11 +643,15 @@ function startApp() {
 
       }
       rootTx.oncomplete = function () {
+      
+      
+
         if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
         initProfileView()
         runRead({
           read: '1'
         })
+
       }
     }).catch(console.error)
   }
@@ -659,10 +665,29 @@ function startApp() {
 }
 
 function initProfileView() {
+  Promise.all([firebase.auth().currentUser.getIdTokenResult(),getCheckInSubs()]).then(function(results){
+    let isAdminFlag = "false";
+    let hasCheckinFlag = "false";
+    const tokenResult = results[0];
+    const checkInSubs = results[1];
+    if(isAdmin(tokenResult)) {
+      isAdminFlag = "true";
+    }
+    if(Object.keys(checkInSubs).length) {
+      hasCheckinFlag = "true";
+    }
+    setFirebaseAnalyticsUserProperty("isAdmin",isAdminFlag);
+    setFirebaseAnalyticsUserProperty("hasCheckin",hasCheckinFlag);
+    document.getElementById('app-header').classList.remove('hidden')
+    history.pushState(['profileCheck'], null, null)
+    profileCheck();
+  }).catch(function(error){
+    handleError({
+      message:error.message,
+      body:JSON.stringify(error)
+    })
+  })
 
-  document.getElementById('app-header').classList.remove('hidden')
-  history.pushState(['profileCheck'], null, null)
-  profileCheck();
 }
 
 
@@ -1214,8 +1239,7 @@ function openMap() {
     const totalRecords = result[3];
     const auth = firebase.auth().currentUser;
     
-    setFirebaseAnalyticsUserProperty("hasCheckin",Object.keys(checkInSubs).length ? "true":"false");
-    setFirebaseAnalyticsUserProperty("isAdmin",isAdmin(tokenResult) ? "true":"false");
+  
     progressBar.close();
     if (isAdmin(tokenResult)) {
       
@@ -1328,7 +1352,6 @@ function reloadPage() {
 
 function updateFromTime(fromTime) {
   return new Promise(function (resolve, reject) {
-
     const keyPath = firebase.auth().currentUser.uid;
     const tx = db.transaction('root');
     const store = tx.objectStore('root');

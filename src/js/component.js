@@ -533,11 +533,8 @@ const createDynamiclink = (urlParam, socialInfo) => {
         }).then(function (url) {
             const linkObject = {}
             linkObject[param.get('office')] = url.shortLink;
-
             localStorage.setItem('storedLinks', JSON.stringify(linkObject));
-
             resolve(url.shortLink)
-
         }).catch(reject)
     });
 }
