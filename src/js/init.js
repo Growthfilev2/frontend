@@ -12,7 +12,7 @@ var deepLinkQuery;
 
 
 function setFirebaseAnalyticsUserId(id) {
-  if (window.AndroidInterface) {
+  if (window.AndroidInterface &&  window.AndroidInterface.setFirebaseAnalyticsUserId) {
     window.AndroidInterface.setFirebaseAnalyticsUserId(id)
     return
   }
@@ -31,7 +31,7 @@ function logFirebaseAnlyticsEvent(name, params) {
     return;
   }
 
-  if (window.AndroidInterface) {
+  if (window.AndroidInterface && window.AndroidInterface.logFirebaseAnlyticsEvent) {
     // Call Android interface
     window.AndroidInterface.logFirebaseAnlyticsEvent(name, JSON.stringify(params));
   } else if (window.webkit &&
@@ -55,7 +55,7 @@ function setFirebaseAnalyticsUserProperty(name, value) {
     return;
   }
 
-  if (window.AndroidInterface) {
+  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserProperty) {
     // Call Android interface
     window.AndroidInterface.setFirebaseAnalyticsUserProperty(name, value);
   } else if (window.webkit &&
