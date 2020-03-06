@@ -9,10 +9,10 @@ var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 var deepLinkQuery;
-
+var isNewUser = false;
 
 function setFirebaseAnalyticsUserId(id) {
-  if (window.AndroidInterface &&  window.AndroidInterface.setFirebaseAnalyticsUserId) {
+  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
     window.AndroidInterface.setFirebaseAnalyticsUserId(id)
     return
   }
@@ -290,7 +290,7 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-
+        isNewUser = authResult.additionalUserInfo.isNewUser
         if (!authResult.additionalUserInfo.isNewUser) {
           logReportEvent("login");
           logFirebaseAnlyticsEvent("login", {
@@ -298,6 +298,7 @@ function firebaseUiConfig() {
           })
           return false
         };
+
 
         firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
           const sign_up_params = {
@@ -307,10 +308,11 @@ function firebaseUiConfig() {
           if (isAdmin(tokenResult)) {
             sign_up_params.isAdmin = 1
             logReportEvent("Sign Up Admin");
+            setFirebaseAnalyticsUserProperty("isAdmin", "true");
+
           } else {
             logReportEvent("Sign Up");
           };
-
           logFirebaseAnlyticsEvent("sign_up", sign_up_params)
         })
         return false;
@@ -643,8 +645,8 @@ function startApp() {
 
       }
       rootTx.oncomplete = function () {
-      
-      
+
+
 
         if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
         initProfileView()
@@ -665,29 +667,14 @@ function startApp() {
 }
 
 function initProfileView() {
-  Promise.all([firebase.auth().currentUser.getIdTokenResult(),getCheckInSubs()]).then(function(results){
-    let isAdminFlag = "false";
-    let hasCheckinFlag = "false";
-    const tokenResult = results[0];
-    const checkInSubs = results[1];
-    if(isAdmin(tokenResult)) {
-      isAdminFlag = "true";
+  getCheckInSubs().then(function (results) {
+    if (isNewUser && Object.keys(results).length) {
+      setFirebaseAnalyticsUserProperty("hasCheckin", "true");
     }
-    if(Object.keys(checkInSubs).length) {
-      hasCheckinFlag = "true";
-    }
-    setFirebaseAnalyticsUserProperty("isAdmin",isAdminFlag);
-    setFirebaseAnalyticsUserProperty("hasCheckin",hasCheckinFlag);
-    document.getElementById('app-header').classList.remove('hidden')
-    history.pushState(['profileCheck'], null, null)
-    profileCheck();
-  }).catch(function(error){
-    handleError({
-      message:error.message,
-      body:JSON.stringify(error)
-    })
   })
-
+  document.getElementById('app-header').classList.remove('hidden')
+  history.pushState(['profileCheck'], null, null)
+  profileCheck();
 }
 
 
@@ -780,9 +767,9 @@ function checkForEmail() {
       checkForId();
       return
     }
-    
-  logReportEvent("Profile Completion Email")
-  logFirebaseAnlyticsEvent("profile_completion_email")
+
+    logReportEvent("Profile Completion Email")
+    logFirebaseAnlyticsEvent("profile_completion_email")
     increaseStep(3)
     emailUpdation(true, function () {
       checkForId()
@@ -1238,11 +1225,11 @@ function openMap() {
     const checkInSubs = result[2];
     const totalRecords = result[3];
     const auth = firebase.auth().currentUser;
-    
-  
+
+
     progressBar.close();
     if (isAdmin(tokenResult)) {
-      
+
       handleLocationForMap(geopoint, checkInSubs)
       return
     }
