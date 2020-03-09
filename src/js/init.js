@@ -634,29 +634,23 @@ function startApp() {
       const store = rootTx.objectStore('root');
       store.get(dbName).onsuccess = function (transactionEvent) {
         rootRecord = transactionEvent.target.result;
-
         rootRecord.linkedAccounts = res.linkedAccounts || [];
         potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
-
         if (res.idProof) {
           rootRecord.idProof = res.idProof
         }
         store.put(rootRecord);
-
       }
       rootTx.oncomplete = function () {
-
-
-
         if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
         initProfileView()
         runRead({
           read: '1'
         })
-
       }
     }).catch(console.error)
-  }
+  };
+
   req.onerror = function () {
     handleError({
       message: `${req.error.name}`,
@@ -1229,7 +1223,6 @@ function openMap() {
 
     progressBar.close();
     if (isAdmin(tokenResult)) {
-
       handleLocationForMap(geopoint, checkInSubs)
       return
     }
@@ -1274,7 +1267,6 @@ function openMap() {
       body: error
     })
   })
-
 }
 
 function checkIDBCount(storeNames) {

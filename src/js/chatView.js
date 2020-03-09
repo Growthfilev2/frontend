@@ -65,6 +65,7 @@ function chatView() {
                 dialog.close()
                 if (mergedArray[event.detail.index].template === 'Add users') {
                     history.pushState(['share'],null,null);
+                    
                     giveSubscriptionInit(mergedArray[event.detail.index].office);
                     return
                 }
