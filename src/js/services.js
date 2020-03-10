@@ -726,32 +726,10 @@ function emailVerification(callback) {
   firebase.auth().currentUser.sendEmailVerification().then(function () {
     snacks('Email verification has been sent.')
     progressBar.close();
-
-    emailVerificationWait(callback)
+    callback()
   }).catch(handleEmailError)
 }
 
-function emailVerificationWait(callback) {
-  const auth = firebase.auth().currentUser
-  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
-  <h3 class='mdc-typography--headline6'>Verification Link Has Been Sent To ${firebase.auth().currentUser.email}</h3>
-  <p class='mdc-typography--body1'>Click Continue To Proceed Further</p>
-</div>
-${actionButton('CONTINUE','continue').outerHTML}
-`
-  document.getElementById('continue').addEventListener('click', function (evt) {
-
-    firebase.auth().currentUser.reload();
-    setTimeout(function () {
-      firebase.auth().currentUser.reload();
-      if (!auth.emailVerified) {
-        snacks('Email not verified. Try again');
-        return;
-      }
-      callback();
-    }, 2000)
-  })
-}
 
 function handleEmailError(error) {
   progressBar.close()

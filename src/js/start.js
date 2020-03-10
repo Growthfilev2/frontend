@@ -39,56 +39,26 @@ function isAdmin(idTokenResult) {
     if (!idTokenResult.claims.admin.length) return;
     return true;
 }
-function createOfficeScreen(geopoint) {
-    document.getElementById('app-header').classList.add("hidden")
-    const appEl = document.getElementById('app-current-panel')
-    appEl.classList.remove('mdc-top-app-bar--fixed-adjust')
-    appEl.innerHTML = `<div class='office-registeration mdc-layout-grid'>
-        <div class='graphic-container'>
-            <img src='./img/ic_launcher.png'>
-        </div>
-        <div class='text mdc-typography--body1'>
-            <h3 class='mdc-typography--headline6'>Welcome to Growthfile</h3>
-            <p>Before continuing please agree to Growthfile's privacy policy & terms or use</p>
-            <div class='terms-cont'>
-                ${createCheckBox('office-checkbox',`I agree to Growthfile <a href='./legal.html#privacy-policy' class='no-underline'>Privacy Policy</a> &
-                <a href='./legal.html#terms-of-use-administrator' class='no-underline'>Terms of use</a>`)}
-            </div>
-        </div>
-    </div>
-    ${actionButton('Register your company','register-btn').outerHTML}
-    `
 
-    const registerBtn = document.getElementById('register-btn')
-    registerBtn.setAttribute('disabled', 'true')
-    const form = new mdc.formField.MDCFormField(document.querySelector('.mdc-form-field'))
-    const chckBox = new mdc.checkbox.MDCCheckbox(document.querySelector('.mdc-checkbox'))
-    form.input = chckBox;
-    chckBox.listen('change', function () {
-        if (chckBox.checked) {
-            registerBtn.removeAttribute('disabled')
-        } else {
-            registerBtn.setAttribute('disabled', 'true')
-        }
-    })
-    registerBtn.addEventListener('click', function () {
-        appEl.classList.add('mdc-top-app-bar--fixed-adjust')
-        createOfficeInit(geopoint);
-    })
-
-}
 function createOfficeInit(geopoint) {
-
+    const appEl = document.getElementById('app-current-panel')
+    appEl.classList.add('mdc-top-app-bar--fixed-adjust')
+    const auth = firebase.auth().currentUser;
+    const authProps = {
+        displayName:auth.displayName,
+        phoneNumber:auth.phoneNumber,
+        email:auth.email
+    }
     const template = {
         'template': 'office',
-        'firstContact': '',
-        'secondContact': '',
+        'firstContact': authProps,
+        'secondContact': authProps,
         'name': '',
         'placeId': '',
         'registeredOfficeAddress': '',
     }
     history.pushState(['addView'], null, null);
-    addView(template);
+    addView(template,authProps);
 
 }
 function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {

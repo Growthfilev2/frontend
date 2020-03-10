@@ -1215,51 +1215,50 @@ function openMap() {
   const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
   Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]).then(function (result) {
     const geopoint = result[0];
-    const tokenResult = result[1];
-    const checkInSubs = result[2];
-    const totalRecords = result[3];
-    const auth = firebase.auth().currentUser;
+    // const tokenResult = result[1];
+    // const checkInSubs = result[2];
+    // const totalRecords = result[3];
+    // const auth = firebase.auth().currentUser;
 
 
-    progressBar.close();
-    if (isAdmin(tokenResult)) {
-      handleLocationForMap(geopoint, checkInSubs)
-      return
-    }
-    if (Object.keys(checkInSubs).length) {
-      handleLocationForMap(geopoint, checkInSubs);
-      return;
-    }
-    if (totalRecords) {
-      handleLocationForMap(geopoint, checkInSubs);
-      return;
-    }
+    // progressBar.close();
+    // if (isAdmin(tokenResult)) {
+    //   handleLocationForMap(geopoint, checkInSubs)
+    //   return
+    // }
+    // if (Object.keys(checkInSubs).length) {
+    //   handleLocationForMap(geopoint, checkInSubs);
+    //   return;
+    // }
+    // if (totalRecords) {
+    //   handleLocationForMap(geopoint, checkInSubs);
+    //   return;
+    // }
 
-    if (deepLinkQuery) {
-      const action = deepLinkQuery.get('action')
-      if (action && action === 'get-subscription') {
+    // if (deepLinkQuery) {
+    //   const action = deepLinkQuery.get('action')
+    //   if (action && action === 'get-subscription') {
 
-        sendSubscriptionData({
-          "share": [{
-            phoneNumber: auth.phoneNumber,
-            displayName: auth.displayName,
-            email: auth.email
-          }],
-          "template": "subscription",
-          "office": deepLinkQuery.get('office')
-        }, geopoint)
-      }
-      return
-    }
-    ApplicationState.location = geopoint;
-    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    if (potentialAlternatePhoneNumbers.length) {
-      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
-      return
-    };
+    //     sendSubscriptionData({
+    //       "share": [{
+    //         phoneNumber: auth.phoneNumber,
+    //         displayName: auth.displayName,
+    //         email: auth.email
+    //       }],
+    //       "template": "subscription",
+    //       "office": deepLinkQuery.get('office')
+    //     }, geopoint)
+    //   }
+    //   return
+    // }
+    // ApplicationState.location = geopoint;
+    // localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    // if (potentialAlternatePhoneNumbers.length) {
+    //   chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
+    //   return
+    // };
 
-    history.pushState(['createOfficeScreen', geopoint], null, null)
-    createOfficeScreen(geopoint)
+    createOfficeInit(geopoint)
   }).catch(function (error) {
     console.log(error)
     handleError({

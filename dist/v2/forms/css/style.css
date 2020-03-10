@@ -132,7 +132,7 @@ body {
 }
 
 .forms .form-list .form-component {
-  padding: 10px 17px;
+  padding: 8px 16px;
   page-break-inside: avoid;
   overflow-y: auto;
 
