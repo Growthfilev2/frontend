@@ -74,7 +74,7 @@ function sendOfficeData(requestBody) {
             logFirebaseAnlyticsEvent('office_created', {
                 location: officeBody.registeredOfficeAddress,
             });
-
+            
             progressBar.open();
             setTimeout(function () {
                 requestCreator('subscription', {
