@@ -7,7 +7,7 @@ function addView(sub, body) {
     header.root_.classList.remove('hidden')
     document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     document.getElementById('app-current-panel').innerHTML = `
-        <iframe class='' id='form-iframe' src='${window.location.origin}/growthfile-frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
+        <iframe class='' id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         passFormData({
             name: 'init',
@@ -47,15 +47,15 @@ window.addEventListener('message', function (event) {
 function handleAuthUpdate(authProps) {
     const auth = firebase.auth().currentUser;
     if (auth.displayName && auth.email) return;
-    
+
 
     if (!auth.displayName) {
         auth.updateProfile({
             displayName: authProps.displayName
         }).then(console.log).catch(console.error)
     }
-    if(!auth.email) {
-        emailUpdate(authProps.email,function(){
+    if (!auth.email) {
+        emailUpdate(authProps.email, function () {
             console.log('succesfully updated email')
         })
     }
@@ -66,68 +66,47 @@ function handleAuthUpdate(authProps) {
 function sendOfficeData(requestBody) {
     const auth = firebase.auth().currentUser;
     handleAuthUpdate(requestBody.auth);
-
     const officeBody = requestBody.office;
+    appLocation(3).then(function (geopoint) {
+        return requestCreator('createOffice', officeBody, geopoint).then(function () {
+            successDialog(`Office created successfully`);
+            logReportEvent('Office Created')
+            logFirebaseAnlyticsEvent('office_created', {
+                location: officeBody.registeredOfficeAddress,
+            });
 
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode({
-        'address': officeBody.registeredOfficeAddress
-    }, function (geocodeResults, status) {
-        if (status === 'OK' && geocodeResults.length) {
-            officeBody.placeId = geocodeResults[0].place_id
-            appLocation(3).then(function (geopoint) {
-
-                return requestCreator('createOffice', officeBody, geopoint).then(function () {
-                    successDialog(`Office created successfully`);
-                    logReportEvent('Office Created')
-                    logFirebaseAnlyticsEvent('office_created', {
-                        item_location_id: officeBody.placeId,
-                    });
-
-                    progressBar.open();
-                    setTimeout(function () {
-                        requestCreator('subscription', {
-                            "share": [{
-                                phoneNumber: auth.phoneNumber,
-                                displayName: requestBody.auth.displayName,
-                                email: requestBody.auth.email
-                            }],
-                            "template": "subscription",
-                            "office": officeBody.name
-                        }, geopoint).then(function (response) {
-                            return updateFromTime(0)
-                        }).then(function () {
-                            progressBar.close();
-                            history.pushState(['share'], null, null);
-                            giveSubscriptionInit(officeBody.name, true);
-                        }).catch(function (error) {
-                            progressBar.close();
-                            snacks(error.message);
-                        })
-                    }, 3000)
+            progressBar.open();
+            setTimeout(function () {
+                requestCreator('subscription', {
+                    "share": [{
+                        phoneNumber: auth.phoneNumber,
+                        displayName: requestBody.auth.displayName,
+                        email: requestBody.auth.email
+                    }],
+                    "template": "subscription",
+                    "office": officeBody.name
+                }, geopoint).then(function (response) {
+                    return updateFromTime(0)
+                }).then(function () {
+                    progressBar.close();
+                    history.pushState(['share'], null, null);
+                    giveSubscriptionInit(officeBody.name, true);
                 }).catch(function (error) {
-                    console.log(error)
-                    passFormData({
-                        name: 'toggleSubmit',
-                        template: '',
-                        body: '',
-                        deviceType: native.getName()
-                    })
-            
+                    progressBar.close();
+                    snacks(error.message);
                 })
-            }).catch(handleLocationError);
-            return
-        }
-        snacks('No such address found')
-        passFormData({
-            name: 'toggleSubmit',
-            template: '',
-            body: '',
-            deviceType: native.getName()
+            }, 3000)
+        }).catch(function (error) {
+            console.log(error)
+            passFormData({
+                name: 'toggleSubmit',
+                template: '',
+                body: '',
+                deviceType: native.getName()
+            })
         })
-
-    })
-
+    }).catch(handleLocationError);
+    return
 }
 
 function sendUsersData(formData) {

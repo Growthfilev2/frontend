@@ -633,7 +633,6 @@ function updateCalendar(activity, tx) {
 function putMap(location, updateTx) {
   const mapObjectStore = updateTx.objectStore('map')
   mapObjectStore.put(location);
-
 }
 
 function putAttachment(activity, tx, param) {
