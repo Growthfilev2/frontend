@@ -1215,8 +1215,6 @@ function openMap() {
     const checkInSubs = result[2];
     const totalRecords = result[3];
     const auth = firebase.auth().currentUser;
-
-
     progressBar.close();
     if (isAdmin(tokenResult)) {
       handleLocationForMap(geopoint, checkInSubs)

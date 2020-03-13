@@ -78,19 +78,6 @@ self.onmessage = function (event) {
     });
     return
   }
-  if(event.data.type === 'geocode') {
-    this.http({
-      method: 'GET',
-      url: `https://maps.googleapis.com/maps/api/geocode/json?${event.data.body}&key=${meta.mapKey}`,
-      body: null,
-    },false).then(function(response){
-      sendSuccessRequestToMainThread(response, workerId)
-    }).catch(function (error) {
-      error.id = workerId;
-      self.postMessage(error);
-    })
-    return
-  }
 
   const req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
@@ -575,6 +562,7 @@ function backblaze(body, meta) {
 
 function updateAttendance(attendanceData = [], store) {
   attendanceData.forEach(function (value) {
+    if(!value.id) return;
     value.editable = 1;
     store.put(value)
   })
@@ -582,12 +570,14 @@ function updateAttendance(attendanceData = [], store) {
 
 function updateReimbursements(reimbursementData = [], store) {
   reimbursementData.forEach(function (value) {
+    if(!value.id) return;
     store.put(value)
   })
 }
 
 function updatePayments(paymentData = [], store) {
   paymentData.forEach(function(value) {
+    if(!value.id) return;
       store.put(value)
   })
 }
@@ -631,12 +621,13 @@ function updateCalendar(activity, tx) {
 }
 
 function putMap(location, updateTx) {
+  if(!location.activityId) return;
   const mapObjectStore = updateTx.objectStore('map')
   mapObjectStore.put(location);
 }
 
 function putAttachment(activity, tx, param) {
-
+  if(!activity.activityId) return
   const store = tx.objectStore('children');
   const commonSet = {
     activityId: activity.activityId,
@@ -775,6 +766,7 @@ function successResponse(read, param, db, resolve, reject) {
   updateReimbursements(read.reimbursements, reimbursementStore)
   updatePayments(read.payments, paymentStore);
   read.activities.forEach(function (activity) {
+    if(!activity.activityId) return;
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     
@@ -848,9 +840,7 @@ function successResponse(read, param, db, resolve, reject) {
       return;
     }
     putSubscription(subscription, updateTx);
-    // if (subscription.template === 'check-in' && read.fromTime !== 0) {
-    //    reloadApp = true;
-    // }
+   
   })
 
 

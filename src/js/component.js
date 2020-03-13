@@ -494,7 +494,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
             method: 'POST',
             body: JSON.stringify({
                 "dynamicLinkInfo": {
-                    "domainUriPrefix": "https://growthfileanalytics.page.link",
+                    "domainUriPrefix": "https://growthfile.page.link",
                     "link": `https://growthfile-207204.firebaseapp.com/v2/${urlParam}`,
                     "androidInfo": {
                         "androidPackageName": "com.growthfile.growthfileNew",
@@ -560,11 +560,7 @@ const shareWidget = (link, office) => {
     grid.appendChild(iconContainer)
     grid.appendChild(createElement('h3', {
         className: 'mdc-typography--headline4 mb-10',
-        textContent: 'Invite users to download'
-    }))
-    grid.appendChild(createElement('p',{
-        className:'mdc-typography--headline6',
-        textContent:'Share this link with people to add them to '+office
+        textContent: 'Invite users to join ' + office
     }))
 
     const linkManager = createElement('div', {

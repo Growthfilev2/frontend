@@ -79,7 +79,6 @@ function reportViewHeader() {
   }
   const header = setHeader(homeHeaderStartContent(ApplicationState.venue.location || ''), clearIcon);
   header.root_.classList.remove('hidden');
-
   if (!ApplicationState.venue) {
     generateCheckInVenueName(header);
   }
