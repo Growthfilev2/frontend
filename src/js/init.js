@@ -661,7 +661,7 @@ function startApp() {
 }
 
 function initProfileView() {
-
+  
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
@@ -706,6 +706,9 @@ function checkForPhoto() {
     checkForEmail();
     return;
   }
+
+
+  setHeader(`<span class="mdc-top-app-bar__title">Add Photo</span>`, '');
 
   logReportEvent("Profile Completion Photo")
   logFirebaseAnlyticsEvent("profile_completion_photo")
@@ -807,7 +810,6 @@ function checkForBankAccount() {
     }
     logReportEvent("Profile Completion bank account")
     logFirebaseAnlyticsEvent("profile_completion_bank_account")
-
     increaseStep(5)
     addNewBankAccount(function () {
       loadingScreen();

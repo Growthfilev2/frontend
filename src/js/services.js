@@ -241,7 +241,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=106');
+const apiHandler = new Worker('js/apiHandler.js?version=110');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -729,6 +729,7 @@ function emailVerification(callback) {
 
 
 function handleEmailError(error) {
+  if(history.state[0] === 'addView') return;
   progressBar.close()
   if (error.code === 'auth/requires-recent-login') {
     const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');

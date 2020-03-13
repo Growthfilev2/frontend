@@ -3,10 +3,7 @@ function chooseAlternativePhoneNumber(alternatePhoneNumbers) {
     const appEl = document.getElementById('app-current-panel');
     appEl.innerHTML = `<div class='phone-number-choose ${alternatePhoneNumbers.length == 1 ? 'slider' :''}'>
             <div class='phone-number-choose-cont ${alternatePhoneNumbers.length == 1 ? 'slider-container' :''}''>
-                <h1 class='mdc-typography--headline5 mb-0'>
-                    Hello, ${auth.displayName}
-                </h1>
-
+               
                 ${alternatePhoneNumbers.length == 1 ? `<p class='mdc-typography--body1 pl-20 pr-20'>
                 We found another number <span class='mdc-theme--primary'><b>${alternatePhoneNumbers[0].phoneNumber}</b></span> you used with this device for Company <span class='mdc-theme--primary'><b>${alternatePhoneNumbers[0].office}</b></span>. Login with this phone number to proceed
                 </p>`:`<p class='mdc-typography--body1'>We found other numbers you used with this device . Login with any of these phone numbers to proceed</p>
@@ -41,6 +38,7 @@ function isAdmin(idTokenResult) {
 }
 
 function createOfficeInit(geopoint) {
+    ApplicationState.location = geopoint
     const appEl = document.getElementById('app-current-panel')
     appEl.classList.add('mdc-top-app-bar--fixed-adjust')
     if(progressBar) {
