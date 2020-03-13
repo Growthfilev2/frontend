@@ -68,7 +68,7 @@ function sendOfficeData(requestBody) {
     handleAuthUpdate(requestBody.auth);
     const officeBody = requestBody.office;
     appLocation(3).then(function (geopoint) {
-        return requestCreator('createOffice', officeBody, geopoint).then(function () {
+        // return requestCreator('createOffice', officeBody, geopoint).then(function () {
             successDialog(`Office created successfully`);
             logReportEvent('Office Created')
             logFirebaseAnlyticsEvent('office_created', {
@@ -92,19 +92,19 @@ function sendOfficeData(requestBody) {
                     history.pushState(['share'], null, null);
                     giveSubscriptionInit(officeBody.name, true);
                 }).catch(function (error) {
-                    progressBar.close();
+                    progressBar.close();           
                     snacks(error.message);
                 })
             }, 3000)
-        }).catch(function (error) {
-            console.log(error)
-            passFormData({
-                name: 'toggleSubmit',
-                template: '',
-                body: '',
-                deviceType: native.getName()
-            })
-        })
+        // }).catch(function (error) {
+        //     console.log(error)
+        //     passFormData({
+        //         name: 'toggleSubmit',
+        //         template: '',
+        //         body: '',
+        //         deviceType: native.getName()
+        //     })
+        // })
     }).catch(handleLocationError);
     return
 }

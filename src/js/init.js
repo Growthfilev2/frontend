@@ -642,8 +642,8 @@ function startApp() {
         store.put(rootRecord);
       }
       rootTx.oncomplete = function () {
-        if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
-        initProfileView()
+        if (!rootRecord.fromTime) return requestCreator('Null').then(openMap).catch(console.error)
+        openMap()
         runRead({
           read: '1'
         })
@@ -662,11 +662,6 @@ function startApp() {
 
 function initProfileView() {
 
-  getCheckInSubs().then(function (results) {
-    if (isNewUser && Object.keys(results).length) {
-      setFirebaseAnalyticsUserProperty("hasCheckin", "true");
-    }
-  })
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
@@ -807,7 +802,7 @@ function checkForBankAccount() {
 
   getRootRecord().then(function (record) {
     if (record.skipBankAccountAdd || record.linkedAccounts.length) {
-      openMap();
+      openReportView();
       return;
     }
     logReportEvent("Profile Completion bank account")
@@ -816,7 +811,7 @@ function checkForBankAccount() {
     increaseStep(5)
     addNewBankAccount(function () {
       loadingScreen();
-      openMap()
+      openReportView()
     });
   })
 }
@@ -1216,48 +1211,48 @@ function openMap() {
   const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
   Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]).then(function (result) {
     const geopoint = result[0];
-    // const tokenResult = result[1];
-    // const checkInSubs = result[2];
-    // const totalRecords = result[3];
-    // const auth = firebase.auth().currentUser;
+    const tokenResult = result[1];
+    const checkInSubs = result[2];
+    const totalRecords = result[3];
+    const auth = firebase.auth().currentUser;
 
 
-    // progressBar.close();
-    // if (isAdmin(tokenResult)) {
-    //   handleLocationForMap(geopoint, checkInSubs)
-    //   return
-    // }
-    // if (Object.keys(checkInSubs).length) {
-    //   handleLocationForMap(geopoint, checkInSubs);
-    //   return;
-    // }
-    // if (totalRecords) {
-    //   handleLocationForMap(geopoint, checkInSubs);
-    //   return;
-    // }
+    progressBar.close();
+    if (isAdmin(tokenResult)) {
+      handleLocationForMap(geopoint, checkInSubs)
+      return
+    }
+    if (Object.keys(checkInSubs).length) {
+      handleLocationForMap(geopoint, checkInSubs);
+      return;
+    }
+    if (totalRecords) {
+      openReportView()
+      return;
+    }
 
-    // if (deepLinkQuery) {
-    //   const action = deepLinkQuery.get('action')
-    //   if (action && action === 'get-subscription') {
+    if (deepLinkQuery) {
+      const action = deepLinkQuery.get('action')
+      if (action && action === 'get-subscription') {
 
-    //     sendSubscriptionData({
-    //       "share": [{
-    //         phoneNumber: auth.phoneNumber,
-    //         displayName: auth.displayName,
-    //         email: auth.email
-    //       }],
-    //       "template": "subscription",
-    //       "office": deepLinkQuery.get('office')
-    //     }, geopoint)
-    //   }
-    //   return
-    // }
-    // ApplicationState.location = geopoint;
-    // localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    // if (potentialAlternatePhoneNumbers.length) {
-    //   chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
-    //   return
-    // };
+        sendSubscriptionData({
+          "share": [{
+            phoneNumber: auth.phoneNumber,
+            displayName: auth.displayName,
+            email: auth.email
+          }],
+          "template": "subscription",
+          "office": deepLinkQuery.get('office')
+        }, geopoint)
+      }
+      return
+    }
+    ApplicationState.location = geopoint;
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    if (potentialAlternatePhoneNumbers.length) {
+      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
+      return
+    };
 
     createOfficeInit(geopoint)
   }).catch(function (error) {
@@ -1303,10 +1298,16 @@ function handleLocationForMap(geopoint, checkInSubs) {
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
   if (isOlder || hasChangedLocation) return mapView(geopoint);
   ApplicationState = oldApplicationState;
+  openReportView()
+}
+
+
+function openReportView() {
+  logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view")
   history.pushState(['reportView'], null, null)
-  return reportView()
+  reportView()
 }
 
 function fillVenueInSub(sub, venue) {
@@ -1332,14 +1333,16 @@ function reloadPage() {
 function updateFromTime(fromTime) {
   return new Promise(function (resolve, reject) {
     const keyPath = firebase.auth().currentUser.uid;
-    const tx = db.transaction('root');
+    const tx = db.transaction('root','readwrite');
     const store = tx.objectStore('root');
     store.get(keyPath).onsuccess = function (e) {
       const record = e.target.result;
       record.fromTime = fromTime
+      store.put(record);
     }
     tx.oncomplete = function () {
       resolve(true)
     }
+   
   })
 }
