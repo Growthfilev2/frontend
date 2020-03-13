@@ -648,8 +648,8 @@ function startApp() {
 
 
 
-        if (!rootRecord.fromTime) return requestCreator('Null').then(initProfileView).catch(console.error)
-        initProfileView()
+        if (!rootRecord.fromTime) return requestCreator('Null').then(openMap).catch(console.error)
+        openMap()
         runRead({
           read: '1'
         })
@@ -667,11 +667,7 @@ function startApp() {
 }
 
 function initProfileView() {
-  getCheckInSubs().then(function (results) {
-    if (isNewUser && Object.keys(results).length) {
-      setFirebaseAnalyticsUserProperty("hasCheckin", "true");
-    }
-  })
+
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
@@ -812,7 +808,11 @@ function checkForBankAccount() {
 
   getRootRecord().then(function (record) {
     if (record.skipBankAccountAdd || record.linkedAccounts.length) {
-      openMap();
+      history.pushState(['reportView'], null, null)
+      logReportEvent('IN ReportsView');
+      logReportEvent('IN Reports');
+      logFirebaseAnlyticsEvent("report_view")
+      reportView()
       return;
     }
     logReportEvent("Profile Completion bank account")
@@ -821,7 +821,11 @@ function checkForBankAccount() {
     increaseStep(5)
     addNewBankAccount(function () {
       loadingScreen();
-      openMap()
+      history.pushState(['reportView'], null, null)
+      logReportEvent('IN ReportsView');
+      logReportEvent('IN Reports');
+      logFirebaseAnlyticsEvent("report_view")
+      reportView()
     });
   })
 }
@@ -1234,6 +1238,9 @@ function openMap() {
       return
     }
     if (Object.keys(checkInSubs).length) {
+      if (isNewUser) {
+        setFirebaseAnalyticsUserProperty("hasCheckin", "true");
+      }
       handleLocationForMap(geopoint, checkInSubs);
       return;
     }

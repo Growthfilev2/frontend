@@ -468,7 +468,6 @@ function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
 
 function giveSubscriptionInit(name, skip) {
     if (isDeviceVersionLower(17, 9)) {
-        debugger
         const template = {
             "assignees": [],
             "template": "subscription",

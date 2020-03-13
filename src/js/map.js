@@ -221,12 +221,8 @@ function createUnkownCheckIn(cardProd, geopoint, retry) {
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
 
+    initProfileView()
 
-    history.pushState(['reportView'], null, null)
-    logReportEvent('IN ReportsView');
-    logReportEvent('IN Reports');
-    logFirebaseAnlyticsEvent("report_view")
-    reportView()
   }).catch(function (error) {
 
 
@@ -325,11 +321,7 @@ function createKnownCheckIn(selectedVenue, cardProd, geopoint, retry) {
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    history.pushState(['reportView'], null, null)
-    logReportEvent('IN ReportsView');
-    logReportEvent('IN Reports');
-    logFirebaseAnlyticsEvent("report_view")
-    reportView();
+    initProfileView()
   }).catch(function (error) {
     if (error.message === 'Invalid check-in') {
 
