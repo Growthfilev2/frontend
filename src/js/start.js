@@ -43,6 +43,9 @@ function isAdmin(idTokenResult) {
 function createOfficeInit(geopoint) {
     const appEl = document.getElementById('app-current-panel')
     appEl.classList.add('mdc-top-app-bar--fixed-adjust')
+    if(progressBar) {
+        progressBar.close();
+    }
     const auth = firebase.auth().currentUser;
     const authProps = {
         displayName:auth.displayName,
@@ -51,10 +54,8 @@ function createOfficeInit(geopoint) {
     }
     const template = {
         'template': 'office',
-        'firstContact': authProps,
-        'secondContact': authProps,
+        'firstContact': authProps,       
         'name': '',
-        'placeId': '',
         'registeredOfficeAddress': '',
     }
     history.pushState(['addView'], null, null);

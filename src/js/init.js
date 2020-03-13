@@ -661,6 +661,7 @@ function startApp() {
 }
 
 function initProfileView() {
+
   getCheckInSubs().then(function (results) {
     if (isNewUser && Object.keys(results).length) {
       setFirebaseAnalyticsUserProperty("hasCheckin", "true");
