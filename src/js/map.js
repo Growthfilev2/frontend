@@ -57,9 +57,7 @@ function handleLocationError(error, onAppOpen) {
   if (progressBar) {
     progressBar.close()
   }
-  if (document.getElementById('selection-box-prog')) {
-    document.getElementById('selection-box-prog').classList.add('mdc-linear-progress--closed')
-  }
+
   passFormData({
     name: 'toggleSubmit',
     template: '',
@@ -140,7 +138,7 @@ function mapView(location) {
   progressBar.close();
   
   panel.innerHTML = `
-    <div id='map-view' class=''>
+    <div id='map-view' class='mdc-top-app-bar--fixed-adjust'>
       ${selectionBox()}
     </div>
   `
@@ -249,8 +247,6 @@ function loadCardData(venues, geopoint) {
   ${venues.map(function(venue) {
       return `${venueList(venue)}`
   }).join("")}
-  <li class='mdc-list-divider'></li>
-  ${loadUnkwown()}
 </ul>`
 
   document.querySelector('#selection-box .content-body').innerHTML = venuesList;
@@ -260,9 +256,6 @@ function loadCardData(venues, geopoint) {
   ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
     console.log(evt.detail.index)
-    if (evt.detail.index == venues.length) return createUnkownCheckIn(geopoint);
-   
-
     const selectedVenue = venues[evt.detail.index];
     createKnownCheckIn(selectedVenue,geopoint);
   })
@@ -298,13 +291,6 @@ function createKnownCheckIn(selectedVenue, geopoint, retry) {
   })
 }
 
-function loadUnkwown() {
-  return ` <li class='mdc-list-item venue-list-item  pl-0 pr-0'>
-  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">location_on</span>
-    Unknown location
-    <span class="mdc-list-item__meta material-icons" aria-hidden="true">keyboard_arrow_right</span>
-  </li>`
-}
 
 
 function venueList(venue) {
@@ -332,22 +318,7 @@ function newOfficeView() {
   
 function selectionBox() {
   return `<div class="selection-box-auto" id='selection-box'>
-
-  <div role="progressbar"
-    class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-    id='selection-box-prog'>
-    <div class="mdc-linear-progress__buffering-dots"></div>
-    <div class="mdc-linear-progress__buffer"></div>
-    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-      <span class="mdc-linear-progress__bar-inner"></span>
-    </div>
-    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-      <span class="mdc-linear-progress__bar-inner"></span>
-    </div>
-  </div>
-
-  <div class="content-body">
-  </div>
+      <div class="content-body"></div>
   </div>
 `
 }
