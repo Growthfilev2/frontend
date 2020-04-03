@@ -8,7 +8,8 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
-var deepLinkQuery;
+var firebaseDeepLink;
+var facebookDeepLink;
 var isNewUser = false;
 
 function setFirebaseAnalyticsUserId(id) {
@@ -74,6 +75,15 @@ function setFirebaseAnalyticsUserProperty(name, value) {
   }
 }
 
+
+function parseFacebookDeeplink(link) {
+  console.log("fb link ", link)
+  const url = new URL(link);
+  const query = new URLSearchParams(url.search);
+  facebookDeepLink = query;
+  if(!firebase.auth().currentUser) return;
+}
+
 /**
  * long dynamic link intercepted by device containing query parameters
  * @param {string} link 
@@ -81,8 +91,8 @@ function setFirebaseAnalyticsUserProperty(name, value) {
 
 function parseDynamicLink(link) {
   const url = new URL(link);
-  deepLinkQuery = new URLSearchParams(url.search);
-
+  firebaseDeepLink = new URLSearchParams(url.search);
+  if(!firebase.auth().currentUser) return;
 }
 
 /**
@@ -221,7 +231,7 @@ window.onpopstate = function (event) {
 }
 
 
-function initializeApp() {
+// function initializeApp() {
   window.addEventListener('load', function () {
 
     firebase.initializeApp(appKey.getKeys())
@@ -269,7 +279,7 @@ function initializeApp() {
     });
   })
 
-}
+// }
 
 function checkNetworkValidation() {
   if (!navigator.onLine) {
@@ -290,7 +300,23 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        isNewUser = authResult.additionalUserInfo.isNewUser
+        setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
+      
+        var queryLink = firebaseDeepLink || facebookDeepLink;
+        if(queryLink && queryLink.get('action') === 'user_engaged_campaign') {
+    
+          const tracker = {
+            "source":queryLink.get("utm_source"),
+            "medium":queryLink.get("utm_medium"),
+            "campaign":queryLink.get("utm_campaign")
+          }
+          logFirebaseAnlyticsEvent('campaign_details',tracker);
+          tracker.logId = queryLink.get("logid")
+          logFirebaseAnlyticsEvent('user_engaged_campaign',tracker)
+        }
+
+    
+        isNewUser = authResult.additionalUserInfo.isNewUser;
         if (!authResult.additionalUserInfo.isNewUser) {
           logReportEvent("login");
           logFirebaseAnlyticsEvent("login", {
@@ -299,21 +325,18 @@ function firebaseUiConfig() {
           return false
         };
 
-
         firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
-          const sign_up_params = {
-            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-            'isAdmin': 0
-          }
+       
           if (isAdmin(tokenResult)) {
-            sign_up_params.isAdmin = 1
             logReportEvent("Sign Up Admin");
             setFirebaseAnalyticsUserProperty("isAdmin", "true");
-
           } else {
             logReportEvent("Sign Up");
           };
-          logFirebaseAnlyticsEvent("sign_up", sign_up_params)
+          logFirebaseAnlyticsEvent("sign_up", {
+            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
+          });
+
         })
         return false;
       },
@@ -1218,21 +1241,25 @@ function openMap() {
     const totalRecords = result[3];
     const auth = firebase.auth().currentUser;
     progressBar.close();
+
+    if (Object.keys(checkInSubs).length) {
+      setFirebaseAnalyticsUserProperty("hasCheckin","true");
+      handleLocationForMap(geopoint, checkInSubs);
+      return;
+    }
+
     if (isAdmin(tokenResult)) {
       handleLocationForMap(geopoint, checkInSubs)
       return
     }
-    if (Object.keys(checkInSubs).length) {
-      handleLocationForMap(geopoint, checkInSubs);
-      return;
-    }
+  
     if (totalRecords) {
       openReportView()
       return;
     }
 
-    if (deepLinkQuery) {
-      const action = deepLinkQuery.get('action')
+    if (firebaseDeepLink) {
+      const action = firebaseDeepLink.get('action')
       if (action && action === 'get-subscription') {
 
         sendSubscriptionData({
@@ -1242,7 +1269,7 @@ function openMap() {
             email: auth.email
           }],
           "template": "subscription",
-          "office": deepLinkQuery.get('office')
+          "office": firebaseDeepLink.get('office')
         }, geopoint)
       }
       return
