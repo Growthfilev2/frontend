@@ -314,8 +314,7 @@ function firebaseUiConfig() {
           tracker.logId = queryLink.get("logid")
           logFirebaseAnlyticsEvent('user_engaged_campaign',tracker)
         }
-
-    
+        
         isNewUser = authResult.additionalUserInfo.isNewUser;
         if (!authResult.additionalUserInfo.isNewUser) {
           logReportEvent("login");
