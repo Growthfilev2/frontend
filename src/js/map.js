@@ -1,7 +1,6 @@
 
 let selectedSubs;
-
-ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
+var ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   location: '',
   knownLocation: false,
   venue: '',
@@ -9,10 +8,6 @@ ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   nearByLocations: []
 }
 
-var markersObject = {
-  markers: [],
-  infowindow: []
-}
 
 function logReportEvent(name) {
   const deviceInfo = JSON.parse(native.getInfo());
@@ -134,11 +129,11 @@ function mapView(location) {
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
-  panel.classList.remove('pl-0', 'pr-0');
+  panel.classList.add("mdc-top-app-bar--fixed-adjust")
   progressBar.close();
   
   panel.innerHTML = `
-    <div id='map-view' class='mdc-top-app-bar--fixed-adjust'>
+    <div id='map-view'>
       ${selectionBox()}
     </div>
   `
@@ -509,8 +504,7 @@ function getOrientation(image) {
 
 function loadNearByLocations(o, location) {
   return new Promise(function (resolve, reject) {
-    markersObject.markers = [];
-    markersObject.infowindow = []
+    
     const result = []
     
     const tx = db.transaction(['map'])

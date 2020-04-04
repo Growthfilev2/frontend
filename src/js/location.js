@@ -10,7 +10,7 @@ function timeDelta(previousLocationTime, newLocationTime) {
 
     try {
         const duration = moment.duration(moment(newLocationTime).diff(previousLocationTime));
-        return duration.asHours();
+        return duration.asMinutes()
     } catch (e) {
         console.log(e)
         const res = newLocationTime - previousLocationTime;
@@ -26,7 +26,7 @@ function getStoredLocation() {
 
 function isLocationOld(newLocation, oldLocation) {
     if (!oldLocation) return false;
-    return oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;    
+    return  oldLocation.provider === newLocation.provider &&  oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;    
 }
 
 function isLocationMoreThanThreshold(distance) {

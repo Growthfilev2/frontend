@@ -10,6 +10,10 @@ var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
+var updatedWifiAddresses = {
+  addresses: {},
+  timestamp:null
+}
 var isNewUser = false;
 
 function setFirebaseAnalyticsUserId(id) {
@@ -77,6 +81,7 @@ function setFirebaseAnalyticsUserProperty(name, value) {
 
 
 function parseFacebookDeeplink(link) {
+  
   console.log("fb link ", link)
   const url = new URL(link);
   const query = new URLSearchParams(url.search);
@@ -113,6 +118,19 @@ function linkSharedComponent(componentValue) {
  */
 function updatedWifiScans(wifiString) {
   console.log("updated wifi", wifiString)
+  const result = {}
+  const splitBySeperator = wifiString.split(",")
+  splitBySeperator.forEach(function (value) {
+      const url = new URLSearchParams(value);
+      if (url.has('ssid')) {
+          url.delete('ssid')
+      }
+      if (!url.has('macAddress')) return;
+      result[url.get("macAddress")] = true
+    })
+    updatedWifiAddresses.addresses = result;
+    updatedWifiAddresses.timestamp = Date.now()
+  
 };
 
 /**
@@ -120,6 +138,7 @@ function updatedWifiScans(wifiString) {
  */
 
 window.addEventListener('error', function (event) {
+  this.console.error(event.message)
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
   handleError({
     message: 'global error :' + event.message,
@@ -304,7 +323,6 @@ function firebaseUiConfig() {
       
         var queryLink = firebaseDeepLink || facebookDeepLink;
         if(queryLink && queryLink.get('action') === 'user_engaged_campaign') {
-    
           const tracker = {
             "source":queryLink.get("utm_source"),
             "medium":queryLink.get("utm_medium"),
