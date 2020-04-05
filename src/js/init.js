@@ -353,7 +353,6 @@ function firebaseUiConfig() {
           logFirebaseAnlyticsEvent("sign_up", {
             method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
           });
-
         })
         return false;
       },
@@ -1269,12 +1268,7 @@ function openMap() {
       handleLocationForMap(geopoint, checkInSubs)
       return
     }
-  
-    if (totalRecords) {
-      openReportView()
-      return;
-    }
-
+    
     if (firebaseDeepLink) {
       const action = firebaseDeepLink.get('action')
       if (action && action === 'get-subscription') {
@@ -1291,6 +1285,12 @@ function openMap() {
       }
       return
     }
+  
+    if (totalRecords) {
+      openReportView()
+      return;
+    }
+
     ApplicationState.location = geopoint;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     if (potentialAlternatePhoneNumbers.length) {

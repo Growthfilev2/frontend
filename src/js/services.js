@@ -167,36 +167,34 @@ function getLocation() {
       }
       return;
     }
-
-    handleGeoLocationApi().then(resolve).catch(reject)
-    // html5Geolocation().then(function (htmlLocation) {
-    //   if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
-        // handleGeoLocationApi().then(resolve).catch(function (error) {
-        //   return resolve(htmlLocation);
-        // })
-      //   return;
-      // };
-      // return resolve(htmlLocation)
-    // }).catch(function (htmlError) {
-    //   handleGeoLocationApi().then(resolve).catch(function (error) {
-    //     return reject({
-    //       message: 'Both HTML and Geolocation failed to fetch location',
-    //       body: {
-    //         html5: htmlError,
-    //         geolocation: error,
-    //       },
-    //       'locationError': true
-    //     })
-    //   })
-    // })
+    html5Geolocation().then(function (htmlLocation) {
+      if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
+        handleGeoLocationApi().then(resolve).catch(function (error) {
+          return resolve(htmlLocation);
+        })
+        return;
+      };
+      return resolve(htmlLocation)
+    }).catch(function (htmlError) {
+      handleGeoLocationApi().then(resolve).catch(function (error) {
+        return reject({
+          message: 'Both HTML and Geolocation failed to fetch location',
+          body: {
+            html5: htmlError,
+            geolocation: error,
+          },
+          'locationError': true
+        })
+      })
+    })
   })
 }
 
 
 function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
-    if (ApplicationState.location && typeof (ApplicationState.location.provider) === 'object' &&  ApplicationState.location.provider.wifiAccessPoints) {
-      
+    if (ApplicationState.location && typeof (ApplicationState.location.provider) === 'object' && ApplicationState.location.provider.wifiAccessPoints) {
+
       let matchFound = false
       ApplicationState.location.provider.wifiAccessPoints.forEach(function (ap) {
         if (updatedWifiAddresses.addresses[ap.macAddress] && ApplicationState.location.accuracy <= 1000 && timeDelta(ApplicationState.location.lastLocationTime, updatedWifiAddresses.timestamp) <= 5) {
@@ -255,7 +253,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=110');
+const apiHandler = new Worker('js/apiHandler.js?version=111');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {

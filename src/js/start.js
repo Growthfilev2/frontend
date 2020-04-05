@@ -105,7 +105,7 @@ function giveSubscriptionInit(name, skip) {
     header.root_.classList.remove('hidden')
     progressBar.open()
     createDynamicLinkSocialTags(name).then(function (socialInfo) {
-        createDynamiclink(`?action=get-subscription&office=${name}`, socialInfo).then(function (link) {
+        createDynamiclink(`?action=get-subscription&office=${name}&utm_source=share_link_employee_app&utm_medium=share_widget&utm_campaign=share_link`, socialInfo).then(function (link) {
             progressBar.close();
             el.appendChild(shareWidget(link, name));
         }).catch(function (error) {
