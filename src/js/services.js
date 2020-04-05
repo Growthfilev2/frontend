@@ -30,7 +30,7 @@ function handleError(error) {
   console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message))
-  error.device = localStorage.getItem('deviceInfo');
+    error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   return requestCreator('instant', JSON.stringify(error))
@@ -76,14 +76,14 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-  
+
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
         return resolve(geopoint);
       }
-      
+
       if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
@@ -167,8 +167,6 @@ function getLocation() {
       }
       return;
     }
-
-
     html5Geolocation().then(function (htmlLocation) {
       if (htmlLocation.isLocationOld || htmlLocation.accuracy >= 350) {
         handleGeoLocationApi().then(resolve).catch(function (error) {
@@ -195,6 +193,20 @@ function getLocation() {
 
 function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
+    if (ApplicationState.location && typeof (ApplicationState.location.provider) === 'object' && ApplicationState.location.provider.wifiAccessPoints) {
+
+      let matchFound = false
+      ApplicationState.location.provider.wifiAccessPoints.forEach(function (ap) {
+        if (updatedWifiAddresses.addresses[ap.macAddress] && ApplicationState.location.accuracy <= 1000 && timeDelta(ApplicationState.location.lastLocationTime, updatedWifiAddresses.timestamp) <= 5) {
+          matchFound = true
+        }
+      })
+
+      if (matchFound) {
+        return resolve(ApplicationState.location)
+      }
+    }
+
     let body;
     try {
       body = getCellularInformation();
@@ -241,12 +253,12 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=110');
+const apiHandler = new Worker('js/apiHandler.js?version=111');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
-    'geocode':true,
-    'geolocationApi':true
+    'geocode': true,
+    'geolocationApi': true
   }
   var auth = firebase.auth().currentUser;
   var requestGenerator = {
@@ -262,7 +274,7 @@ function requestCreator(requestType, requestBody, geopoint) {
       },
       mapKey: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl(),
-      authorization : extralRequest[requestType] ? false : true
+      authorization: extralRequest[requestType] ? false : true
     },
   };
 
@@ -311,7 +323,7 @@ function executeRequest(requestGenerator) {
       } else {
         const resolve = workerResolves[event.data.id];
         if (resolve) {
-          if(event.data.response.hasOwnProperty('reloadApp') && !event.data.response.reloadApp)  {
+          if (event.data.response.hasOwnProperty('reloadApp') && !event.data.response.reloadApp) {
             delete event.data.response.reloadApp;
           }
           resolve(event.data.response);
@@ -390,8 +402,8 @@ function updateIosLocation(geopointIos) {
 function handleComponentUpdation(readResponse) {
   console.log(readResponse)
   if (readResponse.reloadApp) return reloadPage()
-  
-  
+
+
   if (readResponse.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
@@ -483,13 +495,13 @@ function getSubscription(office, template) {
     const subscription = tx.objectStore('subscriptions')
     let range;
     let index;
-    if(!office && !template) {
-      subscription.getAll().onsuccess = function(e) {
+    if (!office && !template) {
+      subscription.getAll().onsuccess = function (e) {
         return resolve(event.target.result)
       }
       return;
     }
-    
+
     if (office) {
       index = subscription.index('validSubscription')
       range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
@@ -597,7 +609,7 @@ function updateName(callback) {
   nameField.focus();
   document.getElementById('name-btn').addEventListener('click', function () {
     if (!nameField.value) {
-      setHelperInvalid(nameField,'Name Cannot Be Left Blank')
+      setHelperInvalid(nameField, 'Name Cannot Be Left Blank')
       return;
     }
     progressBar.open();
@@ -643,7 +655,7 @@ function emailUpdation(skip, callback) {
   const headings = getEmailViewHeading(auth)
   let backIcon = '';
   let actionBtn = ''
-  if(skip) {
+  if (skip) {
     actionBtn = createButton('SKIP', 'skip-header').outerHTML;
   }
   if (history.state[0] === 'profileCheck') {
@@ -666,11 +678,11 @@ function emailUpdation(skip, callback) {
   document.getElementById('email-btn').addEventListener('click', function () {
 
     if (!emailReg(emailField.value)) {
-      setHelperInvalid(emailField,'Enter A Valid Email Id')
+      setHelperInvalid(emailField, 'Enter A Valid Email Id')
       return;
     };
     progressBar.open();
-    
+
     if (auth.email) {
       if (emailField.value !== auth.email) {
         emailUpdate(emailField.value, callback)
@@ -681,7 +693,7 @@ function emailUpdation(skip, callback) {
         return
       }
       progressBar.close()
-      setHelperInvalid(emailField,'New Email Cannot Be Same As Previous Email')
+      setHelperInvalid(emailField, 'New Email Cannot Be Same As Previous Email')
       return
     }
 
@@ -729,7 +741,7 @@ function emailVerification(callback) {
 
 
 function handleEmailError(error) {
-  if(history.state[0] === 'addView') return;
+  if (history.state[0] === 'addView') return;
   progressBar.close()
   if (error.code === 'auth/requires-recent-login') {
     const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
@@ -815,7 +827,7 @@ function idProofView(callback) {
     let actionBtn = ''
     if (history.state[0] === 'profileCheck') {
       backIcon = ' <span class="mdc-top-app-bar__title">Add ID Proof</span>'
-      actionBtn = createButton('SKIP','skip-header').outerHTML
+      actionBtn = createButton('SKIP', 'skip-header').outerHTML
     } else {
       backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add ID Proof</span>
@@ -903,7 +915,7 @@ function idProofView(callback) {
     </div>
     ${actionButton('UPDATE','submit-btn').outerHTML}
   `
-    
+
     const panNumber = new mdc.textField.MDCTextField(document.getElementById('pan-number'))
     const aadharNumber = new mdc.textField.MDCTextField(document.getElementById('aadhar-number'))
     const skipBtn = document.getElementById('skip-header');
@@ -913,7 +925,7 @@ function idProofView(callback) {
 
         getImageBase64(evt).then(function (dataURL) {
           const parentImg = el.closest('.image-container').querySelector('img')
-          if(!parentImg) return;
+          if (!parentImg) return;
           parentImg.src = `${dataURL}`;
           parentImg.dataset.valid = true
         });
@@ -930,7 +942,7 @@ function idProofView(callback) {
       }
 
       if (!isPossiblyValidPan(panNumber.value.trim())) {
-        setHelperInvalid(panNumber,'Please enter a valid PAN number');
+        setHelperInvalid(panNumber, 'Please enter a valid PAN number');
         return;
       };
       const validImagesLength = [...document.querySelectorAll(`[data-valid="false"]`)].length;
@@ -997,49 +1009,48 @@ function idProofView(callback) {
 
 
 function getDropDownContent(office, template, indexName) {
-    return new Promise(function (resolve, reject) {
-        const data = []
-        const name_object = {}
-        const tx = parent.db.transaction(['children'])
-        let keyRange = ''
-        if(office) {
-           keyRange = IDBKeyRange.only([office, template])
-        }
-        else {
-          keyRange = IDBKeyRange.only(template)
-        }
-        tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
-            const cursor = event.target.result;
-            if (!cursor) return;
-            if (cursor.value.status === 'CANCELLED') {
-                cursor.continue();
-                return;
-            }
-            const value = cursor.value.attachment.Name.value
-            if (name_object[value]) {
-                cursor.continue();
-                return;
-            }
-            name_object[value] = true;
-            data.push(value);            
-            cursor.continue();
-        }
-        tx.oncomplete = function () {
-            return resolve(data)
-        }
+  return new Promise(function (resolve, reject) {
+    const data = []
+    const name_object = {}
+    const tx = parent.db.transaction(['children'])
+    let keyRange = ''
+    if (office) {
+      keyRange = IDBKeyRange.only([office, template])
+    } else {
+      keyRange = IDBKeyRange.only(template)
+    }
+    tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
+      }
+      const value = cursor.value.attachment.Name.value
+      if (name_object[value]) {
+        cursor.continue();
+        return;
+      }
+      name_object[value] = true;
+      data.push(value);
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      return resolve(data)
+    }
 
-    })
+  })
 }
 
 
-const phoneFieldInit = (input,dropEl,hiddenInput) => {
-  
-    return intlTelInput(input, {
-        initialCountry: "IN",
-        formatOnDisplay: true,
-        separateDialCode: true,
-        dropdownContainer:dropEl || null,
-        hiddenInput:hiddenInput || "",
-        nationalMode:false
-    });
-  };
+const phoneFieldInit = (input, dropEl, hiddenInput) => {
+
+  return intlTelInput(input, {
+    initialCountry: "IN",
+    formatOnDisplay: true,
+    separateDialCode: true,
+    dropdownContainer: dropEl || null,
+    hiddenInput: hiddenInput || "",
+    nationalMode: false
+  });
+};

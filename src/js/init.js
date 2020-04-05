@@ -8,7 +8,12 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
-var deepLinkQuery;
+var firebaseDeepLink;
+var facebookDeepLink;
+var updatedWifiAddresses = {
+  addresses: {},
+  timestamp:null
+}
 var isNewUser = false;
 
 function setFirebaseAnalyticsUserId(id) {
@@ -74,6 +79,16 @@ function setFirebaseAnalyticsUserProperty(name, value) {
   }
 }
 
+
+function parseFacebookDeeplink(link) {
+  
+  console.log("fb link ", link)
+  const url = new URL(link);
+  const query = new URLSearchParams(url.search);
+  facebookDeepLink = query;
+  if(!firebase.auth().currentUser) return;
+}
+
 /**
  * long dynamic link intercepted by device containing query parameters
  * @param {string} link 
@@ -81,8 +96,8 @@ function setFirebaseAnalyticsUserProperty(name, value) {
 
 function parseDynamicLink(link) {
   const url = new URL(link);
-  deepLinkQuery = new URLSearchParams(url.search);
-
+  firebaseDeepLink = new URLSearchParams(url.search);
+  if(!firebase.auth().currentUser) return;
 }
 
 /**
@@ -103,6 +118,19 @@ function linkSharedComponent(componentValue) {
  */
 function updatedWifiScans(wifiString) {
   console.log("updated wifi", wifiString)
+  const result = {}
+  const splitBySeperator = wifiString.split(",")
+  splitBySeperator.forEach(function (value) {
+      const url = new URLSearchParams(value);
+      if (url.has('ssid')) {
+          url.delete('ssid')
+      }
+      if (!url.has('macAddress')) return;
+      result[url.get("macAddress")] = true
+    })
+    updatedWifiAddresses.addresses = result;
+    updatedWifiAddresses.timestamp = Date.now()
+  
 };
 
 /**
@@ -110,6 +138,7 @@ function updatedWifiScans(wifiString) {
  */
 
 window.addEventListener('error', function (event) {
+  this.console.error(event.message)
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
   handleError({
     message: 'global error :' + event.message,
@@ -221,7 +250,7 @@ window.onpopstate = function (event) {
 }
 
 
-function initializeApp() {
+// function initializeApp() {
   window.addEventListener('load', function () {
 
     firebase.initializeApp(appKey.getKeys())
@@ -239,6 +268,7 @@ function initializeApp() {
     firebase.auth().onAuthStateChanged(function (auth) {
       if (!auth) {
         logReportEvent("IN Slider");
+
         history.pushState(['userSignedOut'], null, null);
         userSignedOut()
         return;
@@ -269,7 +299,7 @@ function initializeApp() {
     });
   })
 
-}
+// }
 
 function checkNetworkValidation() {
   if (!navigator.onLine) {
@@ -290,7 +320,21 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        isNewUser = authResult.additionalUserInfo.isNewUser
+        setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
+      
+        var queryLink = firebaseDeepLink || facebookDeepLink;
+        if(queryLink && queryLink.get('action') === 'user_engaged_campaign') {
+          const tracker = {
+            "source":queryLink.get("utm_source"),
+            "medium":queryLink.get("utm_medium"),
+            "campaign":queryLink.get("utm_campaign")
+          }
+          logFirebaseAnlyticsEvent('campaign_details',tracker);
+          tracker.logId = queryLink.get("logid")
+          logFirebaseAnlyticsEvent('user_engaged_campaign',tracker)
+        }
+        
+        isNewUser = authResult.additionalUserInfo.isNewUser;
         if (!authResult.additionalUserInfo.isNewUser) {
           logReportEvent("login");
           logFirebaseAnlyticsEvent("login", {
@@ -299,21 +343,17 @@ function firebaseUiConfig() {
           return false
         };
 
-
         firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
-          const sign_up_params = {
-            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-            'isAdmin': 0
-          }
+       
           if (isAdmin(tokenResult)) {
-            sign_up_params.isAdmin = 1
             logReportEvent("Sign Up Admin");
             setFirebaseAnalyticsUserProperty("isAdmin", "true");
-
           } else {
             logReportEvent("Sign Up");
           };
-          logFirebaseAnlyticsEvent("sign_up", sign_up_params)
+          logFirebaseAnlyticsEvent("sign_up", {
+            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
+          });
         })
         return false;
       },
@@ -321,7 +361,7 @@ function firebaseUiConfig() {
         return handleUIError(error)
       },
       uiShown: function () {
-
+        logFirebaseAnlyticsEvent('auth_page_open',{})
       }
     },
     signInFlow: 'popup',
@@ -412,10 +452,6 @@ function userSignedOut() {
     removeSwipe()
     panel.innerHTML = '';
     history.pushState(['login'], null, null);
-    // callShareInterface(
-    //   'https://growthfile.page.link/DxcgjL1aBzcn49xC8',
-    //   'Share this link https://growthfile.page.link/DxcgjL1aBzcn49xC8');
-
     initializeFirebaseUI();
   })
 
@@ -1218,21 +1254,22 @@ function openMap() {
     const totalRecords = result[3];
     const auth = firebase.auth().currentUser;
     progressBar.close();
+
+    if (Object.keys(checkInSubs).length) {
+      if(isNewUser) {
+          setFirebaseAnalyticsUserProperty("hasCheckin","true");
+      }
+      handleLocationForMap(geopoint, checkInSubs);
+      return;
+    }
+
     if (isAdmin(tokenResult)) {
       handleLocationForMap(geopoint, checkInSubs)
       return
     }
-    if (Object.keys(checkInSubs).length) {
-      handleLocationForMap(geopoint, checkInSubs);
-      return;
-    }
-    if (totalRecords) {
-      openReportView()
-      return;
-    }
-
-    if (deepLinkQuery) {
-      const action = deepLinkQuery.get('action')
+    
+    if (firebaseDeepLink) {
+      const action = firebaseDeepLink.get('action')
       if (action && action === 'get-subscription') {
 
         sendSubscriptionData({
@@ -1242,11 +1279,17 @@ function openMap() {
             email: auth.email
           }],
           "template": "subscription",
-          "office": deepLinkQuery.get('office')
+          "office": firebaseDeepLink.get('office')
         }, geopoint)
       }
       return
     }
+  
+    if (totalRecords) {
+      openReportView()
+      return;
+    }
+
     ApplicationState.location = geopoint;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     if (potentialAlternatePhoneNumbers.length) {

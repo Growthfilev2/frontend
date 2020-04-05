@@ -3,13 +3,10 @@
     background-color: transparent !important;
 }
 
-#selection-box  aside {
-    height: 40%;
+.selection-box-auto {
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
-#selection-box #card-primary {
-    text-align: left;
-}
-
 .selection-box-auto button {
     width: 100%;
     border-radius: 0px;
@@ -18,12 +15,6 @@
 
 .selection-box-auto button span {
     font-size: 24px;
-}
-
-.selection-box-auto .content-body {
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 0px 10px 30px 10px;
 }
 
 .selection-box-auto .content-body .mdc-select {
@@ -108,7 +99,7 @@
     padding-left: 20px;
     text-align: center;
     font-weight: 400;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.38);
+    /* border-bottom: 1px solid rgba(0, 0, 0, 0.38); */
     color: #89273E
 }
 

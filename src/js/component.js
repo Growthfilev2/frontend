@@ -512,8 +512,8 @@ const createDynamiclink = (urlParam, socialInfo) => {
                     },
                     "analyticsInfo": {
                         "googlePlayAnalytics": {
-                            "utmSource": "employeeApp",
-                            "utmMedium": "Referral",
+                            "utmSource": "share_link_employee_app",
+                            "utmMedium": "share_widget",
                             "utmCampaign": "share_link",
                             "utmTerm": "share_link+create",
                             "utmContent": "Share",
