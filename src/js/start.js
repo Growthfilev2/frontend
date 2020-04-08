@@ -88,7 +88,7 @@ function giveSubscriptionInit(name, skip) {
     const el = document.getElementById('app-current-panel')
     el.innerHTML = '';
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Invite users</span>
+    <span class="mdc-top-app-bar__title">Add users</span>
     `
     
     let header;

@@ -494,7 +494,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
             method: 'POST',
             body: JSON.stringify({
                 "dynamicLinkInfo": {
-                    "domainUriPrefix": "https://growthfile.page.link",
+                    "domainUriPrefix": appKey.dynamicLinkUriPrefix(),
                     "link": `https://growthfile-207204.firebaseapp.com/v2/${urlParam}`,
                     "androidInfo": {
                         "androidPackageName": "com.growthfile.growthfileNew",
@@ -550,17 +550,15 @@ const shareWidget = (link, office) => {
     const grid = createElement('div',{
         className:'mdc-layout-grid'
     })
-    const iconContainer = createElement('div',{
-        className:'icon-container'
-    })
-    iconContainer.appendChild(createElement('i',{
-        className:'material-icons share-icon mdc-theme--primary',
-        textContent:'share'
-    }))
-    grid.appendChild(iconContainer)
+   
+
     grid.appendChild(createElement('h3', {
-        className: 'mdc-typography--headline4 mb-10',
-        textContent: 'Invite users to join ' + office
+        className: 'mdc-typography--headline6 mb-10 mt-0 text-center',
+        textContent: 'Invite users to join'
+    }))
+    grid.appendChild(createElement('h3', {
+        className: 'mdc-typography--headline5 mt-10 text-center mdc-theme--primary',
+        textContent: office
     }))
 
     const linkManager = createElement('div', {
@@ -569,29 +567,26 @@ const shareWidget = (link, office) => {
     const shortLinkPath = new URL(link).pathname
     linkManager.innerHTML = textField({
         value:shortLinkPath.slice(1,shortLinkPath.length),
-        trailingIcon:'file_copy',
+        trailingIcon:'share',
         readonly:true,
     })
     const field = new mdc.textField.MDCTextField(linkManager.querySelector('.mdc-text-field'))
     console.log(field)
     field.trailingIcon_.root_.addEventListener('click',function(){
-        const tempInput = createElement('input',{
-            value:shareText+link
-        })
-        document.body.appendChild(tempInput)
-        copyRegionToClipboard(tempInput)
-        tempInput.remove();
-
-    })
-    const button = actionButton('Share')
-
-    button.querySelector('button').addEventListener('click', function () {
+        field.focus()
         callShareInterface(link,shareText);
-
     })
+
+    const tempInput = createElement('input', {
+        value: shareText + link
+    })
+    document.body.appendChild(tempInput)
+    copyRegionToClipboard(tempInput)
+    tempInput.remove();
+    
     grid.appendChild(linkManager)
     el.appendChild(grid)
-    el.appendChild(button)
+    
     return el;
 }
 
@@ -630,5 +625,5 @@ const copyRegionToClipboard = (el) => {
     el.select();
     el.setSelectionRange(0, 9999);
     document.execCommand("copy")
-    snacks('Link copied')
+    snacks('Link copied','OKay',null,8000)
 }

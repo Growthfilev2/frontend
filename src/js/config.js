@@ -1,5 +1,5 @@
 function AppKeys() {
-    this.mode = 'production'
+    this.mode = 'dev'
 }
 AppKeys.prototype.getMode = function () {
     return this.mode
@@ -35,4 +35,8 @@ AppKeys.prototype.getKeys = function () {
 }
 AppKeys.prototype.getBaseUrl = function () {
     return this.mode === 'production' ? 'https://api2.growthfile.com/api/' : 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+}
+
+AppKeys.prototype.dynamicLinkUriPrefix  = function () {
+    return this.mode === 'production' ? 'https://growthfile.page.link' : 'https://growthfileanalytics.page.link'
 }

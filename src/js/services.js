@@ -53,10 +53,10 @@ function successDialog(text) {
 }
 
 
-function snacks(message, text, callback) {
+function snacks(message, text, callback,timeout) {
   snackBar.labelText = message;
   snackBar.open();
-  snackBar.timeoutMs = 4000
+  snackBar.timeoutMs = timeout || 4000
   snackBar.actionButtonText = text ? text : 'Okay';
 
   snackBar.listen('MDCSnackbar:closed', function (evt) {

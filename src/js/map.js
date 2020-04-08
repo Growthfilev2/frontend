@@ -264,7 +264,6 @@ function createKnownCheckIn(selectedVenue, geopoint, retry) {
   progressBar.open()
 
   requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
-
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
