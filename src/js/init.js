@@ -321,19 +321,7 @@ function firebaseUiConfig() {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
-      
-        var queryLink = firebaseDeepLink || facebookDeepLink;
-        if(queryLink && queryLink.get('action') === 'user_engaged_campaign') {
-          const tracker = {
-            "source":queryLink.get("utm_source"),
-            "medium":queryLink.get("utm_medium"),
-            "campaign":queryLink.get("utm_campaign")
-          }
-          logFirebaseAnlyticsEvent('campaign_details',tracker);
-          tracker.logId = queryLink.get("logid")
-          logFirebaseAnlyticsEvent('user_engaged_campaign',tracker)
-        }
-        
+           
         isNewUser = authResult.additionalUserInfo.isNewUser;
         if (!authResult.additionalUserInfo.isNewUser) {
           logReportEvent("login");
@@ -351,9 +339,17 @@ function firebaseUiConfig() {
           } else {
             logReportEvent("Sign Up");
           };
-          logFirebaseAnlyticsEvent("sign_up", {
+          const signUpParams = {
             method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
-          });
+          }
+          var queryLink = firebaseDeepLink || facebookDeepLink;
+          if(queryLink) {
+            signUpParams.source = queryLink.get("utm_source");
+            signUpParams.medium = queryLink.get("utm_medium");
+            signUpParams.campaign = queryLink.get("utm_campaign")
+          }
+         
+          logFirebaseAnlyticsEvent("sign_up", signUpParams);
         })
         return false;
       },
