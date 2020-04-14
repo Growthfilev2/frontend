@@ -452,8 +452,10 @@ function createViewProfile() {
       const me = myCreds[evt.detail.index];
       const selectedOffice = me.office;
 
-      const mySupervisors = [me.attachment['First Supervisor'].value, me.attachment['Second Supervisor'].value]
-
+      const mySupervisors = [me.attachment['First Supervisor'].value]
+      if(me.attachment['Second Supervisor']) {
+        mySupervisors.push(me.attachment['Second Supervisor'].value)
+      }
       document.getElementById('my-details').innerHTML = fillUserDetails(me);
       Promise.all([getEmployeeDetails([selectedOffice, 'recipient'], 'officeTemplate'), getEmployeeDetails([selectedOffice, 'leave-type'], 'officeTemplate'), getEmployeeDetails([1, selectedOffice], 'teamOffice')]).then(function (results) {
         const reports = results[0];

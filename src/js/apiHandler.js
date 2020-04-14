@@ -646,13 +646,12 @@ function putAttachment(activity, tx, param) {
     if (activity.attachment.hasOwnProperty('Phone Number')) {
       commonSet.employee = activity.attachment['Phone Number'].value
     }
-    if (activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
+    if(activity.attachment.hasOwnProperty('First Supervisor') && activity.attachment['First Supervisor'].value === myNumber) {
       commonSet.team = 1
     }
   }
-
+  
   store.put(commonSet)
-
 }
 
 function removeUserFromAssigneeInActivity(addendum, updateTx) {

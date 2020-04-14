@@ -41,7 +41,7 @@ function textFieldRemovable(type, label,placeholder) {
 }
 
 function originMatch(origin) {
-    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost','https://growthfilev2-0.firebaseapp.com']
+    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost','https://growthfilev2-0.firebaseapp.com','https://growthfilev2-web-dev.web.app']
     return origins.indexOf(origin) > -1;
 }
 
