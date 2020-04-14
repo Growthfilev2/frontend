@@ -79,7 +79,6 @@ function setFirebaseAnalyticsUserProperty(name, value) {
   }
 }
 
-
 function parseFacebookDeeplink(link) {
   
   console.log("fb link ", link)
