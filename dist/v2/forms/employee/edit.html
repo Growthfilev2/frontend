@@ -9,9 +9,9 @@
     <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
-<body>
+<body class="mdc-typography">
 
-    <form id='iframe-form'>
+    <form id='iframe-form' style="padding-top: 18px;">
         <section class="attachment-section section-block">
             <div class="text-field-block">
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Name">
@@ -30,7 +30,14 @@
                     <label for="name-input" class="mdc-floating-label">Employee phone number</label>
                 </div>
             </div>
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Employee Code">
 
+                    <input class="mdc-text-field__input" id="name-input">
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Employee code</label>
+                </div>
+            </div>
             <div class="text-field-block">
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="First Supervisor">
 
@@ -39,157 +46,159 @@
                     <label class="mdc-floating-label">First Supervisor</label>
                 </div>
             </div>
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Second Supervisor">
-                    <input class="mdc-text-field__input" type="tel">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Second Supervisor</label>
-                </div>
-            </div>
+            <div style="width:100%">
 
-            <div class="text-field-block">
-                <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Department">
-                    <div class="mdc-select__anchor demo-width-class">
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <div class="mdc-select__selected-text"></div>
-                        <span class="mdc-floating-label">Department</span>
+                <div class="text-field-block" style="width:49%;float:left;">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Daily Start Time">
+    
+                        <input class="mdc-text-field__input" type="time">
                         <div class="mdc-line-ripple"></div>
-                    </div>
-
-                    <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                        <ul class="mdc-list">
-                        </ul>
+                        <label for="name-input" class="mdc-floating-label">Daily Start Time</label>
                     </div>
                 </div>
-            </div>
-
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Daily Start Time">
-
-                    <input class="mdc-text-field__input" type="time">
-                    <div class="mdc-line-ripple"></div>
-                    <label for="name-input" class="mdc-floating-label">Daily Start Time</label>
-                </div>
-            </div>
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Daily End Time">
-                    <input class="mdc-text-field__input" type="time">
-                    <div class="mdc-line-ripple"></div>
-                    <label for="name-input" class="mdc-floating-label">Daily End Time</label>
-                </div>
-            </div>
-
-
-            <div class="text-field-block">
-                <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Region">
-                    <div class="mdc-select__anchor demo-width-class">
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <div class="mdc-select__selected-text"></div>
-                        <span class="mdc-floating-label">Region</span>
+                <div class="text-field-block" style="width:49%;float:right;">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Daily End Time">
+                        <input class="mdc-text-field__input" type="time">
                         <div class="mdc-line-ripple"></div>
-                    </div>
-
-                    <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                        <ul class="mdc-list">
-                        
-                        </ul>
+                        <label for="name-input" class="mdc-floating-label">Daily End Time</label>
                     </div>
                 </div>
             </div>
-
-
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Task Specialization">
-                    <input class="mdc-text-field__input" id="task-specialization-input">
-                    <div class="mdc-line-ripple"></div>
-                    <label for="task-specialization-input" class="mdc-floating-label">Task Specialization</label>
+            <a href="#" class="mdc-theme--primary mdc-typography" onclick="showMore(this)">Show more</a>
+            <div class="employee-meta-fields hidden">
+                <div class="text-field-block">
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Department">
+                        <div class="mdc-select__anchor demo-width-class">
+                            <i class="mdc-select__dropdown-icon"></i>
+                            <div class="mdc-select__selected-text"></div>
+                            <span class="mdc-floating-label">Department</span>
+                            <div class="mdc-line-ripple"></div>
+                        </div>
+    
+                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
+                            <ul class="mdc-list">
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Start Point Latitude">
-                    <input class="mdc-text-field__input" type="string">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Start Point Latitude</label>
+              
+    
+                <div class="text-field-block">
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Region">
+                        <div class="mdc-select__anchor demo-width-class">
+                            <i class="mdc-select__dropdown-icon"></i>
+                            <div class="mdc-select__selected-text"></div>
+                            <span class="mdc-floating-label">Region</span>
+                            <div class="mdc-line-ripple"></div>
+                        </div>
+    
+                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
+                            <ul class="mdc-list">
+                            
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Start Point Longitude">
-                    <input class="mdc-text-field__input" type="string">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Start Point Longitude</label>
-                </div>
-            </div>
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="KM Rate">
-                    <input class="mdc-text-field__input" type="string">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">KM Rate</label>
-                </div>
-            </div>
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Base Location">
-                    <input class="mdc-text-field__input" type="string">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Base Location</label>
-                </div>
-            </div>
-
-            <div class="text-field-block">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="KM Daily Limit">
-                    <input class="mdc-text-field__input" type="string">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">KM Daily Limit</label>
-                </div>
-            </div>
-            <div class="text-field-block">
-
-                <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Location Validation Check">
-                    <div class="mdc-select__anchor demo-width-class">
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <div class="mdc-select__selected-text"></div>
-                        <span class="mdc-floating-label">Location Validation Check</span>
+    
+    
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Task Specialization">
+                        <input class="mdc-text-field__input" id="task-specialization-input">
                         <div class="mdc-line-ripple"></div>
-                    </div>
-
-                    <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                        <ul class="mdc-list">
-                            <li class="mdc-list-item mdc-list-item--selected" data-value="" aria-selected="true"></li>
-                            <li class="mdc-list-item" data-value="True">
-                                True
-                            </li>
-                            <li class="mdc-list-item" data-value="False">
-                                False
-                            </li>
-
-                        </ul>
+                        <label for="task-specialization-input" class="mdc-floating-label">Task Specialization</label>
                     </div>
                 </div>
-            </div>
-            <div class="text-field-block">
-                <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Scheduled Only">
-                    <div class="mdc-select__anchor demo-width-class">
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <div class="mdc-select__selected-text"></div>
-                        <span class="mdc-floating-label">Scheduled Only</span>
+                <div class="width:100%">
+    
+                    <div class="text-field-block" style="width: 49%; float: left;">
+                        <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Start Point Latitude">
+                            <input class="mdc-text-field__input" type="string">
+                            <div class="mdc-line-ripple"></div>
+                            <label class="mdc-floating-label">Start Point Latitude</label>
+                        </div>
+                    </div>
+        
+                    <div class="text-field-block" style="width: 49%; float: right;">
+                        <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Start Point Longitude">
+                            <input class="mdc-text-field__input" type="string">
+                            <div class="mdc-line-ripple"></div>
+                            <label class="mdc-floating-label">Start Point Longitude</label>
+                        </div>
+                    </div>
+    
+                </div>
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="KM Rate">
+                        <input class="mdc-text-field__input" type="string">
                         <div class="mdc-line-ripple"></div>
-                    </div>
-
-                    <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                        <ul class="mdc-list">
-                            <li class="mdc-list-item mdc-list-item--selected" data-value="" aria-selected="true"></li>
-                            <li class="mdc-list-item" data-value="True">
-                                True
-                            </li>
-                            <li class="mdc-list-item" data-value="False">
-                                False
-                            </li>
-
-                        </ul>
+                        <label class="mdc-floating-label">KM Rate</label>
                     </div>
                 </div>
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Base Location">
+                        <input class="mdc-text-field__input" type="string">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">Base Location</label>
+                    </div>
+                </div>
+    
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="KM Daily Limit">
+                        <input class="mdc-text-field__input" type="string">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">KM Daily Limit</label>
+                    </div>
+                </div>
+                <div class="text-field-block">
+    
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Location Validation Check">
+                        <div class="mdc-select__anchor demo-width-class">
+                            <i class="mdc-select__dropdown-icon"></i>
+                            <div class="mdc-select__selected-text"></div>
+                            <span class="mdc-floating-label">Location Validation Check</span>
+                            <div class="mdc-line-ripple"></div>
+                        </div>
+    
+                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
+                            <ul class="mdc-list">
+                                <li class="mdc-list-item" data-value=""></li>
+                                <li class="mdc-list-item" data-value="true">
+                                    True
+                                </li>
+                                <li class="mdc-list-item" data-value="false">
+                                    False
+                                </li>
+    
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-field-block">
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Scheduled Only">
+                        <div class="mdc-select__anchor demo-width-class">
+                            <i class="mdc-select__dropdown-icon"></i>
+                            <div class="mdc-select__selected-text"></div>
+                            <span class="mdc-floating-label">Scheduled Only</span>
+                            <div class="mdc-line-ripple"></div>
+                        </div>
+    
+                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
+                            <ul class="mdc-list">
+                                <li class="mdc-list-item" data-value=""></li>
+                                <li class="mdc-list-item" data-value="true">
+                                    True
+                                </li>
+                                <li class="mdc-list-item" data-value="false">
+                                    False
+                                </li>
+    
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
 
 
         </section>
@@ -202,13 +211,26 @@
 
     <script src="../js/common.js?version=5"></script>
     <script>
-      
+        const employeeMetaFieldsCont = document.querySelector('.employee-meta-fields')
+        function showMore(el) {
 
+            if(employeeMetaFieldsCont.classList.contains('hidden')) {
+                employeeMetaFieldsCont.classList.remove('hidden')
+                el.textContent = 'Show less'
+                return
+            }
+            employeeMetaFieldsCont.classList.add('hidden')
+            el.textContent = 'Show more'
+
+        }
+
+        
         function init(template,data) {
             window.mdc.autoInit();
             var form = document.getElementById('iframe-form');
             const copy = JSON.parse(JSON.stringify(template));
-         
+            console.log(template)
+            console.log(data)
 
             Object.keys(copy.attachment).forEach(function (key) {
                 const el = document.querySelector(`[data-type="${key}"]`);
@@ -220,7 +242,8 @@
                 if (el.classList.contains('mdc-select')) {
                     field = new mdc.select.MDCSelect(el)
                 }
-                field.value = copy.attachment[key].value || "";
+                
+                field.value = String(copy.attachment[key].value) || "";
             });
             
             const departmentSelect = document.querySelector(`[data-type="Department"]`)
@@ -249,11 +272,6 @@
             const regionSelectInit = new mdc.select.MDCSelect(regionSelect);
             regionSelectInit.value = copy.attachment['Region'].value;
 
-            if (copy.attachment['Second Supervisor'].value && !copy.attachment['First Supervisor']
-                .value) {
-                const fs = document.querySelector(`[data-type="First Supervisor"]`)
-                fs.querySelector('input').removeAttribute('required');
-            }
              parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
             form.addEventListener("submit", function (evt) {
                 evt.preventDefault();
@@ -273,7 +291,7 @@
                         value = Number(value)
                     }
                     if (copy.attachment[key].type === 'boolean') {
-                        value = value ? Boolean(value) : ""
+                        value = value ? converStringToBoolean(value) : ""
 
                     }
                     copy.attachment[key].value = value
@@ -284,6 +302,9 @@
                 }, parentOrigin);
                 toggleSubmit()
             })
+        }
+        function converStringToBoolean(string) {
+            return string === 'true'
         }
     </script>
 

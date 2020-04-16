@@ -741,6 +741,7 @@ body {
 /**iframe **/
 iframe {
   border: 0px;
+
 }
 
 .full-width {
@@ -751,6 +752,7 @@ iframe {
   width: 100%;
   height: 100%;
   position: relative;
+  
   /* min-height: 70vh; */
 }
 

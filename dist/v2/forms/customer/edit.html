@@ -95,8 +95,12 @@
         const contactBtn = document.getElementById('contact-btn')
         let contactList;
         const select = new mdc.select.MDCSelect(document.querySelector(".mdc-select"))
+        
+
         function init(template,customerTypes) {
-            console.log(deviceType);
+            console.log('inside frame ', document.body.scrollHeight);
+            parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
+
             subscriptionTemplate = template;
             const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
             const customerAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
@@ -179,7 +183,6 @@
                 document.querySelector('.customer-type-container').classList.remove('hidden')
             }
 
-            parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
             var formEl = document.getElementById('form');
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
