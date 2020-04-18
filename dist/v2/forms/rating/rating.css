@@ -1,0 +1,185 @@
+.feedback-card {
+    max-width: 480px;
+    min-height: 400px;
+    padding: 16px;
+    display: block;
+    margin: 0 auto;
+}
+
+.agent-profile {
+    display: block;
+    margin: 0 auto;
+    /* max-width: 300px; */
+    padding-bottom: 10px;
+}
+
+.agent-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+.agent-location {
+    margin-top: 5px;
+}
+.agent-meta {
+    display: inline-flex;
+    width: 100%;
+    margin-top: 10px;
+
+}
+
+.agent-meta a {
+    text-decoration: none;
+
+}
+
+.agent-details {
+    text-align: left;
+}
+
+.agent-details a {
+    text-decoration: none;
+
+}
+
+.rating-stars {
+    cursor: pointer;
+}
+
+.rating-stars .rating-star {
+    font-size: 35px;
+    padding: 12px;
+}
+#up , #down {
+    transition: 0.1s ease;
+    font-size: 40px;
+    width: 150px;
+}
+
+.rating-stars .rating-star.marked {
+    color: gold;
+    transition: 0.3s ease;
+}
+
+.rating-section {
+    padding-top: 10px;
+}
+
+.feedback-area {
+    padding-top: 20px;
+}
+
+input[type=submit] {
+    width: 100%;
+    margin-top: 15px;
+
+}
+
+@media (max-width:479px) {
+    .mdc-layout-grid__inner {
+        grid-gap: 0px;
+    }
+    .rating-stars .rating-star {
+        font-size: 32px;
+        padding: 6px;
+    }
+
+    .agent-details {
+        text-align: center;
+    }
+
+    #agent-name {
+        margin-top: 0px;
+    }
+    #up , #down {
+        width: 120px;
+    }
+}
+
+.center-abs {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    text-align: center;
+  }
+  
+  /**success **/
+  #success-animation svg {
+    width: 100px;
+    display: block;
+    margin: 40px auto 0;
+  }
+  
+  #success-animation svg .path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+  }
+  
+  #success-animation svg .circle {
+    -webkit-animation: dash .9s ease-in-out;
+    animation: dash .9s ease-in-out;
+  }
+  
+  #success-animation svg .line {
+  
+    stroke-dashoffset: 1000;
+    -webkit-animation: dash .9s .35s ease-in-out forwards;
+    animation: dash .9s .35s ease-in-out forwards;
+  }
+  
+  #success-animation svg .check {
+    stroke-dashoffset: -100;
+    -webkit-animation: dash-check .9s .35s ease-in-out forwards;
+    animation: dash-check .9s .35s ease-in-out forwards;
+  }
+  
+  #success-animation p {
+    text-align: center;
+    margin: 20px 0 60px;
+    font-size: 1.25em;
+    font-weight: bold
+  }
+  
+  
+  @-webkit-keyframes dash {
+    0% {
+      stroke-dashoffset: 1000;
+    }
+  
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+  @keyframes dash {
+    0% {
+      stroke-dashoffset: 1000;
+    }
+  
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+  @-webkit-keyframes dash-check {
+    0% {
+      stroke-dashoffset: -100;
+    }
+  
+    100% {
+      stroke-dashoffset: 900;
+    }
+  }
+  
+  @keyframes dash-check {
+    0% {
+      stroke-dashoffset: -100;
+    }
+  
+    100% {
+      stroke-dashoffset: 900;
+    }
+  }

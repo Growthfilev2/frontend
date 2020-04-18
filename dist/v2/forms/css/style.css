@@ -48,7 +48,9 @@ body {
 .mt-0 {
   margin-top: 0px !important;
 }
-
+.mr-10 {
+  margin-right: 10px;
+}
 .mr-0 {
   margin-right: 0px;
 }
@@ -157,7 +159,7 @@ body {
   animation-duration: 0.5s;
   animation-name: bottomToTop;
 }
-@media screen and (orientation:landscape) {
+@media (min-width:481px) {
 	.action-button-container .submit-button-cont {
     position: relative;
   }
