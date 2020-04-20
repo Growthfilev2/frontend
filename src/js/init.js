@@ -642,44 +642,86 @@ function startApp() {
     console.log('version upgrade')
   }
 
+
+
+
+
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
     console.log("run app")
     loadingScreen();
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: '',
-      registerToken: native.getFCMToken()
-    }).then(function (res) {
-      if (res.updateClient) {
-        updateApp()
-        return
-      }
-      if (res.revokeSession) {
-        revokeSession(true);
-        return
-      };
-      let rootRecord;
-      const rootTx = db.transaction('root', 'readwrite');
-      const store = rootTx.objectStore('root');
-      store.get(dbName).onsuccess = function (transactionEvent) {
-        rootRecord = transactionEvent.target.result;
-        rootRecord.linkedAccounts = res.linkedAccounts || [];
-        potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
-        if (res.idProof) {
-          rootRecord.idProof = res.idProof
-        }
-        store.put(rootRecord);
-      }
-      rootTx.oncomplete = function () {
-        if (!rootRecord.fromTime) return requestCreator('Null').then(openMap).catch(console.error)
-        openMap()
-        runRead({
-          read: '1'
-        })
-      }
+
+    requestCreator('device',native.getInfo()).then(console.log).catch(console.error)
+
+    requestCreator('acquisition',{
+      source:'testing_source',
+      medium:'testing_medium',
+      campaign:'testing_campaign',
+      office:null,
+      action:null
+    }).then(console.log).catch(console.error)
+
+    requestCreator('fcmToken',{
+      token:'testing_token_sample'
+    }).then(console.log).catch(console.error)
+
+    requestCreator('newBankAccount',{
+      bankAccount: '1234567891234',
+      ifsc: 'qwert1234567',
+      address1: 'Rohini sector A4, 283 284',
+      email:firebase.auth().currentUser.email,
+      upi:'+919999288921@upi',
+      displayName:firebase.auth().currentUser.displayName
+    }).then(function(response){
+      console.log(response)
     }).catch(console.error)
+
+    toDataURL('../src/img/currency_large.png',function(dataURL){
+      requestCreator('pan',{
+        image:dataURL
+      }).then(console.log).catch(console.error)
+      requestCreator('aadhar',{
+        front:dataURL,
+        back:dataURL
+      }).then(console.log).catch(console.error)
+    })
+
+    requestCreator('now').then(console.log).catch(console.error)
+    requestCreator('profile').then(console.log).catch(console.error)
+    // requestCreator('now', {
+    //   device: native.getInfo(),
+    //   from: '',
+    //   registerToken: native.getFCMToken()
+    // }).then(function (res) {
+    //   if (res.updateClient) {
+    //     updateApp()
+    //     return
+    //   }
+    //   if (res.revokeSession) {
+    //     revokeSession(true);
+    //     return
+    //   };
+    //   let rootRecord;
+    //   const rootTx = db.transaction('root', 'readwrite');
+    //   const store = rootTx.objectStore('root');
+    //   store.get(dbName).onsuccess = function (transactionEvent) {
+    //     rootRecord = transactionEvent.target.result;
+    //     rootRecord.linkedAccounts = res.linkedAccounts || [];
+    //     potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
+    //     if (res.idProof) {
+    //       rootRecord.idProof = res.idProof
+    //     }
+    //     store.put(rootRecord);
+    //   }
+    //   rootTx.oncomplete = function () {
+    //     if (!rootRecord.fromTime) return requestCreator('Null').then(openMap).catch(console.error)
+    //     openMap()
+    //     runRead({
+    //       read: '1'
+    //     })
+    //   }
+    // }).catch(console.error)
   };
 
   req.onerror = function () {

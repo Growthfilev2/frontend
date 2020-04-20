@@ -30,7 +30,12 @@ const requestFunctionCaller = {
   searchOffice: searchOffice,
   checkIns: checkIns,
   idProof: idProof,
-
+  device:device,
+  acquisition:acquisition,
+  fcmToken:fcmToken,
+  pan:pan,
+  aadhar:aadhar,
+  profile:profile
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -192,9 +197,9 @@ function http(request,authorization = true) {
 
 function fetchServerTime(body, meta, db) {
   return new Promise(function (resolve, reject) {
-    currentDevice = body.device;
-    const parsedDeviceInfo = JSON.parse(currentDevice);
-    let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}&idb_version=${db.version}`
+    // currentDevice = body.device;
+    // const parsedDeviceInfo = JSON.parse(currentDevice);
+    let url = `${meta.apiUrl}now`
     const tx = db.transaction(['root'], 'readwrite');
     const rootStore = tx.objectStore('root');
 
@@ -277,8 +282,8 @@ function removeBankAccount(body, meta) {
 
 function newBankAccount(body, meta) {
   const req = {
-    method: 'POST',
-    url: `${meta.apiUrl}services/accounts/`,
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/linkedAccount`,
     body: JSON.stringify(body),
     token: meta.user.token,
     timeout: null
@@ -330,6 +335,72 @@ function idProof(body, meta) {
   return http(req)
 }
 
+
+function device(body,meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/device`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function acquisition(body,meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/acquisition`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function fcmToken(body,meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/fcmToken`,
+    body: JSON.stringify(body),
+    token: meta.user.token, 
+    timeout: null
+  }
+  return http(req)
+}
+
+function pan(body,meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/pan`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function aadhar(body,meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/aadhar`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function profile(body,meta) {
+  const req = {
+    method: 'GET',
+    url: `${meta.apiUrl}profile/`,
+    body: null,
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
 
 
 function createSubscription(body, meta) {
