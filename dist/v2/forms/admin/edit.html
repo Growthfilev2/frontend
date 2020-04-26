@@ -53,7 +53,7 @@
             const field = new mdc.textField.MDCTextField(document.querySelector(".mdc-text-field"))
             field.value = template.attachment['Phone Number'].value;
             const iti = phoneFieldInit(field.input_);
-             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
+             ;
             form.addEventListener("submit", function (evt) {
 
                 evt.preventDefault();

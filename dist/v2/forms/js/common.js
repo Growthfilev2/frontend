@@ -1,71 +1,70 @@
 let deviceType = ''
-//const parentOrigin = new URL(document.referrer).origin
-const parentOrigin = 'https://growthfile.com'
+const parentOrigin = new URL(document.referrer).origin
 const allowedOrigins = {
-    'https://growthfile.com':true,
-    'https://growthfile-207204.firebaseapp.com':true,
-    'http://localhost:5000':true
+    'https://growthfile.com': true,
+    'https://growthfile-207204.firebaseapp.com': true,
+    'http://localhost:5000': true
 }
 
 function sendFrameDimensions() {
-    if(!allowedOrigins[parentOrigin]) return;
-    console.log(document.body.offsetHeight)
-   /**  parent.postMessage({
+    if (!allowedOrigins[parentOrigin]) return;
+    parent.postMessage({
 	    name:'resizeFrame',
 	    body : {
 		width:document.body.offsetWidth,
 		height:document.body.offsetHeight
-	    }
-	
-	},parentOrigin)
- **/
+        }
+    },parentOrigin)
 }
 
 
-window.addEventListener('load',function(){
+window.addEventListener('load', function () {
     sendFrameDimensions()
     initMutation()
-    setTimeout(function(){
-	document.querySelector('#asd').setAttribute('title','asd')
-    },2000)
 })
 
-window.addEventListener('resize',function(){
+window.addEventListener('resize', function () {
     sendFrameDimensions()
 })
 
-
-function initMutation() {
-    
-    const form = document.querySelector('form');
-    const config = {
-	attributes:true,
-	attributeOldValue: true,
-	attributesNewValue:true,
-	attributeFilter: ['hidden'],
-	childList:true,
-	subtree:true
+window.addEventListener('message', function (event) {
+    if (!originMatch(event.origin)) return;
+    if (!deviceType) {
+        deviceType = event.data.deviceType
     }
 
-    const callback = function(mutationsList, observer) {
-	let resizeWindow = false
-	for(let mutation of mutationsList) { 
-        console.log(mutation)    
-        if (mutation.type === 'childList' || mutation.type === 'attributes') {
-                
+    if (event.data.template) {
+        window[event.data.name](event.data.template, event.data.body)
+    } else {
+        window[event.data.name](event.data.body)
+    }
+})
+
+function initMutation() {
+
+    const form = document.querySelector('form');
+    const config = {
+        attributes: true,
+        attributeFilter: ['hidden'],
+        childList: true,
+        subtree: true
+    }
+
+    const callback = function (mutationsList, observer) {
+        let resizeWindow = false
+        for (let mutation of mutationsList) {
+            if (mutation.type === 'childList' || mutation.type === 'attributes') {
+                console.log(mutation)
                 resizeWindow = true
-	    }
-	}
-	
+            }
+        }
+        if(resizeWindow) sendFrameDimensions()
     };
     const observer = new MutationObserver(callback);
     observer.observe(form, config);
-
 }
 
 
-
-console.log(document.referrer)
 
 function callContact(functionName) {
     switch (deviceType) {
@@ -76,18 +75,18 @@ function callContact(functionName) {
             parent.webkit.messageHandlers.getContact.postMessage(functionName);
             break;
         default:
-            return textFieldRemovable('tel','','Secondary contact');
+            return textFieldRemovable('tel', '', 'Secondary contact');
     }
 }
 
-function textFieldRemovable(type, label,placeholder) {
+function textFieldRemovable(type, label, placeholder) {
     const cont = createElement('div', {
         className: 'inline-flex mt-10'
     })
     let field;
     if (type === 'tel') {
         field = textFieldTelephoneWithHelper({
-            placeholder:placeholder,
+            placeholder: placeholder,
             customClass: 'contact-field'
         })
     } else {
@@ -109,31 +108,17 @@ function textFieldRemovable(type, label,placeholder) {
 
 
 function originMatch(origin) {
-    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost','https://growthfilev2-0.firebaseapp.com','https://growthfilev2-0.web.app']
+    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost', 'https://growthfilev2-0.firebaseapp.com', 'https://growthfilev2-0.web.app']
     return origins.indexOf(origin) > -1;
 }
 
-window.addEventListener('message', function (event) {
-    if (!originMatch(event.origin)) return;
-    if (!deviceType) {
-        deviceType = event.data.deviceType
-    }
-  
-    if(event.data.template) {
-        window[event.data.name](event.data.template,event.data.body)
-    }
-    else {
-        window[event.data.name](event.data.body)
-    }
-})
 
 
 function toggleSubmit() {
     var submit = document.querySelector('form input[type="submit"]');
-    if(submit.disabled) {
+    if (submit.disabled) {
         submit.disabled = false;
-    }
-    else {
+    } else {
         submit.disabled = true
     }
 }
@@ -161,8 +146,8 @@ function getTommorowDate() {
 }
 
 function showSecondDate(event, className, dataName) {
-    event.target.classList.add('hidden')
-    document.querySelector('.' + className).classList.remove('hidden');
+    event.target.setAttribute('hidden', true)
+    document.querySelector('.' + className).removeAttribute('hidden');
 
     document.querySelector(`[data-name="${dataName}"]`).removeEventListener('change', startDateListen)
 }
@@ -327,19 +312,19 @@ function setHelperValid(field) {
     field.foundation_.setValid(true);
 }
 
-const phoneFieldInit = (input,dropEl,hiddenInput) => {
-  
+const phoneFieldInit = (input, dropEl, hiddenInput) => {
+
     return intlTelInput(input, {
         initialCountry: "IN",
         formatOnDisplay: true,
         separateDialCode: true,
-        dropdownContainer:dropEl || null,
-        hiddenInput:hiddenInput || "",
-        nationalMode:false
+        dropdownContainer: dropEl || null,
+        hiddenInput: hiddenInput || "",
+        nationalMode: false
     });
-  };
+};
 
-  const getPhoneFieldErrorMessage = (code) => {
+const getPhoneFieldErrorMessage = (code) => {
     let message = ''
     switch (code) {
         case 1:
@@ -362,7 +347,7 @@ const phoneFieldInit = (input,dropEl,hiddenInput) => {
     }
     return message;
 }
-  
+
 
 function textFieldTelephone(attr) {
     const textField = createElement('div', {
@@ -407,11 +392,11 @@ function productCard(productName) {
         name: 'Quantity',
         icon: 'add',
         type: 'quantity'
-    },{
+    }, {
         name: 'Rate',
         icon: 'add',
         type: 'rate'
-    },{
+    }, {
         name: 'Date',
         icon: 'event',
         type: 'date'
@@ -432,7 +417,7 @@ function productCard(productName) {
         className: 'mdc-icon-button material-icons mdc-theme--error',
         textContent: 'delete',
         style: 'margin-left:auto',
-        id:'remove-card'
+        id: 'remove-card'
     });
 
     heading.appendChild(removeCardIcon);
@@ -448,15 +433,15 @@ function productCard(productName) {
 
 
 
- 
+
     const chipSet = createElement('div', {
         className: 'mdc-chip-set mdc-chip-set--choice'
     })
     chipSet.role = 'grid';
-    productFields.forEach(function(type){
+    productFields.forEach(function (type) {
         chipSet.appendChild(createChip(type))
     })
-    
+
     chipCont.appendChild(chipSet);
 
     const chipSetInit = new mdc.chips.MDCChipSet(chipSet);
@@ -465,20 +450,20 @@ function productCard(productName) {
         console.log(chipSetInit)
         console.log(event);
         const selectedChip = document.getElementById(event.detail.chipId)
-        selectedChip.classList.add('hidden')
+        selectedChip.setAttribute('hidden', true)
         let field;
-        
-        
+
+
         if (selectedChip.dataset.type === 'quantity') {
             field = textFieldRemovable('number', 'Quantity');
         }
         if (selectedChip.dataset.type === 'rate') {
             field = textFieldRemovable('number', 'Rate');
-            field.querySelector('input').setAttribute('min',1);
-            field.querySelector('input').setAttribute('step','any');
-            field.querySelector('input').onkeydown = function(evt){
+            field.querySelector('input').setAttribute('min', 1);
+            field.querySelector('input').setAttribute('step', 'any');
+            field.querySelector('input').onkeydown = function (evt) {
                 console.log(evt.keyCode)
-                if(evt.keyCode == 190) return true;
+                if (evt.keyCode == 190) return true;
                 if (!((evt.keyCode > 95 && evt.keyCode < 106) ||
                         (evt.keyCode > 47 && evt.keyCode < 58) ||
                         evt.keyCode == 8)) {
@@ -491,13 +476,13 @@ function productCard(productName) {
             field.querySelector('input').value = createDate(new Date())
         };
 
-        field.querySelector('.mdc-icon-button').addEventListener('click',function(e){
+        field.querySelector('.mdc-icon-button').addEventListener('click', function (e) {
             e.preventDefault();
-            selectedChip.classList.remove('hidden')
+            selectedChip.removeAttribute('hidden')
             field.remove();
         })
         fieldCont.appendChild(field);
-        const fieldInit =  new mdc.textField.MDCTextField(field.querySelector('.mdc-text-field'));
+        const fieldInit = new mdc.textField.MDCTextField(field.querySelector('.mdc-text-field'));
         fieldInit.root_.dataset.productDetail = selectedChip.dataset.type;
         fieldInit.focus();
 
@@ -546,19 +531,21 @@ function textFieldTelephoneWithHelper(attr) {
 
 function isPhoneNumberValid(iti) {
     var errorCode = iti.getValidationError();
-    
+
     const result = {
-        message:'',
-        valid:false
+        message: '',
+        valid: false
     }
-    if(errorCode)  {
+    if (errorCode) {
         result.message = getPhoneFieldErrorMessage(errorCode);
         return result
     }
-    if(!iti.isValidNumber()){
+    if (!iti.isValidNumber()) {
         result.message = 'Invalid number';
         return result
     }
     result.valid = true;
     return result;
 }
+
+

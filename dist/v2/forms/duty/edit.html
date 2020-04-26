@@ -248,9 +248,9 @@
             el.listElements.forEach(function (li) {
                 if (li.dataset.name.toLowerCase().indexOf(inputValue) > -1 || li.dataset.number.toLowerCase()
                     .indexOf(inputValue) > -1) {
-                    li.classList.remove('hidden')
+                    li.removeAttribute('hidden')
                 } else {
-                    li.classList.add('hidden')
+                    li.setAttribute('hidden',true)
                 }
             })
         }
@@ -260,9 +260,9 @@
                 if (li.dataset.location.toLowerCase().indexOf(inputValue) > -1 || li.dataset.address
                     .toLowerCase()
                     .indexOf(inputValue) > -1) {
-                    li.classList.remove('hidden')
+                    li.removeAttribute('hidden')
                 } else {
-                    li.classList.add('hidden')
+                    li.setAttribute('hidden',true)
                 }
             })
         }

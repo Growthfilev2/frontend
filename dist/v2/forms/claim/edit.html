@@ -106,8 +106,8 @@
 
         function setExpenseImage(base64) {
             const el = document.getElementById('expense-image')
-            document.querySelector('.add-photo-container').classList.add('hidden');
-            document.querySelector('.mdc-image-list--masonry').classList.remove('hidden')
+            document.querySelector('.add-photo-container').setAttribute('hidden',true);
+            document.querySelector('.mdc-image-list--masonry').removeAttribute('hidden')
             el.src = `data:image/jpg;base64,${base64}`;
             photo = `data:image/jpg;base64,${base64}`;
         }
@@ -144,7 +144,7 @@
                 if (!result.string) return;
                 select.nativeControl_.innerHTML += result.string;
                 select.nativeControl_.setAttribute('required', 'true')
-                document.querySelector('.claim-type-select-container').classList.remove('hidden');
+                document.querySelector('.claim-type-select-container').removeAttribute('hidden');
 
             })
 

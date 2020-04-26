@@ -1,11 +1,7 @@
 
 window.addEventListener('load',function(){
   
-    parent.postMessage({name: 'resizeFrame',body:{
-        height:document.body.scrollHeight,
-        width:document.body.scrollWidth
-    }},'*');
-    
+ 
     [...this.document.querySelectorAll('.rating-star')].forEach(function(el){
         el.addEventListener('click',function(){
             console.log(el.previousSibling)
@@ -28,31 +24,31 @@ window.addEventListener('load',function(){
     if(!upVote || !downVote) return
     upVote.addEventListener('click',function(){
         downVote.style.color = 'black'
-        document.querySelector('.down-text').classList.add('hidden')
+        document.querySelector('.down-text').setAttribute('hidden',true)
 
         if(upVote.style.color === 'green') {
             upVote.style.color = 'black'
-            document.querySelector('.up-text').classList.add('hidden')
+            document.querySelector('.up-text').setAttribute('hidden',true)
 
         }
         else {
           
             upVote.style.color = 'green'
-            document.querySelector('.up-text').classList.remove('hidden')
+            document.querySelector('.up-text').removeAttribute('hidden')
 
         }
     })
     downVote.addEventListener('click',function(){
         upVote.style.color = 'black'
-        document.querySelector('.up-text').classList.add('hidden')
+        document.querySelector('.up-text').setAttribute('hidden',true)
 
         if(downVote.style.color === 'red') {
             downVote.style.color = 'black';
-            document.querySelector('.down-text').classList.add('hidden')
+            document.querySelector('.down-text').setAttribute('hidden',true)
         }
         else {
             downVote.style.color = 'red'
-            document.querySelector('.down-text').classList.remove('hidden')
+            document.querySelector('.down-text').removeAttribute('hidden')
         }
     })
 })
@@ -70,5 +66,5 @@ form.addEventListener('submit',function(e){
     <p class="success-text">Thank you for your feedback</p>
 
   </div>`
-    // document.getElementById('success-animation').classList.remove('hidden')
+    // document.getElementById('success-animation').removeAttribute('hidden')
 })
