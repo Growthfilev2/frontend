@@ -962,6 +962,7 @@ function idProofView(callback) {
       if (skipBtn) {
         skipBtn.setAttribute('disabled', true)
       }
+      
       requestCreator('idProof', ids).then(function (response) {
         const tx = db.transaction('root', 'readwrite');
         const store = tx.objectStore('root')

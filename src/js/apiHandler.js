@@ -26,7 +26,6 @@ const requestFunctionCaller = {
   newBankAccount: newBankAccount,
   removeBankAccount: removeBankAccount,
   subscription: createSubscription,
-  createOffice: createOffice,
   searchOffice: searchOffice,
   checkIns: checkIns,
   idProof: idProof,
@@ -291,16 +290,7 @@ function newBankAccount(body, meta) {
   return http(req)
 }
 
-function createOffice(body, meta) {
-  const req = {
-    method: 'POST',
-    url: `${meta.apiUrl}services/office`,
-    body: JSON.stringify(body),
-    token: meta.user.token,
-    timeout: null
-  }
-  return http(req)
-}
+
 
 function searchOffice(body, meta) {
   const req = {
@@ -903,10 +893,10 @@ function successResponse(read, param, db, resolve, reject) {
   read.templates.forEach(function (subscription) {
     if (subscription.status === 'CANCELLED') return;
     if(!subscription.activityId) {
-      instant({
+      instant(JSON.stringify({
         message:'activityId missing from template object',
         body:subscription
-      },param)
+      }),param)
       return;
     }
     putSubscription(subscription, updateTx);

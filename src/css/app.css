@@ -1021,7 +1021,7 @@ iframe {
 .dot-container {
   min-height: 20px;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   margin-top: 10px;
 }
 
@@ -1069,11 +1069,11 @@ iframe {
   animation-name: bottomToTop;
 }
 
-@media screen and (orientation:landscape) {
+/* @media screen and (orientation:landscape) {
   .action-button-container .submit-button-cont {
     position: relative;
   }
-}
+} */
 
 .submit-btn {
   font-size: 20px;
@@ -1204,4 +1204,16 @@ iframe {
   .office-registeration .terms-cont {
     text-align: center;
   }
+}
+
+#app-slider {
+  background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.legal-links {
+  padding-top: 20px;
+  display: block;
+  margin: 0 auto;
 }

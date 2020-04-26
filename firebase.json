@@ -1,6 +1,7 @@
 {
   "hosting": [{
     "target":"v2",
+    "site":"growthfilev2-0.firebaseapp.com",
     "public": "dist",
     "ignore": [
       "firebase.json",

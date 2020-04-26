@@ -1,5 +1,71 @@
 let deviceType = ''
-let parentOrigin = ''
+//const parentOrigin = new URL(document.referrer).origin
+const parentOrigin = 'https://growthfile.com'
+const allowedOrigins = {
+    'https://growthfile.com':true,
+    'https://growthfile-207204.firebaseapp.com':true,
+    'http://localhost:5000':true
+}
+
+function sendFrameDimensions() {
+    if(!allowedOrigins[parentOrigin]) return;
+    console.log(document.body.offsetHeight)
+   /**  parent.postMessage({
+	    name:'resizeFrame',
+	    body : {
+		width:document.body.offsetWidth,
+		height:document.body.offsetHeight
+	    }
+	
+	},parentOrigin)
+ **/
+}
+
+
+window.addEventListener('load',function(){
+    sendFrameDimensions()
+    initMutation()
+    setTimeout(function(){
+	document.querySelector('#asd').setAttribute('title','asd')
+    },2000)
+})
+
+window.addEventListener('resize',function(){
+    sendFrameDimensions()
+})
+
+
+function initMutation() {
+    
+    const form = document.querySelector('form');
+    const config = {
+	attributes:true,
+	attributeOldValue: true,
+	attributesNewValue:true,
+	attributeFilter: ['hidden'],
+	childList:true,
+	subtree:true
+    }
+
+    const callback = function(mutationsList, observer) {
+	let resizeWindow = false
+	for(let mutation of mutationsList) { 
+        console.log(mutation)    
+        if (mutation.type === 'childList' || mutation.type === 'attributes') {
+                
+                resizeWindow = true
+	    }
+	}
+	
+    };
+    const observer = new MutationObserver(callback);
+    observer.observe(form, config);
+
+}
+
+
+
+console.log(document.referrer)
 
 function callContact(functionName) {
     switch (deviceType) {
@@ -40,8 +106,10 @@ function textFieldRemovable(type, label,placeholder) {
     return cont
 }
 
+
+
 function originMatch(origin) {
-    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost','https://growthfilev2-0.firebaseapp.com','https://growthfilev2-web-dev.web.app']
+    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost','https://growthfilev2-0.firebaseapp.com','https://growthfilev2-0.web.app']
     return origins.indexOf(origin) > -1;
 }
 
@@ -50,7 +118,7 @@ window.addEventListener('message', function (event) {
     if (!deviceType) {
         deviceType = event.data.deviceType
     }
-    parentOrigin = event.origin;
+  
     if(event.data.template) {
         window[event.data.name](event.data.template,event.data.body)
     }

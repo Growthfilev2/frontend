@@ -12,7 +12,7 @@ var firebaseDeepLink;
 var facebookDeepLink;
 var updatedWifiAddresses = {
   addresses: {},
-  timestamp:null
+  timestamp: null
 }
 var isNewUser = false;
 
@@ -80,12 +80,12 @@ function setFirebaseAnalyticsUserProperty(name, value) {
 }
 
 function parseFacebookDeeplink(link) {
-  
+
   console.log("fb link ", link)
   const url = new URL(link);
   const query = new URLSearchParams(url.search);
   facebookDeepLink = query;
-  if(!firebase.auth().currentUser) return;
+  if (!firebase.auth().currentUser) return;
 }
 
 /**
@@ -96,7 +96,7 @@ function parseFacebookDeeplink(link) {
 function parseDynamicLink(link) {
   const url = new URL(link);
   firebaseDeepLink = new URLSearchParams(url.search);
-  if(!firebase.auth().currentUser) return;
+  if (!firebase.auth().currentUser) return;
 }
 
 /**
@@ -120,16 +120,16 @@ function updatedWifiScans(wifiString) {
   const result = {}
   const splitBySeperator = wifiString.split(",")
   splitBySeperator.forEach(function (value) {
-      const url = new URLSearchParams(value);
-      if (url.has('ssid')) {
-          url.delete('ssid')
-      }
-      if (!url.has('macAddress')) return;
-      result[url.get("macAddress")] = true
-    })
-    updatedWifiAddresses.addresses = result;
-    updatedWifiAddresses.timestamp = Date.now()
-  
+    const url = new URLSearchParams(value);
+    if (url.has('ssid')) {
+      url.delete('ssid')
+    }
+    if (!url.has('macAddress')) return;
+    result[url.get("macAddress")] = true
+  })
+  updatedWifiAddresses.addresses = result;
+  updatedWifiAddresses.timestamp = Date.now()
+
 };
 
 /**
@@ -165,6 +165,7 @@ function imgErr(source) {
 }
 
 let native = function () {
+  var deviceInfo = '';
   return {
     setFCMToken: function (token) {
       localStorage.setItem('token', token)
@@ -181,28 +182,23 @@ let native = function () {
 
     setIosInfo: function (iosDeviceInfo) {
       const queryString = new URLSearchParams(iosDeviceInfo);
-      var deviceInfo = {}
+      var obj = {}
       queryString.forEach(function (val, key) {
         if (key === 'appVersion') {
-          deviceInfo[key] = Number(val)
+          obj[key] = Number(val)
         } else {
-          deviceInfo[key] = val
+          obj[key] = val
         }
       })
-
-      localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
-    },
-    getIosInfo: function () {
-      return localStorage.getItem('deviceInfo');
+      deviceInfo = obj
     },
     getInfo: function () {
       if (!this.getName()) return false;
-
       if (this.getName() === 'Android') {
-        localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
-        return localStorage.getItem('deviceInfo');
+        deviceInfo = getAndroidDeviceInformation()
+        return deviceInfo
       }
-      return this.getIosInfo();
+      return deviceInfo;
     }
   }
 }();
@@ -249,56 +245,55 @@ window.onpopstate = function (event) {
 }
 
 
-// function initializeApp() {
-  window.addEventListener('load', function () {
+window.addEventListener('load', function () {
 
-    firebase.initializeApp(appKey.getKeys())
-    progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
-    snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-    topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-    const panel = this.document.getElementById('app-current-panel');
+  firebase.initializeApp(appKey.getKeys())
+  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
+  snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+  topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+  const panel = this.document.getElementById('app-current-panel');
 
-    if (!window.Worker && !window.indexedDB) {
-      const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
-      incompatibleDialog.open();
+  if (!window.Worker && !window.indexedDB) {
+    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile  is incompatible with this device').create();
+    incompatibleDialog.open();
+    return;
+  }
+
+  firebase.auth().onAuthStateChanged(function (auth) {
+    if (!auth) {
+      logReportEvent("IN Slider");
+
+      history.pushState(['userSignedOut'], null, null);
+      userSignedOut()
       return;
     }
 
-    firebase.auth().onAuthStateChanged(function (auth) {
-      if (!auth) {
-        logReportEvent("IN Slider");
-
-        history.pushState(['userSignedOut'], null, null);
-        userSignedOut()
-        return;
-      }
 
 
+    const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
+    header.listen('MDCTopAppBar:nav', handleNav);
+    header.root_.classList.add("hidden");
+    if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
-      const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
-      header.listen('MDCTopAppBar:nav', handleNav);
-      header.root_.classList.add("hidden");
-      if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
+    panel.classList.remove('hidden');
+    if (EMAIL_REAUTH) {
+      history.pushState(['reportView'], null, null);
+      history.pushState(['profileView'], null, null);
+      history.pushState(['emailUpdation'], null, null);
+      emailUpdation(false, function () {
+        EMAIL_REAUTH = false
+        history.back()
+      })
+      return;
+    }
 
-      panel.classList.remove('hidden');
-      if (EMAIL_REAUTH) {
-        history.pushState(['reportView'], null, null);
-        history.pushState(['profileView'], null, null);
-        history.pushState(['emailUpdation'], null, null);
-        emailUpdation(false, function () {
-          EMAIL_REAUTH = false
-          history.back()
-        })
-        return;
-      }
+    localStorage.setItem('error', JSON.stringify({}));
+    localStorage.removeItem('storedLinks');
+    checkNetworkValidation();
+  });
+})
 
-      localStorage.setItem('error', JSON.stringify({}));
-      localStorage.removeItem('storedLinks');
-      checkNetworkValidation();
-    });
-  })
 
-// }
 
 function checkNetworkValidation() {
   if (!navigator.onLine) {
@@ -320,7 +315,7 @@ function firebaseUiConfig() {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
-           
+
         isNewUser = authResult.additionalUserInfo.isNewUser;
         if (!authResult.additionalUserInfo.isNewUser) {
           logReportEvent("login");
@@ -331,7 +326,7 @@ function firebaseUiConfig() {
         };
 
         firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
-       
+
           if (isAdmin(tokenResult)) {
             logReportEvent("Sign Up Admin");
             setFirebaseAnalyticsUserProperty("isAdmin", "true");
@@ -342,12 +337,12 @@ function firebaseUiConfig() {
             method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
           }
           var queryLink = firebaseDeepLink || facebookDeepLink;
-          if(queryLink) {
+          if (queryLink) {
             signUpParams.source = queryLink.get("utm_source");
             signUpParams.medium = queryLink.get("utm_medium");
             signUpParams.campaign = queryLink.get("utm_campaign")
           }
-         
+
           logFirebaseAnlyticsEvent("sign_up", signUpParams);
         })
         return false;
@@ -356,7 +351,24 @@ function firebaseUiConfig() {
         return handleUIError(error)
       },
       uiShown: function () {
-        logFirebaseAnlyticsEvent('auth_page_open',{})
+        logFirebaseAnlyticsEvent('auth_page_open', {})
+        const span = createElement('span', {
+          className: 'text-center mdc-typography--subtitle1 legal-links',
+        })
+        span.appendChild(createElement('a', {
+          textContent: 'Privacy policy',
+          href: 'https://growthfile.com/legal#privacy-policy',
+          target: '_blank'
+        }))
+        span.appendChild(createElement('span', {
+          textContent: ' & '
+        }))
+        span.appendChild(createElement('a', {
+          textContent: 'Terms of use',
+          href: 'https://growthfile.com/legal#terms-of-use-user',
+          target: '_blank'
+        }))
+        document.getElementById('login-container').appendChild(span)
       }
     },
     signInFlow: 'popup',
@@ -397,38 +409,14 @@ function userSignedOut() {
 
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
-    <div class='slider' id='app-slider'>
-      <div class='slider-container'>
-        <div class='slider-content'>
-          <div class='graphic-container'>
-            <img src='./img/ic_launcher.png'>
-          </div>
-
-          <div class='text'>
-              <p class='mdc-typography--headline6 text-center mb-0'>
-                Welcome to Growthfile
-              </p>
-              <p class='mdc-typography--body1 text-center p-10'>
-                Mark attendance on Growthfile to avoid deductions in salary and expenses
-              </p>
-          </div>
-        </div>
-        
-
-      </div>
-    </div>
+    <div class='slider' id='app-slider' style='background-image:url("./img/welcome.jpeg")'>
+      
     <div class="action-button-container">
           <div class="submit-button-cont">
               <div class='dot-container'>
                 <span class='dot active'></span>
                 <span class='dot'></span>
                 <span class='dot'></span>
-              </div>
-              <div class='mdc-typography--body1 mb-10'>
-                <div class='text-center'>
-                  <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
-                  <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
-                </div>
               </div>
               <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
                   id='login-btn'>
@@ -438,6 +426,7 @@ function userSignedOut() {
               </button>
           </div>
         </div>
+    </div>
   `;
 
 
@@ -450,21 +439,17 @@ function userSignedOut() {
     initializeFirebaseUI();
   })
 
-  var interval = setInterval(function () {
-    sliderSwipe({
-      element: sliderEl,
-      direction: 'right'
-    })
-  }, sliderTimeout);
+  // var interval = setInterval(function () {
+  sliderSwipe('right')
+  // }, sliderTimeout);
   swipe(sliderEl, sliderSwipe);
 }
 
 
 
 
-function sliderSwipe(swipeEvent) {
-  const el = swipeEvent.element;
-  if (swipeEvent.direction === 'left') {
+function sliderSwipe(direction) {
+  if (direction === 'left') {
     if (sliderIndex <= 1) {
       sliderIndex = 3;
     } else {
@@ -473,7 +458,7 @@ function sliderSwipe(swipeEvent) {
     }
   }
 
-  if (swipeEvent.direction === 'right') {
+  if (direction === 'right') {
     if (sliderIndex >= 3) {
       sliderIndex = 1;
     } else {
@@ -481,7 +466,7 @@ function sliderSwipe(swipeEvent) {
     }
   }
 
-  loadSlider(el);
+  loadSlider();
   [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
     dotEl.classList.remove('active');
     if (index == sliderIndex - 1) {
@@ -490,59 +475,23 @@ function sliderSwipe(swipeEvent) {
   })
 }
 
-function loadSlider(sliderEl) {
+function loadSlider() {
 
-  let sliderContent = '';
+  let src = '';
 
   switch (sliderIndex) {
     case 1:
-      sliderContent = `<div class='graphic-container'>
-      <img src='./img/ic_launcher.png'>
-    </div>
-
-    <div class='text'>
-        <p class='mdc-typography--headline6 text-center mb-0'>
-          Welcome to Growthfile
-        </p>
-        <p class='mdc-typography--body1 text-center p-10'>
-          Mark attendance on Growthfile to avoid deductions in salary and expenses
-        </p>
-    </div>`
+      src = './img/welcome.jpeg'
       break;
     case 2:
-      sliderContent = `
-        <div class='icon-container'>
-          <i class='material-icons mdc-theme--primary'>room</i>
-
-        </div>
-        <div class='text-container'>
-          <ul class='slider-list'>
-            <li>Mark attendance on your phone</li>
-            <li>Branch, customer or unknown location</li>
-            <li>Calculate kilometres traveled</li>
-          </ul>
-        </div>
-        `
-
+      src = './img/proof.jpeg'
       break;
     case 3:
-
-      sliderContent = `
-        <div class='image-container'>
-            <img src='./img/currency_large.png' class='currency-primary'>
-        </div>
-        <div class='text-container'>
-        <ul class='slider-list'>
-            <li>Daily payment calculation</li>
-            <li>Online bank transfer</li>
-            <li>Offer letter, payslip & form 16</li>
-            
-        </ul>
-        </div>
-        `
+      src = './img/payments.jpeg'
       break;
   }
-  sliderEl.querySelector('.slider-content').innerHTML = sliderContent;
+
+  document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
 }
 
 
@@ -652,56 +601,51 @@ function startApp() {
     console.log("run app")
     loadingScreen();
 
-    requestCreator('device',native.getInfo()).then(console.log).catch(console.error)
+    const queryLink = facebookDeepLink || firebaseDeepLink;
 
-    requestCreator('acquisition',{
-      source:'testing_source',
-      medium:'testing_medium',
-      campaign:'testing_campaign',
-      office:null,
-      action:null
+    regulator().then()
+    // if (queryLink) {
+    //   requestCreator('acquisition', {
+    //     source: queryLink.get('utm_source'),
+    //     medium: queryLink.get('utm_medium'),
+    //     campaign: queryLink.get('utm_camapign'),
+    //     office: queryLink.get('office'),
+    //     action: queryLink.get('action')
+    //   }).then().catch(console.error)
+    //   return
+    // }
+
+
+
+    requestCreator('fcmToken', {
+      token: native.getFCMToken()
     }).then(console.log).catch(console.error)
 
-    requestCreator('fcmToken',{
-      token:'testing_token_sample'
-    }).then(console.log).catch(console.error)
+    // requestCreator('newBankAccount', {
+    //   bankAccount: '1234567891234',
+    //   ifsc: 'qwert1234567',
+    //   address1: 'Rohini sector A4, 283 284',
+    //   email: firebase.auth().currentUser.email,
+    //   upi: '+919999288921@upi',
+    //   displayName: firebase.auth().currentUser.displayName
+    // }).then(function (response) {
+    //   console.log(response)
+    // }).catch(console.error)
 
-    requestCreator('newBankAccount',{
-      bankAccount: '1234567891234',
-      ifsc: 'qwert1234567',
-      address1: 'Rohini sector A4, 283 284',
-      email:firebase.auth().currentUser.email,
-      upi:'+919999288921@upi',
-      displayName:firebase.auth().currentUser.displayName
-    }).then(function(response){
-      console.log(response)
-    }).catch(console.error)
+    // toDataURL('../src/img/currency_large.png', function (dataURL) {
+    //   requestCreator('pan', {
+    //     image: dataURL
+    //   }).then(console.log).catch(console.error)
+    //   requestCreator('aadhar', {
+    //     front: dataURL,
+    //     back: dataURL
+    //   }).then(console.log).catch(console.error)
+    // })
 
-    toDataURL('../src/img/currency_large.png',function(dataURL){
-      requestCreator('pan',{
-        image:dataURL
-      }).then(console.log).catch(console.error)
-      requestCreator('aadhar',{
-        front:dataURL,
-        back:dataURL
-      }).then(console.log).catch(console.error)
-    })
+    // requestCreator('now').then(console.log).catch(console.error)
+    // requestCreator('profile').then(console.log).catch(console.error)
 
-    requestCreator('now').then(console.log).catch(console.error)
-    requestCreator('profile').then(console.log).catch(console.error)
-    // requestCreator('now', {
-    //   device: native.getInfo(),
-    //   from: '',
-    //   registerToken: native.getFCMToken()
-    // }).then(function (res) {
-    //   if (res.updateClient) {
-    //     updateApp()
-    //     return
-    //   }
-    //   if (res.revokeSession) {
-    //     revokeSession(true);
-    //     return
-    //   };
+
     //   let rootRecord;
     //   const rootTx = db.transaction('root', 'readwrite');
     //   const store = rootTx.objectStore('root');
@@ -733,8 +677,88 @@ function startApp() {
 
 }
 
+
+
+
+function regulator() {
+  const queryLink = facebookDeepLink || firebaseDeepLink;
+  const deviceInfo = native.getInfo();
+  return new Promise(function (resolve, reject) {
+    if (!queryLink) return Promise.resolve()
+    return requestCreator('acquisition', {
+        source: queryLink.get('utm_source'),
+        medium: queryLink.get('utm_medium'),
+        campaign: queryLink.get('utm_camapign'),
+        office: queryLink.get('office'),
+        action: queryLink.get('action')
+      })
+      .then(function () {
+        return requestCreator('now')
+      })
+      .then(function () {
+        return appLocation(3)
+      })
+      .then(function (geopoint) {
+        return handleCheckin(geopoint)
+      })
+      .then(function () {
+        if (localStorage.getItem(deviceInfo)) return Promise.resolve();
+        return requestCreator('device', native.getInfo())
+      })
+      .then(function () {
+        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
+        return requestCreator('fcmToken', native.getFCMToken())
+      })
+      .then(function () {
+        console.log('all completed')
+      })
+      .catch(function (error) {
+        console.log(error)
+      })
+  })
+}
+
+
+function handleCheckin(geopoint, noUser) {
+  if (queryLink && queryLink.get('action') === 'get-subscription') {
+    const subscription = {
+      attachment: {
+        Comment: {
+          type: 'string',
+          value: ''
+        },
+        Photo: {
+          type: 'base64',
+          value: ''
+        }
+      },
+      template: 'check-in',
+      office: queryLink.get('office'),
+      schedule: [],
+      venue: ['Check-in Location'],
+      status: 'PENDING'
+    }
+    ApplicationState.officeWithCheckInSubs = subscription;
+    mapView(geopoint)
+    return
+  }
+  getCheckInSubs().then(function (checkInSubs) {
+    if (Object.keys(checkInSubs).length) {
+      ApplicationState.officeWithCheckInSubs = checkInSubs;
+      return mapView(geopoint)
+    }
+    if (noUser) {
+      // no user found
+      return
+    }
+    requestCreator('Null').then(function () {
+      handleCheckin(geopoint, true)
+    })
+  });
+}
+
 function initProfileView() {
-  
+
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
@@ -821,16 +845,13 @@ function checkForEmail() {
 
   const auth = firebase.auth().currentUser;
   if (auth.email && auth.emailVerified) {
-    increaseStep(4);
-    checkForId();
+    openReportView();
     return
   }
 
-
   getRootRecord().then(function (record) {
     if (record.skipEmail) {
-      increaseStep(4);
-      checkForId();
+      openReportView();
       return
     }
 
@@ -838,10 +859,10 @@ function checkForEmail() {
     logFirebaseAnlyticsEvent("profile_completion_email")
     increaseStep(3)
     emailUpdation(true, function () {
-      checkForId()
+      openReportView();
     });
-
   })
+
 }
 
 
@@ -858,38 +879,67 @@ function checkEmptyIdProofs(record) {
   return isEmpty;
 }
 
-function checkForId() {
-  getRootRecord().then(function (record) {
+function getProfileInformation() {
+  return new Promise(function (resolve, reject) {
+    let record;
 
-    if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
-      increaseStep(5);
-      checkForBankAccount();
-      return
-    };
-    logReportEvent("Profile Completion Id")
-    logFirebaseAnlyticsEvent("profile_completion_id")
-    increaseStep(4);
-    idProofView(checkForBankAccount);
-  })
-}
-
-
-function checkForBankAccount() {
-
-  getRootRecord().then(function (record) {
-    if (record.skipBankAccountAdd || record.linkedAccounts.length) {
-      openReportView();
-      return;
-    }
-    logReportEvent("Profile Completion bank account")
-    logFirebaseAnlyticsEvent("profile_completion_bank_account")
-    increaseStep(5)
-    addNewBankAccount(function () {
-      loadingScreen();
-      openReportView()
+    getRootRecord().then(function (record) {
+      if (!record.aadhar || !record.pan || !record.linkedAccounts) {
+        requestCreator('profile').then(function (response) {
+          const dbName = firebase.auth().currentUser.uid;
+          const rootTx = db.transaction('root', 'readwrite');
+          const store = rootTx.objectStore('root');
+          store.get(dbName).onsuccess = function (event) {
+            record = event.target.result;
+            delete record.idProof;
+            record.linkedAccounts = response.linkSharedComponent;
+            record.pan = response.pan;
+            record.aadhar = response.aadhar;
+            store.put(record);
+          }
+          rootTx.oncomplete = function () {
+            return resolve(record)
+          }
+        }).catch(reject)
+        return
+      }
+      return resolve(record)
     });
   })
 }
+
+// function checkForId() {
+//   getProfileInformation().then(function(record){
+//     if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
+//       increaseStep(5);
+//       checkForBankAccount();
+//     }
+//     logReportEvent("Profile Completion Id")
+//     logFirebaseAnlyticsEvent("profile_completion_id")
+//     increaseStep(4);
+//     idProofView(checkForBankAccount);
+
+//   }).catch()
+  
+// }
+
+
+// function checkForBankAccount() {
+
+//   getRootRecord().then(function (record) {
+//     if (record.skipBankAccountAdd || record.linkedAccounts.length) {
+//       openReportView();
+//       return;
+//     }
+//     logReportEvent("Profile Completion bank account")
+//     logFirebaseAnlyticsEvent("profile_completion_bank_account")
+//     increaseStep(5)
+//     addNewBankAccount(function () {
+//       loadingScreen();
+//       openReportView()
+//     });
+//   })
+// }
 
 
 function resizeAndCompressImage(image, compressionFactor) {
@@ -1198,36 +1248,6 @@ function redirect() {
   });
 }
 
-function getUniqueOfficeCount() {
-  return new Promise(function (resolve, reject) {
-    let offices = [];
-
-    const tx = db.transaction('children');
-    const childrenStore = tx.objectStore('children').index('employees');
-
-    childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return;
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      offices.push(cursor.value.office)
-      cursor.continue()
-    };
-
-    tx.oncomplete = function () {
-      return resolve(offices);
-    }
-    tx.onerror = function () {
-      return reject({
-        message: tx.error.message,
-        body: JSON.stringify(tx.error)
-      })
-    }
-  })
-}
-
 
 function hasDataInDB() {
   return new Promise(function (resolve) {
@@ -1293,8 +1313,8 @@ function openMap() {
     progressBar.close();
 
     if (Object.keys(checkInSubs).length) {
-      if(isNewUser) {
-          setFirebaseAnalyticsUserProperty("hasCheckin","true");
+      if (isNewUser) {
+        setFirebaseAnalyticsUserProperty("hasCheckin", "true");
       }
       handleLocationForMap(geopoint, checkInSubs);
       return;
@@ -1304,7 +1324,7 @@ function openMap() {
       handleLocationForMap(geopoint, checkInSubs)
       return
     }
-    
+
     if (firebaseDeepLink) {
       const action = firebaseDeepLink.get('action')
       if (action && action === 'get-subscription') {
@@ -1321,7 +1341,7 @@ function openMap() {
       }
       return
     }
-  
+
     if (totalRecords) {
       openReportView()
       return;
@@ -1334,7 +1354,6 @@ function openMap() {
       return
     };
 
-    createOfficeInit(geopoint)
   }).catch(function (error) {
     console.log(error)
     handleError({
@@ -1413,7 +1432,7 @@ function reloadPage() {
 function updateFromTime(fromTime) {
   return new Promise(function (resolve, reject) {
     const keyPath = firebase.auth().currentUser.uid;
-    const tx = db.transaction('root','readwrite');
+    const tx = db.transaction('root', 'readwrite');
     const store = tx.objectStore('root');
     store.get(keyPath).onsuccess = function (e) {
       const record = e.target.result;
@@ -1423,6 +1442,6 @@ function updateFromTime(fromTime) {
     tx.oncomplete = function () {
       resolve(true)
     }
-   
+
   })
 }

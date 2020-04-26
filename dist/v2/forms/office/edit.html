@@ -4,7 +4,7 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../external/css/material.min.css" rel="stylesheet">
+   <link href="../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
@@ -54,7 +54,7 @@
                         <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">Enter the name of your office</div>
                     </div>
                 </div>
-                <div class="form-component">
+                <div class="form-component" id='asd'>
                     <div class="mdc-text-field mdc-text-field--textarea" data-mdc-auto-init="MDCTextField">
                         <textarea class="mdc-text-field__input" rows="4" cols="100" required id="address" autocomplete="street-address"></textarea>
                         <div class="mdc-notched-outline">
@@ -82,6 +82,7 @@
 
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js?version=5"></script>
+    
     <script>
         window.mdc.autoInit();
         const address = document.getElementById('address')
@@ -89,8 +90,7 @@
         const username = document.getElementById('display-name')
         const email = document.getElementById('email')
         var formEl = document.getElementById('form');
-     
-
+      
         function init(subscriptionTemplate, auth) {
 
            const officeTemplate = JSON.parse(JSON.stringify(subscriptionTemplate));
@@ -101,8 +101,37 @@
             if(auth.email) {
                 document.querySelector('.form-component.email').remove()
             }
-            parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
 
+        setTimeout(function(){
+
+	const div = document.createElement('div');
+	
+	div.innerHTML = `<div class="form-component emails">
+                   
+
+                    <div class="mdc-text-field  mdc-text-field--with-leading-icon" id="asd" data-mdc-auto-init="MDCTextField">
+                        <input class=" mdc-text-field__input" type="email" id="email" name="email" required autocomplete="email">
+                        <label for="email" class="mdc-floating-label">Email</label>
+                        <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
+                            id="logo">email</i>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                    <div class="mdc-text-field-helper-line">
+                        <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">Enter your email</div>
+                    </div>
+        </div>`
+	console.log('appending dom')
+        document.querySelector('.form-list').appendChild(div)
+	
+	},3000)
+
+	setTimeout(function(){
+	//	document.getElementById('asd').remove()
+
+	},6000)
+	
+	    // sendFrameDimensions();
+        
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
 
@@ -130,6 +159,7 @@
         }
    
     </script>
+   
 </body>
 
 </html>

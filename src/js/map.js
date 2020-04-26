@@ -172,13 +172,10 @@ function createUnkownCheckIn(geopoint, retry) {
 
   progressBar.open()
   Promise.all(prom).then(function () {
-
     successDialog('Check-In Created')
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-
     initProfileView()
-
   }).catch(function (error) {
 
     progressBar.close()
@@ -432,9 +429,9 @@ function setFilePath(base64, retry) {
 
     requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
 
+      successDialog('Check-In Created')
       history.pushState(['reportView'], null, null)
       reportView()
-      successDialog('Check-In Created')
     }).catch(function (error) {
       if (error.message === 'Invalid check-in') {
         handleInvalidCheckinLocation(retry, function (newGeopoint) {

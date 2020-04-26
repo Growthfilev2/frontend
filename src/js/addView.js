@@ -34,9 +34,9 @@ function originMatch(origin) {
 }
 
 window.addEventListener('message', function (event) {
-    console.log(event)
+    // console.log(event)
     if (!originMatch(event.origin)) return;
-    this.console.log(event.data);
+    // this.console.log(event.data);
     if (typeof event.data === 'object' && event.data != null) {
         if (event.data.hasOwnProperty('name')) {
             window[event.data.name](event.data.body);
@@ -58,76 +58,6 @@ function handleAuthUpdate(authProps) {
             console.log('succesfully updated email')
         })
     }
-}
-
-
-
-function sendOfficeData(requestBody) {
-    const auth = firebase.auth().currentUser;
-    handleAuthUpdate(requestBody.auth);
-    const officeBody = requestBody.office;
-    const geopoint = ApplicationState.location
-    return requestCreator('createOffice', officeBody, geopoint).then(function () {
-        successDialog(`Office created successfully`);
-        logReportEvent('Office Created')
-        logFirebaseAnlyticsEvent('office_created', {
-            location: officeBody.registeredOfficeAddress,
-        });
-
-        progressBar.open();
-        setTimeout(function () {
-            requestCreator('subscription', {
-                "share": [{
-                    phoneNumber: auth.phoneNumber,
-                    displayName: requestBody.auth.displayName,
-                    email: requestBody.auth.email
-                }],
-                "template": "subscription",
-                "office": officeBody.name
-            
-            }, geopoint).then(function (response) {
-                return updateFromTime(0)
-            }).then(function () {
-                progressBar.close();
-                history.pushState(['share'], null, null);
-                giveSubscriptionInit(officeBody.name, true);
-            }).catch(function (error) {
-                progressBar.close();
-                snacks(error.message);
-                handleError({
-                    message: error.message,
-                    body: JSON.stringify(error)
-                })
-            })
-        }, 3000)
-    }).catch(function (error) {
-        console.log(error)
-        passFormData({
-            name: 'toggleSubmit',
-            template: '',
-            body: '',
-            deviceType: native.getName()
-        })
-    })
-
-    return
-}
-
-function sendUsersData(formData) {
-    appLocation(3).then(function (geopoint) {
-        requestCreator('checkIns', formData, geopoint).then(function (response) {
-            history.back();
-            successDialog('')
-        }).catch(function (error) {
-            passFormData({
-                name: 'toggleSubmit',
-                template: '',
-                body: '',
-                deviceType: native.getName()
-            })
-        });
-
-    }).catch(handleLocationError);
 }
 
 function sendSubscriptionData(formData, geopoint) {
