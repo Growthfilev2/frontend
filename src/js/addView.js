@@ -61,80 +61,10 @@ function handleAuthUpdate(authProps) {
 }
 
 
-
-function sendOfficeData(requestBody) {
-    const auth = firebase.auth().currentUser;
-    handleAuthUpdate(requestBody.auth);
-    const officeBody = requestBody.office;
-    const geopoint = ApplicationState.location
-    return requestCreator('createOffice', officeBody, geopoint).then(function () {
-        successDialog(`Office created successfully`);
-        logReportEvent('Office Created')
-        logFirebaseAnlyticsEvent('office_created', {
-            location: officeBody.registeredOfficeAddress,
-        });
-
-        progressBar.open();
-        setTimeout(function () {
-            requestCreator('subscription', {
-                "share": [{
-                    phoneNumber: auth.phoneNumber,
-                    displayName: requestBody.auth.displayName,
-                    email: requestBody.auth.email
-                }],
-                "template": "subscription",
-                "office": officeBody.name
-            
-            }, geopoint).then(function (response) {
-                return updateFromTime(0)
-            }).then(function () {
-                progressBar.close();
-                history.pushState(['share'], null, null);
-                giveSubscriptionInit(officeBody.name, true);
-            }).catch(function (error) {
-                progressBar.close();
-                snacks(error.message);
-                handleError({
-                    message: error.message,
-                    body: JSON.stringify(error)
-                })
-            })
-        }, 3000)
-    }).catch(function (error) {
-        console.log(error)
-        passFormData({
-            name: 'toggleSubmit',
-            template: '',
-            body: '',
-            deviceType: native.getName()
-        })
-    })
-
-    return
-}
-
-function sendUsersData(formData) {
-    appLocation(3).then(function (geopoint) {
-        requestCreator('checkIns', formData, geopoint).then(function (response) {
-            history.back();
-            successDialog('')
-        }).catch(function (error) {
-            passFormData({
-                name: 'toggleSubmit',
-                template: '',
-                body: '',
-                deviceType: native.getName()
-            })
-        });
-
-    }).catch(handleLocationError);
-}
-
 function sendSubscriptionData(formData, geopoint) {
     const prom = geopoint ? Promise.resolve(geopoint) : appLocation(3);
     prom.then(function (coord) {
         requestCreator('subscription', formData, coord).then(function (response) {
-
             localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
             document.getElementById('app-header').classList.add('hidden');
             loadingScreen(['Generating Reports']);

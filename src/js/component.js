@@ -30,20 +30,31 @@ function createFab(icon, id = '') {
     return button;
 }
 
-function actionButton(name, id = '') {
+function actionButton(name, id = '',link) {
     const actionContainer = createElement('div', {
         className: 'action-button-container'
     })
     const submitContainer = createElement('div', {
         className: 'submit-button-cont'
     })
-    const button = createButton(name, id);
-    button.classList.add('mdc-button--raised', 'submit-btn');
+    let button;
+    if(link) {
+        button = createElement("a",{
+            href:link,
+            target:'_blank',
+            textContent:name,
+            className:'mdc-button mdc-button--raised submit-btn',
+            id:id
+        })
+    }
+    else {
+        button =  createButton(name, id);
+    }
+  
     new mdc.ripple.MDCRipple(button);
     submitContainer.appendChild(button);
     actionContainer.appendChild(submitContainer);
     return actionContainer;
-
 }
 
 function createExtendedFab(icon, name, id, absolute) {
