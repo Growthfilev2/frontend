@@ -921,6 +921,7 @@ function updateIDB(config) {
 
       http(req)
         .then(function (response) {
+          console.log('read completed')
           return successResponse(response, config.payload.meta, config.db, resolve, reject);
         }).catch(function (error) {
 

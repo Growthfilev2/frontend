@@ -647,11 +647,14 @@ function startApp() {
     db = req.result;
     console.log("run app")
     loadingScreen();
+    console.log('running now')
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
       registerToken: native.getFCMToken()
     }).then(function (res) {
+      console.log('now completed')
+      
       if (res.updateClient) {
         updateApp()
         return
@@ -1244,53 +1247,53 @@ function openMap() {
   const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
   Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]).then(function (result) {
     const geopoint = result[0];
-    // const tokenResult = result[1];
-    // const checkInSubs = result[2];
-    // const totalRecords = result[3];
-    // const auth = firebase.auth().currentUser;
-    // progressBar.close();
+    const tokenResult = result[1];
+    const checkInSubs = result[2];
+    const totalRecords = result[3];
+    const auth = firebase.auth().currentUser;
+    progressBar.close();
 
-    // if (Object.keys(checkInSubs).length) {
-    //   if(isNewUser) {
-    //       setFirebaseAnalyticsUserProperty("hasCheckin","true");
-    //   }
-    //   handleLocationForMap(geopoint, checkInSubs);
-    //   return;
-    // }
+    if (Object.keys(checkInSubs).length) {
+      if(isNewUser) {
+          setFirebaseAnalyticsUserProperty("hasCheckin","true");
+      }
+      handleLocationForMap(geopoint, checkInSubs);
+      return;
+    }
 
-    // if (isAdmin(tokenResult)) {
-    //   handleLocationForMap(geopoint, checkInSubs)
-    //   return
-    // }
+    if (isAdmin(tokenResult)) {
+      handleLocationForMap(geopoint, checkInSubs)
+      return
+    }
     
-    // if (firebaseDeepLink) {
-    //   const action = firebaseDeepLink.get('action')
-    //   if (action && action === 'get-subscription') {
+    if (firebaseDeepLink) {
+      const action = firebaseDeepLink.get('action')
+      if (action && action === 'get-subscription') {
 
-    //     sendSubscriptionData({
-    //       "share": [{
-    //         phoneNumber: auth.phoneNumber,
-    //         displayName: auth.displayName,
-    //         email: auth.email
-    //       }],
-    //       "template": "subscription",
-    //       "office": firebaseDeepLink.get('office')
-    //     }, geopoint)
-    //   }
-    //   return
-    // }
+        sendSubscriptionData({
+          "share": [{
+            phoneNumber: auth.phoneNumber,
+            displayName: auth.displayName,
+            email: auth.email
+          }],
+          "template": "subscription",
+          "office": firebaseDeepLink.get('office')
+        }, geopoint)
+      }
+      return
+    }
   
-    // if (totalRecords) {
-    //   openReportView()
-    //   return;
-    // }
+    if (totalRecords) {
+      openReportView()
+      return;
+    }
 
-    // ApplicationState.location = geopoint;
-    // localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    // if (potentialAlternatePhoneNumbers.length) {
-    //   chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
-    //   return
-    // };
+    ApplicationState.location = geopoint;
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    if (potentialAlternatePhoneNumbers.length) {
+      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
+      return
+    };
 
     noOfficeFoundScreen()
 
@@ -1318,7 +1321,7 @@ function noOfficeFoundScreen() {
         <p class='mdc-typography--body1'>
           If you are a business owner and want to register your company with us, click below to get started.
         </p>
-        <a class='mdc-button mdc-button--raised create-office--link' target='_blank' href='https://www.growthfile.com/signup?phoneNumber=${encodeURIComponent(firebase.auth().currentUser.phoneNumber)}'>Create office</a>
+        <a class='mdc-button mdc-button--raised create-office--link' target='_blank' href='https://www.growthfile.com/signup'>Create office</a>
       </div>
     </div>
    
