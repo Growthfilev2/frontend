@@ -98,8 +98,7 @@
         
 
         function init(template,customerTypes) {
-            console.log('inside frame ', document.body.scrollHeight);
-            parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
+        
 
             subscriptionTemplate = template;
             const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
@@ -180,7 +179,7 @@
                     select.nativeControl_.appendChild(option);
                 })
                 select.value = subscriptionTemplate.attachment['Customer Type'].value
-                document.querySelector('.customer-type-container').classList.remove('hidden')
+                document.querySelector('.customer-type-container').removeAttribute('hidden')
             }
 
             var formEl = document.getElementById('form');
@@ -240,11 +239,11 @@
         function toggleContactBtn() {
 
             if (currentContactsAdded == 2) {
-                contactBtn.classList.add('hidden')
+                contactBtn.setAttribute('hidden',true)
                 return
             }
             if (currentContactsAdded < 2) {
-                contactBtn.classList.remove('hidden')
+                contactBtn.removeAttribute('hidden')
             }
         }
 
@@ -255,7 +254,7 @@
 
                 subscriptionTemplate.attachment[li.dataset.type].value = '';
                 delete customerAuths[contactObject.phoneNumber]
-                contactBtn.classList.remove('hidden')
+                contactBtn.removeAttribute('hidden')
                 if (!contactList.listElements.length) {
                     document.querySelector('.contact-container .inline-flex').appendChild(contactBtn);
                     return;
@@ -274,7 +273,7 @@
             contactList.root_.appendChild(li)
             document.querySelector(".contact-container").appendChild(contactBtn);
             if (contactList.listElements.length == 2) {
-                contactBtn.classList.add('hidden')
+                contactBtn.setAttribute('hidden',true)
                 return;
             }
         }

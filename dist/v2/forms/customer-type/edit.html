@@ -44,7 +44,7 @@
             window.mdc.autoInit();
 
             var form = document.getElementById('iframe-form');
-             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
+             ;
             form.addEventListener("submit", function (evt) {
                 evt.preventDefault();
                 copy.attachment.Name.value = document.getElementById('name-input').value;

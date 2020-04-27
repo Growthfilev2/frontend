@@ -1069,11 +1069,7 @@ iframe {
   animation-name: bottomToTop;
 }
 
-@media screen and (orientation:landscape) {
-  .action-button-container .submit-button-cont {
-    position: relative;
-  }
-}
+
 
 .submit-btn {
   font-size: 20px;
@@ -1092,9 +1088,10 @@ iframe {
   .submit-button-cont {
     bottom: 1rem;
     margin: auto;
+    position: relative;
   
   }
-
+ 
 }
 
 
@@ -1204,4 +1201,43 @@ iframe {
   .office-registeration .terms-cont {
     text-align: center;
   }
+}
+
+
+.message-screen {
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 481px;
+}
+.message-screen  .icon-container{
+  width: 100px;
+  height: 100px;
+  display: block;
+  margin: 0 auto;
+  color: var(--mdc-theme-primary);
+}
+.message-screen .icon-container i {
+  font-size: 100px;
+}
+.message-screen .text-container {
+  margin-top: 30px;
+}
+.message-screen .text-container  .headline{
+  font-weight: bold;
+  margin-bottom: 0px;
+}
+.message-screen .text-container p {
+  padding: 0px 10px;
+  font-weight: 500;
+}
+.message-screen .text-container .create-office--link {
+  width: 80%;
+  margin: 0 auto;
+
+  margin-top: 50px;
 }

@@ -97,7 +97,7 @@
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
 
                 if (result.string) {
-                    document.querySelector('.customer-select-container').classList.remove('hidden');
+                    document.querySelector('.customer-select-container').removeAttribute('hidden');
                     customer.nativeControl_.innerHTML += result.string
                     customer.nativeControl_.setAttribute('required', 'true')
                 }
@@ -108,7 +108,7 @@
                 const el = document.querySelector('.product-container')
                 product.nativeControl_.innerHTML += result.string;
                 product.nativeControl_.setAttribute('required', 'true');
-                el.classList.remove('hidden')
+                el.removeAttribute('hidden')
 
                 product.listen('MDCSelect:change', function (event) {
                     console.log(event);

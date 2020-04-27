@@ -37,29 +37,6 @@ function isAdmin(idTokenResult) {
     return true;
 }
 
-function createOfficeInit(geopoint) {
-    ApplicationState.location = geopoint
-    const appEl = document.getElementById('app-current-panel')
-    appEl.classList.add('mdc-top-app-bar--fixed-adjust')
-    if(progressBar) {
-        progressBar.close();
-    }
-    const auth = firebase.auth().currentUser;
-    const authProps = {
-        displayName:auth.displayName,
-        phoneNumber:auth.phoneNumber,
-        email:auth.email
-    }
-    const template = {
-        'template': 'office',
-        'firstContact': authProps,       
-        'name': '',
-        'registeredOfficeAddress': '',
-    }
-    history.pushState(['addView'], null, null);
-    addView(template,authProps);
-
-}
 function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
     const device = JSON.parse(native.getInfo());
 

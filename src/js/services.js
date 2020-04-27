@@ -434,6 +434,7 @@ function handleComponentUpdation(readResponse) {
 function backgroundTransition() {}
 
 function runRead(type) {
+  console.log("run read notification")
   if (!firebase.auth().currentUser) return;
   if (type.read) {
     var readEvent = new CustomEvent('callRead', {
