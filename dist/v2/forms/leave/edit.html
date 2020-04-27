@@ -88,7 +88,7 @@
                 if (!result.string) return;
                 select.nativeControl_.setAttribute('required', 'true')
                 select.nativeControl_.innerHTML += result.string;
-                document.querySelector('.leave-type-select-container').classList.remove('hidden');
+                document.querySelector('.leave-type-select-container').removeAttribute('hidden');
             })
 
             formEl.addEventListener('submit', function (e) {

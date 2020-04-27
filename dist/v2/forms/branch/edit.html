@@ -154,7 +154,7 @@
             });
 
           
-            parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);
+            
             var formEl = document.getElementById('form');
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -204,11 +204,11 @@
         function toggleContactBtn() {
 
             if (currentContactsAdded == 2) {
-                contactBtn.classList.add('hidden')
+                contactBtn.setAttribute('hidden',true)
                 return
             }
             if (currentContactsAdded < 2) {
-                contactBtn.classList.remove('hidden')
+                contactBtn.removeAttribute('hidden')
             }
         }
 
@@ -219,7 +219,7 @@
 
                 subscriptionTemplate.attachment[li.dataset.type].value = '';
                
-                contactBtn.classList.remove('hidden')
+                contactBtn.removeAttribute('hidden')
                 if (!contactList.listElements.length) {
                     document.querySelector('.contact-container .inline-flex').appendChild(contactBtn);
                     return;
@@ -238,7 +238,7 @@
             contactList.root_.appendChild(li)
             document.querySelector(".contact-container").appendChild(contactBtn);
             if (contactList.listElements.length == 2) {
-                contactBtn.classList.add('hidden')
+                contactBtn.setAttribute('hidden',true)
                 return;
             }
 

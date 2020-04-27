@@ -215,11 +215,11 @@
         function showMore(el) {
 
             if(employeeMetaFieldsCont.classList.contains('hidden')) {
-                employeeMetaFieldsCont.classList.remove('hidden')
+                employeeMetaFieldsCont.removeAttribute('hidden')
                 el.textContent = 'Show less'
                 return
             }
-            employeeMetaFieldsCont.classList.add('hidden')
+            employeeMetaFieldsCont.setAttribute('hidden',true)
             el.textContent = 'Show more'
 
         }
@@ -272,7 +272,7 @@
             const regionSelectInit = new mdc.select.MDCSelect(regionSelect);
             regionSelectInit.value = copy.attachment['Region'].value;
 
-             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
+             ;
             form.addEventListener("submit", function (evt) {
                 evt.preventDefault();
 

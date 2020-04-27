@@ -68,7 +68,7 @@
             document.getElementById('name-input').value = copy.attachment.Name.value;
             var form = document.getElementById('iframe-form');
             window.mdc.autoInit();
-             parent.postMessage({name: 'resizeFrame',body:document.body.scrollHeight+'px'}, parentOrigin);;
+             ;
 
             form.addEventListener("submit", function (evt) {
                 evt.preventDefault();
