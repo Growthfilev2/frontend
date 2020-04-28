@@ -1270,15 +1270,15 @@ function openMap() {
       const action = firebaseDeepLink.get('action')
       if (action && action === 'get-subscription') {
 
-        sendSubscriptionData({
-          "share": [{
-            phoneNumber: auth.phoneNumber,
-            displayName: auth.displayName,
-            email: auth.email
-          }],
-          "template": "subscription",
-          "office": firebaseDeepLink.get('office')
-        }, geopoint)
+        requestCreator("acquisition",JSON.stringify({
+          source:firebaseDeepLink.get('source'),
+          medium:firebaseDeepLink.get('medium'),
+          campaign:firebaseDeepLink.get('campaign'),
+          office:firebaseDeepLink.get('office')
+        })).then(function(){
+
+        }).catch(console.error)
+
       }
       return
     }

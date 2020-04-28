@@ -44,56 +44,6 @@ window.addEventListener('message', function (event) {
     }
 });
 
-function handleAuthUpdate(authProps) {
-    const auth = firebase.auth().currentUser;
-    if (auth.displayName && auth.email) return;
-
-    if (!auth.displayName) {
-        auth.updateProfile({
-            displayName: authProps.displayName
-        }).then(console.log).catch(console.error)
-    }
-    if (!auth.email) {
-        emailUpdate(authProps.email, function () {
-            console.log('succesfully updated email')
-        })
-    }
-}
-
-
-function sendSubscriptionData(formData, geopoint) {
-    const prom = geopoint ? Promise.resolve(geopoint) : appLocation(3);
-    prom.then(function (coord) {
-        requestCreator('subscription', formData, coord).then(function (response) {
-            localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-            document.getElementById('app-header').classList.add('hidden');
-            loadingScreen(['Generating Reports']);
-            const rootTx = db.transaction(['root'], 'readwrite');
-            const store = rootTx.objectStore('root')
-            const uid = firebase.auth().currentUser.uid
-            store.get(uid).onsuccess = function (event) {
-                const record = event.target.result;
-                record.fromTime = 0;
-                store.put(record)
-            }
-            rootTx.oncomplete = function () {
-                loadingScreen(['Getting Data', 'Generating Reports'])
-                requestCreator('Null').then(function () {
-                    openMap();
-                }).catch(console.error)
-
-            };
-        }).catch(function (error) {
-            passFormData({
-                name: 'toggleSubmit',
-                template: '',
-                body: '',
-                deviceType: native.getName()
-            })
-        })
-    }).catch(handleLocationError)
-
-}
 
 
 function sendFormToParent(formData) {
