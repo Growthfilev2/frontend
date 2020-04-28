@@ -299,14 +299,16 @@ body {
   height: 100%;
   width: 100%;
 }
-
-.graphic-container img {
-  display: block;
-  margin: 0 auto;
-  max-width: 100px;
+.splash-content .text-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-align: center;
 }
 
-.splash-content .text {
+/* .splash-content .text {
   text-align: center;
   padding: 10px;
   margin: 0 auto;
@@ -322,7 +324,7 @@ body {
   position: absolute;
   bottom: 0;
   width: 100%;
-}
+} */
 
 
 

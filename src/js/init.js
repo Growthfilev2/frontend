@@ -500,8 +500,8 @@ function loadingScreen(data) {
 
   panel.innerHTML = `
   <div class='splash-content loading-screen' id='loading-screen' style="background-image:url(${data.src});">
-    <div class'text-container'> 
-      <p class='message'>${data.text}</p>
+    <div class='text-container'> 
+      <p class='text'>${data.text} . . .</p>
     </div>  
   </div>
   `
@@ -552,8 +552,10 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    loadingScreen({text:'Fetching details',src:'./img/fetching-details.jpg'});
-
+    loadingScreen({
+      text:'Fetching details',
+      src:'./img/fetching-details.jpg'
+    })    
     const queryLink = facebookDeepLink || firebaseDeepLink;
 
     // regulator().then(console.log).catch(console.error)
@@ -636,7 +638,7 @@ function startApp() {
 function regulator() {
   const queryLink = facebookDeepLink || firebaseDeepLink;
   const deviceInfo = native.getInfo();
-  loadingScreen()
+ 
   return new Promise(function (resolve, reject) {
     var prom = queryLink ? requestCreator('acquisition', {
       source: queryLink.get('utm_source'),
