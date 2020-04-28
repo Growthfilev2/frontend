@@ -46,7 +46,7 @@ function failureScreen(error, callback) {
   })
 }
 
-function handleLocationError(error, onAppOpen) {
+function handleLocationError(error) {
   let alertDialog;
   if (progressBar) {
     progressBar.close()
@@ -65,33 +65,13 @@ function handleLocationError(error, onAppOpen) {
       break;
 
     case 'BROKEN INTERNET CONNECTION':
-      if (onAppOpen) {
-        failureScreen({
-          message: 'You Are Currently Offline. Please Check Your Internet Connection',
-          icon: 'wifi_off',
-          title: 'BROKEN INTERNET CONNECTION'
-        }, function () {
-          loadingScreen();
-          openMap();
-        });
-        return;
-      };
+      
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
 
     case 'TURN ON YOUR WIFI':
-      if (onAppOpen) {
-        failureScreen({
-          message: 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location',
-          icon: 'wifi_off',
-          title: 'TURN ON YOUR WIFI'
-        }, function () {
-          loadingScreen();
-          openMap();
-        });
-        return;
-      }
+      
       alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
       break;
@@ -104,17 +84,7 @@ function handleLocationError(error, onAppOpen) {
           stack: error.stack || ''
         }
       })
-      if (onAppOpen) {
-        failureScreen({
-          message: 'There was a problem in detecting your location. Please try again later',
-          icon: 'location_off',
-          title: 'Failed To Detect Location'
-        }, function () {
-          loadingScreen();
-          openMap();
-        });
-        return;
-      }
+      
       alertDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
       alertDialog.open();
       break;

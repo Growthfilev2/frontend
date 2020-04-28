@@ -495,63 +495,14 @@ function loadSlider() {
 }
 
 
-function loadingScreen(texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']) {
+function loadingScreen(text) {
   const panel = document.getElementById('app-current-panel');
 
-
-
   panel.innerHTML = `
-  <div class='splash-content' id='loading-screen'>
-
-      <div class='graphic-container'>
-        <img src='./img/ic_launcher.png'>
-      </div>
-  
-      <div class='text'>
-
-        <p class='mdc-typography--headline6 text-center mb-0'>
-            Growthfile is free to use for any employee of any company
-        </p>
-        <p class='mdc-typography--subtitle2 text-center'>
-          No more queries, disputes, delays or deductions from your monthly salary & other payments
-        </p>
-    </div>
-
-    <div class="showbox" id='start-load'>
-    <div class="loader">
-      <svg class="circular" viewBox="25 25 50 50">
-        <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
-      </svg>
-    </div>
-    <p class="mdc-typography--headline6 mdc-theme--primary"></p>
-  </div>
-    <div class='icon-cont mdc-layout-grid__inner mt-20'>
-        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
-          <div class='icon text-center'>
-            <i class='material-icons mdc-theme--primary'>room</i>
-            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Check-in</p>
-          </div>
-        </div>
-       
-        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
-          <div class='icon text-center'>
-            <img src='./img/currency.png' class='currency-primary'>
-            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Incentives</p>
-          </div>
-        </div>
-
-      </div>
+  <div class='splash-content' id='loading-screen' style="background-image:url('./img/fetching-details.jpg');background">
+    <p>${text}</p>
   </div>
   `
-  const startLoad = document.getElementById('start-load')
-  let index = 0;
-  var interval = setInterval(function () {
-    if (index == texts.length - 1) {
-      clearInterval(interval)
-    };
-    startLoad.querySelector('p').textContent = texts[index]
-    index++;
-  }, index + 1 * 1000);
 
 }
 
@@ -599,11 +550,11 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    loadingScreen();
+    // loadingScreen('Fetching details');
 
     const queryLink = facebookDeepLink || firebaseDeepLink;
 
-    regulator().then(console.log).catch(console.error)
+    // regulator().then(console.log).catch(console.error)
     // if (queryLink) {
     //   requestCreator('acquisition', {
     //     source: queryLink.get('utm_source'),
@@ -683,6 +634,7 @@ function startApp() {
 function regulator() {
   const queryLink = facebookDeepLink || firebaseDeepLink;
   const deviceInfo = native.getInfo();
+  loadingScreen()
   return new Promise(function (resolve, reject) {
     var prom = queryLink ? requestCreator('acquisition', {
       source: queryLink.get('utm_source'),
@@ -712,13 +664,16 @@ function regulator() {
         console.log('all completed')
       })
       .catch(function (error) {
-        console.log(error)
+        if(error.type === 'geolocation') return handleLocationError(error)
+        snacks(error.message);
       })
   })
 }
 
 
+
 function handleCheckin(geopoint, noUser) {
+  const queryLink = firebaseDeepLink || facebookDeepLink;
   if (queryLink && queryLink.get('action') === 'get-subscription') {
     const subscription = {
       attachment: {
@@ -748,6 +703,7 @@ function handleCheckin(geopoint, noUser) {
     }
     if (noUser) {
       // no user found
+
       return
     }
     requestCreator('Null').then(function () {
