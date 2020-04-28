@@ -1,5 +1,5 @@
 {
-  "hosting": [{
+  "hosting": {
     "target":"v2",
     "public": "dist",
     "ignore": [
@@ -31,37 +31,5 @@
         }]
       }
     ]
-  },{
-    "target": "dev",
-    "public": "dist",
-    "ignore": [
-      "firebase.json",
-      "*/.",
-      "/node_modules/"
-    ],
-    "headers": [
-      {
-        "source":"/**",
-        "headers": [{
-          "key": "Cache-Control",
-          "value": "no-cache"
-        }]
-      },
-
-      {
-        "source": "**/*.@(jpg|jpeg|gif|png|js|css)",
-        "headers": [{
-          "key": "Cache-Control",
-          "value": "max-age=604800"
-        }]
-      },
-      {
-        "source": "404.html",
-        "headers": [{
-          "key": "Cache-Control",
-          "value": "max-age=300"
-        }]
-      }
-    ]
-  }]
+  }
 }
