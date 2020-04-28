@@ -30,7 +30,7 @@ const requestFunctionCaller = {
   searchOffice: searchOffice,
   checkIns: checkIns,
   idProof: idProof,
-
+  acquisition:acquisition
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -402,10 +402,21 @@ function create(requestBody, meta) {
     url: `${meta.apiUrl}activities/create`,
     body: JSON.stringify(requestBody),
     token: meta.user.token,
-    timeout: 15000
+    timeout: null
   }
   return http(req)
 
+}
+
+function acquisition(body,meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/acquisition`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
 }
 
 

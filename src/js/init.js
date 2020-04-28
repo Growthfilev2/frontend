@@ -1270,12 +1270,12 @@ function openMap() {
       const action = firebaseDeepLink.get('action')
       if (action && action === 'get-subscription') {
 
-        requestCreator("acquisition",JSON.stringify({
+        requestCreator("acquisition",{
           source:firebaseDeepLink.get('source'),
           medium:firebaseDeepLink.get('medium'),
           campaign:firebaseDeepLink.get('campaign'),
           office:firebaseDeepLink.get('office')
-        })).then(function(){
+        }).then(function(){
 
         }).catch(console.error)
 
