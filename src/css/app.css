@@ -1217,3 +1217,9 @@ iframe {
   display: block;
   margin: 0 auto;
 }
+
+.loading-screen {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}

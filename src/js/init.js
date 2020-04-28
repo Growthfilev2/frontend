@@ -495,12 +495,14 @@ function loadSlider() {
 }
 
 
-function loadingScreen(text) {
+function loadingScreen(data) {
   const panel = document.getElementById('app-current-panel');
 
   panel.innerHTML = `
-  <div class='splash-content' id='loading-screen' style="background-image:url('./img/fetching-details.jpg');background">
-    <p>${text}</p>
+  <div class='splash-content loading-screen' id='loading-screen' style="background-image:url(${data.src});">
+    <div class'text-container'> 
+      <p class='message'>${data.text}</p>
+    </div>  
   </div>
   `
 
@@ -550,7 +552,7 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    // loadingScreen('Fetching details');
+    loadingScreen({text:'Fetching details',src:'./img/fetching-details.jpg'});
 
     const queryLink = facebookDeepLink || firebaseDeepLink;
 
