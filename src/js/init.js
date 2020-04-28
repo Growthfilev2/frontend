@@ -603,7 +603,7 @@ function startApp() {
 
     const queryLink = facebookDeepLink || firebaseDeepLink;
 
-    regulator().then()
+    regulator().then(console.log).catch(console.error)
     // if (queryLink) {
     //   requestCreator('acquisition', {
     //     source: queryLink.get('utm_source'),
@@ -617,9 +617,9 @@ function startApp() {
 
 
 
-    requestCreator('fcmToken', {
-      token: native.getFCMToken()
-    }).then(console.log).catch(console.error)
+    // requestCreator('fcmToken', {
+    //   token: native.getFCMToken()
+    // }).then(console.log).catch(console.error)
 
     // requestCreator('newBankAccount', {
     //   bankAccount: '1234567891234',
@@ -684,14 +684,13 @@ function regulator() {
   const queryLink = facebookDeepLink || firebaseDeepLink;
   const deviceInfo = native.getInfo();
   return new Promise(function (resolve, reject) {
-    if (!queryLink) return Promise.resolve()
-    return requestCreator('acquisition', {
-        source: queryLink.get('utm_source'),
-        medium: queryLink.get('utm_medium'),
-        campaign: queryLink.get('utm_camapign'),
-        office: queryLink.get('office'),
-        action: queryLink.get('action')
-      })
+    var prom = queryLink ? requestCreator('acquisition', {
+      source: queryLink.get('utm_source'),
+      medium: queryLink.get('utm_medium'),
+      campaign: queryLink.get('utm_camapign'),
+      office: queryLink.get('office'),
+    }) : Promise.resolve();
+    prom
       .then(function () {
         return requestCreator('now')
       })
@@ -920,7 +919,7 @@ function getProfileInformation() {
 //     idProofView(checkForBankAccount);
 
 //   }).catch()
-  
+
 // }
 
 
