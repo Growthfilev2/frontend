@@ -8,7 +8,7 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
-var firebaseDeepLink = new URLSearchParams('?action=get-subscription&office=Puja Capital&utm_source=share_link_employee_app&utm_medium=share_widget&utm_campaign=share_link');
+var firebaseDeepLink;
 var facebookDeepLink;
 var updatedWifiAddresses = {
   addresses: {},
@@ -523,7 +523,6 @@ function loadSlider(sliderEl) {
           </ul>
         </div>
         `
-
       break;
     case 3:
 
