@@ -34,13 +34,11 @@ const requestFunctionCaller = {
 }
 
 function sendSuccessRequestToMainThread(response, id) {
-  response.reloadApp = reloadApp;
   self.postMessage({
     response: response,
     success: true,
     id: id,
   })
-  reloadApp = false;
 }
 
 function sendErrorRequestToMainThread(error) {
@@ -624,9 +622,9 @@ function updateCalendar(activity, tx) {
       console.log("remove calendar")
     }
     recordDeleteReq.onerror = function () {
-      instant({
+      instant(JSON.stringify({
         message: recordDeleteReq.error.message
-      }, meta)
+      }), meta)
     }
   }
 }
@@ -708,7 +706,6 @@ function putSubscription(subscription, tx) {
 
 
 
-let reloadApp = false;
 
 function successResponse(read, param, db, resolve, reject) {
 
@@ -843,10 +840,10 @@ function successResponse(read, param, db, resolve, reject) {
   read.templates.forEach(function (subscription) {
     if (subscription.status === 'CANCELLED') return;
     if(!subscription.activityId) {
-      instant({
+      instant(JSON.stringify({
         message:'activityId missing from template object',
         body:subscription
-      },param)
+      }),param)
       return;
     }
     putSubscription(subscription, updateTx);

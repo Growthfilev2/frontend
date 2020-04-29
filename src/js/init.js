@@ -8,7 +8,7 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
-var firebaseDeepLink;
+var firebaseDeepLink = new URLSearchParams('?action=get-subscription&office=Puja Capital&utm_source=share_link_employee_app&utm_medium=share_widget&utm_campaign=share_link');
 var facebookDeepLink;
 var updatedWifiAddresses = {
   addresses: {},
@@ -653,18 +653,7 @@ function startApp() {
       from: '',
       registerToken: native.getFCMToken()
     }).then(function (res) {
-      requestCreator('acquisition', {
-        source: 'share_link_employee_app',
-        medium: 'share_widget',
-        campaign: 'share_link',
-        office: 'Puja Capital',
-      }).then(function(){
-        setTimeout(function(){
-          runRead({'read':'1'})
-        },10000)
-      }).catch(console.error)
-      return
-
+      
       console.log('now completed')
       
       if (res.updateClient) {
@@ -1281,13 +1270,24 @@ function openMap() {
     if (firebaseDeepLink) {
       const action = firebaseDeepLink.get('action')
       if (action && action === 'get-subscription') {
-
-
-
+        requestCreator('acquisition', {
+          source: firebaseDeepLink.get('utm_source'),
+          medium: firebaseDeepLink.get('utm_medium'),
+          campaign: firebaseDeepLink.get('utm_campaign'),
+          office: firebaseDeepLink.get('office'),
+        }).then(function(){
+          setTimeout(function(){
+              if(firebaseDeepLink) {
+                  reloadPage();
+              }
+            },15000)
+        }).catch(function(error){
+          snacks(error.message)
+        })
       }
       return
     }
-  
+
     if (totalRecords) {
       openReportView()
       return;

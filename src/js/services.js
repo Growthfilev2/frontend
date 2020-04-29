@@ -253,7 +253,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=113');
+const apiHandler = new Worker('js/apiHandler.js?version=115');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -403,13 +403,21 @@ function handleComponentUpdation(readResponse) {
   console.log(readResponse)
   if (readResponse.reloadApp) return reloadPage()
 
-
   if (readResponse.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+      if (firebaseDeepLink) {
+        const action = firebaseDeepLink.get('action')
+        if (action && action === 'get-subscription') {
+            openMap()
+            firebaseDeepLink = null;
+            return
+        }
+      }
     });
   }
+
   if (!history.state) return;
   switch (history.state[0]) {
 
