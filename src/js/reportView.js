@@ -1,4 +1,5 @@
 function reportView(state, attendanceRecord) {
+
   document.getElementById('step-ui').innerHTML = ''
   const panel = document.getElementById('app-current-panel');
   panel.classList.remove('mdc-theme--primary-bg')

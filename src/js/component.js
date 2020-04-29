@@ -554,7 +554,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
 
 const shareWidget = (link, office) => {
     const auth = firebase.auth().currentUser;
-    const shareText = `Hi ${auth.displayName} from ${office} wants you to use Growthfile to mark daily attendance, apply for leave and regularize attendance. To download please click `
+    const shareText = `Hi ${auth.displayName} from ${office} wants you to use Growthfile to Check-in & collect proof of work without any effort. Download app & login now `
     const el = createElement('div', {
         className: 'share-widget'
     })

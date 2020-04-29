@@ -1414,7 +1414,7 @@ function openReportView() {
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view")
   history.pushState(['reportView'], null, null);
-
+  runRead({'read':'1'})
   reportView()
 }
 
