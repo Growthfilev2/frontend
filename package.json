@@ -4,8 +4,8 @@
   "description": "## File structure ``` |   index.html |   .gitignore |   package.json |   README.md | +---css |   |   conversation.css | +---js |   |   apiHandler.js |   |   conversation.js |   |   init.js |   |   panel.js |   |   services.js | ```",
   "main": "index.js",
   "scripts": {
-    "deploy:prod": "firebase use --add growthfilev2-0 && firebase deploy --only hosting",
-    "deploy:test": "firebase use --add growthfile-207204 && firebase deploy --only hosting",
+    "deploy:test": "firebase use --add growthfilev2-0 && firebase deploy --only hosting",
+    "deploy:prod": "firebase use --add growthfile-207204 && firebase deploy --only hosting",
     "clean": "rm -r dist/v2/js/*.js && rm -r dist/v2/css/bundle.css",
     "babel": "babel src/js --out-file dist/v2/js/compiled.js --ignore 'src/js/apiHandler.js'",
     "worker": "babel src/js/apiHandler.js --out-file dist/v2/js/apiHandler.js",
