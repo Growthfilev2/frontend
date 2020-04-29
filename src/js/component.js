@@ -50,7 +50,7 @@ function actionButton(name, id = '',link) {
     else {
         button =  createButton(name, id);
     }
-  
+    button.classList.add('submit-btn','mdc-button--raised')
     new mdc.ripple.MDCRipple(button);
     submitContainer.appendChild(button);
     actionContainer.appendChild(submitContainer);

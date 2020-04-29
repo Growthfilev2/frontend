@@ -253,7 +253,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=115');
+const apiHandler = new Worker('js/apiHandler.js?version=117');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -400,38 +400,30 @@ function updateIosLocation(geopointIos) {
 }
 
 function handleComponentUpdation(readResponse) {
-  console.log(readResponse)
+ 
 
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-      if (firebaseDeepLink) {
-        const action = firebaseDeepLink.get('action')
-        if (action && action === 'get-subscription') {
-            openMap()
-            firebaseDeepLink = null;
-            return
-        }
-      }
-      if (!history.state) return;
-      switch (history.state[0]) {
-        case 'enterChat':
-          if (!readResponse.addendum.length) return;
-          dynamicAppendChats(readResponse.addendum)
-          break;
-        case 'chatView':
-          if (!readResponse.addendum.length) return;
-          readLatestChats(false);
-          break;
-    
-        case 'reportView':
-          reportView(history.state[1]);
-          break;
-        default:
-          console.log("no refresh")
-      }
     });
+    
+    if (!history.state) return;
+    switch (history.state[0]) {
+      case 'enterChat':
+        if (!readResponse.addendum.length) return;
+        dynamicAppendChats(readResponse.addendum)
+        break;
+      case 'chatView':
+        if (!readResponse.addendum.length) return;
+        readLatestChats(false);
+        break;
   
+      case 'reportView':
+        reportView(history.state[1]);
+        break;
+      default:
+        console.log("no refresh")
+    }
 }
 
 /** function call to be removed from apk */

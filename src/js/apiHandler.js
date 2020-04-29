@@ -846,6 +846,7 @@ function successResponse(read, param, db, resolve, reject) {
       }),param)
       return;
     }
+   
     putSubscription(subscription, updateTx);
    
   })

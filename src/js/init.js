@@ -11,10 +11,10 @@ var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
 var firebaseAnalytics;
-var  serverTimeUpdated = false;
+var serverTimeUpdated = false;
 var updatedWifiAddresses = {
   addresses: {},
-  timestamp:null
+  timestamp: null
 }
 var isNewUser = false;
 
@@ -82,12 +82,12 @@ function setFirebaseAnalyticsUserProperty(name, value) {
 }
 
 function parseFacebookDeeplink(link) {
-  
+
   console.log("fb link ", link)
   const url = new URL(link);
   const query = new URLSearchParams(url.search);
   facebookDeepLink = query;
-  if(!firebase.auth().currentUser) return;
+  if (!firebase.auth().currentUser) return;
 }
 
 /**
@@ -98,7 +98,7 @@ function parseFacebookDeeplink(link) {
 function parseDynamicLink(link) {
   const url = new URL(link);
   firebaseDeepLink = new URLSearchParams(url.search);
-  if(!firebase.auth().currentUser) return;
+  if (!firebase.auth().currentUser) return;
 }
 
 /**
@@ -122,16 +122,16 @@ function updatedWifiScans(wifiString) {
   const result = {}
   const splitBySeperator = wifiString.split(",")
   splitBySeperator.forEach(function (value) {
-      const url = new URLSearchParams(value);
-      if (url.has('ssid')) {
-          url.delete('ssid')
-      }
-      if (!url.has('macAddress')) return;
-      result[url.get("macAddress")] = true
-    })
-    updatedWifiAddresses.addresses = result;
-    updatedWifiAddresses.timestamp = Date.now()
-  
+    const url = new URLSearchParams(value);
+    if (url.has('ssid')) {
+      url.delete('ssid')
+    }
+    if (!url.has('macAddress')) return;
+    result[url.get("macAddress")] = true
+  })
+  updatedWifiAddresses.addresses = result;
+  updatedWifiAddresses.timestamp = Date.now()
+
 };
 
 /**
@@ -252,53 +252,53 @@ window.onpopstate = function (event) {
 
 
 // function initializeApp() {
-  window.addEventListener('load', function () {
+window.addEventListener('load', function () {
 
-    firebase.initializeApp(appKey.getKeys())
-    progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
-    snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-    topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-    const panel = this.document.getElementById('app-current-panel');
+  firebase.initializeApp(appKey.getKeys())
+  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
+  snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+  topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+  const panel = this.document.getElementById('app-current-panel');
 
-    if (!window.Worker && !window.indexedDB) {
-      const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
-      incompatibleDialog.open();
+  if (!window.Worker && !window.indexedDB) {
+    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
+    incompatibleDialog.open();
+    return;
+  }
+
+  firebase.auth().onAuthStateChanged(function (auth) {
+    if (!auth) {
+      logReportEvent("IN Slider");
+
+      history.pushState(['userSignedOut'], null, null);
+      userSignedOut()
       return;
     }
 
-    firebase.auth().onAuthStateChanged(function (auth) {
-      if (!auth) {
-        logReportEvent("IN Slider");
-
-        history.pushState(['userSignedOut'], null, null);
-        userSignedOut()
-        return;
-      }
 
 
+    const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
+    header.listen('MDCTopAppBar:nav', handleNav);
+    header.root_.classList.add("hidden");
+    if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
-      const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
-      header.listen('MDCTopAppBar:nav', handleNav);
-      header.root_.classList.add("hidden");
-      if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
+    panel.classList.remove('hidden');
+    if (EMAIL_REAUTH) {
+      history.pushState(['reportView'], null, null);
+      history.pushState(['profileView'], null, null);
+      history.pushState(['emailUpdation'], null, null);
+      emailUpdation(false, function () {
+        EMAIL_REAUTH = false
+        history.back()
+      })
+      return;
+    }
 
-      panel.classList.remove('hidden');
-      if (EMAIL_REAUTH) {
-        history.pushState(['reportView'], null, null);
-        history.pushState(['profileView'], null, null);
-        history.pushState(['emailUpdation'], null, null);
-        emailUpdation(false, function () {
-          EMAIL_REAUTH = false
-          history.back()
-        })
-        return;
-      }
-
-      localStorage.setItem('error', JSON.stringify({}));
-      localStorage.removeItem('storedLinks');
-      checkNetworkValidation();
-    });
-  })
+    localStorage.setItem('error', JSON.stringify({}));
+    localStorage.removeItem('storedLinks');
+    checkNetworkValidation();
+  });
+})
 
 // }
 
@@ -322,7 +322,7 @@ function firebaseUiConfig() {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
-           
+
         isNewUser = authResult.additionalUserInfo.isNewUser;
         if (!authResult.additionalUserInfo.isNewUser) {
           logReportEvent("login");
@@ -333,7 +333,7 @@ function firebaseUiConfig() {
         };
 
         firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
-       
+
           if (isAdmin(tokenResult)) {
             logReportEvent("Sign Up Admin");
             setFirebaseAnalyticsUserProperty("isAdmin", "true");
@@ -344,12 +344,12 @@ function firebaseUiConfig() {
             method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
           }
           var queryLink = firebaseDeepLink || facebookDeepLink;
-          if(queryLink) {
+          if (queryLink) {
             signUpParams.source = queryLink.get("utm_source");
             signUpParams.medium = queryLink.get("utm_medium");
             signUpParams.campaign = queryLink.get("utm_campaign")
           }
-         
+
           logFirebaseAnlyticsEvent("sign_up", signUpParams);
         })
         return false;
@@ -358,7 +358,7 @@ function firebaseUiConfig() {
         return handleUIError(error)
       },
       uiShown: function () {
-        logFirebaseAnlyticsEvent('auth_page_open',{})
+        logFirebaseAnlyticsEvent('auth_page_open', {})
       }
     },
     signInFlow: 'popup',
@@ -603,7 +603,7 @@ function loadingScreen(texts = ['Loading Growthfile', 'Getting Your Data', 'Crea
     };
     startLoad.querySelector('p').textContent = texts[index]
     index++;
-  }, index + 1 * 1000);
+  }, (index + 1) * 1000);
 
 }
 
@@ -636,7 +636,7 @@ function startApp() {
         record.fromTime = 0;
         rootStore.put(record);
       }
-  };
+    };
     console.log('version upgrade')
   }
 
@@ -644,8 +644,9 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    loadingScreen();
+
     console.log('running now')
+    loadingScreen();
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
@@ -653,7 +654,7 @@ function startApp() {
     }).then(function (res) {
       serverTimeUpdated = true
       console.log('now completed')
-      
+
       if (res.updateClient) {
         updateApp()
         return
@@ -662,7 +663,7 @@ function startApp() {
         revokeSession(true);
         return
       };
-    
+
       let rootRecord;
       const rootTx = db.transaction('root', 'readwrite');
       const store = rootTx.objectStore('root');
@@ -677,16 +678,20 @@ function startApp() {
         store.put(rootRecord);
 
       }
-      
+
       rootTx.oncomplete = function () {
-        if (!rootRecord.fromTime) return requestCreator('Null').then(openMap).catch(console.error)
+        if (!rootRecord.fromTime) {
+          requestCreator('Null').then(function () {
+            openMap();
+          }).catch(console.error)
+          return
+        }
         openMap()
         runRead({
           read: '1'
         })
-      
       }
-    
+
     }).catch(console.error)
   };
 
@@ -700,9 +705,9 @@ function startApp() {
 }
 
 function initProfileView() {
-  
-  document.getElementById('app-header').classList.remove('hidden')
-  history.pushState(['profileCheck'], null, null)
+  document.getElementById('app-current-panel').classList.remove('mdc-top-app-bar--fixed-adjust');
+  document.getElementById('app-header').classList.remove('hidden');
+  history.pushState(['profileCheck'], null, null);
   profileCheck();
 }
 
@@ -917,7 +922,7 @@ function showReLoginDialog(heading, contentText) {
 }
 
 function getProfileCompletionTabs() {
-  const dom = `<div class="step-container mdc-top-app-bar--fixed-adjust">
+  const dom = `<div class="step-container">
   <div class="progress">
     <div class="progress-track"></div>
     <div id="step1" class="progress-step">
@@ -1245,63 +1250,72 @@ function getCheckInSubs() {
   })
 };
 
-function openMap() {
+function openMap(geopoint) {
   document.getElementById('app-header').classList.add("hidden")
   document.getElementById('step-ui').innerHTML = ''
   progressBar.open();
   const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
-  Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]).then(function (result) {
-    const geopoint = result[0];
-    const tokenResult = result[1];
-    const checkInSubs = result[2];
-    const totalRecords = result[3];
-    const auth = firebase.auth().currentUser;
+  const prom = [firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]
+  let userLocation;
+  if (!geopoint) {
+    prom.push(appLocation(3))
+  }
+
+  Promise.all(prom).then(function (result) {
+
+    const tokenResult = result[0];
+    const checkInSubs = result[1];
+    const totalRecords = result[2];
+    userLocation = result[3] || geopoint
     progressBar.close();
+    console.log()
 
     if (Object.keys(checkInSubs).length) {
-      if(isNewUser) {
-          setFirebaseAnalyticsUserProperty("hasCheckin","true");
+      if (isNewUser) {
+        setFirebaseAnalyticsUserProperty("hasCheckin", "true");
       }
-      handleLocationForMap(geopoint, checkInSubs);
+      console.log('call checkin flow')
+      handleLocationForMap(userLocation, checkInSubs);
       return;
     }
 
     if (isAdmin(tokenResult)) {
-      handleLocationForMap(geopoint, checkInSubs)
+      handleLocationForMap(userLocation, checkInSubs)
       return
     }
-    
-    if (firebaseDeepLink) {
-      const action = firebaseDeepLink.get('action')
-      if (action && action === 'get-subscription') {
-        requestCreator('acquisition', {
-          source: firebaseDeepLink.get('utm_source'),
-          medium: firebaseDeepLink.get('utm_medium'),
-          campaign: firebaseDeepLink.get('utm_campaign'),
-          office: firebaseDeepLink.get('office'),
-        }).then(function(){
-          setTimeout(function(){
-              if(firebaseDeepLink) {
-                  reloadPage();
-              }
-            },15000)
-        }).catch(function(error){
-          snacks(error.message)
-        })
-      }
+
+    if (firebaseDeepLink && firebaseDeepLink.get('action') && firebaseDeepLink.get('action') === 'get-subscription') {
+      const subscriptionOffice = firebaseDeepLink.get('office')
+      loadingScreen(['Adding you in ' + subscriptionOffice + '... Please wait'])
+      requestCreator('acquisition', {
+        source: firebaseDeepLink.get('utm_source'),
+        medium: firebaseDeepLink.get('utm_medium'),
+        campaign: firebaseDeepLink.get('utm_campaign'),
+        office: subscriptionOffice,
+      }).then(function () {
+        loadingScreen(['Adding you in ' + subscriptionOffice + '... Please wait', 'You are added in ' + subscriptionOffice + '... Please wait'])
+        setTimeout(function () {
+          requestCreator('Null').then(function () {
+            openMap(geopoint)
+          })
+        }, 10000)
+      }).catch(function (error) {
+        snacks(error.message)
+      })
       return
     }
 
     if (totalRecords) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
+      console.log('call non checkin flow')
       openReportView()
       return;
     }
 
-    ApplicationState.location = geopoint;
+    ApplicationState.location = userLocation;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     if (potentialAlternatePhoneNumbers.length) {
-      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
+      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, userLocation);
       return
     };
 
@@ -1315,6 +1329,8 @@ function openMap() {
     })
   })
 }
+
+
 
 
 function noOfficeFoundScreen() {
@@ -1337,7 +1353,7 @@ function noOfficeFoundScreen() {
    
 
   `
-document.getElementById('app-current-panel').innerHTML = content;
+  document.getElementById('app-current-panel').innerHTML = content;
 
 }
 
@@ -1369,22 +1385,36 @@ function checkIDBCount(storeNames) {
 function handleLocationForMap(geopoint, checkInSubs) {
   ApplicationState.officeWithCheckInSubs = checkInSubs;
   const oldState = localStorage.getItem('ApplicationState')
-  if (!oldState) return mapView(geopoint);
+  if (!oldState)  {
+    console.log('create read');
+    mapView(geopoint);
+    return
+  }
   const oldApplicationState = JSON.parse(oldState);
-  if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
+  if (!oldApplicationState.lastCheckInCreated)   {
+    console.log('create read');
+    return mapView(geopoint);
+  }
   const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
-  if (isOlder || hasChangedLocation) return mapView(geopoint);
+  if (isOlder || hasChangedLocation)   {
+    console.log('create read');
+    mapView(geopoint);
+    return
+  }
+  console.log('skip read')
   ApplicationState = oldApplicationState;
-  openReportView()
+  initProfileView()
 }
 
 
 function openReportView() {
+
   logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view")
-  history.pushState(['reportView'], null, null)
+  history.pushState(['reportView'], null, null);
+
   reportView()
 }
 
@@ -1411,7 +1441,7 @@ function reloadPage() {
 function updateFromTime(fromTime) {
   return new Promise(function (resolve, reject) {
     const keyPath = firebase.auth().currentUser.uid;
-    const tx = db.transaction('root','readwrite');
+    const tx = db.transaction('root', 'readwrite');
     const store = tx.objectStore('root');
     store.get(keyPath).onsuccess = function (e) {
       const record = e.target.result;
@@ -1421,6 +1451,6 @@ function updateFromTime(fromTime) {
     tx.oncomplete = function () {
       resolve(true)
     }
-   
+
   })
 }

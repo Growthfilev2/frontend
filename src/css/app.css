@@ -1062,14 +1062,11 @@ iframe {
 .submit-button-cont {
   width: inherit;
   position: fixed;
-
   bottom: 0px;
   max-width: inherit;
   animation-duration: 0.5s;
   animation-name: bottomToTop;
 }
-
-
 
 .submit-btn {
   font-size: 20px;
@@ -1081,7 +1078,6 @@ iframe {
 
 .submit-btn .mdc-button__icon {
   font-size: 24px;
-
 }
 
 @media (min-width:481px) {
