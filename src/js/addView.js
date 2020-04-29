@@ -1,3 +1,10 @@
+const allowedOrigins = {
+    'https://growthfile.com': true,
+    'https://growthfile-207204.firebaseapp.com': true,
+    'https://growthfilev2-0.firebaseapp.com':true,
+    'https://dev-growthfile.web.app':true
+}
+
 function addView(sub, body) {
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -28,14 +35,11 @@ function resizeFrame() {
 
 }
 
-function originMatch(origin) {
-    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com']
-    return origins.indexOf(origin) > -1;
-}
+
 
 window.addEventListener('message', function (event) {
     console.log(event)
-    if (!originMatch(event.origin)) return;
+    if (!allowedOrigins[event.origin]) return;
     this.console.log(event.data);
     if (typeof event.data === 'object' && event.data != null) {
         if (event.data.hasOwnProperty('name')) {

@@ -634,10 +634,7 @@ function startApp() {
         record.fromTime = 0;
         rootStore.put(record);
       }
-    };
-
-
-
+  };
     console.log('version upgrade')
   }
 
@@ -1288,6 +1285,7 @@ function openMap() {
     }
 
     if (totalRecords) {
+      ApplicationState.officeWithCheckInSubs = checkInSubs;
       openReportView()
       return;
     }

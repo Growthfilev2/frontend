@@ -401,9 +401,7 @@ function updateIosLocation(geopointIos) {
 
 function handleComponentUpdation(readResponse) {
   console.log(readResponse)
-  if (readResponse.reloadApp) return reloadPage()
 
-  if (readResponse.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
@@ -415,27 +413,26 @@ function handleComponentUpdation(readResponse) {
             return
         }
       }
+      if (!history.state) return;
+      switch (history.state[0]) {
+    
+        case 'enterChat':
+          if (!readResponse.addendum.length) return;
+          dynamicAppendChats(readResponse.addendum)
+          break;
+        case 'chatView':
+          if (!readResponse.addendum.length) return;
+          readLatestChats(false);
+          break;
+    
+        case 'reportView':
+          reportView(history.state[1]);
+          break;
+        default:
+          console.log("no refresh")
+      }
     });
-  }
-
-  if (!history.state) return;
-  switch (history.state[0]) {
-
-    case 'enterChat':
-      if (!readResponse.addendum.length) return;
-      dynamicAppendChats(readResponse.addendum)
-      break;
-    case 'chatView':
-      if (!readResponse.addendum.length) return;
-      readLatestChats(false);
-      break;
-
-    case 'reportView':
-      reportView(history.state[1]);
-      break;
-    default:
-      console.log("no refresh")
-  }
+  
 }
 
 /** function call to be removed from apk */
