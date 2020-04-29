@@ -415,7 +415,6 @@ function handleComponentUpdation(readResponse) {
       }
       if (!history.state) return;
       switch (history.state[0]) {
-    
         case 'enterChat':
           if (!readResponse.addendum.length) return;
           dynamicAppendChats(readResponse.addendum)
@@ -440,7 +439,8 @@ function backgroundTransition() {}
 
 function runRead(type) {
   console.log("run read notification")
-  if (!firebase.auth().currentUser) return;
+  if (!firebase.auth().currentUser || !serverTimeUpdated) return;
+    
   if (type.read) {
     var readEvent = new CustomEvent('callRead', {
       detail: type.read

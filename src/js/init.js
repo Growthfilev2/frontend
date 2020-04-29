@@ -10,6 +10,8 @@ var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
+var firebaseAnalytics;
+var  serverTimeUpdated = false;
 var updatedWifiAddresses = {
   addresses: {},
   timestamp:null
@@ -649,7 +651,7 @@ function startApp() {
       from: '',
       registerToken: native.getFCMToken()
     }).then(function (res) {
-      
+      serverTimeUpdated = true
       console.log('now completed')
       
       if (res.updateClient) {
@@ -660,9 +662,11 @@ function startApp() {
         revokeSession(true);
         return
       };
+    
       let rootRecord;
       const rootTx = db.transaction('root', 'readwrite');
       const store = rootTx.objectStore('root');
+
       store.get(dbName).onsuccess = function (transactionEvent) {
         rootRecord = transactionEvent.target.result;
         rootRecord.linkedAccounts = res.linkedAccounts || [];
@@ -671,14 +675,18 @@ function startApp() {
           rootRecord.idProof = res.idProof
         }
         store.put(rootRecord);
+
       }
+      
       rootTx.oncomplete = function () {
         if (!rootRecord.fromTime) return requestCreator('Null').then(openMap).catch(console.error)
         openMap()
         runRead({
           read: '1'
         })
+      
       }
+    
     }).catch(console.error)
   };
 
