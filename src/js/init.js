@@ -1409,12 +1409,13 @@ function handleLocationForMap(geopoint, checkInSubs) {
 
 
 function openReportView() {
-
   logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view")
   history.pushState(['reportView'], null, null);
-  runRead({'read':'1'})
+  setTimeout(function(){
+    runRead({'read':'1'})
+  },3000)
   reportView()
 }
 
