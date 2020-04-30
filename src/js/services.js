@@ -539,10 +539,10 @@ function handleNav(evt) {
 
 
 function bottomDialog(dialog, ul) {
-
+  dialog.root_.classList.add('bottom-dialog')
   ul.singleSelection = true
   ul.selectedIndex = 0;
-
+  dialog.rootRecord
   setTimeout(function () {
     dialog.root_.querySelector('.mdc-dialog__surface').classList.add('open')
     ul.foundation_.adapter_.focusItemAtIndex(0);

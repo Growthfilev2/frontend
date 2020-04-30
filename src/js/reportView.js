@@ -62,7 +62,7 @@ function reportView(state, attendanceRecord) {
     if (state == null) {
       if (reportTabs.length > 2) {
         return tabList.activateTab(2)
-     
+
       }
       return tabList.activateTab(0)
     }
@@ -161,7 +161,7 @@ function getReportTabData() {
       view: 'chatView',
       index: 0,
     }];
-    if(Object.keys(ApplicationState.officeWithCheckInSubs).length) {
+    if (Object.keys(ApplicationState.officeWithCheckInSubs).length) {
       reportTabData.push({
         name: 'Photo Check-In',
         id: 'photo-check-in',
@@ -213,7 +213,7 @@ function getReportTabData() {
     })
     reportTx.oncomplete = function () {
       Promise.all([getReportSubscriptions('incentive'), getSubscription('', 'call')]).then(function (results) {
-        const merged = [...results[0],...results[1]];
+        const merged = [...results[0], ...results[1]];
         if (merged.length) {
           reportTabData.push({
             name: 'Incentives',
@@ -227,8 +227,8 @@ function getReportTabData() {
     }
     reportTx.onerror = function () {
       return reject({
-        message:reportTx.error.message,
-        body:JSON.stringify(reportTx.error)
+        message: reportTx.error.message,
+        body: JSON.stringify(reportTx.error)
       })
     }
   })
@@ -320,38 +320,75 @@ function toggleReportCard(selector) {
 }
 
 function createTemplateButton(subs) {
-  const button = createFab('add')
-  button.addEventListener('click', function () {
-    if (subs.length == 1) {
-      history.pushState(['addView'], null, null);
-      addView(subs[0])
-      return
-    }
-    
-    const dialog = new Dialog('', templateSelectionList(subs), 'choose-office-subscription').create('simple');
-    const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-    bottomDialog(dialog, ul)
 
-    ul.listen('MDCList:action', function (evt) {
-      history.pushState(['addView'], null, null);
-      addView(subs[evt.detail.index])
-      dialog.close()
+    const button = createFab('add')
+    button.addEventListener('click', function () {
+      if (subs.length == 1) {
+        history.pushState(['addView'], null, null);
+        addView(subs[0])
+        return
+      }
+
+      const uniqueSubs = {}
+        subs.forEach(function (sub) {
+        if (!uniqueSubs[sub.template]) {
+          uniqueSubs[sub.template] = [sub]
+        } else {
+          uniqueSubs[sub.template].push(sub)
+        }
+      })
+
+      const dialog = new Dialog('', templateSelectionList(uniqueSubs), 'choose-office-subscription').create('simple');
+      const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+      bottomDialog(dialog, ul)
+
+      ul.listen('MDCList:action', function (subscriptionEvent) {
+        const selectedSubscriptions = uniqueSubs[Object.keys(uniqueSubs)[subscriptionEvent.detail.index]];
+        dialog.close()
+        if (selectedSubscriptions.length == 1) {
+          history.pushState(['addView'], null, null);
+          addView(selectedSubscriptions[0])
+          return
+        }
+        const officeDialog = new Dialog('Choose office', officeSelectionList(selectedSubscriptions), 'choose-office-subscription').create('simple');
+        const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+        bottomDialog(officeDialog, officeList)
+        officeList.listen('MDCList:action', function (officeEvent) {
+          const selectedSubscription = selectedSubscriptions[officeEvent.detail.index];
+          officeDialog.close();
+          history.pushState(['addView'], null, null);
+          addView(selectedSubscription)
+        })
+      })
     })
-  })
-  return button;
+    return button;
+ 
 }
 
 
 
-function templateSelectionList(subs) {
+function templateSelectionList(uniqueSubs) {
   return `<ul class='mdc-list subscription-list mdc-list--two-line' id='dialog-office'>
-     ${subs.map(function(sub){
+     ${Object.keys(uniqueSubs).map(function(name){
        return `<li class='mdc-list-item'>
         <span class="mdc-list-item__text">
-          <span class="mdc-list-item__primary-text">${sub.template}</span>
-          <span class="mdc-list-item__secondary-text">${sub.office}</span>
-        </span>
-      
+          <span class="mdc-list-item__primary-text">${name}</span>
+        </span>      
+       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+         keyboard_arrow_right
+       </span>
+       </li>`
+     }).join("")}
+     </ul>`
+};
+
+function officeSelectionList(subscriptions) {
+  return `<ul class='mdc-list subscription-list mdc-list--two-line' id='dialog-office'>
+     ${subscriptions.map(function(sub){
+       return `<li class='mdc-list-item'>
+        <span class="mdc-list-item__text">
+          <span class="mdc-list-item__primary-text">${sub.office}</span>
+        </span>      
        <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
          keyboard_arrow_right
        </span>
