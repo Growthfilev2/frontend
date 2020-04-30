@@ -327,6 +327,7 @@ function createTemplateButton(subs) {
       addView(subs[0])
       return
     }
+    
     const dialog = new Dialog('', templateSelectionList(subs), 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
     bottomDialog(dialog, ul)

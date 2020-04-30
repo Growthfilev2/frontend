@@ -193,10 +193,7 @@ let native = function () {
       deviceInfo = obj
     },
     getInfo: function () {
-      if (!this.getName()) return {
-        'id': '1234',
-        'brand': '123213'
-      };
+      if (!this.getName()) return null;
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
         return deviceInfo
@@ -515,7 +512,9 @@ function loadingScreen(data) {
   `
 
 }
-
+function removeLoadingScreen() {
+  document.getElementById('loading-screen').remove()
+}
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName, DB_VERSION);
@@ -688,12 +687,15 @@ function regulator() {
         return appLocation(3)
       })
       .then(function (geopoint) {
+
+        
         return handleCheckin(geopoint)
       })
       .then(function () {
         console.log('all completed')
       })
       .catch(function (error) {
+        console.log(error)
         if (error.type === 'geolocation') return handleLocationError(error)
         snacks(error.message);
       })
@@ -726,7 +728,9 @@ function handleCheckin(geopoint, noUser) {
     mapView(geopoint)
     return
   }
+  
   getCheckInSubs().then(function (checkInSubs) {
+    if(!shouldCheckin(geopoint,checkInSubs)) return initProfileView();
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       return mapView(geopoint)
@@ -743,7 +747,9 @@ function handleCheckin(geopoint, noUser) {
 }
 
 function initProfileView() {
-
+  const auth = firebase.auth().currentUser;
+  if(auth.displayName && auth.photoURL && auth.email) return openReportView()
+  removeLoadingScreen()
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
   profileCheck();
@@ -997,12 +1003,7 @@ function getProfileCompletionTabs() {
     <div id="step3" class="progress-step">
       <i class='material-icons'>email</i>
     </div>
-    <div id="step4" class="progress-step">
-      <i class='material-icons'>verified_user</i>
-     </div>
-    <div id="step5" class="progress-step">
-      <i class='material-icons'>payment</i>
-    </div>
+
   </div>
 
 </div>`
@@ -1428,4 +1429,32 @@ function updateFromTime(fromTime) {
     }
 
   })
+}
+
+
+
+function shouldCheckin(geopoint, checkInSubs) {
+
+  ApplicationState.officeWithCheckInSubs = checkInSubs;
+  const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
+  if (!oldState)  {
+    // mapView(geopoint);
+    return true
+  }
+
+  if (!oldState.lastCheckInCreated)   {
+    // return mapView(geopoint);
+    return true
+  }
+
+  const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
+  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
+  if (isOlder || hasChangedLocation)   {
+    // mapView(geopoint);
+    return true
+    return
+  }
+  ApplicationState = oldState;
+  // initProfileView()
+  return
 }
