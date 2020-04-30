@@ -533,7 +533,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
                     "socialMetaTagInfo": socialInfo,
                 },
                 "suffix": {
-                    "option": "UNGUESSABLE"
+                    "option": "SHORT"
                 }
             }),
             headers: {
@@ -554,7 +554,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
 
 const shareWidget = (link, office) => {
     const auth = firebase.auth().currentUser;
-    const shareText = `Hi ${auth.displayName} from ${office} wants you to use Growthfile to Check-in & collect proof of work without any effort. Download app & login now `
+    const shareText = `Hi ${auth.displayName}  wants you to use Growthfile to Check-in & collect proof of work without any effort. Download app & login now `
     const el = createElement('div', {
         className: 'share-widget'
     })
@@ -619,8 +619,8 @@ const callShareInterface = (link,shareText) => {
         shareText: shareText+link,
         type: 'text/plain',
         email: {
-            cc: 'help@growthfile.com',
-            subject: 'Download this app',
+            cc: '',
+            subject: 'Welcome to Growthfile - Here’s your link to download the app',
             body: ''
         }
     }
