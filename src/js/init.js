@@ -193,7 +193,10 @@ let native = function () {
       deviceInfo = obj
     },
     getInfo: function () {
-      if (!this.getName()) return false;
+      if (!this.getName()) return {
+        'id': '1234',
+        'brand': '123213'
+      };
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
         return deviceInfo
@@ -499,10 +502,11 @@ function loadingScreen(data) {
   const panel = document.getElementById('app-current-panel');
 
   panel.innerHTML = `
-  <div class='splash-content loading-screen' id='loading-screen' style="background-image:url(${data.src});">
+  <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
     <div class='text-container'> 
-      <p class='text'>${data.text} . . .</p>
+      <p class='text'>${data.text || ''}</p>
     </div>  
+    
   </div>
   `
 
@@ -552,13 +556,8 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    loadingScreen({
-      text:'Fetching details',
-      src:'./img/fetching-details.jpg'
-    })    
-    const queryLink = facebookDeepLink || firebaseDeepLink;
 
-    // regulator().then(console.log).catch(console.error)
+    regulator().then(console.log).catch(console.error)
     // if (queryLink) {
     //   requestCreator('acquisition', {
     //     source: queryLink.get('utm_source'),
@@ -638,37 +637,58 @@ function startApp() {
 function regulator() {
   const queryLink = facebookDeepLink || firebaseDeepLink;
   const deviceInfo = native.getInfo();
- 
+
   return new Promise(function (resolve, reject) {
-    var prom = queryLink ? requestCreator('acquisition', {
-      source: queryLink.get('utm_source'),
-      medium: queryLink.get('utm_medium'),
-      campaign: queryLink.get('utm_camapign'),
-      office: queryLink.get('office'),
-    }) : Promise.resolve();
-    prom
+    var prom;
+    loadingScreen({
+      src: './img/please wait.jpg',
+    })
+    // if (localStorage.getItem('deviceInfo')) {
+      prom = Promise.resolve();
+    // } else {
+    //   prom = requestCreator('device', native.getInfo())
+    // }
+    prom.then(function () {
+        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
+        return requestCreator('fcmToken', native.getFCMToken())
+      })
       .then(function () {
+        if (queryLink && queryLink.get('action') === 'get-subscription') {
+          loadingScreen({
+            src: './img/fetching-details.jpg',
+            text: 'Adding you in ' + queryLink.get('office')
+          })
+          return requestCreator('acquisition', {
+            source: queryLink.get('utm_source'),
+            medium: queryLink.get('utm_medium'),
+            campaign: queryLink.get('utm_camapign'),
+            office: queryLink.get('office')
+          })
+        }
+        return Promise.resolve()
+      })
+      .then(function () {
+        loadingScreen({
+          src: './img/connecting to server.jpg',
+          text: 'Connecting to server'
+        })
         return requestCreator('now')
       })
       .then(function () {
+        loadingScreen({
+          src: './img/fetching location.jpg',
+          text: 'Verifying location'
+        })
         return appLocation(3)
       })
       .then(function (geopoint) {
-        return handleCheckin(geopoint)
-      })
-      .then(function () {
-        if (localStorage.getItem(deviceInfo)) return Promise.resolve();
-        return requestCreator('device', native.getInfo())
-      })
-      .then(function () {
-        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
-        return requestCreator('fcmToken', native.getFCMToken())
+        // return handleCheckin(geopoint)
       })
       .then(function () {
         console.log('all completed')
       })
       .catch(function (error) {
-        if(error.type === 'geolocation') return handleLocationError(error)
+        if (error.type === 'geolocation') return handleLocationError(error)
         snacks(error.message);
       })
   })
@@ -678,7 +698,7 @@ function regulator() {
 
 function handleCheckin(geopoint, noUser) {
   const queryLink = firebaseDeepLink || facebookDeepLink;
-  if (queryLink && queryLink.get('action') === 'get-subscription') {
+  if (queryLink && queryLink.get('action') && queryLink.get('action') === 'get-subscription') {
     const subscription = {
       attachment: {
         Comment: {
@@ -807,7 +827,6 @@ function checkForEmail() {
     openReportView();
     return
   }
-
   getRootRecord().then(function (record) {
     if (record.skipEmail) {
       openReportView();
