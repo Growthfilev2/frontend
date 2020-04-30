@@ -505,8 +505,12 @@ function loadingScreen(data) {
   <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
     <div class='text-container'> 
       <p class='text'>${data.text || ''}</p>
+      <div class="loader">
+        <svg class="circular" viewBox="25 25 50 50">
+          <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
+        </svg>
+      </div>
     </div>  
-    
   </div>
   `
 
@@ -641,7 +645,7 @@ function regulator() {
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
-      src: './img/please wait.jpg',
+      src: './img/wait.jpg',
     })
     // if (localStorage.getItem('deviceInfo')) {
       prom = Promise.resolve();
@@ -650,12 +654,14 @@ function regulator() {
     // }
     prom.then(function () {
         localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
-        return requestCreator('fcmToken', native.getFCMToken())
+        return requestCreator('fcmToken', {
+          token:native.getFCMToken() || 'iashdioashd'
+        })
       })
       .then(function () {
         if (queryLink && queryLink.get('action') === 'get-subscription') {
           loadingScreen({
-            src: './img/fetching-details.jpg',
+            src: './img/details.jpg',
             text: 'Adding you in ' + queryLink.get('office')
           })
           return requestCreator('acquisition', {
@@ -669,20 +675,20 @@ function regulator() {
       })
       .then(function () {
         loadingScreen({
-          src: './img/connecting to server.jpg',
+          src: './img/server.jpg',
           text: 'Connecting to server'
         })
         return requestCreator('now')
       })
       .then(function () {
         loadingScreen({
-          src: './img/fetching location.jpg',
+          src: './img/fetching-location.jpg',
           text: 'Verifying location'
         })
         return appLocation(3)
       })
       .then(function (geopoint) {
-        // return handleCheckin(geopoint)
+        return handleCheckin(geopoint)
       })
       .then(function () {
         console.log('all completed')

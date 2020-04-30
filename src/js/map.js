@@ -119,7 +119,9 @@ function mapView(location) {
     if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
     panel.innerHTML = `
     <div id='map-view'>
-      ${selectionBox()}
+      <div class="selection-box-auto" id='selection-box'>
+          <div class="content-body"></div>
+      </div>
     </div>
   `
 
@@ -129,7 +131,10 @@ function mapView(location) {
 }
 
 function createUnkownCheckIn(geopoint, retry) {
-  loadingScreen()
+  loadingScreen({
+    src:'./img/fetching-location.jpg',
+    text:'Checking in ...'
+  })
   document.getElementById("app-header").classList.add('hidden')
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
@@ -202,7 +207,7 @@ function handleInvalidCheckinLocation(retry, callback) {
 
 function loadCardData(venues, geopoint) {
   ApplicationState.knownLocation = true;
-  const header = setHeader('<span class="mdc-top-app-bar__title">Choose location</span>', '', 'app-header')
+  const header = setHeader('<span class="mdc-top-app-bar__title">Choose your location</span>', '', 'app-header')
   header.root_.classList.remove("hidden")
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${venues.map(function(venue) {
@@ -229,7 +234,10 @@ function createKnownCheckIn(selectedVenue, geopoint, retry) {
   copy.share = []
 
   progressBar.open()
-
+  loadingScreen({
+    src:'./img/fetching-location.jpg',
+    text:'Checking in at ' + selectedVenue.location
+  })
   requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
@@ -276,12 +284,6 @@ function newOfficeView() {
 }
 
 
-function selectionBox() {
-  return `<div class="selection-box-auto" id='selection-box'>
-      <div class="content-body"></div>
-  </div>
-`
-}
 
 
 
