@@ -8,7 +8,7 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
-var firebaseDeepLink = new URLSearchParams('?action=get-subscription&office=yes&utm_campaign=share_link');
+var firebaseDeepLink = new URLSearchParams('?action=get-subscription&office=berserk 101&utm_campaign=share_link');
 var facebookDeepLink;
 var firebaseAnalytics;
 var serverTimeUpdated = false;
@@ -623,7 +623,7 @@ function regulator() {
         return requestCreator('now')
       })
       .then(function () {
-
+        serverTimeUpdated = true
         loadingScreen({
           src: './img/fetching-location.jpg',
           text: 'Verifying location'
