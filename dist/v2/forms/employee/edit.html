@@ -65,7 +65,7 @@
                 </div>
             </div>
             <a href="#" class="mdc-theme--primary mdc-typography" onclick="showMore(this)">Show more</a>
-            <div class="employee-meta-fields hidden">
+            <div class="employee-meta-fields" hidden>
                 <div class="text-field-block">
                     <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Department">
                         <div class="mdc-select__anchor demo-width-class">
@@ -214,7 +214,7 @@
         const employeeMetaFieldsCont = document.querySelector('.employee-meta-fields')
         function showMore(el) {
 
-            if(employeeMetaFieldsCont.classList.contains('hidden')) {
+            if(employeeMetaFieldsCont['hidden']) {
                 employeeMetaFieldsCont.removeAttribute('hidden')
                 el.textContent = 'Show less'
                 return

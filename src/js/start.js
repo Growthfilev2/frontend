@@ -38,7 +38,7 @@ function isAdmin(idTokenResult) {
 }
 
 function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
-    const device = JSON.parse(native.getInfo());
+    const device = native.getInfo();
 
     if (native.getName() === 'Android') {
         return Number(device.appVersion) < requiredVersionAndroid

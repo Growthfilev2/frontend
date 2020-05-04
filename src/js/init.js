@@ -8,12 +8,13 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
-var firebaseDeepLink;
+var firebaseDeepLink = new URLSearchParams('?action=get-subscription&office=Puja Capital&utm_campaign=share_link');
 var facebookDeepLink;
 var updatedWifiAddresses = {
   addresses: {},
   timestamp: null
 }
+
 var isNewUser = false;
 
 function setFirebaseAnalyticsUserId(id) {
@@ -166,12 +167,21 @@ function imgErr(source) {
 
 let native = function () {
   var deviceInfo = '';
+  var tokenChanged = '';
   return {
     setFCMToken: function (token) {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken != token) {
+        tokenChanged = true
+      }
+
       localStorage.setItem('token', token)
     },
     getFCMToken: function () {
       return localStorage.getItem('token')
+    },
+    isFCMTokenChanged: function () {
+      return tokenChanged;
     },
     setName: function (device) {
       localStorage.setItem('deviceType', device);
@@ -193,7 +203,16 @@ let native = function () {
       deviceInfo = obj
     },
     getInfo: function () {
-      if (!this.getName()) return null;
+      if (!this.getName()) return {
+        "id": "",
+        "deviceBrand": "",
+        "deviceModel": "",
+        "osVersion": "",
+        "baseOs": "",
+        "radioVersion": "",
+        "appVersion": "",
+        "idbVersion":""
+      };
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
         return deviceInfo
@@ -500,8 +519,8 @@ function loadingScreen(data) {
 
   panel.innerHTML = `
   <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
-    <div class='text-container'> 
-      <p class='text'>${data.text || ''}</p>
+    <div class='text-container' style="${data.src === './img/fetching-location.jpg' ? 'margin-top:110px':''}"> 
+      <p class='text mdc-typography--headline6'>${data.text || ''}</p>
       <div class="loader">
         <svg class="circular" viewBox="25 25 50 50">
           <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
@@ -512,9 +531,11 @@ function loadingScreen(data) {
   `
 
 }
+
 function removeLoadingScreen() {
   document.getElementById('loading-screen').remove()
 }
+
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName, DB_VERSION);
@@ -640,28 +661,25 @@ function startApp() {
 function regulator() {
   const queryLink = facebookDeepLink || firebaseDeepLink;
   const deviceInfo = native.getInfo();
-
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
       src: './img/wait.jpg',
+      text: 'Loading ... '
     })
-    // if (localStorage.getItem('deviceInfo')) {
+
+    if (!native.isFCMTokenChanged()) {
       prom = Promise.resolve();
-    // } else {
-    //   prom = requestCreator('device', native.getInfo())
-    // }
-    prom.then(function () {
-        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
-        return requestCreator('fcmToken', {
-          token:native.getFCMToken() || 'iashdioashd'
-        })
+    } else {
+      prom = requestCreator('fcmToken', {
+        token: native.getFCMToken() || 'iashdioashd'
       })
-      .then(function () {
+    }
+    prom.then(function () {
         if (queryLink && queryLink.get('action') === 'get-subscription') {
           loadingScreen({
-            src: './img/details.jpg',
-            text: 'Adding you in ' + queryLink.get('office')
+            src: './img/wait.jpg',
+            text: 'Adding you in Puja Capital'
           })
           return requestCreator('acquisition', {
             source: queryLink.get('utm_source'),
@@ -672,6 +690,7 @@ function regulator() {
         }
         return Promise.resolve()
       })
+
       .then(function () {
         loadingScreen({
           src: './img/server.jpg',
@@ -687,12 +706,12 @@ function regulator() {
         return appLocation(3)
       })
       .then(function (geopoint) {
-
-        
-        return handleCheckin(geopoint)
+        handleCheckin(geopoint)
+        if(localStorage.getItem('deviceInfo')) return Promise.resolve();
+        return requestCreator('device',deviceInfo);
       })
-      .then(function () {
-        console.log('all completed')
+      .then(function(){
+        localStorage.setItem('deviceInfo',deviceInfo);
       })
       .catch(function (error) {
         console.log(error)
@@ -706,7 +725,7 @@ function regulator() {
 
 function handleCheckin(geopoint, noUser) {
   const queryLink = firebaseDeepLink || facebookDeepLink;
-  if (queryLink && queryLink.get('action') && queryLink.get('action') === 'get-subscription') {
+  if (queryLink && queryLink.get('action') === 'get-subscription') {
     const subscription = {
       attachment: {
         Comment: {
@@ -728,9 +747,9 @@ function handleCheckin(geopoint, noUser) {
     mapView(geopoint)
     return
   }
-  
+
   getCheckInSubs().then(function (checkInSubs) {
-    if(!shouldCheckin(geopoint,checkInSubs)) return initProfileView();
+    if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       return mapView(geopoint)
@@ -748,7 +767,7 @@ function handleCheckin(geopoint, noUser) {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  if(auth.displayName && auth.photoURL && auth.email) return openReportView()
+  if (auth.displayName && auth.photoURL && auth.email) return openReportView()
   removeLoadingScreen()
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
@@ -1437,19 +1456,19 @@ function shouldCheckin(geopoint, checkInSubs) {
 
   ApplicationState.officeWithCheckInSubs = checkInSubs;
   const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
-  if (!oldState)  {
+  if (!oldState) {
     // mapView(geopoint);
     return true
   }
 
-  if (!oldState.lastCheckInCreated)   {
+  if (!oldState.lastCheckInCreated) {
     // return mapView(geopoint);
     return true
   }
 
   const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
-  if (isOlder || hasChangedLocation)   {
+  if (isOlder || hasChangedLocation) {
     // mapView(geopoint);
     return true
     return

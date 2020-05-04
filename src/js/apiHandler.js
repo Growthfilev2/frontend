@@ -116,7 +116,7 @@ self.onmessage = function (event) {
 }
 
 function handleNow(eventData, db) {
-  fetchServerTime(eventData.body, eventData.meta, db).then(function (response) {
+  fetchServerTime(eventData.meta, db).then(function (response) {
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(eventData.meta.user.uid).onsuccess = function (event) {
@@ -130,7 +130,6 @@ function handleNow(eventData, db) {
         success: true,
         id: eventData.id
       })
-
 
       if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
         removeFromOffice(response.removeFromOffice, eventData.meta, db).then(function (response) {
@@ -194,10 +193,9 @@ function http(request,authorization = true) {
 
 
 
-function fetchServerTime(body, meta, db) {
+function fetchServerTime(meta, db) {
   return new Promise(function (resolve, reject) {
-    // currentDevice = body.device;
-    // const parsedDeviceInfo = JSON.parse(currentDevice);
+   
     let url = `${meta.apiUrl}now`
     const tx = db.transaction(['root'], 'readwrite');
     const rootStore = tx.objectStore('root');
@@ -211,10 +209,7 @@ function fetchServerTime(body, meta, db) {
         });
         delete record.officesRemoved;
       }
-      if (record.venuesSet) {
-        url = url + "&venues=true"
-        delete record.venuesSet;
-      }
+
       rootStore.put(record);
     }
     tx.oncomplete = function () {
@@ -870,7 +865,6 @@ function successResponse(read, param, db, resolve, reject) {
 
         record.assignees.forEach(function (user) {
           addendum.key = param.user.phoneNumber + user.phoneNumber;
-
           addendumObjectStore.put(addendum);
           if (number === param.user.phoneNumber) {
             updateUserStore(userStore, user.phoneNumber, addendum, counter)

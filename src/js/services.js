@@ -6,7 +6,7 @@ function isWifiRequired() {
   if (native.getName() !== 'Android') return;
   if (AndroidInterface.isWifiOn()) return;
 
-  const deviceInfo = JSON.parse(native.getInfo());
+  const deviceInfo = native.getInfo();
   const requiredWifiDevices = {
     'samsung': true,
     'OnePlus': true
@@ -76,7 +76,10 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-
+    // return resolve({
+    //   latitude:28.5503314,
+    //   longitude:77.2501893
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint

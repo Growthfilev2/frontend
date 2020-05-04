@@ -9,7 +9,7 @@ var ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
 
 
 function logReportEvent(name) {
-  const deviceInfo = JSON.parse(native.getInfo());
+  const deviceInfo = native.getInfo();
   if (native.getName() === 'Android' && deviceInfo.appVersion >= 14) {
     AndroidInterface.logEvent(name);
     return;
@@ -232,12 +232,13 @@ function createKnownCheckIn(selectedVenue, geopoint, retry) {
 
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
-
+    document.getElementById('app-header').classList.add('hidden')
   progressBar.open()
   loadingScreen({
     src:'./img/fetching-location.jpg',
     text:'Checking in at ' + selectedVenue.location
   })
+  // return
   requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
@@ -495,7 +496,7 @@ function loadNearByLocations(o, location) {
       cursor.continue();
     }
     tx.oncomplete = function () {
-      return resolve([])
+      return resolve(result)
     }
   })
 }
