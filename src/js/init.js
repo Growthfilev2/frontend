@@ -211,7 +211,7 @@ let native = function () {
         "baseOs": "",
         "radioVersion": "",
         "appVersion": "",
-        "idbVersion":""
+        "idbVersion": ""
       };
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
@@ -565,7 +565,7 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    regulator().then(console.log).catch(function(error){
+    regulator().then(console.log).catch(function (error) {
       if (error.type === 'geolocation') return handleLocationError(error)
       contactSupport()
     })
@@ -601,7 +601,7 @@ function regulator() {
       })
     }
     prom.then(function () {
-      if (queryLink && queryLink.get('action') === 'get-subscription') {
+        if (queryLink && queryLink.get('action') === 'get-subscription') {
           loadingScreen({
             src: './img/wait.jpg',
             text: 'Adding you in Puja Capital'
@@ -609,7 +609,7 @@ function regulator() {
           return requestCreator('acquisition', {
             source: queryLink.get('utm_source'),
             medium: queryLink.get('utm_medium'),
-            campaign: queryLink.get('utm_camapign'),
+            campaign: queryLink.get('utm_campaign'),
             office: queryLink.get('office')
           })
         }
@@ -617,7 +617,6 @@ function regulator() {
       })
 
       .then(function () {
-        // throw new Error("hmmmm")
         loadingScreen({
           src: './img/server.jpg',
           text: 'Connecting to server'
@@ -625,7 +624,7 @@ function regulator() {
         return requestCreator('now')
       })
       .then(function () {
-     
+
         loadingScreen({
           src: './img/fetching-location.jpg',
           text: 'Verifying location'
@@ -634,19 +633,19 @@ function regulator() {
       })
       .then(function (geopoint) {
         handleCheckin(geopoint)
-        if(localStorage.getItem('deviceInfo')) return Promise.resolve();
-        return requestCreator('device',deviceInfo);
+        if (localStorage.getItem('deviceInfo')) return Promise.resolve();
+        return requestCreator('device', deviceInfo);
       })
-      .then(function(){
-        localStorage.setItem('deviceInfo',deviceInfo);
+      .then(function () {
+        localStorage.setItem('deviceInfo', deviceInfo);
       })
       .catch(reject)
   })
 }
 
-function contactSupport () {
-  const div = createElement('div',{
-    style:'position:fixed;bottom:1rem;width:100%;text-align:center'
+function contactSupport() {
+  const div = createElement('div', {
+    style: 'position:fixed;bottom:1rem;width:100%;text-align:center'
   })
   div.innerHTML = `
   
@@ -659,7 +658,7 @@ function contactSupport () {
 
 function showErrorMessage() {
   const el = document.querySelector('#loading-screen .text-container')
-  if(!el) return;
+  if (!el) return;
   el.innerHTML = `<p class='mdc-typography--headline6 mb-10 mt-0'>Error occured</p>
   <div class='mdc-typography--subtitle2 mdc-theme--primary'>Please try again later</div>`
 }
@@ -698,13 +697,16 @@ function handleCheckin(geopoint, noUser) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       return mapView(geopoint)
     }
-    if (noUser) {
-      // no user found
+    const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
+    Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
+      if (isAdmin(result[0]) || result[1]) return initProfileView();
+      if (noUser) {
 
-      return
-    }
-    requestCreator('Null').then(function () {
-      handleCheckin(geopoint, true)
+        return
+      }
+      requestCreator('Null').then(function () {
+        handleCheckin(geopoint, true)
+      })
     })
   });
 }
@@ -1197,26 +1199,6 @@ function redirect() {
 }
 
 
-function hasDataInDB() {
-  return new Promise(function (resolve) {
-    const tx = db.transaction(['activity', 'subscriptions'])
-    const activityStoreCountReq = tx.objectStore('activity').count()
-    const subscriptionStoreCountReq = tx.objectStore('subscriptions').count()
-    let activityStoreSize;
-    let subscriptionStoreSize;
-
-    activityStoreCountReq.onsuccess = function () {
-      activityStoreSize = activityStoreCountReq.result;
-    }
-    subscriptionStoreCountReq.onsuccess = function () {
-      subscriptionStoreSize = subscriptionStoreCountReq.result;
-    }
-    tx.oncomplete = function () {
-      if (!activityStoreSize && !subscriptionStoreSize) return resolve(false)
-      return resolve(true)
-    }
-  })
-}
 
 function getCheckInSubs() {
   return new Promise(function (resolve) {
@@ -1247,70 +1229,6 @@ function getCheckInSubs() {
   })
 };
 
-function openMap() {
-  document.getElementById('app-header').classList.add("hidden")
-  document.getElementById('step-ui').innerHTML = ''
-  progressBar.open();
-  const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
-  Promise.all([appLocation(3), firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]).then(function (result) {
-    const geopoint = result[0];
-    const tokenResult = result[1];
-    const checkInSubs = result[2];
-    const totalRecords = result[3];
-    const auth = firebase.auth().currentUser;
-    progressBar.close();
-
-    if (Object.keys(checkInSubs).length) {
-      if (isNewUser) {
-        setFirebaseAnalyticsUserProperty("hasCheckin", "true");
-      }
-      handleLocationForMap(geopoint, checkInSubs);
-      return;
-    }
-
-    if (isAdmin(tokenResult)) {
-      handleLocationForMap(geopoint, checkInSubs)
-      return
-    }
-
-    if (firebaseDeepLink) {
-      const action = firebaseDeepLink.get('action')
-      if (action && action === 'get-subscription') {
-
-        sendSubscriptionData({
-          "share": [{
-            phoneNumber: auth.phoneNumber,
-            displayName: auth.displayName,
-            email: auth.email
-          }],
-          "template": "subscription",
-          "office": firebaseDeepLink.get('office')
-        }, geopoint)
-      }
-      return
-    }
-
-    if (totalRecords) {
-      openReportView()
-      return;
-    }
-
-    ApplicationState.location = geopoint;
-    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    if (potentialAlternatePhoneNumbers.length) {
-      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, geopoint);
-      return
-    };
-
-  }).catch(function (error) {
-    console.log(error)
-    handleError({
-      message: error.message,
-      body: error
-    })
-  })
-}
-
 function checkIDBCount(storeNames) {
   return new Promise(function (resolve, reject) {
     let totalCount = 0;
@@ -1333,19 +1251,6 @@ function checkIDBCount(storeNames) {
       })
     }
   })
-}
-
-function handleLocationForMap(geopoint, checkInSubs) {
-  ApplicationState.officeWithCheckInSubs = checkInSubs;
-  const oldState = localStorage.getItem('ApplicationState')
-  if (!oldState) return mapView(geopoint);
-  const oldApplicationState = JSON.parse(oldState);
-  if (!oldApplicationState.lastCheckInCreated) return mapView(geopoint);
-  const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
-  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
-  if (isOlder || hasChangedLocation) return mapView(geopoint);
-  ApplicationState = oldApplicationState;
-  openReportView()
 }
 
 
@@ -1377,47 +1282,17 @@ function reloadPage() {
 }
 
 
-function updateFromTime(fromTime) {
-  return new Promise(function (resolve, reject) {
-    const keyPath = firebase.auth().currentUser.uid;
-    const tx = db.transaction('root', 'readwrite');
-    const store = tx.objectStore('root');
-    store.get(keyPath).onsuccess = function (e) {
-      const record = e.target.result;
-      record.fromTime = fromTime
-      store.put(record);
-    }
-    tx.oncomplete = function () {
-      resolve(true)
-    }
-
-  })
-}
-
-
-
 function shouldCheckin(geopoint, checkInSubs) {
 
   ApplicationState.officeWithCheckInSubs = checkInSubs;
   const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
-  if (!oldState) {
-    // mapView(geopoint);
-    return true
-  }
-
-  if (!oldState.lastCheckInCreated) {
-    // return mapView(geopoint);
-    return true
-  }
+  if (!oldState) return true
+  if (!oldState.lastCheckInCreated) return true
 
   const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
-  if (isOlder || hasChangedLocation) {
-    // mapView(geopoint);
-    return true
-    return
-  }
+  if (isOlder || hasChangedLocation) return true
+
   ApplicationState = oldState;
-  // initProfileView()
-  return
+  return false
 }

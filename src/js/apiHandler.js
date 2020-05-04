@@ -159,15 +159,15 @@ function http(request, authorization = true) {
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
       xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
     }
-    if (request.timeout) {
-      xhr.timeout = 30000;
-      xhr.ontimeout = function () {
-        return reject({
-          code: 'request-timed-out',
-          message: 'Request time out. Try again later',
-        });
-      }
+
+    xhr.timeout = 30000;
+    xhr.ontimeout = function () {
+      return reject({
+        code: 'request-timed-out',
+        message: 'Request time out. Try again later',
+      });
     }
+    
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
