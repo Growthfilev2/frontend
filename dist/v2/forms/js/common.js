@@ -2,7 +2,8 @@ let deviceType = ''
 const parentOrigin = new URL(document.referrer).origin
 const allowedOrigins = {
     'https://growthfile.com': true,
-    'https://growthfile-207204.firebaseapp.com': true
+    'https://growthfile-207204.firebaseapp.com': true,
+    'http://localhost:5000':true
 }
 
 function sendFrameDimensions() {
@@ -27,7 +28,7 @@ window.addEventListener('resize', function () {
 })
 
 window.addEventListener('message', function (event) {
-    if (!originMatch(event.origin)) return;
+    if (!allowedOrigins[event.origin]) return;
     if (!deviceType) {
         deviceType = event.data.deviceType
     }
