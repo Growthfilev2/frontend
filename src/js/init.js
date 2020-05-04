@@ -8,7 +8,7 @@ var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
-var firebaseDeepLink = new URLSearchParams('?action=get-subscription&office=Puja Capital&utm_campaign=share_link');
+var firebaseDeepLink = new URLSearchParams('?action=get-subscription&office=yes&utm_campaign=share_link');
 var facebookDeepLink;
 var updatedWifiAddresses = {
   addresses: {},
@@ -666,6 +666,8 @@ function showErrorMessage() {
 
 
 function handleCheckin(geopoint, noUser) {
+  if (noUser) return noOfficeFoundScreen();
+  
   const queryLink = firebaseDeepLink || facebookDeepLink;
   if (queryLink && queryLink.get('action') === 'get-subscription') {
     const subscription = {}
@@ -700,16 +702,39 @@ function handleCheckin(geopoint, noUser) {
     const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
       if (isAdmin(result[0]) || result[1]) return initProfileView();
-      if (noUser) {
-
-        return
-      }
+    
       requestCreator('Null').then(function () {
         handleCheckin(geopoint, true)
       })
     })
   });
 }
+
+
+function noOfficeFoundScreen() {
+  const content = `
+ 
+      <div class='message-screen mdc-layout-grid'>
+      <div class='icon-container'>
+        <div class='mdc-theme--primary icons'>
+          <i class='material-icons'>help_outline</i>
+        </div>
+      </div>
+      <div class='text-container'>
+        <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>
+        <p class='mdc-typography--body1'>
+          If you are a business owner and want to register your company with us, click below to get started.
+        </p>
+        <a class='mdc-button mdc-button--raised create-office--link' target='_blank' href='https://www.growthfile.com/signup'>Create office</a>
+      </div>
+    </div>
+   
+
+  `
+  document.getElementById('app-current-panel').innerHTML = content;
+
+}
+
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
