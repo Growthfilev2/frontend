@@ -29,12 +29,12 @@ const requestFunctionCaller = {
   searchOffice: searchOffice,
   checkIns: checkIns,
   idProof: idProof,
-  device:device,
-  acquisition:acquisition,
-  fcmToken:fcmToken,
-  pan:pan,
-  aadhar:aadhar,
-  profile:profile
+  device: device,
+  acquisition: acquisition,
+  fcmToken: fcmToken,
+  pan: pan,
+  aadhar: aadhar,
+  profile: profile
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -150,24 +150,22 @@ function handleNow(eventData, db) {
 
 // Performs XMLHTTPRequest for the API's.
 
-function http(request,authorization = true) {
+function http(request, authorization = true) {
   return new Promise(function (resolve, reject) {
     const xhr = new XMLHttpRequest()
     xhr.open(request.method, request.url, true)
-    if(authorization) {
+    if (authorization) {
       xhr.setRequestHeader('Content-Type', 'application/json')
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
       xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
     }
-    if (request.method !== 'GET') {
-      if (request.timeout) {
-        xhr.timeout = request.timeout;
-        xhr.ontimeout = function () {
-          return reject({
-            code: 400,
-            message: 'Request Timed Out. Please Try Again Later',
-          });
-        }
+    if (request.timeout) {
+      xhr.timeout = 30000;
+      xhr.ontimeout = function () {
+        return reject({
+          code: 'request-timed-out',
+          message: 'Request time out. Try again later',
+        });
       }
     }
     xhr.onreadystatechange = function () {
@@ -195,7 +193,7 @@ function http(request,authorization = true) {
 
 function fetchServerTime(meta, db) {
   return new Promise(function (resolve, reject) {
-   
+
     let url = `${meta.apiUrl}now`
     const tx = db.transaction(['root'], 'readwrite');
     const rootStore = tx.objectStore('root');
@@ -321,7 +319,7 @@ function idProof(body, meta) {
 }
 
 
-function device(body,meta) {
+function device(body, meta) {
   const req = {
     method: 'PUT',
     url: `${meta.apiUrl}profile/device`,
@@ -332,7 +330,7 @@ function device(body,meta) {
   return http(req)
 }
 
-function acquisition(body,meta) {
+function acquisition(body, meta) {
   const req = {
     method: 'PUT',
     url: `${meta.apiUrl}profile/acquisition`,
@@ -343,18 +341,18 @@ function acquisition(body,meta) {
   return http(req)
 }
 
-function fcmToken(body,meta) {
+function fcmToken(body, meta) {
   const req = {
     method: 'PUT',
     url: `${meta.apiUrl}profile/fcmToken`,
     body: JSON.stringify(body),
-    token: meta.user.token, 
+    token: meta.user.token,
     timeout: null
   }
   return http(req)
 }
 
-function pan(body,meta) {
+function pan(body, meta) {
   const req = {
     method: 'PUT',
     url: `${meta.apiUrl}profile/pan`,
@@ -365,7 +363,7 @@ function pan(body,meta) {
   return http(req)
 }
 
-function aadhar(body,meta) {
+function aadhar(body, meta) {
   const req = {
     method: 'PUT',
     url: `${meta.apiUrl}profile/aadhar`,
@@ -376,7 +374,7 @@ function aadhar(body,meta) {
   return http(req)
 }
 
-function profile(body,meta) {
+function profile(body, meta) {
   const req = {
     method: 'GET',
     url: `${meta.apiUrl}profile/`,
@@ -618,7 +616,7 @@ function backblaze(body, meta) {
 
 function updateAttendance(attendanceData = [], store) {
   attendanceData.forEach(function (value) {
-    if(!value.id) return;
+    if (!value.id) return;
     value.editable = 1;
     store.put(value)
   })
@@ -626,15 +624,15 @@ function updateAttendance(attendanceData = [], store) {
 
 function updateReimbursements(reimbursementData = [], store) {
   reimbursementData.forEach(function (value) {
-    if(!value.id) return;
+    if (!value.id) return;
     store.put(value)
   })
 }
 
 function updatePayments(paymentData = [], store) {
-  paymentData.forEach(function(value) {
-    if(!value.id) return;
-      store.put(value)
+  paymentData.forEach(function (value) {
+    if (!value.id) return;
+    store.put(value)
   })
 }
 
@@ -677,13 +675,13 @@ function updateCalendar(activity, tx) {
 }
 
 function putMap(location, updateTx) {
-  if(!location.activityId) return;
+  if (!location.activityId) return;
   const mapObjectStore = updateTx.objectStore('map')
   mapObjectStore.put(location);
 }
 
 function putAttachment(activity, tx, param) {
-  if(!activity.activityId) return
+  if (!activity.activityId) return
   const store = tx.objectStore('children');
   const commonSet = {
     activityId: activity.activityId,
@@ -702,11 +700,11 @@ function putAttachment(activity, tx, param) {
     if (activity.attachment.hasOwnProperty('Phone Number')) {
       commonSet.employee = activity.attachment['Phone Number'].value
     }
-    if(activity.attachment.hasOwnProperty('First Supervisor') && activity.attachment['First Supervisor'].value === myNumber) {
+    if (activity.attachment.hasOwnProperty('First Supervisor') && activity.attachment['First Supervisor'].value === myNumber) {
       commonSet.team = 1
     }
   }
-  
+
   store.put(commonSet)
 }
 
@@ -821,10 +819,10 @@ function successResponse(read, param, db, resolve, reject) {
   updateReimbursements(read.reimbursements, reimbursementStore)
   updatePayments(read.payments, paymentStore);
   read.activities.forEach(function (activity) {
-    if(!activity.activityId) return;
+    if (!activity.activityId) return;
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
-    
+
     activityObjectStore.put(activity);
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
@@ -886,15 +884,15 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.templates.forEach(function (subscription) {
     if (subscription.status === 'CANCELLED') return;
-    if(!subscription.activityId) {
+    if (!subscription.activityId) {
       instant(JSON.stringify({
-        message:'activityId missing from template object',
-        body:subscription
-      }),param)
+        message: 'activityId missing from template object',
+        body: subscription
+      }), param)
       return;
     }
     putSubscription(subscription, updateTx);
-   
+
   })
 
 

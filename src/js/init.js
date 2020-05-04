@@ -333,6 +333,7 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        document.querySelector('.login-box').classList.add('hidden')
         setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
 
         isNewUser = authResult.additionalUserInfo.isNewUser;
@@ -371,23 +372,7 @@ function firebaseUiConfig() {
       },
       uiShown: function () {
         logFirebaseAnlyticsEvent('auth_page_open', {})
-        const span = createElement('span', {
-          className: 'text-center mdc-typography--subtitle1 legal-links',
-        })
-        span.appendChild(createElement('a', {
-          textContent: 'Privacy policy',
-          href: 'https://growthfile.com/legal#privacy-policy',
-          target: '_blank'
-        }))
-        span.appendChild(createElement('span', {
-          textContent: ' & '
-        }))
-        span.appendChild(createElement('a', {
-          textContent: 'Terms of use',
-          href: 'https://growthfile.com/legal#terms-of-use-user',
-          target: '_blank'
-        }))
-        document.getElementById('login-container').appendChild(span)
+        document.querySelector('.login-box').classList.remove('hidden')
       }
     },
     signInFlow: 'popup',
@@ -520,13 +505,13 @@ function loadingScreen(data) {
   panel.innerHTML = `
   <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
     <div class='text-container' style="${data.src === './img/fetching-location.jpg' ? 'margin-top:110px':''}"> 
-      <p class='text mdc-typography--headline6'>${data.text || ''}</p>
+      <div class='text mdc-typography--headline6'>${data.text || ''}</div>
       <div class="loader">
         <svg class="circular" viewBox="25 25 50 50">
           <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
         </svg>
       </div>
-    </div>  
+      </div>  
   </div>
   `
 
@@ -580,70 +565,10 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-
-    regulator().then(console.log).catch(console.error)
-    // if (queryLink) {
-    //   requestCreator('acquisition', {
-    //     source: queryLink.get('utm_source'),
-    //     medium: queryLink.get('utm_medium'),
-    //     campaign: queryLink.get('utm_camapign'),
-    //     office: queryLink.get('office'),
-    //     action: queryLink.get('action')
-    //   }).then().catch(console.error)
-    //   return
-    // }
-
-
-
-    // requestCreator('fcmToken', {
-    //   token: native.getFCMToken()
-    // }).then(console.log).catch(console.error)
-
-    // requestCreator('newBankAccount', {
-    //   bankAccount: '1234567891234',
-    //   ifsc: 'qwert1234567',
-    //   address1: 'Rohini sector A4, 283 284',
-    //   email: firebase.auth().currentUser.email,
-    //   upi: '+919999288921@upi',
-    //   displayName: firebase.auth().currentUser.displayName
-    // }).then(function (response) {
-    //   console.log(response)
-    // }).catch(console.error)
-
-    // toDataURL('../src/img/currency_large.png', function (dataURL) {
-    //   requestCreator('pan', {
-    //     image: dataURL
-    //   }).then(console.log).catch(console.error)
-    //   requestCreator('aadhar', {
-    //     front: dataURL,
-    //     back: dataURL
-    //   }).then(console.log).catch(console.error)
-    // })
-
-    // requestCreator('now').then(console.log).catch(console.error)
-    // requestCreator('profile').then(console.log).catch(console.error)
-
-
-    //   let rootRecord;
-    //   const rootTx = db.transaction('root', 'readwrite');
-    //   const store = rootTx.objectStore('root');
-    //   store.get(dbName).onsuccess = function (transactionEvent) {
-    //     rootRecord = transactionEvent.target.result;
-    //     rootRecord.linkedAccounts = res.linkedAccounts || [];
-    //     potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
-    //     if (res.idProof) {
-    //       rootRecord.idProof = res.idProof
-    //     }
-    //     store.put(rootRecord);
-    //   }
-    //   rootTx.oncomplete = function () {
-    //     if (!rootRecord.fromTime) return requestCreator('Null').then(openMap).catch(console.error)
-    //     openMap()
-    //     runRead({
-    //       read: '1'
-    //     })
-    //   }
-    // }).catch(console.error)
+    regulator().then(console.log).catch(function(error){
+      if (error.type === 'geolocation') return handleLocationError(error)
+      contactSupport()
+    })
   };
 
   req.onerror = function () {
@@ -676,7 +601,7 @@ function regulator() {
       })
     }
     prom.then(function () {
-        if (queryLink && queryLink.get('action') === 'get-subscription') {
+      if (queryLink && queryLink.get('action') === 'get-subscription') {
           loadingScreen({
             src: './img/wait.jpg',
             text: 'Adding you in Puja Capital'
@@ -692,6 +617,7 @@ function regulator() {
       })
 
       .then(function () {
+        // throw new Error("hmmmm")
         loadingScreen({
           src: './img/server.jpg',
           text: 'Connecting to server'
@@ -699,6 +625,7 @@ function regulator() {
         return requestCreator('now')
       })
       .then(function () {
+     
         loadingScreen({
           src: './img/fetching-location.jpg',
           text: 'Verifying location'
@@ -713,12 +640,28 @@ function regulator() {
       .then(function(){
         localStorage.setItem('deviceInfo',deviceInfo);
       })
-      .catch(function (error) {
-        console.log(error)
-        if (error.type === 'geolocation') return handleLocationError(error)
-        snacks(error.message);
-      })
+      .catch(reject)
   })
+}
+
+function contactSupport () {
+  const div = createElement('div',{
+    style:'position:fixed;bottom:1rem;width:100%;text-align:center'
+  })
+  div.innerHTML = `
+  
+  <p class='mdc-typography--headline6 mb-10 mt-0'>Having trouble ? </p>
+  <a class='mdc-typography--subtitle2 mdc-theme--primary' href="https://wa.me/918595422858">Contact support</a>
+  `
+  document.getElementById('app-current-panel').appendChild(div)
+
+}
+
+function showErrorMessage() {
+  const el = document.querySelector('#loading-screen .text-container')
+  if(!el) return;
+  el.innerHTML = `<p class='mdc-typography--headline6 mb-10 mt-0'>Error occured</p>
+  <div class='mdc-typography--subtitle2 mdc-theme--primary'>Please try again later</div>`
 }
 
 
@@ -726,7 +669,8 @@ function regulator() {
 function handleCheckin(geopoint, noUser) {
   const queryLink = firebaseDeepLink || facebookDeepLink;
   if (queryLink && queryLink.get('action') === 'get-subscription') {
-    const subscription = {
+    const subscription = {}
+    subscription[queryLink.get('office')] = {
       attachment: {
         Comment: {
           type: 'string',
@@ -740,10 +684,10 @@ function handleCheckin(geopoint, noUser) {
       template: 'check-in',
       office: queryLink.get('office'),
       schedule: [],
-      venue: ['Check-in Location'],
+      venue: ['Check-In Location'],
       status: 'PENDING'
     }
-    ApplicationState.officeWithCheckInSubs = subscription;
+    ApplicationState.officeWithCheckInSubs = subscription
     mapView(geopoint)
     return
   }

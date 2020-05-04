@@ -73,10 +73,7 @@ body {
   padding: 20px;
 }
 
-#login-container {
-  top: 5rem;
-  position: relative;
-}
+
 
 .app {
   padding: 0;
@@ -1228,4 +1225,14 @@ iframe {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
+}
+
+.login-box {
+  position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    width: 100%;
+    z-index: 99;
 }
