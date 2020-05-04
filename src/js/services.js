@@ -6,7 +6,7 @@ function isWifiRequired() {
   if (native.getName() !== 'Android') return;
   if (AndroidInterface.isWifiOn()) return;
 
-  const deviceInfo = JSON.parse(native.getInfo());
+  const deviceInfo = native.getInfo();
   const requiredWifiDevices = {
     'samsung': true,
     'OnePlus': true
@@ -76,7 +76,10 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-
+    // return resolve({
+    //   latitude:28.5503314,
+    //   longitude:77.2501893
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -87,6 +90,7 @@ function appLocation(maxRetry) {
       if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
+          type:'geolocation',
           body: {
             geopoint: geopoint
           }
@@ -96,7 +100,10 @@ function appLocation(maxRetry) {
       ApplicationState.location = geopoint
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
-    }).catch(reject)
+    }).catch(function(error){
+      error.type = 'geolocation';
+      reject(error)
+    })
   })
 }
 
@@ -533,10 +540,10 @@ function handleNav(evt) {
 
 
 function bottomDialog(dialog, ul) {
-
+  dialog.root_.classList.add('bottom-dialog')
   ul.singleSelection = true
   ul.selectedIndex = 0;
-
+  dialog.rootRecord
   setTimeout(function () {
     dialog.root_.querySelector('.mdc-dialog__surface').classList.add('open')
     ul.foundation_.adapter_.focusItemAtIndex(0);
@@ -960,6 +967,7 @@ function idProofView(callback) {
       if (skipBtn) {
         skipBtn.setAttribute('disabled', true)
       }
+      
       requestCreator('idProof', ids).then(function (response) {
         const tx = db.transaction('root', 'readwrite');
         const store = tx.objectStore('root')
@@ -1052,3 +1060,24 @@ const phoneFieldInit = (input, dropEl, hiddenInput) => {
     nationalMode: false
   });
 };
+
+
+
+
+
+
+function toDataURL(src, callback) {
+  var img = new Image();
+  // img.crossOrigin = 'Anonymous';
+  img.onload = function() {
+    var canvas = document.createElement('CANVAS');
+    var ctx = canvas.getContext('2d');
+    var dataURL;
+    canvas.height = this.naturalHeight;
+    canvas.width = this.naturalWidth;
+    ctx.drawImage(this, 0, 0);
+    dataURL = canvas.toDataURL();
+    callback(dataURL);
+  };
+  img.src = src;
+}

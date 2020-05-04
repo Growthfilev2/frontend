@@ -9,7 +9,7 @@ var ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
 
 
 function logReportEvent(name) {
-  const deviceInfo = JSON.parse(native.getInfo());
+  const deviceInfo = native.getInfo();
   if (native.getName() === 'Android' && deviceInfo.appVersion >= 14) {
     AndroidInterface.logEvent(name);
     return;
@@ -46,7 +46,7 @@ function failureScreen(error, callback) {
   })
 }
 
-function handleLocationError(error, onAppOpen) {
+function handleLocationError(error) {
   let alertDialog;
   if (progressBar) {
     progressBar.close()
@@ -65,33 +65,13 @@ function handleLocationError(error, onAppOpen) {
       break;
 
     case 'BROKEN INTERNET CONNECTION':
-      if (onAppOpen) {
-        failureScreen({
-          message: 'You Are Currently Offline. Please Check Your Internet Connection',
-          icon: 'wifi_off',
-          title: 'BROKEN INTERNET CONNECTION'
-        }, function () {
-          loadingScreen();
-          openMap();
-        });
-        return;
-      };
+      
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
 
     case 'TURN ON YOUR WIFI':
-      if (onAppOpen) {
-        failureScreen({
-          message: 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location',
-          icon: 'wifi_off',
-          title: 'TURN ON YOUR WIFI'
-        }, function () {
-          loadingScreen();
-          openMap();
-        });
-        return;
-      }
+      
       alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
       break;
@@ -104,17 +84,7 @@ function handleLocationError(error, onAppOpen) {
           stack: error.stack || ''
         }
       })
-      if (onAppOpen) {
-        failureScreen({
-          message: 'There was a problem in detecting your location. Please try again later',
-          icon: 'location_off',
-          title: 'Failed To Detect Location'
-        }, function () {
-          loadingScreen();
-          openMap();
-        });
-        return;
-      }
+      
       alertDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
       alertDialog.open();
       break;
@@ -149,7 +119,9 @@ function mapView(location) {
     if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
     panel.innerHTML = `
     <div id='map-view'>
-      ${selectionBox()}
+      <div class="selection-box-auto" id='selection-box'>
+          <div class="content-body"></div>
+      </div>
     </div>
   `
 
@@ -159,7 +131,10 @@ function mapView(location) {
 }
 
 function createUnkownCheckIn(geopoint, retry) {
-  loadingScreen()
+  loadingScreen({
+    src:'./img/fetching-location.jpg',
+    text:'Checking in ...'
+  })
   document.getElementById("app-header").classList.add('hidden')
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
@@ -172,13 +147,10 @@ function createUnkownCheckIn(geopoint, retry) {
 
   progressBar.open()
   Promise.all(prom).then(function () {
-
     successDialog('Check-In Created')
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-
     initProfileView()
-
   }).catch(function (error) {
 
     progressBar.close()
@@ -235,7 +207,7 @@ function handleInvalidCheckinLocation(retry, callback) {
 
 function loadCardData(venues, geopoint) {
   ApplicationState.knownLocation = true;
-  const header = setHeader('<span class="mdc-top-app-bar__title">Choose location</span>', '', 'app-header')
+  const header = setHeader('<span class="mdc-top-app-bar__title">Choose your location</span>', '', 'app-header')
   header.root_.classList.remove("hidden")
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${venues.map(function(venue) {
@@ -260,9 +232,13 @@ function createKnownCheckIn(selectedVenue, geopoint, retry) {
 
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
-
+    document.getElementById('app-header').classList.add('hidden')
   progressBar.open()
-
+  loadingScreen({
+    src:'./img/fetching-location.jpg',
+    text:'Checking in at ' + selectedVenue.location
+  })
+  // return
   requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
     successDialog('Check-In Created')
     ApplicationState.venue = selectedVenue
@@ -309,12 +285,6 @@ function newOfficeView() {
 }
 
 
-function selectionBox() {
-  return `<div class="selection-box-auto" id='selection-box'>
-      <div class="content-body"></div>
-  </div>
-`
-}
 
 
 
@@ -432,9 +402,9 @@ function setFilePath(base64, retry) {
 
     requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
 
+      successDialog('Check-In Created')
       history.pushState(['reportView'], null, null)
       reportView()
-      successDialog('Check-In Created')
     }).catch(function (error) {
       if (error.message === 'Invalid check-in') {
         handleInvalidCheckinLocation(retry, function (newGeopoint) {
@@ -526,7 +496,7 @@ function loadNearByLocations(o, location) {
       cursor.continue();
     }
     tx.oncomplete = function () {
-      return resolve([])
+      return resolve(result)
     }
   })
 }

@@ -73,10 +73,7 @@ body {
   padding: 20px;
 }
 
-#login-container {
-  top: 5rem;
-  position: relative;
-}
+
 
 .app {
   padding: 0;
@@ -299,14 +296,18 @@ body {
   height: 100%;
   width: 100%;
 }
-
-.graphic-container img {
-  display: block;
-  margin: 0 auto;
-  max-width: 100px;
+.splash-content .text-container {
+  margin-top: 70px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 100%;
 }
 
-.splash-content .text {
+/* .splash-content .text {
   text-align: center;
   padding: 10px;
   margin: 0 auto;
@@ -322,7 +323,7 @@ body {
   position: absolute;
   bottom: 0;
   width: 100%;
-}
+} */
 
 
 
@@ -450,6 +451,8 @@ body {
   position: relative;
   margin: 0 auto;
   width: 65px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .loader:before {
@@ -1021,7 +1024,7 @@ iframe {
 .dot-container {
   min-height: 20px;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   margin-top: 10px;
 }
 
@@ -1199,41 +1202,30 @@ iframe {
   }
 }
 
-
-.message-screen {
-  text-align: center;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 481px;
+#app-slider {
+  background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
-.message-screen  .icon-container{
-  width: 100px;
-  height: 100px;
+
+.legal-links {
+  padding-top: 20px;
   display: block;
   margin: 0 auto;
-  color: var(--mdc-theme-primary);
 }
-.message-screen .icon-container i {
-  font-size: 100px;
-}
-.message-screen .text-container {
-  margin-top: 30px;
-}
-.message-screen .text-container  .headline{
-  font-weight: bold;
-  margin-bottom: 0px;
-}
-.message-screen .text-container p {
-  padding: 0px 10px;
-  font-weight: 500;
-}
-.message-screen .text-container .create-office--link {
-  width: 80%;
-  margin: 0 auto;
 
-  margin-top: 50px;
+.loading-screen {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.login-box {
+  position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    width: 100%;
+    z-index: 99;
 }
