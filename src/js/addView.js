@@ -99,6 +99,7 @@ function sendFormToParent(formData) {
 
             return reportView()
         }).catch(function (err) {
+            snacks(err.message);
             passFormData({
                 name: 'toggleSubmit',
                 template: '',

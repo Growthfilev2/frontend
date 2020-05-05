@@ -47,7 +47,9 @@ function setDetails() {
     }).then(function () {
       snacks('Profile picture updated')
       firebase.auth().currentUser.reload();
-    }).catch(console.error)
+    }).catch(function(error){
+      snacks('Try again later')
+    })
   })
   createViewProfile()
 
@@ -134,7 +136,9 @@ function bankAccount() {
             el.parentNode.remove();
             snacks(`Account removed`)
           }
-        }).catch(console.error);
+        }).catch(function(error){
+          snacks(error.message);
+        });
       })
     })
 
@@ -298,7 +302,9 @@ function addNewBankAccount(callback) {
               } else {
                 history.back();
               }
-            }).catch(console.error)
+            }).catch(function(error){
+              snacks(error.message);
+            })
       },function(){
         
       })

@@ -603,7 +603,7 @@ function regulator() {
       src: './img/wait.jpg',
       text: 'Loading ... '
     })
-    console.log(native.isFCMTokenChanged())
+   
     if (!native.isFCMTokenChanged()) {
       prom = Promise.resolve();
     } else {
@@ -615,7 +615,7 @@ function regulator() {
         if (queryLink && queryLink.get('action') === 'get-subscription') {
           loadingScreen({
             src: './img/wait.jpg',
-            text: 'Adding you in Puja Capital'
+            text: 'Adding you in '+queryLink.get('office')
           })
           return requestCreator('acquisition', {
             source: queryLink.get('utm_source'),
@@ -632,7 +632,15 @@ function regulator() {
           src: './img/server.jpg',
           text: 'Connecting to server'
         })
-        return requestCreator('now')
+        let queryParam = ''
+        const keys =  Object.keys(deviceInfo)
+        keys.forEach(function(key,index){
+          queryParam += `${key}=${deviceInfo[key]}`
+          if(index < keys.length - 1) {
+            queryParam += '&'
+          } 
+        })
+        return requestCreator('now',queryParam)
       })
       .then(function () {
         serverTimeUpdated = true
@@ -643,12 +651,12 @@ function regulator() {
         return appLocation(3)
       })
       .then(function (geopoint) {
-        handleCheckin(geopoint)
-        if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
-        return requestCreator('device', deviceInfo);
+        handleCheckin(geopoint);
+        // if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
+        // return requestCreator('device', deviceInfo);
       })
       .then(function () {
-        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+        // localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
       })
       .catch(reject)
   })  
@@ -681,6 +689,7 @@ function handleCheckin(geopoint, noUser) {
   const queryLink = firebaseDeepLink || facebookDeepLink;
 
   getCheckInSubs().then(function (checkInSubs) {
+    
     if (queryLink && queryLink.get('action') === 'get-subscription') {
       checkInSubs[queryLink.get('office')] = {
         attachment: {
@@ -700,15 +709,17 @@ function handleCheckin(geopoint, noUser) {
         status: 'PENDING'
       }
       ApplicationState.officeWithCheckInSubs = checkInSubs;
-
       mapView(geopoint)
       return
     }
+
     if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
+  
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       return mapView(geopoint)
     }
+    
     const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
       if (result[1]) return initProfileView();
@@ -721,6 +732,7 @@ function handleCheckin(geopoint, noUser) {
         handleCheckin(geopoint, true)
       })
     })
+  
   });
 }
 
@@ -752,11 +764,11 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
+  runRead({'read':'1'})
   if (auth.displayName && auth.photoURL && auth.email) return openReportView()
   removeLoadingScreen()
   document.getElementById('app-header').classList.remove('hidden')
   history.pushState(['profileCheck'], null, null)
-  runRead({'read':'1'})
   profileCheck();
 }
 

@@ -130,7 +130,7 @@ function mapView(location) {
 
 }
 
-function createUnkownCheckIn(geopoint, retry) {
+function createUnkownCheckIn(geopoint, retries = {subscriptionRetry:0,invalidRetry:0}) {
   loadingScreen({
     src:'./img/fetching-location.jpg',
     text:'Checking in ...'
@@ -147,6 +147,7 @@ function createUnkownCheckIn(geopoint, retry) {
 
   progressBar.open()
   Promise.all(prom).then(function () {
+
     successDialog('Check-In Created')
     ApplicationState.venue = ''
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
@@ -154,12 +155,23 @@ function createUnkownCheckIn(geopoint, retry) {
   }).catch(function (error) {
 
     progressBar.close()
-
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
+      
+      if(retries.subscriptionRetry  <= 2) {
+        setTimeout(function(){
+            retries.subscriptionRetry++
+            createUnkownCheckIn(geopoint, retries)
+        },5000)
+      }  
+      return
+    }
+    
     if (error.message === 'Invalid check-in') {
-
-      handleInvalidCheckinLocation(retry, function (newGeopoint) {
+      
+      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
         ApplicationState.location = newGeopoint;
-        createUnkownCheckIn(newGeopoint, true);
+        retries.invalidRetry++
+        createUnkownCheckIn(newGeopoint, retries);
       });
       return
     };
@@ -228,7 +240,7 @@ function loadCardData(venues, geopoint) {
   logFirebaseAnlyticsEvent('map_view_check-in');
 };
 
-function createKnownCheckIn(selectedVenue, geopoint, retry) {
+function createKnownCheckIn(selectedVenue, geopoint, retries = {subscriptionRetry:0,invalidRetry:0}) {
 
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
@@ -246,12 +258,22 @@ function createKnownCheckIn(selectedVenue, geopoint, retry) {
     initProfileView()
   }).catch(function (error) {
     progressBar.close()
-
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
+      
+      if(retries.subscriptionRetry  <= 2) {
+        setTimeout(function(){
+            retries.subscriptionRetry++
+            createUnkownCheckIn(geopoint, retries)
+        },5000)
+      }  
+      return
+    }
     if (error.message === 'Invalid check-in') {
 
-      handleInvalidCheckinLocation(retry, function (newGeopoint) {
+      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
         ApplicationState.location = newGeopoint;
-        createKnownCheckIn(selectedVenue, newGeopoint, true);
+        retries.invalidRetry++
+        createKnownCheckIn(selectedVenue, newGeopoint, retries);
       });
       return
     };
@@ -343,7 +365,7 @@ function setFilePathFailed(error) {
   snacks(error);
 }
 
-function setFilePath(base64, retry) {
+function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
 
 
   const url = `data:image/jpg;base64,${base64}`
@@ -406,10 +428,22 @@ function setFilePath(base64, retry) {
       history.pushState(['reportView'], null, null)
       reportView()
     }).catch(function (error) {
+      if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
+      
+        if(retries.subscriptionRetry  <= 2) {
+          setTimeout(function(){
+              retries.subscriptionRetry++
+              createUnkownCheckIn(geopoint, retries)
+          },5000)
+        }  
+        return
+      }
+      
       if (error.message === 'Invalid check-in') {
-        handleInvalidCheckinLocation(retry, function (newGeopoint) {
+        handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
           ApplicationState.location = newGeopoint;
-          setFilePath(base64, true);
+          retries.invalidRetry++
+          setFilePath(base64, retries);
         });
         return
       };

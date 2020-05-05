@@ -30,7 +30,7 @@ function handleError(error) {
   console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message))
-    error.device = localStorage.getItem('deviceInfo');
+    error.device = JSON.parse(localStorage.getItem('deviceInfo'));
   errorInStorage[error.message] = error
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   return requestCreator('instant', JSON.stringify(error))
@@ -316,16 +316,12 @@ function executeRequest(requestGenerator) {
         const reject = workerRejects[event.data.id];
         if (reject) {
           reject(event.data);
-
-
           if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
               body: JSON.stringify(event.data.body)
             })
-          } else if (event.data.requestType !== 'Null') {
-            snacks(event.data.message);
-          }
+          } 
         }
       } else {
         const resolve = workerResolves[event.data.id];
