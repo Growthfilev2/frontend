@@ -18,9 +18,6 @@ var updatedWifiAddresses = {
   timestamp: null
 }
 
-
-
-
 var isNewUser = false;
 
 function setFirebaseAnalyticsUserId(id) {
@@ -459,11 +456,11 @@ function userSignedOut() {
   })
 
   var interval = setInterval(function () {
-  sliderSwipe('right')
+    if (!sliderEl) return
+    sliderSwipe('right')
   }, sliderTimeout);
   swipe(sliderEl, sliderSwipe);
 }
-
 
 
 
@@ -504,7 +501,7 @@ function loadSlider() {
       break;
     case 2:
       src = './img/proof.jpeg'
-    
+
       break;
     case 3:
       src = './img/payments.jpeg'
@@ -594,10 +591,15 @@ function startApp() {
 }
 
 
-
+function getDeepLink() {
+  if (firebaseDeepLink) return firebaseDeepLink
+  if (facebookDeepLink) return facebookDeepLink;
+  if (isNewUser) return new URLSearchParams('?utm_source=organic')
+  return null;
+}
 
 function regulator() {
-  const queryLink = facebookDeepLink || firebaseDeepLink || isNewUser ? new URLSearchParams('?utm_source=organic') : '';
+  const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
   return new Promise(function (resolve, reject) {
     var prom;
@@ -614,23 +616,21 @@ function regulator() {
       })
     }
     prom.then(function () {
-        if (queryLink && (queryLink.has('utm_campaign') || queryLink.has('utm_source') || queryLink.has('utm_medium'))) {
-          if (queryLink.get('action') === 'get-subscription') {
-            loadingScreen({
-              src: './img/wait.jpg',
-              text: 'Adding you in ' + queryLink.get('office')
-            })
-          }
-          return requestCreator('acquisition', {
-            source: queryLink.get('utm_source'),
-            medium: queryLink.get('utm_medium'),
-            campaign: queryLink.get('utm_campaign'),
-            office: queryLink.get('office')
+        if (!queryLink) return Promise.resolve();
+     
+        if (queryLink.get('action') === 'get-subscription') {
+          loadingScreen({
+            src: './img/wait.jpg',
+            text: 'Adding you in ' + queryLink.get('office')
           })
         }
-        return Promise.resolve()
+        return requestCreator('acquisition', {
+          source: queryLink.get('utm_source'),
+          medium: queryLink.get('utm_medium'),
+          campaign: queryLink.get('utm_campaign'),
+          office: queryLink.get('office')
+        })
       })
-
       .then(function () {
         loadingScreen({
           src: './img/server.jpg',
@@ -691,7 +691,7 @@ function showErrorMessage() {
 
 function handleCheckin(geopoint, noUser) {
 
-  const queryLink = firebaseDeepLink || facebookDeepLink;
+  const queryLink = getDeepLink();
 
   getCheckInSubs().then(function (checkInSubs) {
 
