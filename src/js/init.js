@@ -727,15 +727,21 @@ function handleCheckin(geopoint, noUser) {
 
     const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
-      if (result[1]) return initProfileView();
-      if (noUser) return noOfficeFoundScreen();
-      loadingScreen({
-        src: './img/update.jpg',
-        text: 'Fetching your data'
+      getRootRecord().then(function(record){
+        if(record.fromTime == 0) {
+          loadingScreen({
+            src: './img/update.jpg',
+            text: 'Fetching your data'
+          })
+          requestCreator('Null').then(function () {
+            handleCheckin(geopoint, true)
+          })
+          return
+        }
+        if (isAdmin(result[0] || result[1])) return initProfileView();
+        if (noUser) return noOfficeFoundScreen();
       })
-      requestCreator('Null').then(function () {
-        handleCheckin(geopoint, true)
-      })
+   
     })
 
   });
