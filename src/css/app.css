@@ -968,7 +968,7 @@ iframe {
   text-align: center;
 }
 
-.slider-container .slider-content {
+.slider-content {
   min-height: 300px;
   min-width: 300px;
   position: relative;
@@ -976,15 +976,12 @@ iframe {
   animation-name: bottomToTop;
 }
 
-.slider-container .slider-content .text-container {
-  /* width: 100vw; */
-}
 
-.slider-container .slider-content .heading {
+.slider-content .heading {
   min-height: 200px;
 }
 
-.slider-container .image-container {
+/* .slider-container .image-container {
   min-height: 100px;
 }
 
@@ -992,7 +989,7 @@ iframe {
   max-width: 100px;
   width: 15%;
 }
-
+ */
 
 
 .slider-list li {

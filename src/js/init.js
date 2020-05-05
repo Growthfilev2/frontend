@@ -10,6 +10,7 @@ var sliderTimeout = 10000;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
+
 var firebaseAnalytics;
 var serverTimeUpdated = false;
 var updatedWifiAddresses = {
@@ -175,9 +176,9 @@ let native = function () {
   var tokenChanged = '';
   return {
     setFCMToken: function (token) {
-      console.log('rec ',token)
+      console.log('rec ', token)
       const storedToken = localStorage.getItem('token');
-      console.log('stored token',storedToken)
+      console.log('stored token', storedToken)
       if (storedToken !== token) {
         tokenChanged = true
       }
@@ -271,7 +272,7 @@ window.onpopstate = function (event) {
 }
 
 function preloadImages(urls) {
-  urls.forEach(function(url){
+  urls.forEach(function (url) {
     var img = new Image();
     img.src = url
   })
@@ -291,7 +292,7 @@ window.addEventListener('load', function () {
     return;
   }
 
-  preloadImages(['./img/fetching-location.jpg','./img/wait.jpg','./img/server.jpg','./img/update.jpg','./img/fetching.jpg'])
+  preloadImages(['./img/fetching-location.jpg', './img/wait.jpg', './img/server.jpg', './img/update.jpg', './img/fetching.jpg'])
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
       logReportEvent("IN Slider");
@@ -427,20 +428,8 @@ function userSignedOut() {
 
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
-    <div class='slider' id='app-slider'>
-    <div class='slider-content'>
-        <div class='graphic-container'>
-          <img src='./img/ic_launcher.png'>
-        </div>
-        <div class='text'>
-            <p class='mdc-typography--headline6 text-center mb-0'>
-              Welcome to Growthfile
-            </p>
-            <p class='mdc-typography--body1 text-center p-10'>
-              Mark attendance on Growthfile to avoid deductions in salary and expenses
-            </p>
-        </div>
-    </div>
+    <div class='slider' id='app-slider' style="background-image:url('./img/welcome.jpg')">
+ 
     <div class="action-button-container">
           <div class="submit-button-cont">
               <div class='dot-container'>
@@ -469,9 +458,9 @@ function userSignedOut() {
     initializeFirebaseUI();
   })
 
-  // var interval = setInterval(function () {
+  var interval = setInterval(function () {
   sliderSwipe('right')
-  // }, sliderTimeout);
+  }, sliderTimeout);
   swipe(sliderEl, sliderSwipe);
 }
 
@@ -515,15 +504,15 @@ function loadSlider() {
       break;
     case 2:
       src = './img/proof.jpeg'
-      document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
+    
       break;
     case 3:
       src = './img/payments.jpeg'
-      document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
+   
       break;
   }
 
-  // document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
+  document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
 }
 
 
@@ -609,7 +598,7 @@ function startApp() {
 
 
 function regulator() {
-  const queryLink = facebookDeepLink || firebaseDeepLink;
+  const queryLink = facebookDeepLink || firebaseDeepLink || isNewUser ? new URLSearchParams('?utm_source=organic') : '';
   const deviceInfo = native.getInfo();
   return new Promise(function (resolve, reject) {
     var prom;
@@ -617,7 +606,7 @@ function regulator() {
       src: './img/wait.jpg',
       text: 'Loading ... '
     })
-   
+
     if (!native.isFCMTokenChanged()) {
       prom = Promise.resolve();
     } else {
@@ -626,11 +615,13 @@ function regulator() {
       })
     }
     prom.then(function () {
-        if (queryLink && queryLink.get('action') === 'get-subscription') {
-          loadingScreen({
-            src: './img/wait.jpg',
-            text: 'Adding you in '+queryLink.get('office')
-          })
+        if (queryLink && (queryLink.has('utm_campaign') || queryLink.has('utm_source') || queryLink.has('utm_medium'))) {
+          if (queryLink.get('action') === 'get-subscription') {
+            loadingScreen({
+              src: './img/wait.jpg',
+              text: 'Adding you in ' + queryLink.get('office')
+            })
+          }
           return requestCreator('acquisition', {
             source: queryLink.get('utm_source'),
             medium: queryLink.get('utm_medium'),
@@ -647,17 +638,17 @@ function regulator() {
           text: 'Connecting to server'
         })
         let queryParam = ''
-        const keys =  Object.keys(deviceInfo)
-        keys.forEach(function(key,index){
+        const keys = Object.keys(deviceInfo)
+        keys.forEach(function (key, index) {
           queryParam += `${key}=${deviceInfo[key]}`
-          if(index < keys.length - 1) {
+          if (index < keys.length - 1) {
             queryParam += '&'
-          } 
+          }
         })
-        return requestCreator('now',queryParam)
+        return requestCreator('now', queryParam)
       })
       .then(function () {
-        localStorage.setItem('deviceInfo',JSON.stringify(deviceInfo));
+        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
         serverTimeUpdated = true
         loadingScreen({
           src: './img/fetching-location.jpg',
@@ -674,7 +665,7 @@ function regulator() {
         // localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
       })
       .catch(reject)
-  })  
+  })
 }
 
 function contactSupport() {
@@ -704,7 +695,7 @@ function handleCheckin(geopoint, noUser) {
   const queryLink = firebaseDeepLink || facebookDeepLink;
 
   getCheckInSubs().then(function (checkInSubs) {
-    
+
     if (queryLink && queryLink.get('action') === 'get-subscription') {
       checkInSubs[queryLink.get('office')] = {
         attachment: {
@@ -729,25 +720,25 @@ function handleCheckin(geopoint, noUser) {
     }
 
     if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
-  
+
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
       return mapView(geopoint)
     }
-    
+
     const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
       if (result[1]) return initProfileView();
       if (noUser) return noOfficeFoundScreen();
       loadingScreen({
-        src:'./img/update.jpg',
-        text:'Fetching your data'
+        src: './img/update.jpg',
+        text: 'Fetching your data'
       })
       requestCreator('Null').then(function () {
         handleCheckin(geopoint, true)
       })
     })
-  
+
   });
 }
 
@@ -779,7 +770,9 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  runRead({'read':'1'})
+  runRead({
+    'read': '1'
+  })
   if (auth.displayName && auth.photoURL && auth.email) return openReportView()
   removeLoadingScreen()
   document.getElementById('app-header').classList.remove('hidden')
