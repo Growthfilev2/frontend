@@ -427,8 +427,20 @@ function userSignedOut() {
 
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
-    <div class='slider' id='app-slider' style='background-image:url("./img/welcome.jpeg")'>
-      
+    <div class='slider' id='app-slider'>
+    <div class='slider-content'>
+        <div class='graphic-container'>
+          <img src='./img/ic_launcher.png'>
+        </div>
+        <div class='text'>
+            <p class='mdc-typography--headline6 text-center mb-0'>
+              Welcome to Growthfile
+            </p>
+            <p class='mdc-typography--body1 text-center p-10'>
+              Mark attendance on Growthfile to avoid deductions in salary and expenses
+            </p>
+        </div>
+    </div>
     <div class="action-button-container">
           <div class="submit-button-cont">
               <div class='dot-container'>
