@@ -7,6 +7,7 @@ var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
+var sliderInterval;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
@@ -300,7 +301,7 @@ window.addEventListener('load', function () {
     }
 
 
-
+    clearInterval(sliderInterval);
     const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.add("hidden");
@@ -455,7 +456,7 @@ function userSignedOut() {
     initializeFirebaseUI();
   })
 
-  var interval = setInterval(function () {
+  sliderInterval = setInterval(function () {
     if (!sliderEl) return
     sliderSwipe('right')
   }, sliderTimeout);
@@ -507,8 +508,9 @@ function loadSlider() {
       src = './img/payments.jpeg'
       break;
   }
-
-  document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
+  if(document.getElementById('app-slider')) {
+    document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
+  }
 }
 
 
