@@ -508,7 +508,6 @@ function loadSlider() {
       break;
     case 3:
       src = './img/payments.jpeg'
-   
       break;
   }
 
