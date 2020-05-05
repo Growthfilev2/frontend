@@ -499,17 +499,19 @@ function loadSlider() {
 
   switch (sliderIndex) {
     case 1:
-      src = './img/welcome.jpeg'
+      src = './img/welcome.jpg'
       break;
     case 2:
       src = './img/proof.jpeg'
+      document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
       break;
     case 3:
       src = './img/payments.jpeg'
+      document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
       break;
   }
 
-  document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
+  // document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
 }
 
 
@@ -643,6 +645,7 @@ function regulator() {
         return requestCreator('now',queryParam)
       })
       .then(function () {
+        localStorage.setItem('deviceInfo',JSON.stringify(deviceInfo));
         serverTimeUpdated = true
         loadingScreen({
           src: './img/fetching-location.jpg',
