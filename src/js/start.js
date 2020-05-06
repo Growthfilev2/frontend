@@ -38,13 +38,14 @@ function isAdmin(idTokenResult) {
 }
 
 function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
-    const device = JSON.parse(native.getInfo());
+    const device = native.getInfo();
 
     if (native.getName() === 'Android') {
         return Number(device.appVersion) < requiredVersionAndroid
     }
     return Number(device.appVersion) < requiredVersionIos;
 }
+
 function giveSubscriptionInit(name, skip) {
     if (isDeviceVersionLower(17, 9)) {
         const template = {
@@ -96,6 +97,7 @@ function giveSubscriptionInit(name, skip) {
         })
     })
 }
+
 function createDynamicLinkSocialTags(office) {
     return new Promise(function (resolve, reject) {
         

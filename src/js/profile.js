@@ -47,7 +47,9 @@ function setDetails() {
     }).then(function () {
       snacks('Profile picture updated')
       firebase.auth().currentUser.reload();
-    }).catch(console.error)
+    }).catch(function(error){
+      snacks('Try again later')
+    })
   })
   createViewProfile()
 
@@ -88,7 +90,7 @@ function createBaseDetails() {
 }
 
 function bankAccount() {
-  getRootRecord().then(function (rootRecord) {
+  getProfileInformation().then(function (rootRecord) {
     const accounts = rootRecord.linkedAccounts
 
     console.log(accounts);
@@ -105,7 +107,7 @@ function bankAccount() {
               <span class="mdc-list-item__primary-text">${account.bankAccount}</span>
               <span class="mdc-list-item__secondary-text">${account.ifsc}</span>
           </span>
-          <span class='mdc-list-item__meta material-icons bank-account-remove mdc-theme--error'  data-account="${getLast4digitsOfAccount(account.bankAccount)}">delete</span>
+          <span class='mdc-list-item__meta material-icons mdc-theme--error'  data-account="${getLast4digitsOfAccount(account.bankAccount)}">delete</span>
           </li>`
       }).join("")}
       </ul>
@@ -134,7 +136,9 @@ function bankAccount() {
             el.parentNode.remove();
             snacks(`Account removed`)
           }
-        }).catch(console.error);
+        }).catch(function(error){
+          snacks(error.message);
+        });
       })
     })
 
@@ -180,10 +184,19 @@ function addNewBankAccount(callback) {
   document.getElementById('app-current-panel').innerHTML = `
   <div class='mdc-layout-grid'>
   <div class='add-bank-container mt-20'>
+    
+    ${!auth.email ?  `${textFieldWithHelper({
+      id:'email',
+      label:'Email',
+      disabled:false,
+      value:'',
+      type:'number',
+      required:true
+    }).outerHTML}` : ''}
 
     ${textFieldWithHelper({
       id:'account-number',
-      label:'Bank Account Number',
+      label:'Bank account number',
       disabled:false,
       value:'',
       type:'number',
@@ -192,7 +205,7 @@ function addNewBankAccount(callback) {
     
     ${textFieldWithHelper({
       id:'account-number-re',
-      label:'Re-enter Bank Account Number',
+      label:'Re-enter bank account number',
       disabled:false,
       value:'',
       type:'number',
@@ -202,6 +215,16 @@ function addNewBankAccount(callback) {
     ${textFieldWithHelper({
       id:'ifsc',
       label:'IFSC',
+      disabled:false,
+      value:'',
+      type:'text',
+      required:true
+    }).outerHTML}
+
+          
+    ${textFieldWithHelper({
+      id:'upi',
+      label:'UPI',
       disabled:false,
       value:'',
       type:'text',
@@ -263,18 +286,30 @@ function addNewBankAccount(callback) {
       return;
     }
 
-    requestCreator('newBankAccount', {
-      bankAccount: fields['Bank Account Number'].value,
-      ifsc: fields['IFSC'].value,
-      address1: fields['IFSC'].value,
-    }).then(function () {
-      snacks('New bank account added');
-      if (callback) {
-        callback()
-      } else {
-        history.back();
-      }
-    }).catch(console.error)
+
+    if(!auth.email) {
+      emailUpdate(fields['Email'],function(){
+            requestCreator('newBankAccount', {
+              bankAccount: fields['Bank account number'].value,
+              ifsc: fields['IFSC'].value,
+              address1: fields['IFSC'].value,
+              displayName:auth.displayName,
+              email:auth.email
+            }).then(function () {
+              snacks('New bank account added');
+              if (callback) {
+                callback()
+              } else {
+                history.back();
+              }
+            }).catch(function(error){
+              snacks(error.message);
+            })
+      },function(){
+        
+      })
+    }
+
   });
 
   const skipBtn = document.getElementById('skip-header');

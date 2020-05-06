@@ -1,6 +1,7 @@
 const allowedOrigins = {
     'https://growthfile.com': true,
-    'https://growthfile-207204.firebaseapp.com': true
+    'https://growthfile-207204.firebaseapp.com': true,
+  
 }
 
 function addView(sub, body) {
@@ -97,6 +98,7 @@ function sendFormToParent(formData) {
 
             return reportView()
         }).catch(function (err) {
+            snacks(err.message);
             passFormData({
                 name: 'toggleSubmit',
                 template: '',

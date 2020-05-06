@@ -26,60 +26,79 @@ function chatView() {
 
     sectionContent.innerHTML = chatDom();
 
-    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription()]).then(function (results) {
-        console.log(results);
-        const tokenResult = results[0];
-        const subscriptions = results[1];
-        let offices = [];
-        let customerSubscriptions = [];
-        if (isAdmin(tokenResult)) {
-            offices = tokenResult.claims.admin
-        }
-        subscriptions.forEach(function (subscription) {
-            if (subscription.template === 'customer') {
-                customerSubscriptions.push(subscription);
+    getSubscription().then(function (subscriptions) {
+        const usersTemplate = {}
+        subscriptions.forEach(function(sub){
+            if(sub.template === 'customer') {
+                if(!usersTemplate[sub.template]) {
+                    usersTemplate[sub.template] = [sub]
+                }
+                else {
+                    usersTemplate[sub.template].push(sub)
+                }
             }
-            if (offices.indexOf(subscription.office) > -1) return;
-            offices.push(subscription.office)
+            else {
+                if(!usersTemplate['Add users']) {
+                    usersTemplate['Add users'] = [{office:sub.office}]
+                }
+                else {
+                    usersTemplate['Add users'].push({office:sub.office})
+                }
+            }
         })
-
-        if (!offices.length) return;
-
 
         const addContactBtn = createFab('add');
         document.querySelector('.user-chats').appendChild(addContactBtn);
         addContactBtn.addEventListener('click', function () {
-            const dialogData = [];
-            offices.forEach(office => {
-                dialogData.push({
-                    template: 'Add users',
-                    office: office
-                })
-            });
 
-            const mergedArray = [...dialogData, ...customerSubscriptions];
-            const dialog = new Dialog('', templateSelectionList(mergedArray), 'choose-office-subscription').create('simple');
+          
+            const dialog = new Dialog('', templateSelectionList(usersTemplate), 'choose-office-subscription').create('simple');
             const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
             bottomDialog(dialog, ul);
-            ul.listen('MDCList:action', function (event) {
+            ul.listen('MDCList:action', function (typeEvent) {
                 dialog.close()
-                if (mergedArray[event.detail.index].template === 'Add users') {
-                    history.pushState(['share'],null,null);
-                    
-                    giveSubscriptionInit(mergedArray[event.detail.index].office);
+                const selectedType = Object.keys(usersTemplate)[typeEvent.detail.index]
+          
+               if(usersTemplate[selectedType].length == 1) {
+                    if(usersTemplate[selectedType] === 'customer') {
+                        getDropDownContent(usersTemplate['customer'][0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                            history.pushState(['addView'], null, null);
+                            fillVenueInSub(usersTemplate['customer'][0], {
+                                latitude: ApplicationState.location.latitude,
+                                longitude: ApplicationState.location.longitude
+                            });
+                            addView(usersTemplate['customer'][0], customerTypes);
+                        });
+                        return
+                    }
+                    history.pushState(['share'], null, null);
+                    giveSubscriptionInit(usersTemplate[selectedType][0].office);
                     return
-                }
-                const sub = mergedArray[event.detail.index]
+               }
 
-                getDropDownContent(mergedArray[event.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                    history.pushState(['addView'], null, null);
-                    fillVenueInSub(sub, {
-                        latitude: ApplicationState.location.latitude,
-                        longitude: ApplicationState.location.longitude
-                    });
-                    addView(sub, customerTypes);
-                });
+         
+               const officeDialog = new Dialog('Choose office', officeSelectionList(usersTemplate[selectedType]), 'choose-office-subscription').create('simple');
+               const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+               bottomDialog(officeDialog, offieList);
+               offieList.listen('MDCList:action', function (officeEvent) {
+                    dialog.close();
+                    const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
+                    if(usersTemplate[selectedType] === 'customer') {
+                        getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                            history.pushState(['addView'], null, null);
+                            fillVenueInSub(selectedSubscription, {
+                                latitude: ApplicationState.location.latitude,
+                                longitude: ApplicationState.location.longitude
+                            });
+                            addView(selectedSubscription, customerTypes);
+                        });
+                        return
+                    }
+                    history.pushState(['share'], null, null);
+                    giveSubscriptionInit(selectedSubscription.office);
+               })
 
+         
             })
         });
     })
@@ -281,9 +300,8 @@ function getOtherContacts() {
         if (!contactsEl) return;
         if (!currentContacts) {
             contactsEl.innerHTML = 'No Contacts Found'
-            
-        }
-        else {
+
+        } else {
             contactsEl.innerHTML = currentContacts;
         }
         contactsUl = new mdc.list.MDCList(contactsEl);
@@ -330,8 +348,7 @@ function readLatestChats(initList) {
             chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
                 <p class='text-center'>Choose From Below or Search</p>
                 `
-        }
-        else {
+        } else {
             chatsEl.innerHTML = currentChats
         }
         if (!initList) return;

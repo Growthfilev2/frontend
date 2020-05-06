@@ -7,15 +7,18 @@ var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
 var sliderTimeout = 10000;
+var sliderInterval;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
+
 var firebaseAnalytics;
 var serverTimeUpdated = false;
 var updatedWifiAddresses = {
   addresses: {},
   timestamp: null
 }
+
 var isNewUser = false;
 
 function setFirebaseAnalyticsUserId(id) {
@@ -167,12 +170,24 @@ function imgErr(source) {
 }
 
 let native = function () {
+  var deviceInfo = '';
+  var tokenChanged = '';
   return {
     setFCMToken: function (token) {
+      console.log('rec ', token)
+      const storedToken = localStorage.getItem('token');
+      console.log('stored token', storedToken)
+      if (storedToken !== token) {
+        tokenChanged = true
+      }
+
       localStorage.setItem('token', token)
     },
     getFCMToken: function () {
       return localStorage.getItem('token')
+    },
+    isFCMTokenChanged: function () {
+      return tokenChanged;
     },
     setName: function (device) {
       localStorage.setItem('deviceType', device);
@@ -183,28 +198,32 @@ let native = function () {
 
     setIosInfo: function (iosDeviceInfo) {
       const queryString = new URLSearchParams(iosDeviceInfo);
-      var deviceInfo = {}
+      var obj = {}
       queryString.forEach(function (val, key) {
         if (key === 'appVersion') {
-          deviceInfo[key] = Number(val)
+          obj[key] = Number(val)
         } else {
-          deviceInfo[key] = val
+          obj[key] = val
         }
       })
-
-      localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
-    },
-    getIosInfo: function () {
-      return localStorage.getItem('deviceInfo');
+      deviceInfo = obj
     },
     getInfo: function () {
-      if (!this.getName()) return false;
-
+      if (!this.getName()) return {
+        "id": "",
+        "deviceBrand": "",
+        "deviceModel": "",
+        "osVersion": "",
+        "baseOs": "",
+        "radioVersion": "",
+        "appVersion": "",
+        "idbVersion": ""
+      };
       if (this.getName() === 'Android') {
-        localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
-        return localStorage.getItem('deviceInfo');
+        deviceInfo = getAndroidDeviceInformation()
+        return deviceInfo
       }
-      return this.getIosInfo();
+      return deviceInfo;
     }
   }
 }();
@@ -214,7 +233,7 @@ let native = function () {
  * Call different JNI Android Methods to access device information
  */
 function getAndroidDeviceInformation() {
-  return JSON.stringify({
+  return {
     'id': AndroidInterface.getId(),
     'deviceBrand': AndroidInterface.getDeviceBrand(),
     'deviceModel': AndroidInterface.getDeviceModel(),
@@ -222,7 +241,7 @@ function getAndroidDeviceInformation() {
     'baseOs': AndroidInterface.getBaseOs(),
     'radioVersion': AndroidInterface.getRadioVersion(),
     'appVersion': Number(AndroidInterface.getAppVersion()),
-  })
+  }
 }
 
 window.onpopstate = function (event) {
@@ -250,8 +269,13 @@ window.onpopstate = function (event) {
   }
 }
 
+function preloadImages(urls) {
+  urls.forEach(function (url) {
+    var img = new Image();
+    img.src = url
+  })
+}
 
-// function initializeApp() {
 window.addEventListener('load', function () {
 
   firebase.initializeApp(appKey.getKeys())
@@ -261,11 +285,12 @@ window.addEventListener('load', function () {
   const panel = this.document.getElementById('app-current-panel');
 
   if (!window.Worker && !window.indexedDB) {
-    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
+    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile  is incompatible with this device').create();
     incompatibleDialog.open();
     return;
   }
 
+  preloadImages(['./img/fetching-location.jpg', './img/wait.jpg', './img/server.jpg', './img/update.jpg', './img/fetching.jpg'])
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
       logReportEvent("IN Slider");
@@ -276,7 +301,7 @@ window.addEventListener('load', function () {
     }
 
 
-
+    clearInterval(sliderInterval);
     const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.add("hidden");
@@ -300,7 +325,7 @@ window.addEventListener('load', function () {
   });
 })
 
-// }
+
 
 function checkNetworkValidation() {
   if (!navigator.onLine) {
@@ -321,6 +346,7 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        document.querySelector('.login-box').classList.add('hidden')
         setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
 
         isNewUser = authResult.additionalUserInfo.isNewUser;
@@ -359,6 +385,7 @@ function firebaseUiConfig() {
       },
       uiShown: function () {
         logFirebaseAnlyticsEvent('auth_page_open', {})
+        document.querySelector('.login-box').classList.remove('hidden')
       }
     },
     signInFlow: 'popup',
@@ -399,38 +426,14 @@ function userSignedOut() {
 
   const panel = document.getElementById('app-current-panel');
   panel.innerHTML = `
-    <div class='slider' id='app-slider'>
-      <div class='slider-container'>
-        <div class='slider-content'>
-          <div class='graphic-container'>
-            <img src='./img/ic_launcher.png'>
-          </div>
-
-          <div class='text'>
-              <p class='mdc-typography--headline6 text-center mb-0'>
-                Welcome to Growthfile
-              </p>
-              <p class='mdc-typography--body1 text-center p-10'>
-                Mark attendance on Growthfile to avoid deductions in salary and expenses
-              </p>
-          </div>
-        </div>
-        
-
-      </div>
-    </div>
+    <div class='slider' id='app-slider' style="background-image:url('./img/welcome.jpg')">
+ 
     <div class="action-button-container">
           <div class="submit-button-cont">
               <div class='dot-container'>
                 <span class='dot active'></span>
                 <span class='dot'></span>
                 <span class='dot'></span>
-              </div>
-              <div class='mdc-typography--body1 mb-10'>
-                <div class='text-center'>
-                  <a href='https://www.growthfile.com/legal.html#privacy-policy'>Privacy Policy</a> &
-                  <a href='https://www.growthfile.com/legal.html#terms-of-use-user'>Terms of use</a>
-                </div>
               </div>
               <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
                   id='login-btn'>
@@ -440,6 +443,7 @@ function userSignedOut() {
               </button>
           </div>
         </div>
+    </div>
   `;
 
 
@@ -452,21 +456,17 @@ function userSignedOut() {
     initializeFirebaseUI();
   })
 
-  var interval = setInterval(function () {
-    sliderSwipe({
-      element: sliderEl,
-      direction: 'right'
-    })
+  sliderInterval = setInterval(function () {
+    if (!sliderEl) return
+    sliderSwipe('right')
   }, sliderTimeout);
   swipe(sliderEl, sliderSwipe);
 }
 
 
 
-
-function sliderSwipe(swipeEvent) {
-  const el = swipeEvent.element;
-  if (swipeEvent.direction === 'left') {
+function sliderSwipe(direction) {
+  if (direction === 'left') {
     if (sliderIndex <= 1) {
       sliderIndex = 3;
     } else {
@@ -475,7 +475,7 @@ function sliderSwipe(swipeEvent) {
     }
   }
 
-  if (swipeEvent.direction === 'right') {
+  if (direction === 'right') {
     if (sliderIndex >= 3) {
       sliderIndex = 1;
     } else {
@@ -483,7 +483,7 @@ function sliderSwipe(swipeEvent) {
     }
   }
 
-  loadSlider(el);
+  loadSlider();
   [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
     dotEl.classList.remove('active');
     if (index == sliderIndex - 1) {
@@ -492,119 +492,48 @@ function sliderSwipe(swipeEvent) {
   })
 }
 
-function loadSlider(sliderEl) {
+function loadSlider() {
 
-  let sliderContent = '';
+  let src = '';
 
   switch (sliderIndex) {
     case 1:
-      sliderContent = `<div class='graphic-container'>
-      <img src='./img/ic_launcher.png'>
-    </div>
-
-    <div class='text'>
-        <p class='mdc-typography--headline6 text-center mb-0'>
-          Welcome to Growthfile
-        </p>
-        <p class='mdc-typography--body1 text-center p-10'>
-          Mark attendance on Growthfile to avoid deductions in salary and expenses
-        </p>
-    </div>`
+      src = './img/welcome.jpg'
       break;
     case 2:
-      sliderContent = `
-        <div class='icon-container'>
-          <i class='material-icons mdc-theme--primary'>room</i>
+      src = './img/proof.jpeg'
 
-        </div>
-        <div class='text-container'>
-          <ul class='slider-list'>
-            <li>Mark attendance on your phone</li>
-            <li>Branch, customer or unknown location</li>
-            <li>Calculate kilometres traveled</li>
-          </ul>
-        </div>
-        `
       break;
     case 3:
-
-      sliderContent = `
-        <div class='image-container'>
-            <img src='./img/currency_large.png' class='currency-primary'>
-        </div>
-        <div class='text-container'>
-        <ul class='slider-list'>
-            <li>Daily payment calculation</li>
-            <li>Online bank transfer</li>
-            <li>Offer letter, payslip & form 16</li>
-            
-        </ul>
-        </div>
-        `
+      src = './img/payments.jpeg'
       break;
   }
-  sliderEl.querySelector('.slider-content').innerHTML = sliderContent;
+  if(document.getElementById('app-slider')) {
+    document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
+  }
 }
 
 
-function loadingScreen(texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']) {
+function loadingScreen(data) {
   const panel = document.getElementById('app-current-panel');
 
-
-
   panel.innerHTML = `
-  <div class='splash-content' id='loading-screen'>
-
-      <div class='graphic-container'>
-        <img src='./img/ic_launcher.png'>
+  <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
+    <div class='text-container' style="${data.src === './img/fetching-location.jpg' ? 'margin-top:110px':''}"> 
+      <div class='text mdc-typography--headline6'>${data.text || ''}</div>
+      <div class="loader">
+        <svg class="circular" viewBox="25 25 50 50">
+          <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
+        </svg>
       </div>
-  
-      <div class='text'>
-
-        <p class='mdc-typography--headline6 text-center mb-0'>
-            Growthfile is free to use for any employee of any company
-        </p>
-        <p class='mdc-typography--subtitle2 text-center'>
-          No more queries, disputes, delays or deductions from your monthly salary & other payments
-        </p>
-    </div>
-
-    <div class="showbox" id='start-load'>
-    <div class="loader">
-      <svg class="circular" viewBox="25 25 50 50">
-        <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
-      </svg>
-    </div>
-    <p class="mdc-typography--headline6 mdc-theme--primary"></p>
-  </div>
-    <div class='icon-cont mdc-layout-grid__inner mt-20'>
-        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
-          <div class='icon text-center'>
-            <i class='material-icons mdc-theme--primary'>room</i>
-            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Check-in</p>
-          </div>
-        </div>
-       
-        <div class='mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-6-desktop'>
-          <div class='icon text-center'>
-            <img src='./img/currency.png' class='currency-primary'>
-            <p class='mt-10 mdc-typography--subtitle1 mdc-theme--primary'>Incentives</p>
-          </div>
-        </div>
-
-      </div>
+      </div>  
   </div>
   `
-  const startLoad = document.getElementById('start-load')
-  let index = 0;
-  var interval = setInterval(function () {
-    if (index == texts.length - 1) {
-      clearInterval(interval)
-    };
-    startLoad.querySelector('p').textContent = texts[index]
-    index++;
-  }, (index + 1) * 1000);
 
+}
+
+function removeLoadingScreen() {
+  document.getElementById('loading-screen').remove()
 }
 
 function startApp() {
@@ -640,59 +569,18 @@ function startApp() {
     console.log('version upgrade')
   }
 
+
+
+
+
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
     console.log("run app")
-
-    console.log('running now')
-    loadingScreen();
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: '',
-      registerToken: native.getFCMToken()
-    }).then(function (res) {
-      serverTimeUpdated = true
-      console.log('now completed')
-
-      if (res.updateClient) {
-        updateApp()
-        return
-      }
-      if (res.revokeSession) {
-        revokeSession(true);
-        return
-      };
-
-      let rootRecord;
-      const rootTx = db.transaction('root', 'readwrite');
-      const store = rootTx.objectStore('root');
-
-      store.get(dbName).onsuccess = function (transactionEvent) {
-        rootRecord = transactionEvent.target.result;
-        rootRecord.linkedAccounts = res.linkedAccounts || [];
-        potentialAlternatePhoneNumbers = res.potentialAlternatePhoneNumbers || [];
-        if (res.idProof) {
-          rootRecord.idProof = res.idProof
-        }
-        store.put(rootRecord);
-
-      }
-
-      rootTx.oncomplete = function () {
-        if (!rootRecord.fromTime) {
-          requestCreator('Null').then(function () {
-            openMap();
-          }).catch(console.error)
-          return
-        }
-        openMap()
-        runRead({
-          read: '1'
-        })
-      }
-
-    }).catch(console.error)
+    regulator().then(console.log).catch(function (error) {
+      if (error.type === 'geolocation') return handleLocationError(error)
+      contactSupport()
+    })
   };
 
   req.onerror = function () {
@@ -704,10 +592,198 @@ function startApp() {
 
 }
 
+
+function getDeepLink() {
+  if (firebaseDeepLink) return firebaseDeepLink
+  if (facebookDeepLink) return facebookDeepLink;
+  if (isNewUser) return new URLSearchParams('?utm_source=organic')
+  return null;
+}
+
+function regulator() {
+  const queryLink = getDeepLink();
+  const deviceInfo = native.getInfo();
+  return new Promise(function (resolve, reject) {
+    var prom;
+    loadingScreen({
+      src: './img/wait.jpg',
+      text: 'Loading ... '
+    })
+
+    if (!native.isFCMTokenChanged()) {
+      prom = Promise.resolve();
+    } else {
+      prom = requestCreator('fcmToken', {
+        token: native.getFCMToken()
+      })
+    }
+    prom.then(function () {
+        if (!queryLink) return Promise.resolve();
+     
+        if (queryLink.get('action') === 'get-subscription') {
+          loadingScreen({
+            src: './img/wait.jpg',
+            text: 'Adding you in ' + queryLink.get('office')
+          })
+        }
+        return requestCreator('acquisition', {
+          source: queryLink.get('utm_source'),
+          medium: queryLink.get('utm_medium'),
+          campaign: queryLink.get('utm_campaign'),
+          office: queryLink.get('office')
+        })
+      })
+      .then(function () {
+        loadingScreen({
+          src: './img/server.jpg',
+          text: 'Connecting to server'
+        })
+        let queryParam = ''
+        const keys = Object.keys(deviceInfo)
+        keys.forEach(function (key, index) {
+          queryParam += `${key}=${deviceInfo[key]}`
+          if (index < keys.length - 1) {
+            queryParam += '&'
+          }
+        })
+        return requestCreator('now', queryParam)
+      })
+      .then(function () {
+        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+        serverTimeUpdated = true
+        loadingScreen({
+          src: './img/fetching-location.jpg',
+          text: 'Verifying location'
+        })
+        return appLocation(3)
+      })
+      .then(function (geopoint) {
+        handleCheckin(geopoint);
+        // if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
+        // return requestCreator('device', deviceInfo);
+      })
+      .then(function () {
+        // localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+      })
+      .catch(reject)
+  })
+}
+
+function contactSupport() {
+  const div = createElement('div', {
+    style: 'position:fixed;bottom:1rem;width:100%;text-align:center'
+  })
+  div.innerHTML = `
+  
+  <p class='mdc-typography--headline6 mb-10 mt-0'>Having trouble ? </p>
+  <a class='mdc-typography--subtitle2 mdc-theme--primary' href="https://wa.me/918595422858">Contact support</a>
+  `
+  document.getElementById('app-current-panel').appendChild(div)
+
+}
+
+function showErrorMessage() {
+  const el = document.querySelector('#loading-screen .text-container')
+  if (!el) return;
+  el.innerHTML = `<p class='mdc-typography--headline6 mb-10 mt-0'>Error occured</p>
+  <div class='mdc-typography--subtitle2 mdc-theme--primary'>Please try again later</div>`
+}
+
+
+
+function handleCheckin(geopoint, noUser) {
+
+  const queryLink = getDeepLink();
+
+  getCheckInSubs().then(function (checkInSubs) {
+
+    if (queryLink && queryLink.get('action') === 'get-subscription') {
+      checkInSubs[queryLink.get('office')] = {
+        attachment: {
+          Comment: {
+            type: 'string',
+            value: ''
+          },
+          Photo: {
+            type: 'base64',
+            value: ''
+          }
+        },
+        template: 'check-in',
+        office: queryLink.get('office'),
+        schedule: [],
+        venue: ['Check-In Location'],
+        status: 'PENDING'
+      }
+      ApplicationState.officeWithCheckInSubs = checkInSubs;
+      mapView(geopoint)
+      return
+    }
+
+    if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
+
+    if (Object.keys(checkInSubs).length) {
+      ApplicationState.officeWithCheckInSubs = checkInSubs;
+      return mapView(geopoint)
+    }
+
+    const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
+    Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
+      getRootRecord().then(function(record){
+        if(record.fromTime == 0) {
+          loadingScreen({
+            src: './img/update.jpg',
+            text: 'Fetching your data'
+          })
+          requestCreator('Null').then(function () {
+            handleCheckin(geopoint, true)
+          })
+          return
+        }
+        if (isAdmin(result[0] || result[1])) return initProfileView();
+        if (noUser) return noOfficeFoundScreen();
+      })
+   
+    })
+
+  });
+}
+
+
+function noOfficeFoundScreen() {
+  const content = `
+ 
+      <div class='message-screen mdc-layout-grid'>
+      <div class='icon-container'>
+        <div class='mdc-theme--primary icons'>
+          <i class='material-icons'>help_outline</i>
+        </div>
+      </div>
+      <div class='text-container'>
+        <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>
+        <p class='mdc-typography--body1'>
+          If you are a business owner and want to register your company with us, click below to get started.
+        </p>
+        <a class='mdc-button mdc-button--raised create-office--link' target='_blank' href='https://www.growthfile.com/signup'>Create office</a>
+      </div>
+    </div>
+   
+
+  `
+  document.getElementById('app-current-panel').innerHTML = content;
+
+}
+
+
 function initProfileView() {
-  document.getElementById('app-current-panel').classList.remove('mdc-top-app-bar--fixed-adjust');
-  document.getElementById('app-header').classList.remove('hidden');
-  history.pushState(['profileCheck'], null, null);
+  const auth = firebase.auth().currentUser;
+  runRead({
+    'read': '1'
+  })
+  if (auth.displayName && auth.photoURL && auth.email) return openReportView()
+  removeLoadingScreen()
+  document.getElementById('app-header').classList.remove('hidden')
+  history.pushState(['profileCheck'], null, null)
   profileCheck();
 }
 
@@ -792,16 +868,12 @@ function checkForEmail() {
 
   const auth = firebase.auth().currentUser;
   if (auth.email && auth.emailVerified) {
-    increaseStep(4);
-    checkForId();
+    openReportView();
     return
   }
-
-
   getRootRecord().then(function (record) {
     if (record.skipEmail) {
-      increaseStep(4);
-      checkForId();
+      openReportView();
       return
     }
 
@@ -809,10 +881,10 @@ function checkForEmail() {
     logFirebaseAnlyticsEvent("profile_completion_email")
     increaseStep(3)
     emailUpdation(true, function () {
-      checkForId()
+      openReportView();
     });
-
   })
+
 }
 
 
@@ -829,38 +901,67 @@ function checkEmptyIdProofs(record) {
   return isEmpty;
 }
 
-function checkForId() {
-  getRootRecord().then(function (record) {
+function getProfileInformation() {
+  return new Promise(function (resolve, reject) {
+    let record;
 
-    if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
-      increaseStep(5);
-      checkForBankAccount();
-      return
-    };
-    logReportEvent("Profile Completion Id")
-    logFirebaseAnlyticsEvent("profile_completion_id")
-    increaseStep(4);
-    idProofView(checkForBankAccount);
-  })
-}
-
-
-function checkForBankAccount() {
-
-  getRootRecord().then(function (record) {
-    if (record.skipBankAccountAdd || record.linkedAccounts.length) {
-      openReportView();
-      return;
-    }
-    logReportEvent("Profile Completion bank account")
-    logFirebaseAnlyticsEvent("profile_completion_bank_account")
-    increaseStep(5)
-    addNewBankAccount(function () {
-      loadingScreen();
-      openReportView()
+    getRootRecord().then(function (record) {
+      if (!record.aadhar || !record.pan || !record.linkedAccounts) {
+        requestCreator('profile').then(function (response) {
+          const dbName = firebase.auth().currentUser.uid;
+          const rootTx = db.transaction('root', 'readwrite');
+          const store = rootTx.objectStore('root');
+          store.get(dbName).onsuccess = function (event) {
+            record = event.target.result;
+            delete record.idProof;
+            record.linkedAccounts = response.linkSharedComponent;
+            record.pan = response.pan;
+            record.aadhar = response.aadhar;
+            store.put(record);
+          }
+          rootTx.oncomplete = function () {
+            return resolve(record)
+          }
+        }).catch(reject)
+        return
+      }
+      return resolve(record)
     });
   })
 }
+
+// function checkForId() {
+//   getProfileInformation().then(function(record){
+//     if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
+//       increaseStep(5);
+//       checkForBankAccount();
+//     }
+//     logReportEvent("Profile Completion Id")
+//     logFirebaseAnlyticsEvent("profile_completion_id")
+//     increaseStep(4);
+//     idProofView(checkForBankAccount);
+
+//   }).catch()
+
+// }
+
+
+// function checkForBankAccount() {
+
+//   getRootRecord().then(function (record) {
+//     if (record.skipBankAccountAdd || record.linkedAccounts.length) {
+//       openReportView();
+//       return;
+//     }
+//     logReportEvent("Profile Completion bank account")
+//     logFirebaseAnlyticsEvent("profile_completion_bank_account")
+//     increaseStep(5)
+//     addNewBankAccount(function () {
+//       loadingScreen();
+//       openReportView()
+//     });
+//   })
+// }
 
 
 function resizeAndCompressImage(image, compressionFactor) {
@@ -934,12 +1035,7 @@ function getProfileCompletionTabs() {
     <div id="step3" class="progress-step">
       <i class='material-icons'>email</i>
     </div>
-    <div id="step4" class="progress-step">
-      <i class='material-icons'>verified_user</i>
-     </div>
-    <div id="step5" class="progress-step">
-      <i class='material-icons'>payment</i>
-    </div>
+
   </div>
 
 </div>`
@@ -1169,57 +1265,7 @@ function redirect() {
   });
 }
 
-function getUniqueOfficeCount() {
-  return new Promise(function (resolve, reject) {
-    let offices = [];
 
-    const tx = db.transaction('children');
-    const childrenStore = tx.objectStore('children').index('employees');
-
-    childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return;
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      offices.push(cursor.value.office)
-      cursor.continue()
-    };
-
-    tx.oncomplete = function () {
-      return resolve(offices);
-    }
-    tx.onerror = function () {
-      return reject({
-        message: tx.error.message,
-        body: JSON.stringify(tx.error)
-      })
-    }
-  })
-}
-
-
-function hasDataInDB() {
-  return new Promise(function (resolve) {
-    const tx = db.transaction(['activity', 'subscriptions'])
-    const activityStoreCountReq = tx.objectStore('activity').count()
-    const subscriptionStoreCountReq = tx.objectStore('subscriptions').count()
-    let activityStoreSize;
-    let subscriptionStoreSize;
-
-    activityStoreCountReq.onsuccess = function () {
-      activityStoreSize = activityStoreCountReq.result;
-    }
-    subscriptionStoreCountReq.onsuccess = function () {
-      subscriptionStoreSize = subscriptionStoreCountReq.result;
-    }
-    tx.oncomplete = function () {
-      if (!activityStoreSize && !subscriptionStoreSize) return resolve(false)
-      return resolve(true)
-    }
-  })
-}
 
 function getCheckInSubs() {
   return new Promise(function (resolve) {
@@ -1250,114 +1296,6 @@ function getCheckInSubs() {
   })
 };
 
-function openMap(geopoint) {
-  document.getElementById('app-header').classList.add("hidden")
-  document.getElementById('step-ui').innerHTML = ''
-  progressBar.open();
-  const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
-  const prom = [firebase.auth().currentUser.getIdTokenResult(), getCheckInSubs(), checkIDBCount(storeNames)]
-  let userLocation;
-  if (!geopoint) {
-    prom.push(appLocation(3))
-  }
-
-  Promise.all(prom).then(function (result) {
-
-    const tokenResult = result[0];
-    const checkInSubs = result[1];
-    const totalRecords = result[2];
-    userLocation = result[3] || geopoint
-    progressBar.close();
-    console.log()
-
-    if (Object.keys(checkInSubs).length) {
-      if (isNewUser) {
-        setFirebaseAnalyticsUserProperty("hasCheckin", "true");
-      }
-      console.log('call checkin flow')
-      handleLocationForMap(userLocation, checkInSubs);
-      return;
-    }
-
-    if (isAdmin(tokenResult)) {
-      handleLocationForMap(userLocation, checkInSubs)
-      return
-    }
-
-    if (firebaseDeepLink && firebaseDeepLink.get('action') && firebaseDeepLink.get('action') === 'get-subscription') {
-      const subscriptionOffice = firebaseDeepLink.get('office')
-      loadingScreen(['Adding you in ' + subscriptionOffice + '... Please wait'])
-      requestCreator('acquisition', {
-        source: firebaseDeepLink.get('utm_source'),
-        medium: firebaseDeepLink.get('utm_medium'),
-        campaign: firebaseDeepLink.get('utm_campaign'),
-        office: subscriptionOffice,
-      }).then(function () {
-        loadingScreen(['Adding you in ' + subscriptionOffice + '... Please wait', 'You are added in ' + subscriptionOffice + '... Please wait'])
-        setTimeout(function () {
-          requestCreator('Null').then(function () {
-            openMap(geopoint)
-          })
-        }, 10000)
-      }).catch(function (error) {
-        snacks(error.message)
-      })
-      return
-    }
-
-    if (totalRecords) {
-      ApplicationState.officeWithCheckInSubs = checkInSubs;
-      console.log('call non checkin flow')
-      openReportView()
-      return;
-    }
-
-    ApplicationState.location = userLocation;
-    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    if (potentialAlternatePhoneNumbers.length) {
-      chooseAlternativePhoneNumber(potentialAlternatePhoneNumbers, userLocation);
-      return
-    };
-
-    noOfficeFoundScreen()
-
-  }).catch(function (error) {
-    console.log(error)
-    handleError({
-      message: error.message,
-      body: error
-    })
-  })
-}
-
-
-
-
-function noOfficeFoundScreen() {
-  const content = `
- 
-      <div class='message-screen mdc-layout-grid'>
-      <div class='icon-container'>
-        <div class='mdc-theme--primary icons'>
-          <i class='material-icons'>help_outline</i>
-        </div>
-      </div>
-      <div class='text-container'>
-        <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>
-        <p class='mdc-typography--body1'>
-          If you are a business owner and want to register your company with us, click below to get started.
-        </p>
-        <a class='mdc-button mdc-button--raised create-office--link' target='_blank' href='https://www.growthfile.com/signup'>Create office</a>
-      </div>
-    </div>
-   
-
-  `
-  document.getElementById('app-current-panel').innerHTML = content;
-
-}
-
-
 function checkIDBCount(storeNames) {
   return new Promise(function (resolve, reject) {
     let totalCount = 0;
@@ -1382,40 +1320,12 @@ function checkIDBCount(storeNames) {
   })
 }
 
-function handleLocationForMap(geopoint, checkInSubs) {
-  ApplicationState.officeWithCheckInSubs = checkInSubs;
-  const oldState = localStorage.getItem('ApplicationState')
-  if (!oldState)  {
-    console.log('create read');
-    mapView(geopoint);
-    return
-  }
-  const oldApplicationState = JSON.parse(oldState);
-  if (!oldApplicationState.lastCheckInCreated)   {
-    console.log('create read');
-    return mapView(geopoint);
-  }
-  const isOlder = isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)
-  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, geopoint))
-  if (isOlder || hasChangedLocation)   {
-    console.log('create read');
-    mapView(geopoint);
-    return
-  }
-  console.log('skip read')
-  ApplicationState = oldApplicationState;
-  initProfileView()
-}
-
 
 function openReportView() {
   logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view")
   history.pushState(['reportView'], null, null);
-  setTimeout(function(){
-    runRead({'read':'1'})
-  },3000)
   reportView()
 }
 
@@ -1439,19 +1349,17 @@ function reloadPage() {
 }
 
 
-function updateFromTime(fromTime) {
-  return new Promise(function (resolve, reject) {
-    const keyPath = firebase.auth().currentUser.uid;
-    const tx = db.transaction('root', 'readwrite');
-    const store = tx.objectStore('root');
-    store.get(keyPath).onsuccess = function (e) {
-      const record = e.target.result;
-      record.fromTime = fromTime
-      store.put(record);
-    }
-    tx.oncomplete = function () {
-      resolve(true)
-    }
+function shouldCheckin(geopoint, checkInSubs) {
 
-  })
+  ApplicationState.officeWithCheckInSubs = checkInSubs;
+  const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
+  if (!oldState) return true
+  if (!oldState.lastCheckInCreated) return true
+
+  const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
+  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
+  if (isOlder || hasChangedLocation) return true
+
+  ApplicationState = oldState;
+  return false
 }

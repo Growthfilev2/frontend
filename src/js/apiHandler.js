@@ -26,11 +26,15 @@ const requestFunctionCaller = {
   newBankAccount: newBankAccount,
   removeBankAccount: removeBankAccount,
   subscription: createSubscription,
-  createOffice: createOffice,
   searchOffice: searchOffice,
   checkIns: checkIns,
   idProof: idProof,
-  acquisition:acquisition
+  device: device,
+  acquisition: acquisition,
+  fcmToken: fcmToken,
+  pan: pan,
+  aadhar: aadhar,
+  profile: profile
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -110,7 +114,7 @@ self.onmessage = function (event) {
 }
 
 function handleNow(eventData, db) {
-  fetchServerTime(eventData.body, eventData.meta, db).then(function (response) {
+  fetchServerTime(eventData.body,eventData.meta, db).then(function (response) {
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(eventData.meta.user.uid).onsuccess = function (event) {
@@ -124,7 +128,6 @@ function handleNow(eventData, db) {
         success: true,
         id: eventData.id
       })
-
 
       if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
         removeFromOffice(response.removeFromOffice, eventData.meta, db).then(function (response) {
@@ -145,26 +148,24 @@ function handleNow(eventData, db) {
 
 // Performs XMLHTTPRequest for the API's.
 
-function http(request,authorization = true) {
+function http(request, authorization = true) {
   return new Promise(function (resolve, reject) {
     const xhr = new XMLHttpRequest()
     xhr.open(request.method, request.url, true)
-    if(authorization) {
+    if (authorization) {
       xhr.setRequestHeader('Content-Type', 'application/json')
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
       xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
     }
-    if (request.method !== 'GET') {
-      if (request.timeout) {
-        xhr.timeout = request.timeout;
-        xhr.ontimeout = function () {
-          return reject({
-            code: 400,
-            message: 'Request Timed Out. Please Try Again Later',
-          });
-        }
-      }
-    }
+
+    // xhr.timeout = 30000;
+    // xhr.ontimeout = function () {
+    //   return reject({
+    //     code: 'request-timed-out',
+    //     message: 'Request time out. Try again later',
+    //   });
+    // }
+    
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
@@ -188,11 +189,10 @@ function http(request,authorization = true) {
 
 
 
-function fetchServerTime(body, meta, db) {
+function fetchServerTime(body,meta, db) {
   return new Promise(function (resolve, reject) {
-    currentDevice = body.device;
-    const parsedDeviceInfo = JSON.parse(currentDevice);
-    let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}&idb_version=${db.version}`
+
+    let url = `${meta.apiUrl}now?${body}`
     const tx = db.transaction(['root'], 'readwrite');
     const rootStore = tx.objectStore('root');
 
@@ -205,10 +205,7 @@ function fetchServerTime(body, meta, db) {
         });
         delete record.officesRemoved;
       }
-      if (record.venuesSet) {
-        url = url + "&venues=true"
-        delete record.venuesSet;
-      }
+
       rootStore.put(record);
     }
     tx.oncomplete = function () {
@@ -275,8 +272,8 @@ function removeBankAccount(body, meta) {
 
 function newBankAccount(body, meta) {
   const req = {
-    method: 'POST',
-    url: `${meta.apiUrl}services/accounts/`,
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/linkedAccount`,
     body: JSON.stringify(body),
     token: meta.user.token,
     timeout: null
@@ -284,16 +281,7 @@ function newBankAccount(body, meta) {
   return http(req)
 }
 
-function createOffice(body, meta) {
-  const req = {
-    method: 'POST',
-    url: `${meta.apiUrl}services/office`,
-    body: JSON.stringify(body),
-    token: meta.user.token,
-    timeout: null
-  }
-  return http(req)
-}
+
 
 function searchOffice(body, meta) {
   const req = {
@@ -328,6 +316,72 @@ function idProof(body, meta) {
   return http(req)
 }
 
+
+function device(body, meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/device`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function acquisition(body, meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/acquisition`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function fcmToken(body, meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/fcmToken`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function pan(body, meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/pan`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function aadhar(body, meta) {
+  const req = {
+    method: 'PUT',
+    url: `${meta.apiUrl}profile/aadhar`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
+
+function profile(body, meta) {
+  const req = {
+    method: 'GET',
+    url: `${meta.apiUrl}profile/`,
+    body: null,
+    token: meta.user.token,
+    timeout: null
+  }
+  return http(req)
+}
 
 
 function createSubscription(body, meta) {
@@ -571,7 +625,7 @@ function backblaze(body, meta) {
 
 function updateAttendance(attendanceData = [], store) {
   attendanceData.forEach(function (value) {
-    if(!value.id) return;
+    if (!value.id) return;
     value.editable = 1;
     store.put(value)
   })
@@ -579,15 +633,15 @@ function updateAttendance(attendanceData = [], store) {
 
 function updateReimbursements(reimbursementData = [], store) {
   reimbursementData.forEach(function (value) {
-    if(!value.id) return;
+    if (!value.id) return;
     store.put(value)
   })
 }
 
 function updatePayments(paymentData = [], store) {
-  paymentData.forEach(function(value) {
-    if(!value.id) return;
-      store.put(value)
+  paymentData.forEach(function (value) {
+    if (!value.id) return;
+    store.put(value)
   })
 }
 
@@ -630,13 +684,13 @@ function updateCalendar(activity, tx) {
 }
 
 function putMap(location, updateTx) {
-  if(!location.activityId) return;
+  if (!location.activityId) return;
   const mapObjectStore = updateTx.objectStore('map')
   mapObjectStore.put(location);
 }
 
 function putAttachment(activity, tx, param) {
-  if(!activity.activityId) return
+  if (!activity.activityId) return
   const store = tx.objectStore('children');
   const commonSet = {
     activityId: activity.activityId,
@@ -655,11 +709,11 @@ function putAttachment(activity, tx, param) {
     if (activity.attachment.hasOwnProperty('Phone Number')) {
       commonSet.employee = activity.attachment['Phone Number'].value
     }
-    if(activity.attachment.hasOwnProperty('First Supervisor') && activity.attachment['First Supervisor'].value === myNumber) {
+    if (activity.attachment.hasOwnProperty('First Supervisor') && activity.attachment['First Supervisor'].value === myNumber) {
       commonSet.team = 1
     }
   }
-  
+
   store.put(commonSet)
 }
 
@@ -773,10 +827,10 @@ function successResponse(read, param, db, resolve, reject) {
   updateReimbursements(read.reimbursements, reimbursementStore)
   updatePayments(read.payments, paymentStore);
   read.activities.forEach(function (activity) {
-    if(!activity.activityId) return;
+    if (!activity.activityId) return;
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
-    
+
     activityObjectStore.put(activity);
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
@@ -817,7 +871,6 @@ function successResponse(read, param, db, resolve, reject) {
 
         record.assignees.forEach(function (user) {
           addendum.key = param.user.phoneNumber + user.phoneNumber;
-
           addendumObjectStore.put(addendum);
           if (number === param.user.phoneNumber) {
             updateUserStore(userStore, user.phoneNumber, addendum, counter)
@@ -839,16 +892,16 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.templates.forEach(function (subscription) {
     if (subscription.status === 'CANCELLED') return;
-    if(!subscription.activityId) {
+    if (!subscription.activityId) {
       instant(JSON.stringify({
-        message:'activityId missing from template object',
-        body:subscription
-      }),param)
+        message: 'activityId missing from template object',
+        body: subscription
+      }), param)
       return;
     }
    
     putSubscription(subscription, updateTx);
-   
+
   })
 
 

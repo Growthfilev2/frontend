@@ -6,7 +6,7 @@ function isWifiRequired() {
   if (native.getName() !== 'Android') return;
   if (AndroidInterface.isWifiOn()) return;
 
-  const deviceInfo = JSON.parse(native.getInfo());
+  const deviceInfo = native.getInfo();
   const requiredWifiDevices = {
     'samsung': true,
     'OnePlus': true
@@ -29,8 +29,8 @@ window.addEventListener('callRead', readDebounce);
 function handleError(error) {
   console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
-  if (errorInStorage.hasOwnProperty(error.message))
-    error.device = localStorage.getItem('deviceInfo');
+  if (errorInStorage.hasOwnProperty(error.message)) return
+  error.device = JSON.parse(localStorage.getItem('deviceInfo'));
   errorInStorage[error.message] = error
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   return requestCreator('instant', JSON.stringify(error))
@@ -87,6 +87,7 @@ function appLocation(maxRetry) {
       if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
+          type:'geolocation',
           body: {
             geopoint: geopoint
           }
@@ -96,7 +97,10 @@ function appLocation(maxRetry) {
       ApplicationState.location = geopoint
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
-    }).catch(reject)
+    }).catch(function(error){
+      error.type = 'geolocation';
+      reject(error)
+    })
   })
 }
 
@@ -253,7 +257,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=120');
+const apiHandler = new Worker('js/apiHandler.js?version=122');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -309,16 +313,12 @@ function executeRequest(requestGenerator) {
         const reject = workerRejects[event.data.id];
         if (reject) {
           reject(event.data);
-
-
           if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
               body: JSON.stringify(event.data.body)
             })
-          } else if (event.data.requestType !== 'Null') {
-            snacks(event.data.message);
-          }
+          } 
         }
       } else {
         const resolve = workerResolves[event.data.id];
@@ -533,10 +533,10 @@ function handleNav(evt) {
 
 
 function bottomDialog(dialog, ul) {
-
+  dialog.root_.classList.add('bottom-dialog')
   ul.singleSelection = true
   ul.selectedIndex = 0;
-
+  dialog.rootRecord
   setTimeout(function () {
     dialog.root_.querySelector('.mdc-dialog__surface').classList.add('open')
     ul.foundation_.adapter_.focusItemAtIndex(0);
@@ -960,6 +960,7 @@ function idProofView(callback) {
       if (skipBtn) {
         skipBtn.setAttribute('disabled', true)
       }
+      
       requestCreator('idProof', ids).then(function (response) {
         const tx = db.transaction('root', 'readwrite');
         const store = tx.objectStore('root')
@@ -1052,3 +1053,24 @@ const phoneFieldInit = (input, dropEl, hiddenInput) => {
     nationalMode: false
   });
 };
+
+
+
+
+
+
+function toDataURL(src, callback) {
+  var img = new Image();
+  // img.crossOrigin = 'Anonymous';
+  img.onload = function() {
+    var canvas = document.createElement('CANVAS');
+    var ctx = canvas.getContext('2d');
+    var dataURL;
+    canvas.height = this.naturalHeight;
+    canvas.width = this.naturalWidth;
+    ctx.drawImage(this, 0, 0);
+    dataURL = canvas.toDataURL();
+    callback(dataURL);
+  };
+  img.src = src;
+}

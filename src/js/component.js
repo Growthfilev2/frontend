@@ -402,40 +402,31 @@ function handleTouchMove(evt) {
 
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
-
-    const listenerDetail = {
-        direction: '',
-        element: sliderElement
-    }
-
+    let direction = '';
+    
 
     if (Math.abs(xAxisDiff) > Math.abs(yAxisDiff)) {
         if (xAxisDiff > 0) {
 
-            listenerDetail.direction = 'left'
+           direction = 'left'
             // left
         } else {
 
-            listenerDetail.direction = 'right'
+           direction = 'right'
             //right
         }
     } else {
         if (yAxisDiff > 0) {
 
-            listenerDetail.direction = 'down'
+           direction = 'down'
         } else {
 
-            listenerDetail.direction = 'up'
+           direction = 'up'
         }
     }
     xStart = null;
     yStart = null;
-    sliderCallback(listenerDetail);
-
-    // var swipeEvent = new CustomEvent('siwpe', {
-    //     detail: listenerDetail
-    // });
-    // sliderElement.dispatchEvent(swipeEvent);
+    sliderCallback(direction);
 }
 
 

@@ -1,9 +1,8 @@
 let deviceType = ''
-const parentOrigin = new URL(document.referrer).origin
+const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
-    'http://localhost:5000':true
 }
 
 function sendFrameDimensions() {
@@ -105,12 +104,6 @@ function textFieldRemovable(type, label, placeholder) {
     return cont
 }
 
-
-
-function originMatch(origin) {
-    const origins = ['https://growthfile-207204.firebaseapp.com', 'https://growthfile.com', 'https://growthfile-testing.firebaseapp.com', 'http://localhost:5000', 'http://localhost', 'https://growthfilev2-0.firebaseapp.com', 'https://growthfilev2-0.web.app']
-    return origins.indexOf(origin) > -1;
-}
 
 
 
