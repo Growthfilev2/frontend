@@ -155,6 +155,8 @@ function createUnkownCheckIn(geopoint, retries = {subscriptionRetry:0,invalidRet
   }).catch(function (error) {
 
     progressBar.close()
+    const queryLink = getDeepLink();
+
     if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
       
       if(retries.subscriptionRetry  <= 2) {
@@ -258,6 +260,8 @@ function createKnownCheckIn(selectedVenue, geopoint, retries = {subscriptionRetr
     initProfileView()
   }).catch(function (error) {
     progressBar.close()
+    const queryLink = getDeepLink();
+
     if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
       
       if(retries.subscriptionRetry  <= 2) {
@@ -428,6 +432,8 @@ function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
       history.pushState(['reportView'], null, null)
       reportView()
     }).catch(function (error) {
+      const queryLink = getDeepLink();
+
       if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
       
         if(retries.subscriptionRetry  <= 2) {
