@@ -510,7 +510,7 @@ const createDynamiclink = (urlParam, socialInfo) => {
                         "iosAppStoreId": "1441388774",
                     },
                     "desktopInfo": {
-                        "desktopFallbackLink": "https://www.growthfile.com/welcome.html"
+                        "desktopFallbackLink": `https://www.growthfile.com/welcome${urlParam}`
                     },
                     "analyticsInfo": {
                         "googlePlayAnalytics": {
