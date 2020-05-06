@@ -207,6 +207,7 @@ let native = function () {
         }
       })
       deviceInfo = obj
+      deviceInfo.idbVersion = DB_VERSION
     },
     getInfo: function () {
       if (!this.getName()) return {
@@ -217,10 +218,11 @@ let native = function () {
         "baseOs": "",
         "radioVersion": "",
         "appVersion": "",
-        "idbVersion": ""
+        "idbVersion": DB_VERSION
       };
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
+        deviceInfo.idbVersion = DB_VERSION
         return deviceInfo
       }
       return deviceInfo;
@@ -638,18 +640,10 @@ function regulator() {
           src: './img/server.jpg',
           text: 'Connecting to server'
         })
-        let queryParam = ''
-        const keys = Object.keys(deviceInfo)
-        keys.forEach(function (key, index) {
-          queryParam += `${key}=${deviceInfo[key]}`
-          if (index < keys.length - 1) {
-            queryParam += '&'
-          }
-        })
-        return requestCreator('now', queryParam)
+      
+        return requestCreator('now')
       })
       .then(function () {
-        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
         serverTimeUpdated = true
         loadingScreen({
           src: './img/fetching-location.jpg',
@@ -659,11 +653,11 @@ function regulator() {
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        // if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
-        // return requestCreator('device', deviceInfo);
+        if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
+        return requestCreator('device', deviceInfo);
       })
       .then(function () {
-        // localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
       })
       .catch(reject)
   })

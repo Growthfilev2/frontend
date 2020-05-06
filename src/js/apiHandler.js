@@ -114,7 +114,7 @@ self.onmessage = function (event) {
 }
 
 function handleNow(eventData, db) {
-  fetchServerTime(eventData.body,eventData.meta, db).then(function (response) {
+  fetchServerTime(eventData.meta, db).then(function (response) {
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(eventData.meta.user.uid).onsuccess = function (event) {
@@ -189,10 +189,10 @@ function http(request, authorization = true) {
 
 
 
-function fetchServerTime(body,meta, db) {
+function fetchServerTime(meta, db) {
   return new Promise(function (resolve, reject) {
 
-    let url = `${meta.apiUrl}now?${body}`
+    let url = `${meta.apiUrl}now`
     const tx = db.transaction(['root'], 'readwrite');
     const rootStore = tx.objectStore('root');
 
