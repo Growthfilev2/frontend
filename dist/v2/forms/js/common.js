@@ -2,7 +2,8 @@ let deviceType = ''
 const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
-    'https://growthfile-207204.firebaseapp.com': true,
+    'https://growthfile-207204.firebaseapp.com': true
+
 }
 
 function sendFrameDimensions() {
@@ -294,15 +295,18 @@ function createPhoneNumberLi(contactObject, withoutIcon, callback) {
 
 
 
-function setHelperInvalid(field, shouldShake = true) {
+function setHelperInvalid(field, message) {
     field.focus();
     field.foundation_.setValid(false);
-    field.foundation_.adapter_.shakeLabel(shouldShake);
+    field.foundation_.adapter_.shakeLabel(true);
+    field.helperTextContent = message
 }
 
 function setHelperValid(field) {
     field.focus();
     field.foundation_.setValid(true);
+    field.helperTextContent = ''
+
 }
 
 const phoneFieldInit = (input, dropEl, hiddenInput) => {
