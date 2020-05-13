@@ -115,11 +115,26 @@
         var formEl = document.getElementById('form');
         let officeTemplate;
 
-
+        function getPhoneNumber() {
+            var error = iti.getValidationError();
+            if (error !== 0) {
+                const message = getPhoneFieldErrorMessage(error);
+                setHelperInvalid(phoneNumber, message);
+                return
+            }
+            if (!iti.isValidNumber()) {
+                setHelperInvalid(phoneNumber, 'Invalid number. Please check again');
+                return;
+            }
+            setHelperValid(phoneNumber);
+            parent.postMessage({
+                body: iti.getNumber(intlTelInputUtils.numberFormat.E164),
+                name: 'verifyUser'
+            }, parentOrigin);
+        }
 
         function getFormData() {
             document.getElementById('submit-form').click()
-            // formEl.submit();
         }
 
 
@@ -131,24 +146,14 @@
             if (auth.email) {
                 document.querySelector('.form-component.email').remove()
             }
+            formEl.addEventListener('invalid',function(){
+                parent.postMessage({
+                        name: 'enableSubmitBtn'
+                    }, parentOrigin);
+            },true)
+
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault()
-
-                var error = iti.getValidationError();
-                if (error !== 0) {
-                    const message = getPhoneFieldErrorMessage(error);
-                    setHelperInvalid(phoneNumber, message);
-                    return
-                }
-                if (!iti.isValidNumber()) {
-                    setHelperInvalid(phoneNumber, 'Invalid number. Please check again');
-                    return;
-                }
-                setHelperValid(phoneNumber);
-
-                if (!address.value || !officeName.value) return;
-                if (!auth.displayName && !username.value) return
-                if (!auth.email && !email.value) return;
 
 
                 officeTemplate.registeredOfficeAddress = address.value;
@@ -160,16 +165,17 @@
                     phoneNumber: iti.getNumber(intlTelInputUtils.numberFormat.E164)
                 }
                 officeTemplate.firstContact = authProps
+
                 parent.postMessage({
                     body: {
-                        office: officeTemplate,
                         auth: authProps,
-
+                        office: officeTemplate
                     },
-                    name: 'verifyUser'
+                    name: 'sendOfficeData'
                 }, parentOrigin);
+
             })
-        
+
         }
     </script>
 
