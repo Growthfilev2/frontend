@@ -294,15 +294,18 @@ function createPhoneNumberLi(contactObject, withoutIcon, callback) {
 
 
 
-function setHelperInvalid(field, shouldShake = true) {
+function setHelperInvalid(field, message) {
     field.focus();
     field.foundation_.setValid(false);
-    field.foundation_.adapter_.shakeLabel(shouldShake);
+    field.foundation_.adapter_.shakeLabel(true);
+    field.helperTextContent = message
 }
 
 function setHelperValid(field) {
     field.focus();
     field.foundation_.setValid(true);
+    field.helperTextContent = ''
+
 }
 
 const phoneFieldInit = (input, dropEl, hiddenInput) => {

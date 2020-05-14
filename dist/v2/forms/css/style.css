@@ -40,7 +40,9 @@ body {
 .p-10 {
   padding: 10px;
 }
-
+.pt-10 {
+  padding-top: 10px !important;
+}
 .mb-0 {
   margin-bottom: 0px !important;
 }
@@ -212,6 +214,12 @@ body {
   width: 100%
 }
 
+.forms.integrated-form{
+  padding: 0px 16px;
+}
+.forms.integrated-form .form-component {
+  padding: 0px;
+}
 
 .forms .form-list .product-container .form-component {
   width: auto;
