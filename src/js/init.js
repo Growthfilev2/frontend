@@ -640,8 +640,13 @@ function regulator() {
           src: './img/server.jpg',
           text: 'Connecting to server'
         })
-      
-        return requestCreator('now')
+       
+        const keys = Object.keys(deviceInfo);
+        let url = '?';
+        keys.forEach(function(key){
+          url += `${key}=${deviceInfo[key]}`
+        })
+        return requestCreator('now',url);
       })
       .then(function () {
         serverTimeUpdated = true
