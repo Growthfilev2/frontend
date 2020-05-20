@@ -142,6 +142,7 @@
 
             getDropDownContent(subscriptionTemplate.office, 'claim-type', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
+                
                 select.nativeControl_.innerHTML += result.string;
                 select.nativeControl_.setAttribute('required', 'true')
                 document.querySelector('.claim-type-select-container').removeAttribute('hidden');

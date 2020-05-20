@@ -3,6 +3,8 @@ const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
+    'http://localhost:5000':true,
+    'http://localhost':true
 }
 
 function sendFrameDimensions() {
@@ -40,7 +42,9 @@ window.addEventListener('message', function (event) {
 })
 
 function initMutation() {
-
+    const currentWidth = document.body.offsetWidth;
+    const currentHeight = document.body.offsetHeight;
+    
     const form = document.querySelector('form');
     const config = {
         attributes: true,
@@ -52,11 +56,12 @@ function initMutation() {
     const callback = function (mutationsList, observer) {
         let resizeWindow = false
         for (let mutation of mutationsList) {
-            if (mutation.type === 'childList' || mutation.type === 'attributes') {
+            if (mutation.type === 'childList' || mutation.type === 'attributes' ) {
                 console.log(mutation)
                 resizeWindow = true
             }
         }
+        if(currentWidth === document.body.offsetWidth && currentHeight === document.body.offsetHeight) return;
         if(resizeWindow) sendFrameDimensions()
     };
     const observer = new MutationObserver(callback);
@@ -229,6 +234,16 @@ function getDropDownContent(office, template, indexName) {
         }
 
     })
+}
+
+function createSelectOptions (data) {
+let string;
+data.forEach(function(value){
+    string += ` <option value="${value}">
+    ${value}
+  </option>`
+})
+return string;
 }
 
 function removeList(event) {
