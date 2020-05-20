@@ -4,8 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="../external/css/material.min.css" rel="stylesheet">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
     integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
@@ -39,7 +38,8 @@
             </div>
             </div>
     </form>
-
+    
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js?version=6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
         integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
@@ -64,14 +64,11 @@
                 }
 
                 const value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
-                template.attachment['Phone Number'].value = value
-                template.attachment['Admin'].value = value
-
-               
+                template.attachment['Phone Number'].value = value;               
                 parent.postMessage({
-                    body: copy,
+                    body: template,
                     name: 'sendFormToParent'
-                }, parentOrigin);(template);
+                }, parentOrigin);
                 toggleSubmit()
             })
             
