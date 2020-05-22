@@ -369,11 +369,11 @@ function createTemplateButton(subs) {
 
 
 function templateSelectionList(uniqueSubs) {
-  return `<ul class='mdc-list subscription-list mdc-list--two-line' id='dialog-office'>
+  return `<ul class='mdc-list subscription-list' id='dialog-office'>
      ${Object.keys(uniqueSubs).map(function(name){
        return `<li class='mdc-list-item'>
         <span class="mdc-list-item__text">
-          <span class="mdc-list-item__primary-text">${name}</span>
+          ${name}
         </span>      
        <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
          keyboard_arrow_right
@@ -384,11 +384,11 @@ function templateSelectionList(uniqueSubs) {
 };
 
 function officeSelectionList(subscriptions) {
-  return `<ul class='mdc-list subscription-list mdc-list--two-line' id='dialog-office'>
+  return `<ul class='mdc-list subscription-list' id='dialog-office'>
      ${subscriptions.map(function(sub){
        return `<li class='mdc-list-item'>
         <span class="mdc-list-item__text">
-          <span class="mdc-list-item__primary-text">${sub.office}</span>
+          ${sub.office} 
         </span>      
        <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
          keyboard_arrow_right
