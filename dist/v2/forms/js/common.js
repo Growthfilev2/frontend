@@ -2,10 +2,7 @@ let deviceType = ''
 const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
-    'https://growthfile-207204.firebaseapp.com': true,
-    'http://localhost:5000': true,
-    'http://localhost': true,
-    'https://growthfilev2-0.firebaseapp.com':true
+    'https://growthfile-207204.firebaseapp.com': true
 }
 
 function sendFrameDimensions() {

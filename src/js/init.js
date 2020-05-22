@@ -649,12 +649,7 @@ function regulator() {
           src: './img/fetching-location.jpg',
           text: 'Verifying location'
         })
-        // return appLocation(3)
-        return Promise.resolve({
-          latitude:22,
-          longitude:77,
-          lastLocationTime:Date.now()
-        })
+        return appLocation(3)
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
