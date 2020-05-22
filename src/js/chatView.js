@@ -60,7 +60,7 @@ function chatView() {
                 const selectedType = Object.keys(usersTemplate)[typeEvent.detail.index]
           
                if(usersTemplate[selectedType].length == 1) {
-                    if(usersTemplate[selectedType] === 'customer') {
+                    if(selectedType === 'customer') {
                         getDropDownContent(usersTemplate['customer'][0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
                             history.pushState(['addView'], null, null);
                             fillVenueInSub(usersTemplate['customer'][0], {
@@ -83,7 +83,7 @@ function chatView() {
                offieList.listen('MDCList:action', function (officeEvent) {
                 officeDialog.close();
                     const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
-                    if(usersTemplate[selectedType] === 'customer') {
+                    if(selectedType === 'customer') {
                         getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {
                             history.pushState(['addView'], null, null);
                             fillVenueInSub(selectedSubscription, {
