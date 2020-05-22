@@ -640,13 +640,8 @@ function regulator() {
           src: './img/server.jpg',
           text: 'Connecting to server'
         })
-       
-        const keys = Object.keys(deviceInfo);
-        let url = '?';
-        keys.forEach(function(key){
-          url += `${key}=${deviceInfo[key]}`
-        })
-        return requestCreator('now',url);
+
+        return requestCreator('now');
       })
       .then(function () {
         serverTimeUpdated = true
@@ -654,16 +649,21 @@ function regulator() {
           src: './img/fetching-location.jpg',
           text: 'Verifying location'
         })
-        return appLocation(3)
+        // return appLocation(3)
+        return Promise.resolve({
+          latitude:22,
+          longitude:77,
+          lastLocationTime:Date.now()
+        })
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        // if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
-        // return requestCreator('device', deviceInfo);
+        if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
+        return requestCreator('device', deviceInfo);
       })
-      // .then(function () {
-      //   localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
-      // })
+      .then(function () {
+        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+      })
       .catch(reject)
   })
 }
