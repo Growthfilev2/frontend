@@ -34,7 +34,8 @@ const requestFunctionCaller = {
   fcmToken: fcmToken,
   pan: pan,
   aadhar: aadhar,
-  profile: profile
+  profile: profile,
+  shareLink:shareLink
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -379,6 +380,17 @@ function profile(body, meta) {
     body: null,
     token: meta.user.token,
     timeout: null
+  }
+  return http(req)
+}
+
+function shareLink(body,meta){
+  const req = {
+    method:'POST',
+    url:`${meta.apiUrl}services/shareLink`,
+    body:JSON.stringify(body),
+    token:meta.user.token,
+    timeout:null
   }
   return http(req)
 }

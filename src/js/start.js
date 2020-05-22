@@ -46,56 +46,20 @@ function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
     return Number(device.appVersion) < requiredVersionIos;
 }
 
-function giveSubscriptionInit(name, skip) {
-    if (isDeviceVersionLower(17, 9)) {
-        const template = {
-            "assignees": [],
-            "template": "subscription",
-            "office": name
-        };
-        if (history.state[0] === 'addView') {
-            history.replaceState(['addView'], null, null);
-        } else {
-            history.pushState(['addView'], null, null);
-        }
-        addView(template);
-        return
-    };
-
-
-    const el = document.getElementById('app-current-panel')
-    el.innerHTML = '';
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Add users</span>
-    `
-    
-    let header;
-    if (skip) {
-        const skipBtn = createButton('NEXT', 'skip-header');
-        header = setHeader('', skipBtn.outerHTML);
-        document.getElementById('skip-header').addEventListener('click', function () {
-            window.location.reload();
-        })
-    } else {
-        header = setHeader(backIcon, '');
-    }
-
-    header.root_.classList.remove('hidden')
-    progressBar.open()
-    createDynamicLinkSocialTags(name).then(function (socialInfo) {
-        createDynamiclink(`?action=get-subscription&office=${name}&utm_source=share_link_employee_app&utm_medium=share_widget&utm_campaign=share_link`, socialInfo).then(function (link) {
-            progressBar.close();
-            el.appendChild(shareWidget(link, name));
-        }).catch(function (error) {
-            if (skip) {
-                window.location.reload();
-            }
-            handleError({
-                message: error.message,
-                body: JSON.stringify(error)
-            })
-        })
-    })
+function giveSubscriptionInit(office) {
+    requestCreator('shareLink',{
+        office:office
+    }).then(function(response){
+        const link = response.shortLink;
+        const el = document.getElementById('app-current-panel')
+        el.innerHTML = '';
+        const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title">Add users</span>
+        `
+        const header = setHeader(backIcon, '');
+        header.root_.classList.remove('hidden')
+        el.appendChild(shareWidget(link, office));
+    }).catch(console.log)
 }
 
 function createDynamicLinkSocialTags(office) {

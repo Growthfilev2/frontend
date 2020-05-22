@@ -81,7 +81,7 @@ function chatView() {
                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
                bottomDialog(officeDialog, offieList);
                offieList.listen('MDCList:action', function (officeEvent) {
-                    dialog.close();
+                officeDialog.close();
                     const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
                     if(usersTemplate[selectedType] === 'customer') {
                         getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {

@@ -478,71 +478,6 @@ function textFieldTelephoneWithHelper(attr) {
 
 
 
-
-const createDynamiclink = (urlParam, socialInfo) => {
-    return new Promise((resolve, reject) => {
-        const param = new URLSearchParams(urlParam);
-        let office;
-        console.log(param.get('office'))
-        if (param.get('office')) {
-            office = decodeURI(param.get('office'))
-        }
-        const storedLinks = JSON.parse(localStorage.getItem('storedLinks'));
-        if (storedLinks && storedLinks[office]) {
-            return resolve(storedLinks[office])
-        }
-
-        fetch(`https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${appKey.getKeys().apiKey}`, {
-            method: 'POST',
-            body: JSON.stringify({
-                "dynamicLinkInfo": {
-                    "domainUriPrefix": appKey.dynamicLinkUriPrefix(),
-                    "link": `https://growthfile-207204.firebaseapp.com/v2/${urlParam}`,
-                    "androidInfo": {
-                        "androidPackageName": "com.growthfile.growthfileNew",
-                        "androidMinPackageVersionCode": "15",
-                    },
-                    "navigationInfo": {
-                        "enableForcedRedirect": true,
-                    },
-                    "iosInfo": {
-                        "iosBundleId": "com.Growthfile.GrowthfileNewApp",
-                        "iosAppStoreId": "1441388774",
-                    },
-                    "desktopInfo": {
-                        "desktopFallbackLink": `https://www.growthfile.com/welcome${urlParam}`
-                    },
-                    "analyticsInfo": {
-                        "googlePlayAnalytics": {
-                            "utmSource": "share_link_employee_app",
-                            "utmMedium": "share_widget",
-                            "utmCampaign": "share_link",
-                            "utmTerm": "share_link+create",
-                            "utmContent": "Share",
-                        }
-                    },
-                    "socialMetaTagInfo": socialInfo,
-                },
-                "suffix": {
-                    "option": "SHORT"
-                }
-            }),
-            headers: {
-                'Content-type': 'application/json',
-            }
-        }).then(response => {
-            return response.json()
-        }).then(function (url) {
-            const linkObject = {}
-            linkObject[param.get('office')] = url.shortLink;
-            localStorage.setItem('storedLinks', JSON.stringify(linkObject));
-            resolve(url.shortLink)
-        }).catch(reject)
-    });
-}
-
-
-
 const shareWidget = (link, office) => {
     const auth = firebase.auth().currentUser;
     const shareText = `Hi ${auth.displayName}  wants you to use Growthfile to Check-in & collect proof of work without any effort. Download app & login now `
@@ -566,9 +501,8 @@ const shareWidget = (link, office) => {
     const linkManager = createElement('div', {
         className: 'link-manager'
     })
-    const shortLinkPath = new URL(link).pathname
     linkManager.innerHTML = textField({
-        value:shortLinkPath.slice(1,shortLinkPath.length),
+        value:link,
         trailingIcon:'share',
         readonly:true,
     })
