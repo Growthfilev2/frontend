@@ -4,8 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="../external/css/material.min.css" rel="stylesheet">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
         integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
@@ -25,7 +24,7 @@
                                 <i class="material-icons mdc-text-field__icon">search</i>
                                 <input class="mdc-text-field__input" data-field='Name'>
                                 <div class="mdc-line-ripple"></div>
-                                <label class="mdc-floating-label">Search employee</label>
+                                <label class="mdc-floating-label">Select employees</label>
                             </div>
                         </div>
                         <ul class="mdc-list mdc-list--two-line search-list" id='employee-list' role="group"
@@ -45,7 +44,7 @@
                                 <i class="material-icons mdc-text-field__icon">search</i>
                                 <input class="mdc-text-field__input" data-field='Name'>
                                 <div class="mdc-line-ripple"></div>
-                                <label class="mdc-floating-label">Search Location</label>
+                                <label class="mdc-floating-label">Select customer</label>
                             </div>
                         </div>
                         <ul class="mdc-list mdc-list--two-line search-list" id='customer-list' role="radiogroup">
@@ -77,7 +76,7 @@
                         <div class="text-field-block">
                             <div class='inline-flex' data-schedule-type='start'>
                                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
-                                    <input class="mdc-text-field__input" required type="date"
+                                    <input class="mdc-text-field__input" required type="date" v
                                         data-name="Duty start date">
                                     <div class="mdc-line-ripple"></div>
                                     <label class="mdc-floating-label">Start date</label>
@@ -106,22 +105,20 @@
                         </div>
 
                     </div>
+
                     <div class="text-field-block">
-                        <div class="mdc-select" data-type="Duty Type">
-                            <div class="mdc-select__anchor demo-width-class">
-                                <i class="mdc-select__dropdown-icon"></i>
-                                <div class="mdc-select__selected-text"></div>
-                                <span class="mdc-floating-label">Duty type</span>
-                                <div class="mdc-line-ripple"></div>
-                            </div>
-
-                            <div class="mdc-select__menu mdc-menu mdc-menu-surface duty-type-select">
-                                <ul class="mdc-list">
-
-                                </ul>
-                            </div>
+                        <div class="mdc-select" data-mdc-auto-init="MDCSelect"  data-type="Duty Type">
+                            <i class="mdc-select__dropdown-icon"></i>
+                            <select class="mdc-select__native-control">
+                                <option value="" selected></option>
+                              
+                            </select>
+                            <label class="mdc-floating-label">Duty type</label>
+                            <div class="mdc-line-ripple"></div>
                         </div>
                     </div>
+
+                
                 </div>
             </div>
         </section>
@@ -135,6 +132,7 @@
         </section>
     </form>
 
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js?version=6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
         integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
@@ -146,12 +144,14 @@
         const customerSearchField = new mdc.textField.MDCTextField(document.getElementById('customer-search-field'))
         let employeeList;
         let customerList;
-        let dutyTypeSelect;
+        const dutyTypeSelect = new mdc.select.MDCSelect(document.querySelector(`[data-type="Duty Type"]`));
+        dutyTypeSelect.disabled = true;
         const superVisorField = document.querySelector(`[data-field="Supervisor"]`);
         let iti = phoneFieldInit(superVisorField);
 
         function init(subscription, dataObject) {
-            template = subscription
+            template = JSON.parse(JSON.stringify(subscription))
+            
             initEmployeeAdd(dataObject.employee);
             initCustomerAdd(dataObject.customers)
             initDutyDetailsAdd(dataObject);
@@ -175,14 +175,14 @@
                     return;
                 }
                 employeeList.selectedIndex.forEach((index) => {
-                    template.attachment.Include.value += ',' + dataObject.data.employee[index]
-                        .attachment['Phone Number'].value
+                    template.attachment.Include.value += dataObject.employee[index].attachment['Phone Number'].value+','
                 })
-                template.attachment.Location.value = dataObject.data.customers[customerList.selectedIndex]
+                template.attachment.Location.value = dataObject.customers[customerList.selectedIndex]
                     .venue[0].location
                 template.attachment.Supervisor.value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
-                const newSchedule = getNewSchedule(template)
+                const newSchedule = getNewSchedule(subscription)
                 template.attachment['Duty Type'].value = dutyTypeSelect.value;
+                template.attachment.Products = [{Date:'',quantity:'',rate:''}]
                 if (newSchedule) {
                     console.log(newSchedule)
                     console.log(template)
@@ -199,10 +199,7 @@
         }
 
 
-        function validateForm() {
-
-        }
-
+ 
         function initEmployeeAdd(employees) {
             const ul = document.getElementById('employee-list')
             loadEmployees(employees, ul);
@@ -217,8 +214,6 @@
 
                 initializeEmployeeSearch(inputValue.toLowerCase(), employeeList)
             })
-
-
 
         }
 
@@ -297,32 +292,25 @@
                 block: "start",
                 inline: "nearest"
             })
-            fillDutyType(data.dutyTypes, document.querySelector('.duty-type-select ul'))
-            dutyTypeSelect = new mdc.select.MDCSelect(document.querySelector(`[data-type="Duty Type"]`));
-            if (template.attachment['Duty Type'].value) {
-                dutyTypeSelect.value = template.attachment['Duty Type'].value
-            } else {
-                dutyTypeSelect.selectedIndex = 0;
+
+            if(data.dutyTypes) {
+                const names = [];
+
+                 data.dutyTypes.forEach(type=>{
+                    names.push(type.attachment.Name.value)
+                })
+
+                dutyTypeSelect.nativeControl_.innerHTML += createSelectOptions(names);
+                dutyTypeSelect.disabled = false
             }
 
             iti.setNumber(template.attachment['Supervisor'].value);
 
             initializeDates(template, createDate(new Date()), createTime(new Date()));
-
-
+    
         }
 
 
-        function fillDutyType(dutyTypes, el) {
-            dutyTypes.forEach((type) => {
-                const li = createElement('li', {
-                    className: 'mdc-list-item',
-                    textContent: type.attachment.Name.value
-                })
-                li.dataset.value = type.attachment.Name.value
-                el.appendChild(li)
-            })
-        }
     </script>
 </body>
 

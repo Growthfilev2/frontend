@@ -3,19 +3,20 @@ const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
-    'http://localhost:5000':true,
-    'http://localhost':true
+    'http://localhost:5000': true,
+    'http://localhost': true,
+    'https://growthfilev2-0.firebaseapp.com':true
 }
 
 function sendFrameDimensions() {
     if (!allowedOrigins[parentOrigin]) return;
     parent.postMessage({
-	    name:'resizeFrame',
-	    body : {
-		width:document.body.offsetWidth,
-		height:document.body.offsetHeight
+        name: 'resizeFrame',
+        body: {
+            width: document.body.offsetWidth,
+            height: document.body.offsetHeight
         }
-    },parentOrigin)
+    }, parentOrigin)
 }
 
 
@@ -44,7 +45,7 @@ window.addEventListener('message', function (event) {
 function initMutation() {
     const currentWidth = document.body.offsetWidth;
     const currentHeight = document.body.offsetHeight;
-    
+
     const form = document.querySelector('form');
     const config = {
         attributes: true,
@@ -56,13 +57,12 @@ function initMutation() {
     const callback = function (mutationsList, observer) {
         let resizeWindow = false
         for (let mutation of mutationsList) {
-            if (mutation.type === 'childList' || mutation.type === 'attributes' ) {
-                console.log(mutation)
+            if (mutation.type === 'childList' || mutation.type === 'attributes') {
                 resizeWindow = true
             }
         }
-        if(currentWidth === document.body.offsetWidth && currentHeight === document.body.offsetHeight) return;
-        if(resizeWindow) sendFrameDimensions()
+        if (currentWidth === document.body.offsetWidth && currentHeight === document.body.offsetHeight) return;
+        if (resizeWindow) sendFrameDimensions()
     };
     const observer = new MutationObserver(callback);
     observer.observe(form, config);
@@ -151,11 +151,14 @@ function showSecondDate(event, className, dataName) {
 }
 
 
-function initializeDates(subscriptionTemplate, defaultDateString) {
+function initializeDates(subscriptionTemplate, defaultDateString,defaultTimeString) {
 
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);
+        const startTime= document.querySelector(`[data-name="${name} start time"]`);
+        const endTime = document.querySelector(`[data-name="${name} end time"]`);
+        startTime.value = endTime.value = defaultTimeString;
         startfield.addEventListener('change', function (evt) {
             endField.value = evt.target.value
             endField.min = evt.target.value
@@ -236,14 +239,14 @@ function getDropDownContent(office, template, indexName) {
     })
 }
 
-function createSelectOptions (data) {
-let string;
-data.forEach(function(value){
-    string += ` <option value="${value}">
+function createSelectOptions(data) {
+    let string;
+    data.forEach(function (value) {
+        string += ` <option value="${value}">
     ${value}
   </option>`
-})
-return string;
+    })
+    return string;
 }
 
 function removeList(event) {
@@ -560,3 +563,69 @@ function isPhoneNumberValid(iti) {
 }
 
 
+
+function checkboxLi(label, id, value) {
+    const li = createElement('li', {
+        className: 'mdc-list-item'
+    })
+    li.setAttribute('role', 'checkbox')
+    li.setAttribute('aria-checked', 'false');
+    li.innerHTML = ` <span class="mdc-list-item__graphic">
+    <div class="mdc-checkbox">
+      <input type="checkbox"
+              class="mdc-checkbox__native-control"
+              id="checkbox-item-${id}" value="${value}" />
+      <div class="mdc-checkbox__background">
+        <svg class="mdc-checkbox__checkmark"
+              viewBox="0 0 24 24">
+          <path class="mdc-checkbox__checkmark-path"
+                fill="none"
+                d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+        </svg>
+        <div class="mdc-checkbox__mixedmark"></div>
+      </div>
+    </div>
+  </span>
+  <span class='mdc-list-item__text' for="checkbox-item-${id}">
+    <span class='mdc-list-item__primary-text'>${label}</span>
+    <span class='mdc-list-item__secondary-text mdc-theme--primary'>${value}</span>
+  </span>`
+    return li;
+}
+
+function radioLi(label,id,value) {
+    const li = createElement('li', {
+        className: 'mdc-list-item'
+    })
+    li.setAttribute('role', 'radio')
+    li.setAttribute('aria-checked', 'false');
+    li.innerHTML = `
+    <span class="mdc-list-item__graphic">
+      <div class="mdc-radio">
+        <input class="mdc-radio__native-control"
+              type="radio"
+              id="radio-${id}"
+              name="demo-list-radio-item-group"
+              value="1">
+        <div class="mdc-radio__background">
+          <div class="mdc-radio__outer-circle"></div>
+          <div class="mdc-radio__inner-circle"></div>
+        </div>
+      </div>
+    </span>
+    <span class='mdc-list-item__text' for="radio-${id}">
+        <span class='mdc-list-item__primary-text'>${label}</span>
+        <span class='mdc-list-item__secondary-text mdc-theme--primary'>${value}</span>
+    </span>
+  </li>`
+  return li
+}
+
+function createTime(dateObject) {
+    let hours = dateObject.getHours();
+    let minutes = dateObject.getMinutes();
+    if (minutes < 10) {
+        minutes = '0' + minutes
+    }
+    return `${hours}:${minutes}`
+}
