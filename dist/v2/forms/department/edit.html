@@ -4,8 +4,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="../external/css/material.min.css" rel="stylesheet">
+
     <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
@@ -32,19 +32,15 @@
             </div>
     </form>
 
-    <script src="../js/common.js?version=6"></script>
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js"></script>
     <script>
         function init(template) {
-
             const copy = JSON.parse(JSON.stringify(template))
             var form = document.getElementById('iframe-form');
             document.getElementById('name-input').value = copy.attachment.Name.value
-
             window.mdc.autoInit();
-            parent.postMessage({
-                name: 'resizeFrame',
-                body: document.body.scrollHeight + 'px'
-            }, parentOrigin);
+
             form.addEventListener("submit", function (evt) {
                 evt.preventDefault();
                 copy.attachment.Name.value = document.getElementById('name-input').value;

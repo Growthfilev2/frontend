@@ -4,8 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="../external/css/material.min.css" rel="stylesheet">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
@@ -68,39 +67,26 @@
             <div class="employee-meta-fields" hidden>
                 <div class="text-field-block">
                     <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Department">
-                        <div class="mdc-select__anchor demo-width-class">
-                            <i class="mdc-select__dropdown-icon"></i>
-                            <div class="mdc-select__selected-text"></div>
-                            <span class="mdc-floating-label">Department</span>
-                            <div class="mdc-line-ripple"></div>
-                        </div>
-    
-                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                            <ul class="mdc-list">
-                            </ul>
-                        </div>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Department</label>
+                        <div class="mdc-line-ripple"></div>
                     </div>
                 </div>
               
-    
                 <div class="text-field-block">
                     <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Region">
-                        <div class="mdc-select__anchor demo-width-class">
-                            <i class="mdc-select__dropdown-icon"></i>
-                            <div class="mdc-select__selected-text"></div>
-                            <span class="mdc-floating-label">Region</span>
-                            <div class="mdc-line-ripple"></div>
-                        </div>
-    
-                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                            <ul class="mdc-list">
-                            
-                            </ul>
-                        </div>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Region</label>
+                        <div class="mdc-line-ripple"></div>
                     </div>
                 </div>
-    
-    
+               
                 <div class="text-field-block">
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Task Specialization">
                         <input class="mdc-text-field__input" id="task-specialization-input">
@@ -150,53 +136,31 @@
                     </div>
                 </div>
                 <div class="text-field-block">
-    
                     <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Location Validation Check">
-                        <div class="mdc-select__anchor demo-width-class">
-                            <i class="mdc-select__dropdown-icon"></i>
-                            <div class="mdc-select__selected-text"></div>
-                            <span class="mdc-floating-label">Location Validation Check</span>
-                            <div class="mdc-line-ripple"></div>
-                        </div>
-    
-                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                            <ul class="mdc-list">
-                                <li class="mdc-list-item" data-value=""></li>
-                                <li class="mdc-list-item" data-value="true">
-                                    True
-                                </li>
-                                <li class="mdc-list-item" data-value="false">
-                                    False
-                                </li>
-    
-                            </ul>
-                        </div>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                            <option value="True" selected>true</option>
+                            <option value="False" selected>false</option>
+                        </select>
+                        <label class="mdc-floating-label">Location Validation Check</label>
+                        <div class="mdc-line-ripple"></div>
                     </div>
+
+          
                 </div>
                 <div class="text-field-block">
                     <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Scheduled Only">
-                        <div class="mdc-select__anchor demo-width-class">
-                            <i class="mdc-select__dropdown-icon"></i>
-                            <div class="mdc-select__selected-text"></div>
-                            <span class="mdc-floating-label">Scheduled Only</span>
-                            <div class="mdc-line-ripple"></div>
-                        </div>
-    
-                        <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                            <ul class="mdc-list">
-                                <li class="mdc-list-item" data-value=""></li>
-                                <li class="mdc-list-item" data-value="true">
-                                    True
-                                </li>
-                                <li class="mdc-list-item" data-value="false">
-                                    False
-                                </li>
-    
-                            </ul>
-                        </div>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                            <option value="True" selected>true</option>
+                            <option value="False" selected>false</option>
+                        </select>
+                        <label class="mdc-floating-label">Scheduled Only</label>
+                        <div class="mdc-line-ripple"></div>
                     </div>
                 </div>
-
             </div>
 
 
@@ -209,9 +173,12 @@
             </div>
     </form>
 
+    <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js?version=6"></script>
     <script>
-        const employeeMetaFieldsCont = document.querySelector('.employee-meta-fields')
+        const employeeMetaFieldsCont = document.querySelector('.employee-meta-fields');
+     
+
         function showMore(el) {
 
             if(employeeMetaFieldsCont['hidden']) {
@@ -227,6 +194,11 @@
         
         function init(template,data) {
             window.mdc.autoInit();
+            const departmentSelectInit = new mdc.select.MDCSelect( document.querySelector(`[data-type="Department"]`));
+            const regionSelectInit = new mdc.select.MDCSelect(document.querySelector(`[data-type="Region"]`));
+            departmentSelectInit.disabled = true;
+            regionSelectInit.disabled = true;
+            console.log(departmentSelectInit)
             var form = document.getElementById('iframe-form');
             const copy = JSON.parse(JSON.stringify(template));
             console.log(template)
@@ -246,33 +218,22 @@
                 field.value = String(copy.attachment[key].value) || "";
             });
             
-            const departmentSelect = document.querySelector(`[data-type="Department"]`)
-            data.department.forEach(value => {
-                // mdc-list-item--selected
-                const li = createElement('li',{
-                    className:'mdc-list-item',
-                    textContent:value
-                })
-                li.dataset.value = value
-                departmentSelect.querySelector('ul').appendChild(li);
-            })
-            const departmentSelectInit = new mdc.select.MDCSelect(departmentSelect);
-            departmentSelectInit.value = copy.attachment['Department'].value;
 
-            const regionSelect = document.querySelector(`[data-type="Region"]`)
-            data.region.forEach(value => {
-               
-                const li = createElement('li',{
-                    className:'mdc-list-item',
-                    textContent:value
-                })
-                li.dataset.value = value
-                regionSelect.querySelector('ul').appendChild(li);
-            })
-            const regionSelectInit = new mdc.select.MDCSelect(regionSelect);
-            regionSelectInit.value = copy.attachment['Region'].value;
+            if(data.department.length) {
+           
+                departmentSelectInit.nativeControl_.innerHTML += createSelectOptions(data.department);
+                departmentSelectInit.value = copy['attachment']['Department'].value;
+                departmentSelectInit.disabled = false
+            }
 
-             ;
+            if(data.region.length) {
+             
+                regionSelectInit.nativeControl_.innerHTML += createSelectOptions(data.region);
+                regionSelectInit.value = copy.attachment['Region'].value;
+                regionSelectInit.disabled = false
+            }
+
+
             form.addEventListener("submit", function (evt) {
                 evt.preventDefault();
 

@@ -4,8 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="../external/css/material.min.css" rel="stylesheet">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
 </head>
 
@@ -22,28 +21,21 @@
                     <label for="name-input" class="mdc-floating-label">Name</label>
                 </div>
             </div>
+
             <div class="text-field-block">
-                <div class="mdc-select">
-                    <div class="mdc-select__anchor demo-width-class">
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <div class="mdc-select__selected-text"></div>
-                        <span class="mdc-floating-label">Specialized</span>
-                        <div class="mdc-line-ripple"></div>
-                    </div>
-
-                    <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
-                        <ul class="mdc-list">
-                            <li class="mdc-list-item" data-value="False" aria-selected="true">
-                                false
-                            </li>
-                            <li class="mdc-list-item" data-value="True">
-                                true
-                            </li>
-
-                        </ul>
-                    </div>
+                <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Scheduled Only">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                        <option value="True" selected>true</option>
+                        <option value="False" selected>false</option>
+                    </select>
+                    <label class="mdc-floating-label">Specialized</label>
+                    <div class="mdc-line-ripple"></div>
                 </div>
             </div>
+
+         
 
         </section>
         <section class="form-actionable section-block">
@@ -56,7 +48,8 @@
             </div>
     </form>
 
-    <script src="../js/common.js?version=6"></script>
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js"></script>
     <script>
       
 

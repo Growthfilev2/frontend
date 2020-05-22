@@ -1,0 +1,162 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body class="mdc-typography">
+
+    <form id='iframe-form' style="padding-top: 18px;">
+        <section class="attachment-section section-block">
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Name">
+
+                    <input class="mdc-text-field__input" id="name-input" required>
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Name</label>
+                </div>
+            </div>
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Product Type">
+
+                    <input class="mdc-text-field__input" id="type-input">
+                    <div class="mdc-line-ripple"></div>
+                    <label for="type-input" class="mdc-floating-label">Type</label>
+                </div>
+            </div>
+            <div class="mdc-text-field mdc-text-field--textarea" data-mdc-auto-init="MDCTextField"
+                data-type="Product Description">
+                <textarea class="mdc-text-field__input" rows="4" cols="100"></textarea>
+                <div class="mdc-notched-outline mdc-notched-outline--upgraded">
+                    <div class="mdc-notched-outline__leading"></div>
+                    <div class="mdc-notched-outline__notch">
+                        <label for="textarea" class="mdc-floating-label" style="">Description</label>
+                    </div>
+                    <div class="mdc-notched-outline__trailing"></div>
+                </div>
+            </div>
+
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Unit value">
+
+                    <input class="mdc-text-field__input" id="unit-input">
+                    <div class="mdc-line-ripple"></div>
+                    <label for="unit-input" class="mdc-floating-label">Unit value</label>
+                </div>
+            </div>
+
+            <a href="#" class="mdc-theme--primary mdc-typography" onclick="showMore(this)">Show more</a>
+            <div class="product-meta-fields" hidden>
+
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Model">
+
+                        <input class="mdc-text-field__input" id="model-input">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="model-input" class="mdc-floating-label">Model</label>
+                    </div>
+                </div>
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="GST">
+
+                        <input class="mdc-text-field__input" id="gst-input">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="gst-input" class="mdc-floating-label">GST</label>
+                    </div>
+                </div>
+
+
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Size">
+
+                        <input class="mdc-text-field__input" id="size-input">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="size-input" class="mdc-floating-label">Size</label>
+                    </div>
+                </div>
+
+
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Variant">
+
+                        <input class="mdc-text-field__input" id="variant-input">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="variant-input" class="mdc-floating-label">Variant</label>
+                    </div>
+                </div>
+
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Stock Keeping Unit">
+
+                        <input class="mdc-text-field__input" id="stock-keeping-unit-input">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="stock-keeping-unit-input" class="mdc-floating-label">Stock keeping unit</label>
+                    </div>
+                </div>
+
+            </div>
+
+
+
+        </section>
+        <section class="form-actionable section-block">
+            <div class="form-buttons">
+                <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+            </div>
+            </div>
+    </form>
+
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script>
+        const productMetaFieldsCont = document.querySelector('.product-meta-fields');
+
+
+        function showMore(el) {
+
+            if (productMetaFieldsCont['hidden']) {
+                productMetaFieldsCont.removeAttribute('hidden')
+                el.textContent = 'Show less'
+                return
+            }
+            productMetaFieldsCont.setAttribute('hidden', true)
+            el.textContent = 'Show more'
+
+        }
+
+
+        function init(template, data) {
+            window.mdc.autoInit();
+          
+            var form = document.getElementById('iframe-form');
+            const copy = JSON.parse(JSON.stringify(template));
+        
+            
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+
+                Object.keys(copy.attachment).forEach(function (key) {
+                    const el = document.querySelector(`[data-type="${key}"]`);
+                    let field;
+                    if (!el) return;
+                    field = new mdc.textField.MDCTextField(el);
+                    copy.attachment[key].value = field.value
+                })
+
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+            })
+        }
+
+    </script>
+
+</body>
+
+</html>
