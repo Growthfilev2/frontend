@@ -386,7 +386,7 @@ function textField(attr) {
     ${attr.leadingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.leadingIcon}</i>`:''}
     <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="${attr.type || 'text'}" class="mdc-text-field__input" value="${attr.value || ''}"  ${attr.required ? 'required' :''}  ${attr.disabled ? 'disabled':''} >
     ${attr.trailingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.trailingIcon}</i>` :''}
-    
+
     <div class="mdc-notched-outline">
       <div class="mdc-notched-outline__leading"></div>
       <div class="mdc-notched-outline__notch">
