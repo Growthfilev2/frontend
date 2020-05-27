@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
         integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
 </head>
+
 <body>
     <form id='iframe-form'>
 
@@ -68,18 +69,28 @@
                     </div>
 
                     <div class="text-field-block">
-                        <div class="mdc-select" data-mdc-auto-init="MDCSelect"  data-type="Duty Type">
+                        <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Duty Type">
                             <i class="mdc-select__dropdown-icon"></i>
                             <select class="mdc-select__native-control">
                                 <option value="" selected></option>
-                              
+
                             </select>
                             <label class="mdc-floating-label">Duty type</label>
                             <div class="mdc-line-ripple"></div>
                         </div>
                     </div>
-
-                
+                    <!-- <div class="text-field-block"> -->
+                    <!-- <div class="form-component product-container">
+                            <div class="mdc-select"  id='product-select'>
+                                <i class="mdc-select__dropdown-icon"></i>
+                                <select class="mdc-select__native-control">
+                                    <option value="" selected></option>
+                                </select>
+                                <label class="mdc-floating-label">Product</label>
+                                <div class="mdc-line-ripple"></div>
+                            </div>
+                        </div> -->
+                    <!-- </div> -->
                 </div>
                 <div
                     class="mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-4-desktop employee-grid">
@@ -132,7 +143,7 @@
             </div>
         </section>
     </form>
-
+    <div id="snackbar-container"></div>
     <script src="../external/js/material.min.js"></script>
     <script src="../js/common.js?version=6"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
@@ -141,31 +152,38 @@
         integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
     <script>
         let template = ''
+        const productsChoosen = {}
         const employeeSearchField = new mdc.textField.MDCTextField(document.getElementById('employee-search-field'))
         const customerSearchField = new mdc.textField.MDCTextField(document.getElementById('customer-search-field'))
+        const dutyTypeSelect = new mdc.select.MDCSelect(document.querySelector(`[data-type="Duty Type"]`));
+        // const productSelect = new mdc.select.MDCSelect(document.getElementById('product-select'))
+
         let employeeList;
         let customerList;
-        const dutyTypeSelect = new mdc.select.MDCSelect(document.querySelector(`[data-type="Duty Type"]`));
         dutyTypeSelect.disabled = true;
         const superVisorField = document.querySelector(`[data-field="Supervisor"]`);
         let iti = phoneFieldInit(superVisorField);
 
+
+
         function init(subscription, dataObject) {
             template = JSON.parse(JSON.stringify(subscription))
-            
+            window.mdc.autoInit();
+
             initEmployeeAdd(dataObject.employee);
             initCustomerAdd(dataObject.customers)
             initDutyDetailsAdd(dataObject);
+            initProductsAdd(dataObject.products);
 
-            window.mdc.autoInit();
             document.getElementById('iframe-form').addEventListener('submit', function (evt) {
                 evt.preventDefault();
                 if (!employeeList.selectedIndex.length) {
-                    parent.showSnacksApiResponse('Please choose atleast 1 employee')
+                   
+                    showSnacksApiResponse('Please choose atleast 1 employee')
                     return
                 }
                 if (customerList.selectedIndex == -1) {
-                    parent.showSnacksApiResponse('Please choose atleast 1 location')
+                   showSnacksApiResponse('Please choose atleast 1 location')
                     return;
                 }
                 if (!iti.isValidNumber()) {
@@ -176,14 +194,19 @@
                     return;
                 }
                 employeeList.selectedIndex.forEach((index) => {
-                    template.attachment.Include.value += dataObject.employee[index].attachment['Phone Number'].value+','
+                    template.attachment.Include.value += dataObject.employee[index].attachment[
+                        'Phone Number'].value + ','
                 })
                 template.attachment.Location.value = dataObject.customers[customerList.selectedIndex]
                     .venue[0].location
                 template.attachment.Supervisor.value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
                 const newSchedule = getNewSchedule(subscription)
                 template.attachment['Duty Type'].value = dutyTypeSelect.value;
-                template.attachment.Products = [{Date:'',quantity:'',rate:''}]
+                template.attachment.Products.value = [{
+                    Date: '',
+                    quantity: '',
+                    rate: ''
+                }]
                 if (newSchedule) {
                     console.log(newSchedule)
                     console.log(template)
@@ -200,31 +223,32 @@
         }
 
 
- 
+
         function initEmployeeAdd(employees) {
             const ul = document.getElementById('employee-list')
+            if (!employees.length) {
+                employeeSearchField.disabled = true;
+                const addMore = createElement('span', {
+                    textContent: 'Add employees',
+                })
+                addMore.dataset.type = 'employee'
+                addMore.addEventListener('click',openView);
+                ul.insertAdjacentElement('afterend', addMore)
+                return
+            }
             loadEmployees(employees, ul);
-            parent.postMessage({
-                name: 'resizeFrame',
-                body: document.body.scrollHeight + 'px'
-            }, parentOrigin);
             employeeList = new mdc.list.MDCList(ul)
-
             employeeSearchField.input_.addEventListener('input', function (evt) {
                 const inputValue = evt.target.value.trim();
 
                 initializeEmployeeSearch(inputValue.toLowerCase(), employeeList)
             })
-
         }
 
         function initCustomerAdd(customers) {
             const ul = document.getElementById('customer-list')
             loadCustomers(customers, ul)
-            parent.postMessage({
-                name: 'resizeFrame',
-                body: document.body.scrollHeight + 'px'
-            }, parentOrigin);;
+
             customerList = new mdc.list.MDCList(ul);
 
             customerList.listen('MDCList:action', function (event) {
@@ -238,13 +262,45 @@
             })
         }
 
+        function initProductsAdd(products) {
+            // if(!products.length) return productSelect.disabled = true;
+
+            // const el = document.querySelector('.product-container')
+            // productSelect.nativeControl_.innerHTML += createSelectOptions(products);
+            // el.removeAttribute('hidden')
+
+            // productSelect.listen('MDCSelect:change', function (event) {
+            //     console.log(event);
+            //     if (!event.detail.index) return;
+            //     if (document.querySelector(`[data-product-name="${event.detail.value}"]`)) return;
+            //     const card = productCard(event.detail.value);
+            //     card.querySelector('#remove-card').addEventListener('click', function (e) {
+            //         e.preventDefault();
+            //         card.remove();
+
+            //         delete productsChoosen[card.dataset.productName];
+            //         console.log(productsChoosen)
+            //     })
+            //     el.appendChild(card)
+            //     productsChoosen[event.detail.value] = {
+            //         "name": event.detail.value,
+            //         "quantity": "",
+            //         "rate": "",
+            //         "date": "",
+            //     }
+
+            //     console.log(productsChoosen)
+            // })
+
+        }
+
         function initializeEmployeeSearch(inputValue, el) {
             el.listElements.forEach(function (li) {
                 if (li.dataset.name.toLowerCase().indexOf(inputValue) > -1 || li.dataset.number.toLowerCase()
                     .indexOf(inputValue) > -1) {
                     li.removeAttribute('hidden')
                 } else {
-                    li.setAttribute('hidden',true)
+                    li.setAttribute('hidden', true)
                 }
             })
         }
@@ -256,7 +312,7 @@
                     .indexOf(inputValue) > -1) {
                     li.removeAttribute('hidden')
                 } else {
-                    li.setAttribute('hidden',true)
+                    li.setAttribute('hidden', true)
                 }
             })
         }
@@ -294,13 +350,11 @@
                 inline: "nearest"
             })
 
-            if(data.dutyTypes) {
+            if (data.dutyTypes.length) {
                 const names = [];
-
-                 data.dutyTypes.forEach(type=>{
+                data.dutyTypes.forEach(type => {
                     names.push(type.attachment.Name.value)
                 })
-
                 dutyTypeSelect.nativeControl_.innerHTML += createSelectOptions(names);
                 dutyTypeSelect.disabled = false
             }
@@ -308,10 +362,37 @@
             iti.setNumber(template.attachment['Supervisor'].value);
 
             initializeDates(template, createDate(new Date()), createTime(new Date()));
-    
+
         }
 
+        function openView(evt) {
+            let view = null
+            switch (evt.target.dataset.type) {
+                case 'employee':
+                    view = 'Users'
+                    break;
 
+                case 'product':
+                    view = 'Products'
+                    break;
+
+                case 'customer':
+                    view = 'Customers'
+                    break;
+
+                default:
+                    view = null
+                    break
+            }
+
+            parent.postMessage({
+                name: 'openForm',
+                body: {
+                    view:view
+                }
+            }, parentOrigin)
+
+        }
     </script>
 </body>
 

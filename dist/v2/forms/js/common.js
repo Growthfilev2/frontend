@@ -2,7 +2,10 @@ let deviceType = ''
 const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
-    'https://growthfile-207204.firebaseapp.com': true
+    'https://growthfile-207204.firebaseapp.com': true,
+    'http://localhost:5000':true,
+    'https://growthfilev2-0.firebaseapp.com':true,
+    'https://dev-growthfile.firebaseapp.com':true
 }
 
 function sendFrameDimensions() {
@@ -164,6 +167,21 @@ function initializeDates(subscriptionTemplate, defaultDateString,defaultTimeStri
     });
 }
 
+function createEmptySchedule(subscriptionTemplate) {
+    const newSchedules = []
+    let index = 0;
+    const length = subscriptionTemplate.schedule.length;
+    for (index; index < length; index++) {
+        const name = subscriptionTemplate.schedule[index];
+    
+        newSchedules.push({
+            name: name,
+            startTime: '',
+            endTime: '',
+        })
+    }
+    return newSchedules;
+}
 
 function getNewSchedule(subscriptionTemplate) {
     const newSchedules = []
@@ -171,7 +189,7 @@ function getNewSchedule(subscriptionTemplate) {
     let isScheduleValid = false;
     const length = subscriptionTemplate.schedule.length;
     for (index; index < length; index++) {
-        const name = subscriptionTemplate.schedule[index]
+        const name = subscriptionTemplate.schedule[index];
 
         const startDate = document.querySelector(`[data-name="${name} start date"]`).value;
         const endDate = document.querySelector(`[data-name="${name} end date"]`).value;
@@ -626,3 +644,48 @@ function createTime(dateObject) {
     }
     return `${hours}:${minutes}`
 }
+
+
+function showSnacksApiResponse(message,buttonText = 'OK') { 
+    const sb = snackBar(message, buttonText);
+    sb.open();
+
+}
+
+const snackBar = (labelText, buttonText) => {
+
+    const container = createElement('div', {
+      className: 'mdc-snackbar'
+    })
+    const surface = createElement('div', {
+      className: 'mdc-snackbar__surface'
+    })
+    const label = createElement('div', {
+      className: 'mdc-snackbar__label',
+      role: 'status',
+      'aria-live': 'polite',
+      textContent: labelText
+    })
+    surface.appendChild(label)
+    if(buttonText) {
+      const actions = createElement('div', {
+        className: 'mdc-snackbar__actions'
+      })
+      const button = createElement('button', {
+        type: 'button',
+        className: 'mdc-button mdc-snackbar__action',
+        textContent: buttonText
+      })
+      actions.appendChild(button)
+      surface.appendChild(actions)
+    }
+  
+    container.appendChild(surface)
+    const el = document.getElementById("snackbar-container")
+    el.innerHTML = '';
+    el.appendChild(container)
+    const sb = new mdc.snackbar.MDCSnackbar(container);
+    return sb;
+  
+  }
+  

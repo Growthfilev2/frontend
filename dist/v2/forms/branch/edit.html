@@ -186,8 +186,12 @@
                 copy.venue[0].address = branchAddress.value;
                 copy.venue[0].location = branchName.value
                 copy.share = []
-              
-              
+                if(!subscriptionTemplate.attachment.Name.value) {
+                    const newSchedule = createEmptySchedule(subscriptionTemplate)
+                    copy.schedule = newSchedule;
+                }
+                
+            
                 console.log(copy);
                 if (areAllNumberValid) {
 
