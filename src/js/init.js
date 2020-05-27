@@ -579,10 +579,11 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    regulator().then(console.log).catch(function (error) {
-      if (error.type === 'geolocation') return handleLocationError(error)
-      contactSupport()
-    })
+    regulator()
+    // .then(console.log).catch(function (error) {
+    //   if (error.type === 'geolocation') return handleLocationError(error)
+    //   contactSupport()
+    // })
   };
 
   req.onerror = function () {
@@ -1362,5 +1363,7 @@ function shouldCheckin(geopoint, checkInSubs) {
   ApplicationState = oldState;
   return false
 }
+
+
 
 

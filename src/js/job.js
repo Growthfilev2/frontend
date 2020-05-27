@@ -4,30 +4,51 @@ function jobView() {
     createTimeLapse();
 }
 
+function constructJoBView(activity) {
+    return `<div class='mdc-layout-grid'>
+        <div class='duty-container'>
+
+        </div>
+    </div>`
+}
+
 
 function createTimeLapse() {
     const tx = db.transaction('activity');
     const store = tx.objectStore('activity');
     //    const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
-    const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
+    // const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
     const timeLine = createElement('div', {
         className: 'timeline'
     })
     const historyCont = createElement('div', {
         className: 'history-tl-container'
     })
+
     const ul = createElement('ul', {
         className: 'tl'
     })
-    let firstActivity;
-    let lastActivity;
+    let firstActivityTimestamp;
+    let lastActivityTimestamp;
     let totalCheckins = 0;
-    let totalPhotoCheckins = 0
-    store.index("timestamp").openCursor(bound).onsuccess = function (evt) {
+    let totalPhotoCheckins = 0;
+    const dutyTemplates = {
+        'duty':true,
+        'customer':true,
+        'check-in':true,
+        'product':true,
+        'employee':true,
+        'duty-type':true
+    }
+    store.index("timestamp").openCursor(null,'prev').onsuccess = function (evt) {
         const cursor = evt.target.result;
         if (!cursor) return;
-        if (!firstActivity) {
-            firstActivity = cursor.value
+        if(!dutyTemplates[cursor.value.template]) {
+            cursor.continue();
+            return;
+        }
+        if (!firstActivityTimestamp) {
+            firstActivityTimestamp = cursor.value.timestamp
         }
         if (cursor.value.template === 'check-in') {
             totalCheckins++
@@ -36,11 +57,12 @@ function createTimeLapse() {
             }
         }
         ul.appendChild(createTimelineLi(cursor.value))
-        lastActivity = cursor.value;
+        lastActivityTimestamp = cursor.value.timestamp;
         cursor.continue();
     }
     tx.oncomplete = function () {
-        const timelineDuration = moment.duration(moment(lastActivity.timestamp).diff(moment(firstActivity.timestamp)))
+        const timelineDuration = moment.duration(moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp)))
+        
         console.log(timelineDuration)
         const screen = createElement('div', {
             className: 'timeline--container',
@@ -53,13 +75,13 @@ function createTimeLapse() {
             ${totalCheckins ? 
                 `<ul class='mdc-list'>
                     ${totalCheckins ? 
-                        `<li class='mdc-list-item'>
-                            <span class='mdc-list-item__graphic material-icons'>done</span>
+                        `<li class='mdc-list-item  pl-0 pr-0 mdc-typography--headline6'>
+                            <span class='mdc-list-item__graphic material-icons mdc-theme--primary'>check_circle</span>
                                 ${totalCheckins} Check-Ins
                         </li>` 
                     :''}
                     ${totalPhotoCheckins  ? 
-                        `<li class='mdc-list-item'>
+                        `<li class='mdc-list-item pl-0 pr-0 mdc-typography--headline6'>
                                 <span class='mdc-list-item__graphic material-icons'>done</span>
                                 ${totalPhotoCheckins} Photos uploaded
                         </li>`
@@ -69,14 +91,31 @@ function createTimeLapse() {
         </div>
         `
        
+        if(totalCheckins) {
+            // ul.style.paddingTop = '80px';
+        }
+        if(timelineDuration.asMilliseconds()) {
+            historyCont.appendChild(ul);
+        }
+        else {
+            const emptyCont = createElement('div',{
+                className:'width-100 veritical-horizontal-center'
+            }) 
+            historyCont.classList.add('empty-list')
 
-        historyCont.appendChild(ul);
+            emptyCont.appendChild(createElement('img',{
+                src:'./img/empty-list.svg',
+                className:'svg-list-empty'
+            }))
+            emptyCont.appendChild(createElement('p',{
+                className:'text-center  mdc-typography--headline5',
+                textContent:'No details found'
+            }))
+            
+            historyCont.appendChild(emptyCont)
+        }
         timeLine.appendChild(historyCont);
-        // const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-        // <span class="mdc-top-app-bar__title">History</span>
-        // `
-        // const header = setHeader(backIcon, '');
-        // header.root_.classList.remove('hidden')
+    
         document.getElementById('app-current-panel').innerHTML = '';
         screen.appendChild(timeLine);
         const bottomContainer = createElement('div',{
@@ -97,6 +136,7 @@ function createTimeLapse() {
 
 
 
+
 function createTimelineLi(activity) {
     const li = createElement("li", {
         className: 'tl-item ' + activity.template
@@ -107,12 +147,17 @@ function createTimelineLi(activity) {
         className: 'item-title',
         textContent: mapTemplateNameToTimelineEvent(activity)
     })
+    const span = createElement('span',{
+        className:'event-time mdc-typography--caption',
+        textContent:moment(activity.timestamp).format('hh:mm A')
+    })
     li.addEventListener('click', function () {
         const activity = JSON.parse(li.dataset.activity)
         const heading = createActivityHeading(activity)
         showViewDialog(heading, activity, 'view-form')
     })
     li.appendChild(div);
+    li.appendChild(span);
     return li
 }
 
