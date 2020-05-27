@@ -11,7 +11,7 @@ var sliderInterval;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
-
+var newJob = false
 var firebaseAnalytics;
 var serverTimeUpdated = false;
 var updatedWifiAddresses = {
@@ -605,6 +605,8 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
+  createTimeLapse();
+  return;
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
@@ -652,6 +654,7 @@ function regulator() {
         return appLocation(3)
       })
       .then(function (geopoint) {
+     
         handleCheckin(geopoint);
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
@@ -715,6 +718,7 @@ function handleCheckin(geopoint, noUser) {
     }
 
     if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
+    newJob = true;
 
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
@@ -1318,9 +1322,10 @@ function checkIDBCount(storeNames) {
 function openReportView() {
   logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
-  logFirebaseAnlyticsEvent("report_view")
-  history.pushState(['reportView'], null, null);
-  reportView()
+  logFirebaseAnlyticsEvent("report_view");
+  history.pushState(['jobView'], null, null);
+  jobView();
+  // reportView()
 }
 
 function fillVenueInSub(sub, venue) {
@@ -1357,3 +1362,5 @@ function shouldCheckin(geopoint, checkInSubs) {
   ApplicationState = oldState;
   return false
 }
+
+
