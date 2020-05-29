@@ -168,6 +168,7 @@
 
         function init(subscription, dataObject) {
             template = JSON.parse(JSON.stringify(subscription))
+            template.share = [];
             window.mdc.autoInit();
 
             initEmployeeAdd(dataObject.employee);
@@ -189,6 +190,8 @@
                     employeeList.selectedIndex.forEach((index) => {
                         template.attachment.Include.value += dataObject.employee[index].attachment[
                             'Phone Number'].value + ','
+                            template.share.push(dataObject.employee[index].attachment[
+                            'Phone Number'].value)
                     })
                 }
                 if(validateList(customerList)) {
@@ -218,7 +221,7 @@
                 if (newSchedule) {
                     console.log(newSchedule)
                     console.log(template)
-                    template.share = []
+                 
                     template.schedule = newSchedule
                     parent.postMessage({
                         body: template,
