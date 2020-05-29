@@ -79,8 +79,8 @@
                             <div class="mdc-line-ripple"></div>
                         </div>
                     </div>
-                    <!-- <div class="text-field-block"> -->
-                    <!-- <div class="form-component product-container">
+                    <div class="text-field-block"> 
+                    <div class="form-component product-container">
                             <div class="mdc-select"  id='product-select'>
                                 <i class="mdc-select__dropdown-icon"></i>
                                 <select class="mdc-select__native-control">
@@ -89,8 +89,8 @@
                                 <label class="mdc-floating-label">Product</label>
                                 <div class="mdc-line-ripple"></div>
                             </div>
-                        </div> -->
-                    <!-- </div> -->
+                        </div>
+                    </div>
                 </div>
                 <div
                     class="mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-4-desktop employee-grid">
@@ -156,7 +156,7 @@
         const employeeSearchField = new mdc.textField.MDCTextField(document.getElementById('employee-search-field'))
         const customerSearchField = new mdc.textField.MDCTextField(document.getElementById('customer-search-field'))
         const dutyTypeSelect = new mdc.select.MDCSelect(document.querySelector(`[data-type="Duty Type"]`));
-        // const productSelect = new mdc.select.MDCSelect(document.getElementById('product-select'))
+        const productSelect = new mdc.select.MDCSelect(document.getElementById('product-select'))
 
         let employeeList;
         let customerList;
@@ -177,15 +177,26 @@
 
             document.getElementById('iframe-form').addEventListener('submit', function (evt) {
                 evt.preventDefault();
-                if (!employeeList.selectedIndex.length) {
-                   
-                    showSnacksApiResponse('Please choose atleast 1 employee')
-                    return
+                // if (!employeeList.selectedIndex.length) {
+                //     showSnacksApiResponse('Please choose atleast 1 employee')
+                //     return
+                // }
+                // if (customerList.selectedIndex == -1) {
+                //     showSnacksApiResponse('Please choose atleast 1 location')
+                //     return;
+                // }
+                if(validateList(employeeList)) {
+                    employeeList.selectedIndex.forEach((index) => {
+                        template.attachment.Include.value += dataObject.employee[index].attachment[
+                            'Phone Number'].value + ','
+                    })
                 }
-                if (customerList.selectedIndex == -1) {
-                   showSnacksApiResponse('Please choose atleast 1 location')
-                    return;
+                if(validateList(customerList)) {
+                    template.attachment.Location.value = dataObject.customers[customerList.selectedIndex]
+                        .venue[0].location
+
                 }
+               
                 if (!iti.isValidNumber()) {
                     const superField = new mdc.textField.MDCTextField(document.getElementById(
                         'supervisor-field'));
@@ -193,17 +204,14 @@
                     superField.helperTextContent = 'Please enter a valid number';
                     return;
                 }
-                employeeList.selectedIndex.forEach((index) => {
-                    template.attachment.Include.value += dataObject.employee[index].attachment[
-                        'Phone Number'].value + ','
-                })
-                template.attachment.Location.value = dataObject.customers[customerList.selectedIndex]
-                    .venue[0].location
                 template.attachment.Supervisor.value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
                 const newSchedule = getNewSchedule(subscription)
-                template.attachment['Duty Type'].value = dutyTypeSelect.value;
+                if(dutyTypeSelect.value) {
+                    template.attachment['Duty Type'].value = dutyTypeSelect.value;
+                }
                 template.attachment.Products.value = [{
-                    Date: '',
+                    name: '',
+                    date: '',
                     quantity: '',
                     rate: ''
                 }]
@@ -228,32 +236,28 @@
             const ul = document.getElementById('employee-list')
             if (!employees.length) {
                 employeeSearchField.disabled = true;
-                const addMore = createElement('span', {
-                    textContent: 'Add employees',
-                })
-                addMore.dataset.type = 'employee'
-                addMore.addEventListener('click',openView);
-                ul.insertAdjacentElement('afterend', addMore)
+                ul.insertAdjacentElement('afterend', addMore("employee",'employee'))
                 return
             }
             loadEmployees(employees, ul);
             employeeList = new mdc.list.MDCList(ul)
             employeeSearchField.input_.addEventListener('input', function (evt) {
                 const inputValue = evt.target.value.trim();
-
                 initializeEmployeeSearch(inputValue.toLowerCase(), employeeList)
             })
         }
 
         function initCustomerAdd(customers) {
             const ul = document.getElementById('customer-list')
+            if (!customers.length) {
+                customerSearchField.disabled = true;
+                ul.insertAdjacentElement('afterend', addMore("customer",'customer'))
+                return
+            }
+            
             loadCustomers(customers, ul)
-
             customerList = new mdc.list.MDCList(ul);
-
             customerList.listen('MDCList:action', function (event) {
-
-
                 customerSearchField.value = customers[event.detail.index].venue[0].location
             })
             customerSearchField.input_.addEventListener('input', function (evt) {
@@ -263,34 +267,34 @@
         }
 
         function initProductsAdd(products) {
-            // if(!products.length) return productSelect.disabled = true;
+            if(!products.length) return productSelect.disabled = true;
 
-            // const el = document.querySelector('.product-container')
-            // productSelect.nativeControl_.innerHTML += createSelectOptions(products);
-            // el.removeAttribute('hidden')
+            const el = document.querySelector('.product-container')
+            productSelect.nativeControl_.innerHTML += createSelectOptions(products);
+            el.removeAttribute('hidden')
 
-            // productSelect.listen('MDCSelect:change', function (event) {
-            //     console.log(event);
-            //     if (!event.detail.index) return;
-            //     if (document.querySelector(`[data-product-name="${event.detail.value}"]`)) return;
-            //     const card = productCard(event.detail.value);
-            //     card.querySelector('#remove-card').addEventListener('click', function (e) {
-            //         e.preventDefault();
-            //         card.remove();
+            productSelect.listen('MDCSelect:change', function (event) {
+                console.log(event);
+                if (!event.detail.index) return;
+                if (document.querySelector(`[data-product-name="${event.detail.value}"]`)) return;
+                const card = productCard(event.detail.value);
+                card.querySelector('#remove-card').addEventListener('click', function (e) {
+                    e.preventDefault();
+                    card.remove();
 
-            //         delete productsChoosen[card.dataset.productName];
-            //         console.log(productsChoosen)
-            //     })
-            //     el.appendChild(card)
-            //     productsChoosen[event.detail.value] = {
-            //         "name": event.detail.value,
-            //         "quantity": "",
-            //         "rate": "",
-            //         "date": "",
-            //     }
+                    delete productsChoosen[card.dataset.productName];
+                    console.log(productsChoosen)
+                })
+                el.appendChild(card)
+                productsChoosen[event.detail.value] = {
+                    "name": event.detail.value,
+                    "quantity": "",
+                    "rate": "",
+                    "date": "",
+                }
 
-            //     console.log(productsChoosen)
-            // })
+                console.log(productsChoosen)
+            })
 
         }
 
@@ -360,9 +364,7 @@
             }
 
             iti.setNumber(template.attachment['Supervisor'].value);
-
             initializeDates(template, createDate(new Date()), createTime(new Date()));
-
         }
 
         function openView(evt) {
@@ -388,10 +390,33 @@
             parent.postMessage({
                 name: 'openForm',
                 body: {
-                    view:view
+                    view: view
                 }
             }, parentOrigin)
 
+        }
+
+        function addMore(text,type) {
+            const btn = createElement('button', {
+                className: 'mdc-button mdc-button--outlined',
+                textContent: `Add ${text}`,
+                type: 'button'
+            })
+
+            new mdc.ripple.MDCRipple(btn)
+            btn.dataset.type = type
+            btn.addEventListener('click', openView);
+            return btn;
+           
+        }
+
+        function validateList(list) {
+            if(Array.isArray(list.selectedIndex)) {
+                if(!list.selectedIndex.length) return
+                return true
+            } 
+            if(list.selectedIndex > -1) return true;
+            return 
         }
     </script>
 </body>

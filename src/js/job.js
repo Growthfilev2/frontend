@@ -13,6 +13,11 @@ function constructJoBView(activity) {
 }
 
 
+function getTimelineData() {
+    const tx = db.transaction('addendum');
+    const store = tx.objectStore('addendum');
+}
+
 function createTimeLapse() {
     const tx = db.transaction('activity');
     const store = tx.objectStore('activity');

@@ -816,13 +816,10 @@ function successResponse(read, param, db, resolve, reject) {
           counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
         }
       }
-
       addendumObjectStore.add(addendum)
     } else {
-
       addendum.key = param.user.phoneNumber + addendum.user;
       userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
-
       if (addendum.user !== param.user.phoneNumber) {
         counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
       }

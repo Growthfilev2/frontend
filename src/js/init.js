@@ -558,7 +558,12 @@ function startApp() {
         createMapObjectStore(db);
         createCalendarObjectStore(db);
         break;
+        case 31:
+        const addendumStore = req.transaction.objectStore('addendum');
+        const timestampIndex = addendumStore.createIndex('timestamp');
+
     }
+
 
     if (db.objectStoreNames.contains('root')) {
       var rootStore = req.transaction.objectStore('root')
@@ -580,10 +585,10 @@ function startApp() {
     db = req.result;
     console.log("run app")
     regulator()
-    // .then(console.log).catch(function (error) {
-    //   if (error.type === 'geolocation') return handleLocationError(error)
-    //   contactSupport()
-    // })
+    .then(console.log).catch(function (error) {
+      if (error.type === 'geolocation') return handleLocationError(error)
+      contactSupport()
+    })
   };
 
   req.onerror = function () {
@@ -606,8 +611,8 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
-  createTimeLapse();
-  return;
+  // createTimeLapse();
+  // return;
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
@@ -1127,7 +1132,8 @@ function createObjectStores(db, uid) {
 
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
-  addendum.createIndex('key', 'key')
+  addendum.createIndex('key', 'key');
+  addendum.createIndex('timestamp','timestamp');
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
 
 
@@ -1324,9 +1330,9 @@ function openReportView() {
   logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view");
-  history.pushState(['jobView'], null, null);
-  jobView();
-  // reportView()
+  history.pushState(['reportView'], null, null);
+  reportView()
+  // jobView();
 }
 
 function fillVenueInSub(sub, venue) {
