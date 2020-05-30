@@ -210,16 +210,7 @@ let native = function () {
       deviceInfo.idbVersion = DB_VERSION
     },
     getInfo: function () {
-      if (!this.getName()) return {
-        "id": "",
-        "deviceBrand": "",
-        "deviceModel": "",
-        "osVersion": "",
-        "baseOs": "",
-        "radioVersion": "",
-        "appVersion": "",
-        "idbVersion": DB_VERSION
-      };
+      if (!this.getName()) return false;
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
         deviceInfo.idbVersion = DB_VERSION
