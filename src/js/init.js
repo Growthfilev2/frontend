@@ -585,10 +585,10 @@ function startApp() {
     db = req.result;
     console.log("run app")
     regulator()
-    .then(console.log).catch(function (error) {
-      if (error.type === 'geolocation') return handleLocationError(error)
-      contactSupport()
-    })
+    // .then(console.log).catch(function (error) {
+    //   if (error.type === 'geolocation') return handleLocationError(error)
+    //   contactSupport()
+    // })
   };
 
   req.onerror = function () {
@@ -611,8 +611,8 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
-  // createTimeLapse();
-  // return;
+  createTimeLapse();
+  return;
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
@@ -1330,9 +1330,9 @@ function openReportView() {
   logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view");
-  history.pushState(['reportView'], null, null);
-  reportView()
-  // jobView();
+  // history.pushState(['reportView'], null, null);
+  // reportView()
+  jobView();
 }
 
 function fillVenueInSub(sub, venue) {

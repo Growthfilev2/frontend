@@ -4,12 +4,166 @@ function jobView() {
     createTimeLapse();
 }
 
-function constructJoBView(activity) {
-    return `<div class='mdc-layout-grid'>
-        <div class='duty-container'>
 
+
+function getDutyCoordinates(location) {``
+    const tx =db.transaction('map');
+    const store =tx.objectStore('map');
+    let record;
+    return store.index('location').get(location).onsuccess = function(evt){
+         record = evt.target.result;
+    }
+    tx.oncomplete = function(){
+
+    }
+}
+
+function getSupervisorContact(phoneNumber) {``
+    const tx =db.transaction('users');
+    const store =tx.objectStore('users');
+    let record;
+    return store.get(phoneNumber).onsuccess = function(evt){
+         record = evt.target.result;
+    }
+    tx.oncomplete = function(){
+
+    }
+}
+
+function showUpcomingDuty(duty,currentGeopoint) {
+    
+    const cont = createElement("div",{
+        className:'duty-pop--container'
+    })
+    const heading = createElement('div',{
+        className:'inline-flex'
+    })
+    const reject = createElement("button",{
+        className:'mdc-theme--error',
+        textContent:'Reject',
+        style:'margin-left:auto'
+    })
+    const close = createElement('i',{
+        className:'material-icons',
+        textContent:'close'
+    })
+    heading.appendChild(reject)
+    heading.appendChild(close)
+    
+    const details = createElement('div',{
+        className:'duty-popup--details'
+    })
+    details.innerHTML = `
+    <div class='details'>
+        <span>
+            <i class='material-icons'>bike</i>
+            <span>${calculateDistanceBetweenTwoPoints(duty.dutyGeopoint,currentGeopoint)}</span>
+        </span>
+        <hr>
+        <div class='customer'>
+            ${duty.attachment['Duty Type'].value ?`<span>
+                <i class='material-icons'>assignment</i>
+                <span>${duty.attachment['Duty Type'].value} </span>
+            </span>` :''}
+            <span>
+                <i class='material-icons'>location_on</i>
+                <span>${duty.attachment.Location.value} </span>
+             </span>
+        </div>
+        <hr>
+        <div class='supervisior'>
+            <ul class='mdc-list mdc-list--two-line mdc-list--avatar-list'>
+                <li class='mdc-list-item'>
+                    <span class='mdc-list-item__graphic'>
+                        <img src='${duty.supervisior.photoURL || './img/empty-user.jpg'}'>
+                        <span class='mdc-list-item__text'>
+                            <span class='mdc-list-item__primary-text'>${duty.supervisior.displayName}</span>
+                            <span class='mdc-list-item__secondary-text'>Customer</span>
+                        </span>
+                    </span>
+                </li>
+            </ul>
+            <span>
+                <i class='material-icons'>time</i>
+                <span>${moment(duty.schedule[0].startTime).format('hh:mm A')} To ${moment(duty.schedule[0].endTime).format('hh:mm A')} </span>
+            </span>
+            <hr>
+        </div>
+        <div class='staff'>
+            <span>
+                <i class='material-icons'>people_add</i>
+                <span>Staff</span>
+            </span>
+            <div class='mdc-chip-set'>
+                ${duty.assigness.map(function(contact,index){
+                    const image = createElement('img', {
+                        className: 'mdc-chip__icon mdc-chip__icon--leading',
+                        src: contact.photoURL || './img/empty-user.jpg'
+                    })
+                    returncreateDynamicChips(contact.displayName || contact.mobile, index, image).outerHTML;
+                }).join("")}
+            </div>
+        </div>
+        <hr>
+        <div class='products'>
+            <span>
+                <i class='material-icons'>settings</i>
+                <span>Products</span>
+            </span>
+            <ul class='mdc-list mdc-list--two-line'>
+            ${duty.attachment.Products.value.map(function(product){
+                return `<li class='mdc-list-item'>
+                    <span class='mdc-list-item__text'>
+                        <span class='mdc-list-item__primary-text'>${product.name}</span>
+                        <span class='mdc-list-item__secondary-text'>Quantity : ${product.quanity}</span>
+                    </span>
+                    <span class='mdc-list-item__meta'>${convertNumberToInr(Number(product.rate))}</span>
+                </li>`
+
+            })}
+            </ul>
+        </div>
+    </div>
+    <div class='navigate'>
+        ${createExtendedFab('navigation','Navigate','navigate').outerHTML}
+    </div>
+    `
+    cont.appendChild(heading)
+    cont.appendChild(details)
+
+    const dialog = new Dialog('',cont,'duty-dialog').create('simple')
+    dialog.open();
+}
+
+function constructJoBView(duty) {
+    const body = `<div class='mdc-layout-grid'>
+        <div class='duty-container'>
+        ${duty ? `<div class='mdc-card duty-overview'>
+            <div class='duty-details'>
+
+            
+                <div class='products'></div>
+                <div class='expand'></div>
+            </div>
+
+        </div>` :''}
+            
+            <div class='mdc-card timeline-overview'>
+                <div class='timeline'>
+
+                </div>
+                ${createExtendedFab('add_a_photo','Take a photo','take-job-photo').outerHTML}
+              
+            </div>
         </div>
     </div>`
+
+    const photoBtn = document.getElementById('take-job-photo');
+    photoBtn.addEventListener('click',function (){
+        history.pushState(['cameraView'],null,null)
+        openCamera()
+    });
+
 }
 
 
