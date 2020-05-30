@@ -403,6 +403,7 @@ function updateIosLocation(geopointIos) {
   window.dispatchEvent(iosLocation)
 }
 
+
 function handleComponentUpdation(readResponse) {
  
 
@@ -410,24 +411,31 @@ function handleComponentUpdation(readResponse) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     });
-    
-    if (!history.state) return;
-    switch (history.state[0]) {
-      case 'enterChat':
-        if (!readResponse.addendum.length) return;
-        dynamicAppendChats(readResponse.addendum)
-        break;
-      case 'chatView':
-        if (!readResponse.addendum.length) return;
-        readLatestChats(false);
-        break;
+
+    readResponse.activities.forEach(function(activity){
+        if(activity.template === 'duty') {
+          checkForDuty(activity)
+        }
+    })
+
+
+    // if (!history.state) return;
+    // switch (history.state[0]) {
+    //   case 'enterChat':
+    //     if (!readResponse.addendum.length) return;
+    //     dynamicAppendChats(readResponse.addendum)
+    //     break;
+    //   case 'chatView':
+    //     if (!readResponse.addendum.length) return;
+    //     readLatestChats(false);
+    //     break;
   
-      case 'reportView':
-        reportView(history.state[1]);
-        break;
-      default:
-        console.log("no refresh")
-    }
+    //   case 'reportView':
+    //     reportView(history.state[1]);
+    //     break;
+    //   default:
+    //     console.log("no refresh")
+    // }
 }
 
 /** function call to be removed from apk */
