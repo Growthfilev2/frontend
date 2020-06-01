@@ -1,13 +1,19 @@
 function jobView() {
     const parent = document.getElementById('app-current-panel')
-    parent.innerHTML = ''
- 
-    const oldJob = JSON.parse(localStorage.getItem('duty'));
-    if (newJob) {
-        showPreviousJobPopUp(oldJob)
-        return
-    }
-    parent.appendChild(constructJoBView(oldJob));
+    parent.innerHTML = '';
+    document.getElementById('app-header').classList.add('hidden')
+    getTimelineAddendum(ApplicationState.geopoint).then(function (addendums) {
+            return getTimelineActivityData(addendums)
+        })
+        .then(function (timelineData) {
+            parent.appendChild(constructJoBView(timelineData));
+        }).catch(console.error)
+
+    // if (newJob) {
+    //     showPreviousJobPopUp(oldJob)
+    //     return
+    // }
+    // parent.appendChild(constructJoBView(oldJob));
 }
 
 function showPreviousJobPopUp(oldJo) {
@@ -15,19 +21,19 @@ function showPreviousJobPopUp(oldJo) {
         className: 'mdc-typography--headline5',
         textContent: 'Your last job is not finished. Please finish or skip it now'
     })
-    getTimelineAddendum(oldJob.geopoint).then(function(addendums){
-        return getTimelineActivityData(addendums,oldJob.geopoint)
-    }).then(function(timelineData){
+    getTimelineAddendum(oldJob.geopoint).then(function (addendums) {
+        return getTimelineActivityData(addendums, oldJob.geopoint)
+    }).then(function (timelineData) {
         const dialog = new Dialog(heading, constructJoBView(timelineData), 'job-popup').create('simple');
         dialog.open();
         //dialog button click;
         //new job start
-        
+
         //skip
-    
+
     });
 
-    
+
 
 }
 
@@ -172,12 +178,12 @@ function showUpcomingDuty(duty, currentGeopoint) {
 
 
 
-function constructJoBView(timelineData) {
+function constructJoBView(timelineData, duty) {
 
-        const el = createElement('div', {
-            className: 'mdc-layout-grid'
-        })
-        el.innerHTML = `
+    const el = createElement('div', {
+        className: 'mdc-layout-grid'
+    })
+    el.innerHTML = `
             <div class='duty-container'>
             ${duty ? `<div class='mdc-card duty-overview'>
                 <div class='duty-details'>
@@ -201,23 +207,44 @@ function constructJoBView(timelineData) {
                         </div>
                     </div>
                     ${createExtendedFab('add_a_photo','Take a photo','take-job-photo').outerHTML}
-                  
+
+                </div>
+                <div class='action-buttons'>
+                    <button class='mdc-button mdc-button--outlined' id='skip'>SKIP</button>
+                    <button class='mdc-button mdc-button--raised' id='finish'>finish job</button>
                 </div>
             </div>`
-    
-        const photoBtn = el.querySelector('#take-job-photo');
-        photoBtn.addEventListener('click', function () {
-            history.pushState(['cameraView'], null, null)
-            openCamera()
-        });
-        el.querySelector('#pie').addEventListener('click',function(){
+
+    const photoBtn = el.querySelector('#take-job-photo');
+    const skip = el.querySelector('#skip')
+    const finish = el.querySelector('#finish')
+    photoBtn.addEventListener('click', function () {
+        history.pushState(['cameraView'], null, null)
+        openCamera()
+    });
+    skip.addEventListener('click',function(){
+        history.pushState(['comingSoong'],null,null);
+        comingSoon();
+    })
+    finish.addEventListener('click',function(){
+        showRating();
+    })
+    if (timelineData) {
+        // const firstActivityTimestamp = timelineData[0].timestamp;
+        // const lastActivityTimestamp = timelineData[timelineData.length -1].timestamp;
+        // const fillValue = getTimelineFillValue(firstActivityTimestamp,lastActivityTimestamp);
+        // el.querySelector('#pie .left-side.half-circle').style.transform = `rotate(${fillValue}deg)`;
+        el.querySelector('#pie').addEventListener('click', function () {
             createTimeLapse(timelineData)
         })
-    
-
+    }
     return el;
 }
 
+function getTimelineFillValue() {
+    const diff = moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp))
+    return (diff / 12) * 100
+}
 
 function getTimelineAddendum(geopoint) {
     return new Promise(function (resolve, reject) {
@@ -228,7 +255,7 @@ function getTimelineAddendum(geopoint) {
         const result = []
         //const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
         // const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
-        store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
+        store.index('timestamp').openCursor(null, 'prev').onsuccess = function (evt) {
             const cursor = evt.target.value;
             if (!cursor) return;
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(cursor.value.geopoint, geopoint))) {
@@ -239,7 +266,7 @@ function getTimelineAddendum(geopoint) {
             cursor.continue();
         }
         tx.oncomplete = function () {
-            const sorted = result.reduce(function (first, second) {
+            const sorted = result.sort(function (first, second) {
                 return first.timestamp - second.timestamp
             })
             resolve(sorted)
@@ -256,12 +283,7 @@ function getTimelineActivityData(addendums) {
         const store = tx.objectStore('activity');
         const filteredResult = [];
         const dutyTemplates = {
-            'duty': true,
-            'customer': true,
-            'check-in': true,
-            'product': true,
-            'employee': true,
-            'duty-type': true
+            'check-in': true
         }
         addendums.forEach(function (addendum) {
             store.get(addendum.activityId).onsuccess = function (evt) {
@@ -293,8 +315,12 @@ function createTimeLapse(timelineData) {
     const ul = createElement('ul', {
         className: 'tl'
     })
-    let firstActivityTimestamp = timelineData[0].timestamp
-    let lastActivityTimestamp = timelineData[timelineData.length - 1].timestamp;
+    let firstActivityTimestamp;
+    let lastActivityTimestamp;
+    if (timelineData) {
+        firstActivityTimestamp = timelineData[0].timestamp
+        astActivityTimestamp = timelineData[timelineData.length - 1].timestamp;
+    }
     let totalCheckins = 0;
     let totalPhotoCheckins = 0;
 
@@ -437,8 +463,36 @@ function checkForDuty(duty) {
     })
 }
 
-function getFirstActivity()
+function comingSoon() {
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title">Duties</span>
+        `
+    const header = setHeader(backIcon, '');
+    header.root_.classList.remove('hidden')
+    const el = document.getElementById('app-current-panel')
+    el.innerHTML = ``
 
-function getTimelineProgressBarValue() {
+    const cont = createElement('div',{
+        className:'coming--soon-container mdc-top-app-bar--fixed-adjust'
+    })
 
+    const img = createElement('img', {
+        src: './img/coming-soon.svg',
+    })
+    const div = createElement('div', {
+        className: 'mdc-typography--headline4 bold text-center mt-20',
+        textContent: "Coming soon"
+    })
+    cont.appendChild(img)
+    cont.appendChild(div)
+    el.appendChild(cont);
+
+}
+
+function showRating() {
+    getLastCheckIn().then(function(activity){
+        const el = document.createElement('div');
+        
+        const dialog = new Dialog('How was your job','')
+    })
 }

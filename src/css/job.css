@@ -78,3 +78,14 @@
 .pie-wrapper.progress-45 .pie .left-side {
   transform: rotate(162deg);
 }
+
+
+.coming--soon-container {
+  display: block;
+  margin: 0 auto;
+  max-width: 480px;
+  padding-top: 100px;
+}
+.coming--soon-container img {
+  width: 100%;
+}

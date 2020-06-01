@@ -611,7 +611,8 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
-  jobView()
+  openReportView();
+  // jobView()
   // createTimeLapse();
   return;
   return new Promise(function (resolve, reject) {
@@ -1331,7 +1332,7 @@ function openReportView() {
   logReportEvent('IN Reports')
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view");
-  // history.pushState(['reportView'], null, null);
+  history.pushState(['jobView'], null, null);
   // reportView()
   jobView();
 }
@@ -1371,12 +1372,17 @@ function shouldCheckin(geopoint, checkInSubs) {
 }
 
 function isNewJob(geopoint) {
-
-  const storedJob = JSON.parse(localStorage.getItem('job'));
-  if(!storedJob) return true;
-  const newDate = isToday(storedJob.timestamp);
-  const newLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(storedJob.geopoint,geopoint));
-  return newDate || newLocation;
+  const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
+  if (!oldState) return true
+  if (!oldState.lastCheckInCreated) return true;
+  const today = isToday(oldState.lastCheckInCreated)
+  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
+  
+  if(today) {
+    if(hasChangedLocation) return true
+    return false;
+  }
+  return true
 
 }
 
