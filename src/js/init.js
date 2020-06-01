@@ -611,7 +611,8 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
-  createTimeLapse();
+  jobView()
+  // createTimeLapse();
   return;
   return new Promise(function (resolve, reject) {
     var prom;
@@ -724,7 +725,7 @@ function handleCheckin(geopoint, noUser) {
     }
 
     if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
-    newJob = true;
+    newJob = isNewJob(geopoint);
 
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
@@ -1365,11 +1366,24 @@ function shouldCheckin(geopoint, checkInSubs) {
   const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
   if (isOlder || hasChangedLocation) return true
-
   ApplicationState = oldState;
   return false
 }
 
+function isNewJob(geopoint) {
+
+  const storedJob = JSON.parse(localStorage.getItem('job'));
+  if(!storedJob) return true;
+  const newDate = isToday(storedJob.timestamp);
+  const newLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(storedJob.geopoint,geopoint));
+  return newDate || newLocation;
+
+}
+
+
+function isToday(timestamp) {
+  return moment(timestamp).isSame(moment().clone().startOf('day'),'d')
+}
 
 
 

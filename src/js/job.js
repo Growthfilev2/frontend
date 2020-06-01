@@ -1,12 +1,33 @@
 function jobView() {
-
-    const geopoint = ApplicationState.location;
-    if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(getOldLocation(), ApplicationState.location))) {
-        constructJoBView();
+    const parent = document.getElementById('app-current-panel')
+    parent.innerHTML = ''
+ 
+    const oldJob = JSON.parse(localStorage.getItem('duty'));
+    if (newJob) {
+        showPreviousJobPopUp(oldJob)
         return
     }
+    parent.appendChild(constructJoBView(oldJob));
+}
 
+function showPreviousJobPopUp(oldJo) {
+    const heading = createElement('div', {
+        className: 'mdc-typography--headline5',
+        textContent: 'Your last job is not finished. Please finish or skip it now'
+    })
+    getTimelineAddendum(oldJob.geopoint).then(function(addendums){
+        return getTimelineActivityData(addendums,oldJob.geopoint)
+    }).then(function(timelineData){
+        const dialog = new Dialog(heading, constructJoBView(timelineData), 'job-popup').create('simple');
+        dialog.open();
+        //dialog button click;
+        //new job start
+        
+        //skip
+    
+    });
 
+    
 
 }
 
@@ -148,48 +169,120 @@ function showUpcomingDuty(duty, currentGeopoint) {
     dialog.open();
 }
 
-function constructJoBView(duty) {
-    const body = `<div class='mdc-layout-grid'>
-        <div class='duty-container'>
-        ${duty ? `<div class='mdc-card duty-overview'>
-            <div class='duty-details'>
 
-            
-                <div class='products'></div>
-                <div class='expand'></div>
-            </div>
 
-        </div>` :''}
-            
-            <div class='mdc-card timeline-overview'>
-                <div class='timeline'>
 
+function constructJoBView(timelineData) {
+
+        const el = createElement('div', {
+            className: 'mdc-layout-grid'
+        })
+        el.innerHTML = `
+            <div class='duty-container'>
+            ${duty ? `<div class='mdc-card duty-overview'>
+                <div class='duty-details'>
+    
+                
+                    <div class='products'></div>
+                    <div class='expand'></div>
                 </div>
-                ${createExtendedFab('add_a_photo','Take a photo','take-job-photo').outerHTML}
-              
-            </div>
-        </div>
-    </div>`
+    
+            </div>` :''}
+                
+                <div class='mdc-card timeline-overview'>
+                    <div class='timeline set-size charts-container'>
+                        <div class="pie-wrapper progress-45 style-2" id='pie'>
+                           
+                            <div class="pie">
+                                <div class="left-side half-circle"></div>
+                                <div class="right-side half-circle"></div>
+                            </div>
+                            <div class="shadow"></div>
+                        </div>
+                    </div>
+                    ${createExtendedFab('add_a_photo','Take a photo','take-job-photo').outerHTML}
+                  
+                </div>
+            </div>`
+    
+        const photoBtn = el.querySelector('#take-job-photo');
+        photoBtn.addEventListener('click', function () {
+            history.pushState(['cameraView'], null, null)
+            openCamera()
+        });
+        el.querySelector('#pie').addEventListener('click',function(){
+            createTimeLapse(timelineData)
+        })
+    
 
-    const photoBtn = document.getElementById('take-job-photo');
-    photoBtn.addEventListener('click', function () {
-        history.pushState(['cameraView'], null, null)
-        openCamera()
-    });
-
+    return el;
 }
 
 
-function getTimelineData() {
-    const tx = db.transaction('addendum');
-    const store = tx.objectStore('addendum');
+function getTimelineAddendum(geopoint) {
+    return new Promise(function (resolve, reject) {
+
+        const tx = db.transaction('addendum');
+        const store = tx.objectStore('addendum');
+
+        const result = []
+        //const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
+        // const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
+        store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
+            const cursor = evt.target.value;
+            if (!cursor) return;
+            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(cursor.value.geopoint, geopoint))) {
+                cursor.continue();
+                return
+            }
+            result.push(cursor.value)
+            cursor.continue();
+        }
+        tx.oncomplete = function () {
+            const sorted = result.reduce(function (first, second) {
+                return first.timestamp - second.timestamp
+            })
+            resolve(sorted)
+        }
+    })
 }
 
-function createTimeLapse() {
-    const tx = db.transaction('activity');
-    const store = tx.objectStore('activity');
-    //    const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
-    // const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
+
+function getTimelineActivityData(addendums) {
+    return new Promise(function (resolve, reject) {
+
+
+        const tx = db.transaction('activity');
+        const store = tx.objectStore('activity');
+        const filteredResult = [];
+        const dutyTemplates = {
+            'duty': true,
+            'customer': true,
+            'check-in': true,
+            'product': true,
+            'employee': true,
+            'duty-type': true
+        }
+        addendums.forEach(function (addendum) {
+            store.get(addendum.activityId).onsuccess = function (evt) {
+                const record = evt.target.result;
+                if (!record) return;
+                if (dutyTemplates[record.template]) {
+                    record.geopoint = addendum.geopoint
+                    filteredResult.push(record);
+                }
+            }
+        })
+        tx.oncomplete = function () {
+            resolve(filteredResult)
+        }
+    })
+}
+
+
+
+function createTimeLapse(timelineData) {
+
     const timeLine = createElement('div', {
         className: 'timeline'
     })
@@ -200,46 +293,28 @@ function createTimeLapse() {
     const ul = createElement('ul', {
         className: 'tl'
     })
-    let firstActivityTimestamp;
-    let lastActivityTimestamp;
+    let firstActivityTimestamp = timelineData[0].timestamp
+    let lastActivityTimestamp = timelineData[timelineData.length - 1].timestamp;
     let totalCheckins = 0;
     let totalPhotoCheckins = 0;
-    const dutyTemplates = {
-        'duty': true,
-        'customer': true,
-        'check-in': true,
-        'product': true,
-        'employee': true,
-        'duty-type': true
-    }
-    store.index("timestamp").openCursor(null, 'prev').onsuccess = function (evt) {
-        const cursor = evt.target.result;
-        if (!cursor) return;
-        if (!dutyTemplates[cursor.value.template]) {
-            cursor.continue();
-            return;
-        }
-        if (!firstActivityTimestamp) {
-            firstActivityTimestamp = cursor.value.timestamp
-        }
-        if (cursor.value.template === 'check-in') {
+
+    timelineData.forEach(function (activity) {
+        if (activity.template === 'check-in') {
             totalCheckins++
-            if (cursor.value.attachment.Photo.value) {
+            if (activity.attachment.Photo.value) {
                 totalPhotoCheckins++
             }
         }
-        ul.appendChild(createTimelineLi(cursor.value))
-        lastActivityTimestamp = cursor.value.timestamp;
-        cursor.continue();
-    }
-    tx.oncomplete = function () {
-        const timelineDuration = moment.duration(moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp)))
+        ul.appendChild(createTimelineLi(activity))
+    })
 
-        console.log(timelineDuration)
-        const screen = createElement('div', {
-            className: 'timeline--container',
-        })
-        screen.innerHTML = `
+
+    const timelineDuration = moment.duration(moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp)))
+    console.log(timelineDuration)
+    const screen = createElement('div', {
+        className: 'timeline--container',
+    })
+    screen.innerHTML = `
         <div class='timeline--header'>
             <h3 class='mdc-typography--headline5 mdc-theme--primary mb-0 mt-10'>
                 ${timelineDuration._data.hours} Hours ${timelineDuration._data.minutes} Minutes worked
@@ -263,46 +338,46 @@ function createTimeLapse() {
         </div>
         `
 
-        if (totalCheckins) {
-            // ul.style.paddingTop = '80px';
-        }
-        if (timelineDuration.asMilliseconds()) {
-            historyCont.appendChild(ul);
-        } else {
-            const emptyCont = createElement('div', {
-                className: 'width-100 veritical-horizontal-center'
-            })
-            historyCont.classList.add('empty-list')
-
-            emptyCont.appendChild(createElement('img', {
-                src: './img/empty-list.svg',
-                className: 'svg-list-empty'
-            }))
-            emptyCont.appendChild(createElement('p', {
-                className: 'text-center  mdc-typography--headline5',
-                textContent: 'No details found'
-            }))
-
-            historyCont.appendChild(emptyCont)
-        }
-        timeLine.appendChild(historyCont);
-
-        document.getElementById('app-current-panel').innerHTML = '';
-        screen.appendChild(timeLine);
-        const bottomContainer = createElement('div', {
-            className: 'timeline--footer'
-        })
-
-        const close = createButton('close')
-        close.classList.add("mdc-button--raised");
-        close.addEventListener('click', function () {
-            history.back();
-        })
-        bottomContainer.appendChild(close);
-        screen.appendChild(bottomContainer)
-
-        document.getElementById('app-current-panel').appendChild(screen);
+    if (totalCheckins) {
+        // ul.style.paddingTop = '80px';
     }
+    if (timelineDuration.asMilliseconds()) {
+        historyCont.appendChild(ul);
+    } else {
+        const emptyCont = createElement('div', {
+            className: 'width-100 veritical-horizontal-center'
+        })
+        historyCont.classList.add('empty-list')
+
+        emptyCont.appendChild(createElement('img', {
+            src: './img/empty-list.svg',
+            className: 'svg-list-empty'
+        }))
+        emptyCont.appendChild(createElement('p', {
+            className: 'text-center  mdc-typography--headline5',
+            textContent: 'No details found'
+        }))
+
+        historyCont.appendChild(emptyCont)
+    }
+    timeLine.appendChild(historyCont);
+
+    document.getElementById('app-current-panel').innerHTML = '';
+    screen.appendChild(timeLine);
+    const bottomContainer = createElement('div', {
+        className: 'timeline--footer'
+    })
+
+    const close = createButton('close')
+    close.classList.add("mdc-button--raised");
+    close.addEventListener('click', function () {
+        history.back();
+    })
+    bottomContainer.appendChild(close);
+    screen.appendChild(bottomContainer)
+
+    document.getElementById('app-current-panel').appendChild(screen);
+
 }
 
 
@@ -348,16 +423,22 @@ function mapTemplateNameToTimelineEvent(activity) {
 
 function checkForDuty(duty) {
 
-    Promise.all([getDutyCoordinates(duty.attachment.Location.value),getSupervisorContact(duty.attachment.Supervisor.value)]).then(function(response){
+    Promise.all([getDutyCoordinates(duty.attachment.Location.value), getSupervisorContact(duty.attachment.Supervisor.value)]).then(function (response) {
         let dutyGeopoint;
-        if(response[0]) {
+        if (response[0]) {
             dutyGeopoint = {
-                latitude:response[0].latitude,
-                longitude:response[0].longitude
+                latitude: response[0].latitude,
+                longitude: response[0].longitude
             }
-       }
-       duty.dutyGeopoint = dutyGeopoint;
-       duty.supervisiorContact = response[1]
-       showUpcomingDuty(duty, ApplicationState.location)
+        }
+        duty.dutyGeopoint = dutyGeopoint;
+        duty.supervisiorContact = response[1]
+        showUpcomingDuty(duty, ApplicationState.location)
     })
+}
+
+function getFirstActivity()
+
+function getTimelineProgressBarValue() {
+
 }
