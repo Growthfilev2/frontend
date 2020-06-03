@@ -77,10 +77,10 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     return resolve({
-      latitude:22,
-      longitude:77,
+      latitude:28.7063,
+      longitude:77.1027,
       lastLocationTime:Date.now()
-    })
+    });
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -412,30 +412,33 @@ function handleComponentUpdation(readResponse) {
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     });
 
-    readResponse.activities.forEach(function(activity){
-        if(activity.template === 'duty') {
-          checkForDuty(activity)
-        }
-    })
+    // readResponse.activities.forEach(function(activity){
+    //     if(activity.template === 'duty') {
+    //       checkForDuty(activity)
+    //     }
+    // })
 
 
-    // if (!history.state) return;
-    // switch (history.state[0]) {
-    //   case 'enterChat':
-    //     if (!readResponse.addendum.length) return;
-    //     dynamicAppendChats(readResponse.addendum)
-    //     break;
-    //   case 'chatView':
-    //     if (!readResponse.addendum.length) return;
-    //     readLatestChats(false);
-    //     break;
+    if (!history.state) return;
+    switch (history.state[0]) {
+      case 'enterChat':
+        if (!readResponse.addendum.length) return;
+        dynamicAppendChats(readResponse.addendum)
+        break;
+      case 'chatView':
+        if (!readResponse.addendum.length) return;
+        readLatestChats(false);
+        break;
   
-    //   case 'reportView':
-    //     reportView(history.state[1]);
-    //     break;
-    //   default:
-    //     console.log("no refresh")
-    // }
+      case 'reportView':
+        reportView(history.state[1]);
+        break;
+      case 'jobView':
+        if(document.getElementById('rating-view')) return;
+        jobView();
+      default:
+        console.log("no refresh")
+    }
 }
 
 /** function call to be removed from apk */

@@ -1,84 +1,65 @@
-.set-size {
-  font-size: 10em;
-}
-.charts-container:after {
-  clear: both;
-  content: "";
-  display: table;
-}
-.pie-wrapper {
-  height: 1em;
-  width: 1em;
-  float: left;
-  margin: 15px;
-  position: relative;
-}
-.pie-wrapper:nth-child(3n+1) {
-  clear: both;
-}
-.pie-wrapper .pie {
-  height: 100%;
-  width: 100%;
-  clip: rect(0, 1em, 1em, 0.5em);
-  left: 0;
-  position: absolute;
-  top: 0;
-}
-.pie-wrapper .pie .half-circle {
-  height: 100%;
-  width: 100%;
-  border: 0.1em solid var(--mdc-theme-primary);
-  border-radius: 50%;
-  clip: rect(0, 0.5em, 1em, 0);
-  left: 0;
-  position: absolute;
-  top: 0;
-}
-.pie-wrapper .label {
-  background: var(--mdc-theme-primary);
-  border-radius: 50%;
-  bottom: 0.4em;
-  color: #ecf0f1;
-  cursor: default;
+svg {
+  margin: auto;
   display: block;
-  font-size: 0.25em;
-  left: 0.4em;
-  line-height: 2.6em;
-  position: absolute;
-  right: 0.4em;
-  text-align: center;
-  top: 0.4em;
 }
-.pie-wrapper .label .smaller {
-  color: #bdc3c7;
-  font-size: .45em;
-  padding-bottom: 20px;
-  vertical-align: super;
+path {
+  stroke-linecap: round;
+  stroke-width: 2;
 }
-.pie-wrapper .shadow {
-  height: 100%;
+
+path.grey {
+  stroke: lightgrey;
+}
+
+path.purple {
+  stroke: purple;
+  stroke-dasharray: calc(40 * 3.142 * 2.85);
+  stroke-dashoffset: 20;
+  /* adjust last number for variance */
+}
+ .job-screen {
+   padding: 10px;
+   background-color: #f5f5f5;
+   height: 100%;
+}
+.job-screen .photo-button--container{
+  max-width: 200px;
+  margin: 0 auto;
+  margin-top: 20px;
+
+}
+.job-screen .action-buttons {
+  padding:10px 0px 10px 0px;
   width: 100%;
-  border: 0.1em solid #bdc3c7;
-  border-radius: 50%;
+  text-align: center;
+  max-width: 480px;
+  display: block;
+  margin: 0 auto;
+
 }
-.pie-wrapper.style-2 .label {
-  background: none;
-  color: #7f8c8d;
+.job-screen .action-buttons #skip {
+  width: 29%;
+  height: 48px;
+  font-size: 18px;
 }
-.pie-wrapper.style-2 .label .smaller {
-  color: #bdc3c7;
+.job-screen .action-buttons #finish {
+  width: 69%;
+  height: 48px;
+  font-size: 18px;
+}
+#finish .material-icons.mdc-button__icon {
+  width: 28px;
+  height: 28px;
+  font-size: 28px;
+}
+.job-screen .duty-overview , .job-screen .timeline-overview {
+  padding: 10px;
 }
 
-.pie-wrapper.progress-45 .pie .right-side {
-  display: none;
+.job-screen .duty-overview .location {
+  display: flex;
+  align-items: center;
 }
-.pie-wrapper.progress-45 .pie .half-circle {
-  border-color:var(--mdc-theme-primary);
-}
-.pie-wrapper.progress-45 .pie .left-side {
-  transform: rotate(162deg);
-}
-
 
 .coming--soon-container {
   display: block;

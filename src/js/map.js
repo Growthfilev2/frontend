@@ -362,7 +362,6 @@ function openCamera() {
     return
   }
   webkit.messageHandlers.startCamera.postMessage("setFilePath");
-
 }
 
 function setFilePathFailed(error) {
@@ -374,7 +373,6 @@ function setFilePathFailed(error) {
 
 function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
   const url = `data:image/jpg;base64,${base64}`
-
   document.getElementById('app-current-panel').innerHTML = `
   <div class='image-container'>
     <div id='snap' class="snap-bckg">
@@ -419,44 +417,80 @@ function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
 
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-
-    const sub = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[photoOffice]))
-
-    sub.attachment.Photo.value = url
-    sub.attachment.Comment.value = textValue;
-    sub.share = []
-
-    requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
-
-      successDialog('Check-In Created')
-      history.pushState(['reportView'], null, null)
-      reportView()
-    }).catch(function (error) {
-      const queryLink = getDeepLink();
-
-      if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
-      
-        if(retries.subscriptionRetry  <= 2) {
-          setTimeout(function(){
-              retries.subscriptionRetry++
-              createUnkownCheckIn(geopoint, retries)
-          },5000)
-        }  
-        return
-      }
-      
-      if (error.message === 'Invalid check-in') {
-        handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
-          ApplicationState.location = newGeopoint;
-          retries.invalidRetry++
-          setFilePath(base64, retries);
-        });
-        return
-      };
-    });
+    if(ApplicationState.venue) {
+      sendPhotoCheckinRequest({
+        sub:ApplicationState.officeWithCheckInSubs[ApplicationState.venue.office],
+        base64:url,
+        retries:retries,
+        textValue:textValue,
+      })
+      return
+    }
+    choosePhotoCheckinOffice(function(checkinSubscription){
+      sendPhotoCheckinRequest({
+        sub:checkinSubscription,
+        base64:url,
+        retries:retries,
+        textValue:textValue,
+      })
+    })
   })
 }
 
+
+function sendPhotoCheckinRequest(request) {
+  const url = request.base64;
+  const textValue = request.textValue;
+  const retries = request.retries;
+  const sub = JSON.parse(JSON.stringify(request.sub))
+  sub.attachment.Photo.value = url || ''
+  sub.attachment.Comment.value = textValue;
+  sub.share = []
+  requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
+    successDialog('Photo uploaded')
+    history.back();
+  }).catch(function (error) {
+    const queryLink = getDeepLink();
+
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
+    
+      if(retries.subscriptionRetry  <= 2) {
+        setTimeout(function(){
+            retries.subscriptionRetry++
+            createUnkownCheckIn(geopoint, retries)
+        },5000)
+      }  
+      return
+    }
+    
+    if (error.message === 'Invalid check-in') {
+      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
+        ApplicationState.location = newGeopoint;
+        retries.invalidRetry++
+        setFilePath(base64, retries);
+      });
+      return
+    };
+  });
+}
+
+function choosePhotoCheckinOffice(callback) {
+  const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
+  const subs = [];
+  offices.forEach(function(office){
+    subs.push(ApplicationState.officeWithCheckInSubs[office])
+  })
+  const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+  const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+  bottomDialog(officeDialog, officeList)
+  officeList.listen('MDCList:action', function (officeEvent) {
+    const selectedSubscription = subs[officeEvent.detail.index];
+    officeDialog.close();
+    callback(selectedSubscription)
+    // history.pushState(['addView'], null, null);
+    // addView(selectedSubscription)
+  })
+}
 
 function mdcDefaultSelect(data, label, id, option) {
   const template = `<div class="mdc-select" id=${id}>
@@ -540,3 +574,5 @@ function loadNearByLocations(o, location) {
     }
   })
 }
+
+

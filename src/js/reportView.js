@@ -363,7 +363,6 @@ function createTemplateButton(subs) {
       })
     })
     return button;
- 
 }
 
 

@@ -1,12 +1,59 @@
 function jobView() {
     const parent = document.getElementById('app-current-panel')
     parent.innerHTML = '';
+    parent.classList.remove('mdc-top-app-bar--fixed-adjust')
     document.getElementById('app-header').classList.add('hidden')
-    getTimelineAddendum(ApplicationState.geopoint).then(function (addendums) {
+    getTimelineAddendum(ApplicationState.location).then(function (addendums) {
+           console.log(addendums)
             return getTimelineActivityData(addendums)
         })
         .then(function (timelineData) {
-            parent.appendChild(constructJoBView(timelineData));
+            const auth = firebase.auth().currentUser
+            const duty = {
+                attachment: {
+                    'Duty Type': {
+                        value: '',
+                        type: 'duty'
+                    },
+                    'Location': {
+                        value: ''
+                    },
+                    'Include': {
+                        value: ''
+                    },
+                    'Supervisor': {
+                        value: ''
+                    },
+                    'Products': {
+                        value: [{
+                            name: '',
+                            rate: '',
+                            date: '',
+                            quanity: ''
+                        }]
+                    }
+                },
+                schedule: [{
+                    startTime: '',
+                    endTime: '',
+                    name: 'Date'
+                }],
+                assignees: [{
+                    displayName: auth.displayName,
+                    photoURL: auth.photoURL,
+                    phoneNumber: auth.phoneNumber
+                }],
+                venue: [],
+                supervisior: null
+            }
+            // db.transaction('activity').objectStore('activity').index('timestamp').getAll(bound).onsuccess = function (e) {
+            //     console.log(e.target.result)
+            //     if (!e.target.result) return;
+            //     const filtered = e.target.result.sort(function (a, b) {
+            //         return a.timestamp - b.timestamp;
+            //     })
+                parent.appendChild(constructJobView(timelineData, duty));
+            // }
         }).catch(console.error)
 
     // if (newJob) {
@@ -132,7 +179,7 @@ function showUpcomingDuty(duty, currentGeopoint) {
         <div class='staff'>
             <span>
                 <i class='material-icons'>people_add</i>
-                <span>Staff</span>
+                <span>Staffs</span>
             </span>
             <div class='mdc-chip-set'>
                 ${duty.assigness.map(function(contact,index){
@@ -178,72 +225,181 @@ function showUpcomingDuty(duty, currentGeopoint) {
 
 
 
-function constructJoBView(timelineData, duty) {
+function constructJobView(timelineData, duty) {
 
     const el = createElement('div', {
-        className: 'mdc-layout-grid'
+        className: 'mdc-layout-grid job-screen'
     })
     el.innerHTML = `
-            <div class='duty-container'>
-            ${duty ? `<div class='mdc-card duty-overview'>
+        <div class='duty-container'>
+             <div class='mdc-card duty-overview'>
                 <div class='duty-details'>
-    
-                
-                    <div class='products'></div>
-                    <div class='expand'></div>
-                </div>
-    
-            </div>` :''}
-                
-                <div class='mdc-card timeline-overview'>
-                    <div class='timeline set-size charts-container'>
-                        <div class="pie-wrapper progress-45 style-2" id='pie'>
-                           
-                            <div class="pie">
-                                <div class="left-side half-circle"></div>
-                                <div class="right-side half-circle"></div>
+                    <div class='customer'>
+                        <div class='location full-width mb-10'>
+                            <div class='icon mdc-theme--primary' style='float:left;'>
+                                <i class='material-icons'>location_on</i>
                             </div>
-                            <div class="shadow"></div>
+                            <div class='text mdc-typography--headline6 ml-10'>
+                               ${ApplicationState.venue ? ApplicationState.venue.location : '-'}
+                               <a href=''></a>
+                            </div>
                         </div>
                     </div>
-                    ${createExtendedFab('add_a_photo','Take a photo','take-job-photo').outerHTML}
+                    <div class='duty-type mb-10'>
+                        <span class='inline-flex mdc-theme--primary mb-10'>
+                            <i class='material-icons'>assignment</i>
+                            <span class='mdc-typography--headline6 ml-10'>${duty.attachment['Duty Type'].value || '-'} </span>
+                        </span>
+                    </div>
+                    <div class='products'>
+                        <span class='inline-flex mdc-theme--primary'>
+                            <i class='material-icons'>settings</i>
+                            <span class='mdc-typography--headline6 ml-10'>Products</span>
+                        </span>
+                        <ul class='mdc-list mdc-list--two-line'>
+                            ${checkProductLength(duty.attachment.Products.value) ?  duty.attachment.Products.value.map(function(product){
+                                return `<li class='mdc-list-item'>
+                                    <span class='mdc-list-item__text'>
+                                        <span class='mdc-list-item__primary-text'>${product.name}</span>
+                                        <span class='mdc-list-item__secondary-text'>Quantity : ${product.quanity}</span>
+                                    </span>
+                                    <span class='mdc-list-item__meta'>${convertNumberToInr(Number(product.rate))}</span>
+                                </li>`
+                            }) : '<div class="mdc-typography--caption1 text-center">No products found</div>'}
+                        </ul>
+                    </div>
+                    <div class='expanded-details hidden'>
+                        <hr>
+                        <div class='supervisor'>
+                            <span class='inline-flex mdc-theme--primary'>
+                                <i class='material-icons'>supervisor_account</i>
+                                <span class='mdc-typography--headline6 ml-10'>Supervisor</span>
+                            </span>
+                            ${duty.attachment.Supervisor.value ? `<ul class='mdc-list mdc-list--two-line mdc-list--avatar-list'>
+                            <li class='mdc-list-item'>
+                                <span class='mdc-list-item__graphic'>
+                                    <img src='${duty.supervisior.photoURL || './img/empty-user.jpg'}'>
+                                    <span class='mdc-list-item__text'>
+                                        <span class='mdc-list-item__primary-text'>${duty.supervisior.displayName}</span>
+                                        <span class='mdc-list-item__secondary-text'>Customer</span>
+                                    </span>
+                                </span>
+                            </li>
+                        </ul>` : '<div class="mdc-typography--caption1 text-center">No supervisor found</div>'}
+                            
+                        </div>
+                        <span class='inline-flex mdc-theme--primary'>
+                            <i class='material-icons'>access_time</i>
+                            <span class='mdc-typography--headline6 ml-10'>${duty.schedule[0].startTime ? `${moment(duty.schedule[0].startTime).format('hh:mm A')} to ${moment(duty.schedule[0].endTime).format('hh:mm A')}` : '-'} </span>
+                        </span>
+                        <hr>
+                        <div class='staff'>
+                            <span class='inline-flex mdc-theme--primary'>
+                                <i class='material-icons'>group_add</i>
+                                <span class='mdc-typography--headline6 ml-10'>Staff</span>
+                            </span>
+                            <div class="mdc-chip-set" role="grid">
+                                ${viewAssignee(duty)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class='expand text-center'>
+                        <i class='material-icons' id='expand'>expand_more</i>
+                    </div>
+                </div>
+            </div>
+            <div class='mdc-card timeline-overview mt-20'>
+                      
+                <div class="c100 p100 big center orange" id='pie'>
+                    <div class="slice"><div class="bar"></div><div class="fill"></div></div>
+                </div>
+            
+                <div class='photo-button--container'>
+                    ${createExtendedFab('add_a_photo','Take  photo','take-job-photo').outerHTML}
+                </div>
 
-                </div>
-                <div class='action-buttons'>
-                    <button class='mdc-button mdc-button--outlined' id='skip'>SKIP</button>
-                    <button class='mdc-button mdc-button--raised' id='finish'>finish job</button>
-                </div>
-            </div>`
+            </div>
+            <div class='action-buttons'>
+                ${createButton('SKIP','skip','').outerHTML}
+                ${createButton('finish job','finish','arrow_right_alt').outerHTML}
+            </div>
+        </div>`
+
+
 
     const photoBtn = el.querySelector('#take-job-photo');
-    const skip = el.querySelector('#skip')
-    const finish = el.querySelector('#finish')
+    const skip = el.querySelector('#skip');
+    skip.classList.add("mdc-button--outlined")
+    const finish = el.querySelector('#finish');
+    finish.classList.add('mdc-button--raised')
+    const pie = el.querySelector('#pie');
+    const expand = el.querySelector('#expand');
+    let firstActivityTimestamp;
+    let lastActivityTimestamp;
     photoBtn.addEventListener('click', function () {
         history.pushState(['cameraView'], null, null)
         openCamera()
     });
-    skip.addEventListener('click',function(){
-        history.pushState(['comingSoong'],null,null);
+    skip.addEventListener('click', function () {
+        history.pushState(['comingSoong'], null, null);
         comingSoon();
     })
-    finish.addEventListener('click',function(){
-        showRating();
+    finish.addEventListener('click', function () {
+        getRatingSubsription(ApplicationState.venue ? ApplicationState.venue.office : '')
     })
-    if (timelineData) {
-        // const firstActivityTimestamp = timelineData[0].timestamp;
-        // const lastActivityTimestamp = timelineData[timelineData.length -1].timestamp;
-        // const fillValue = getTimelineFillValue(firstActivityTimestamp,lastActivityTimestamp);
-        // el.querySelector('#pie .left-side.half-circle').style.transform = `rotate(${fillValue}deg)`;
-        el.querySelector('#pie').addEventListener('click', function () {
-            createTimeLapse(timelineData)
-        })
+    expand.addEventListener('click', function () {
+        const details = el.querySelector(".expanded-details")
+        details.classList.toggle('hidden');
+        if (expand.textContent === 'expand_more') {
+            expand.textContent = 'expand_less'
+        } else {
+            expand.textContent = 'expand_more'
+        }
+    })
+    if (timelineData.length) {
+        firstActivityTimestamp = timelineData[timelineData.length -1].timestamp;
+        lastActivityTimestamp = timelineData[0].timestamp;
+        console.log('fat', new Date(firstActivityTimestamp))
+        console.log('lat', new Date(lastActivityTimestamp))
+        const fillValue = getTimelineFillValue(firstActivityTimestamp, lastActivityTimestamp);
+        if (fillValue <= 180) {
+            pie.classList.replace('p100', 'p0')
+        }
+        el.querySelector('#pie .bar').style.transform = `rotate(${fillValue}deg)`;
     }
+    el.querySelector('#pie').addEventListener('click', function () {
+        createTimeLapse(timelineData,firstActivityTimestamp,lastActivityTimestamp)
+    })
     return el;
 }
 
-function getTimelineFillValue() {
+function getRatingSubsription(office) {
+    getSubscription(office, 'call').then(function (subs) {
+     
+        if (!subs.length) return comingSoon();
+        if (subs.length == 1) return showRating(subs[0]);
+        const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+        const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+        bottomDialog(officeDialog, officeList)
+        officeList.listen('MDCList:action', function (officeEvent) {
+            officeDialog.close();
+            const selectedSubscription = subs[officeEvent.detail.index];
+            showRating(selectedSubscription);
+        })
+    })
+}
+
+function checkProductLength(products) {
+    return products.filter(function (product) {
+        return product.name
+    }).length
+}
+
+function getTimelineFillValue(firstActivityTimestamp, lastActivityTimestamp) {
     const diff = moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp))
-    return (diff / 12) * 100
+    const duration = moment.duration(diff).asHours();
+    const timePercentage = (duration / 12) * 100;
+    return (360 * timePercentage) / 100
 }
 
 function getTimelineAddendum(geopoint) {
@@ -253,12 +409,12 @@ function getTimelineAddendum(geopoint) {
         const store = tx.objectStore('addendum');
 
         const result = []
-        //const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
+        const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
         // const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
-        store.index('timestamp').openCursor(null, 'prev').onsuccess = function (evt) {
-            const cursor = evt.target.value;
+        store.index('timestamp').openCursor(null,'prev').onsuccess = function (evt) {
+            const cursor = evt.target.result;
             if (!cursor) return;
-            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(cursor.value.geopoint, geopoint))) {
+            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({latitude:cursor.value.location._latitude,longitude:cursor.value.location._longitude}, geopoint))) {
                 cursor.continue();
                 return
             }
@@ -267,7 +423,7 @@ function getTimelineAddendum(geopoint) {
         }
         tx.oncomplete = function () {
             const sorted = result.sort(function (first, second) {
-                return first.timestamp - second.timestamp
+                return second.timestamp - first.timestamp
             })
             resolve(sorted)
         }
@@ -301,9 +457,7 @@ function getTimelineActivityData(addendums) {
     })
 }
 
-
-
-function createTimeLapse(timelineData) {
+function createTimeLapse(timelineData,fat,lat) {
 
     const timeLine = createElement('div', {
         className: 'timeline'
@@ -315,12 +469,8 @@ function createTimeLapse(timelineData) {
     const ul = createElement('ul', {
         className: 'tl'
     })
-    let firstActivityTimestamp;
-    let lastActivityTimestamp;
-    if (timelineData) {
-        firstActivityTimestamp = timelineData[0].timestamp
-        astActivityTimestamp = timelineData[timelineData.length - 1].timestamp;
-    }
+  
+  
     let totalCheckins = 0;
     let totalPhotoCheckins = 0;
 
@@ -335,7 +485,7 @@ function createTimeLapse(timelineData) {
     })
 
 
-    const timelineDuration = moment.duration(moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp)))
+    const timelineDuration = moment.duration(moment(lat).diff(moment(fat)))
     console.log(timelineDuration)
     const screen = createElement('div', {
         className: 'timeline--container',
@@ -465,15 +615,15 @@ function checkForDuty(duty) {
 
 function comingSoon() {
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-        <span class="mdc-top-app-bar__title">Duties</span>
+        <span class="mdc-top-app-bar__title">Upcoming duties</span>
         `
     const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
     const el = document.getElementById('app-current-panel')
     el.innerHTML = ``
 
-    const cont = createElement('div',{
-        className:'coming--soon-container mdc-top-app-bar--fixed-adjust'
+    const cont = createElement('div', {
+        className: 'coming--soon-container mdc-top-app-bar--fixed-adjust'
     })
 
     const img = createElement('img', {
@@ -489,10 +639,67 @@ function comingSoon() {
 
 }
 
-function showRating() {
-    getLastCheckIn().then(function(activity){
-        const el = document.createElement('div');
-        
-        const dialog = new Dialog('How was your job','')
+function getProdcuts(office) {
+    return new Promise(function(resolve,reject){
+
+        const tx = db.transaction('children');
+        const store = tx.objectStore("children");
+        const products = [];
+        store.index('officeTemplate').openCursor([office,'product']).onsuccess = function(evt){
+            const cursor = evt.target.result;
+            if(!cursor) return;
+            if(cursor.value.status === 'CANCELLED') {
+                cursor.continue();
+                return
+            }
+            products.push(cursor.value)
+            cursor.continue();
+        }
+        tx.oncomplete = function(){
+            resolve(products)
+        }
     })
+}
+function getActivity(activityId) {
+    const tx = db.transaction('activity');
+    const store = tx.objectStore('activity');
+    store.get(activityId).onsuccess = function(evt){
+        Promise.resolve(evt.target.result)
+    }
+}
+function showRating(callSubscription) {
+   
+    const el = document.getElementById("app-current-panel");
+
+    el.innerHTML = `
+    <div id='rating-view'></div>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/rating/index.html'></iframe>`;
+    Promise.all([getProdcuts(callSubscription.office),getSubscription(callSubscription.office,'product'),getSubscription(callSubscription.office,'customer'),getActivity(ApplicationState.venue ? ApplicationState.venue.activityId : '')]).then(function(response){
+        const products = response[0];
+        const customer = ApplicationState.venue;
+        const productSubscription = response[1];
+        const customerSubscription = response[2];
+        customer.phoneNumber = response[3] ? response[3].attachment['First Contact'].value || '' : ''
+        document.getElementById('form-iframe').addEventListener("load", ev => {
+            passFormData({
+                name: 'init',
+                template: callSubscription,
+                body: {
+                    products:products,
+                    customer:customer,
+                    canEditProduct:productSubscription ? productSubscription.canEdit : '',
+                    canEditCustomer:customerSubscription ? customerSubscription.canEdit : ''
+                },
+                deviceType: native.getName()
+            });
+        })
+    })
+
+}
+
+
+
+function skippedRating() {
+    history.pushState(['comingSoon'], null, null);
+    comingSoon();
 }

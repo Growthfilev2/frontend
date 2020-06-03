@@ -111,8 +111,6 @@ function Dialog(title, content, id) {
 
 }
 
-
-
 Dialog.prototype.create = function (type) {
     const parent = createElement('div', {
         className: 'mdc-dialog',

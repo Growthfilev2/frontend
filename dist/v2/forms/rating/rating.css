@@ -1,7 +1,7 @@
 .feedback-card {
     max-width: 480px;
     min-height: 400px;
-    padding: 16px;
+    padding: 0px 16px 16px 16px;
     display: block;
     margin: 0 auto;
 }
@@ -47,7 +47,7 @@
 }
 
 .rating-stars .rating-star {
-    font-size: 35px;
+    font-size: 42px;
     padding: 12px;
 }
 #up , #down {
@@ -70,8 +70,8 @@
 }
 
 input[type=submit] {
-    width: 100%;
-    margin-top: 15px;
+    /* width: 100%; */
+    /* margin-top: 15px; */
 
 }
 
@@ -80,7 +80,7 @@ input[type=submit] {
         grid-gap: 0px;
     }
     .rating-stars .rating-star {
-        font-size: 32px;
+        font-size: 42px;
         padding: 6px;
     }
 
@@ -182,4 +182,39 @@ input[type=submit] {
     100% {
       stroke-dashoffset: 900;
     }
+  }
+
+  .rating-action-buttons {
+    padding:10px 0px 0px 0px;
+  }
+  .rating-action-buttons .mdc-button {
+    height: 48px;
+    font-size: 18px;
+  }
+  .rating-action-buttons #skip-rating {
+    width: 29%;
+  }
+  .rating-action-buttons #give-rating {
+    width: 69%;
+
+  }
+  .product-choose-container .mdc-text-field {
+    margin-top: 20px;
+  }
+  .products-section {
+    margin-top: 10px;
+  }
+  .products-section ul {
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  .product-btn {
+    display: block;
+    margin:0 auto;
+    margin-left: 0;
+  }
+
+  .dialog-action-buttons {
+    margin-top: 20px;
+
   }

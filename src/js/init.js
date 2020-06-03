@@ -2,7 +2,7 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-let DB_VERSION = 31;
+let DB_VERSION = 32;
 var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
@@ -560,7 +560,7 @@ function startApp() {
         break;
         case 31:
         const addendumStore = req.transaction.objectStore('addendum');
-        const timestampIndex = addendumStore.createIndex('timestamp');
+        const timestampIndex = addendumStore.createIndex('timestamp','timestamp');
 
     }
 
@@ -585,10 +585,10 @@ function startApp() {
     db = req.result;
     console.log("run app")
     regulator()
-    // .then(console.log).catch(function (error) {
-    //   if (error.type === 'geolocation') return handleLocationError(error)
-    //   contactSupport()
-    // })
+    .then(console.log).catch(function (error) {
+      if (error.type === 'geolocation') return handleLocationError(error)
+      contactSupport()
+    })
   };
 
   req.onerror = function () {
@@ -611,10 +611,10 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
-  openReportView();
+  // openReportView();
   // jobView()
   // createTimeLapse();
-  return;
+
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
@@ -1333,6 +1333,7 @@ function openReportView() {
   logReportEvent('IN ReportsView');
   logFirebaseAnlyticsEvent("report_view");
   history.pushState(['jobView'], null, null);
+  document.getElementById('step-ui').innerHTML = ''
   // reportView()
   jobView();
 }

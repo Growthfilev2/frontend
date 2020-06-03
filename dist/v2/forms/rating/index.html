@@ -12,72 +12,290 @@
 </head>
 
 <body class="mdc-typography">
-    
+
     <form id='form'>
-        <div class="mdc-layout-grid">
-            <div class="mdc-card feedback-card mdc-card--outlined  text-center">
-                <div class="mdc-layout-grid__inner">
-                    <div
-                        class="mdc-layout-grid__cell--span-4-phone  mdc-layout-grid__cell--span-2-tablet mdc-layout-grid__cell--span-3-desktop mdc-layout-grid__cell--align-middle">
-                        <img src="https://pixinvent.com/materialize-material-design-admin-template/app-assets/images/user/12.jpg"
-                            id="agent-image" class="agent-image">
-                    </div>
-                    <div
-                        class="mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-6-tablet mdc-layout-grid__cell--span-9-desktop agent-details">
-                        <div class="mdc-typography--headline5 mt-10" id="agent-name">John doe</div>
-                        <span class="mdc-typography--subtitle2" id="agent-office">@ Growthfile Analytics Pvt Ltd</span>
-                        <div class="mdc-typography--caption" id="agent-location">
-                            Tuesday, 10:30 Am at
-                            <a href="https://goo.gl/maps/Vh4kY71H9ofKT9gb8" target="_blank" class="mdc-theme--primary">
-                                Bhagawan M, Bhagawan Mahavir Marg, Swarn Jayanti Park, Sector 10, Rohini</a>
-                            </span>
-
-                        </div>
-                    </div>
-
-                </div>
-                <div class="rating-section">
-
-                    <div class="rating-area">
-                        <div class="rating-stars">
-                            <i class="material-icons rating-star" data-rate="1">star_outline</i>
-                            <i class="material-icons rating-star" data-rate="2">star_outline</i>
-                            <i class="material-icons rating-star" data-rate="3">star_outline</i>
-                            <i class="material-icons rating-star" data-rate="4">star_outline</i>
-                            <i class="material-icons rating-star" data-rate="5">star_outline</i>
-                        </div>
-
-                    </div>
-                    <div class="feedback-area">
-                        <div class="form-component">
-                            <div class="mdc-text-field mdc-text-field--textarea" data-mdc-auto-init="MDCTextField"
-                                id="feedback">
-                                <textarea class="mdc-text-field__input" rows="4" cols="100"></textarea>
-                                <div class="mdc-notched-outline mdc-notched-outline--upgraded">
-                                    <div class="mdc-notched-outline__leading"></div>
-                                    <div class="mdc-notched-outline__notch">
-                                        <label for="textarea" class="mdc-floating-label" style="">Feedback
-                                            (optional)</label>
-                                    </div>
-                                    <div class="mdc-notched-outline__trailing"></div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <input type="submit" value="Send Feedback" class="mdc-button mdc-button--raised mdc-ripple-upgraded"
-                    data-mdc-auto-init="MDCRipple">
-                 
+        <div class="feedback-card text-center">
+            <h1 class='mdc-typography--headline5 text-center bold'>How was your job ? </h1>
+            <div class="customer-section mt-10 mdc-typography--headline6">
+                <div id="customer-name"></div>
+                <p id="customer-number"></p>
             </div>
-           
+
+            <div class="products-section">
+
+
+            </div>
+            <div class="rating-section">
+
+                <div class="rating-area">
+                    <div class="rating-stars">
+                        <i class="material-icons rating-star" data-rate="1">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="2">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="3">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="4">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="5">star_outline</i>
+                    </div>
+
+                </div>
+                <div class="feedback-area">
+                    <div class="form-component">
+                        <div class="mdc-text-field mdc-text-field--textarea" data-mdc-auto-init="MDCTextField">
+                            <textarea class="mdc-text-field__input" rows="4" cols="100" id='feedback'></textarea>
+                            <div class="mdc-notched-outline mdc-notched-outline--upgraded">
+                                <div class="mdc-notched-outline__leading"></div>
+                                <div class="mdc-notched-outline__notch">
+                                    <label for="textarea" class="mdc-floating-label" style="">Feedback
+                                        (optional)</label>
+                                </div>
+                                <div class="mdc-notched-outline__trailing"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="rating-action-buttons">
+                <button class="mdc-button mdc-button--outlined" data-mdc-auto-init="MDCRipple" id="skip-rating" type="button">
+                    <span class="mdc-button__label">skip</span>
+                </button>
+                <input type="submit" value="give rating" class="mdc-button mdc-button--raised mdc-ripple-upgraded"
+                    data-mdc-auto-init="MDCRipple" id='give-rating'>
+            </div>
+        </div>
     </form>
+    <div id='dialog-container'></div>
+    <div id='snackbar-container'></div>
 
     <script src="../external/js/material.min.js"></script>
     <script src="./index.js"></script>
-
-    <script src="../js/common.js?version=6"></script>
+    <script src="../js/common.js?version=7"></script>
     <script>
         window.mdc.autoInit();
+        const customerNumber = document.getElementById("customer-number");
+        const customerName = document.getElementById('customer-name');
+        const feedback = document.getElementById('feedback');
+        const skipRatingbtn = document.getElementById('skip-rating');
+        const productsSection = document.querySelector('.products-section');
+        const selectedProducts = {};
+        let productDialog;
+        skipRatingbtn.addEventListener('click', function () {
+            parent.postMessage({
+                name: 'skippedRating'
+            }, parentOrigin)
+        })
+
+
+        function getRating() {
+            return [...document.querySelectorAll('.rating-star.marked')].length;
+        }
+
+        function init(template, data) {
+            const products = data.products;
+            const customer = data.customer;
+            const canEditProducts = data.canEditProduct;
+            const canEditCustomer = data.canEditCustomer;
+            customerNumber.innerHTML = customer ?`<a href='${customer.phoneNumber}'>${customer.phoneNumber}</a>` : '';
+            customerName.textContent = customer ?  customer.location : '';
+            if (products.length) {
+                loadProducts(products)
+            }
+            const form = document.getElementById('form');
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(template));
+                const rating = getRating();
+                if(!rating) {
+                    showSnacksApiResponse('Please give rating');
+                    return
+                }
+                copy.attachment['Creator Rating'].value = rating
+                copy.attachment['Creator Feedback'].value = feedback.value;
+                copy.attachment.Customer.value = customer ? customer.location : '';
+                const productArray = [];
+                Object.keys(selectedProducts).forEach(function(product){
+                    productArray.push(selectedProducts[product])
+                })
+                if(productArray.length == 0) {
+                    productArray.push({name:'',rate:'',date:'',quantity:''})
+                }
+                copy.attachment.Products.value = productArray;
+                copy.venue = [{
+                    venueDescriptor:template.venue[0],
+                    location:customer ? customer.location :'',
+                    address:customer ? customer.address : '',
+                    geopoint:{
+                        latitude:customer ? customer.latitude:'',
+                        longitude:customer ? customer.longitude:''
+                    }
+                }]
+                copy.share = [];
+                parent.postMessage({
+                    name:'sendFormToParent',
+                    body:copy
+                },parentOrigin);
+            })
+        }
+
+        function loadProducts(products) {
+
+            const addProductsBtn = createButton("Add product", '', 'add');
+            addProductsBtn.classList.add('mdc-button--raised', 'product-btn');
+            addProductsBtn.addEventListener('click', function (evt) {
+                evt.preventDefault();
+                openProductScreen(products);
+                // productDialog = new Dialog("New product", createProductScreen(products)).create('simple')
+                // productDialog.open();
+                
+            })
+            const ul = createElement('ul', {
+                className: 'mdc-list mdc-list--two-line mdc-list--avatar-list',
+                id: 'product-list'
+            })
+            productsSection.appendChild(addProductsBtn);
+            productsSection.appendChild(ul);
+        }
+
+        function openProductScreen(products,selectedProduct) {
+            productDialog = new Dialog("New product", createProductScreen(products,selectedProduct)).create('simple')
+            productDialog.open();
+        }
+
+        function createProductScreen(products,savedProduct = {rate:'',date:'',quantity:'',name:''}) {
+            const div = createElement('div', {
+                className: 'product-choose-container'
+            })
+            const name = createProductDatalist(products);
+            const nameValue = name.querySelector('#product-chooser')
+            if(savedProduct.name){
+                nameValue.value = savedProduct.name
+            }
+            const rate = new mdc.textField.MDCTextField(textField({
+                id: 'rate',
+                label: 'Rate',
+                type:'number',
+                value: savedProduct.rate || ''
+            }));
+            const quantity = new mdc.textField.MDCTextField(textField({
+                id: 'quantity',
+                label: 'Quantity',
+                type:'number',
+                value:savedProduct.quantity || ''
+            }));
+            const date = new mdc.textField.MDCTextField(textField({
+                id: 'date',
+                type: 'date',
+                label: 'Date',
+                value: savedProduct.data ||  createDate(new Date())
+            }));
+            div.appendChild(name);
+            div.appendChild(rate.root_);
+            div.appendChild(quantity.root_);
+            div.appendChild(date.root_);
+            const actionButtons = createElement('div',{
+                className:'dialog-action-buttons'
+            })
+            const cancel = createButton('cancel');
+            cancel.addEventListener('click',function(e){
+                e.preventDefault();
+                productDialog.close();
+            })
+            const save = createButton('save');
+            save.classList.add("mdc-button--raised");
+            actionButtons.appendChild(cancel);
+            actionButtons.appendChild(save);
+            save.addEventListener('click', function (e) {
+                e.preventDefault();
+               
+                productDialog.close();
+                if(!nameValue.value) {
+                    showSnacksApiResponse('Please select a product name');
+                    return
+                }
+                if(document.querySelector(`[data-product-name="${nameValue.value}"]`)) {
+                    document.querySelector(`[data-product-name="${nameValue.value}"]`).remove()
+                }
+                const selectedProduct = {
+                    rate:Number(rate.value),
+                    date:date.value,
+                    quantity:Number(quantity.value),
+                    name:nameValue.value
+                }
+                selectedProducts[nameValue.value] = selectedProduct
+                appendProducts(products,selectedProduct);
+            })
+            div.appendChild(actionButtons)
+            return div;
+
+        }
+
+        function appendProducts(products, selectedProduct) {
+            const productList = document.getElementById('product-list');
+            const li = createElement('li', {
+                className: 'mdc-list-item pl-0',
+            })
+            li.dataset.productName = selectedProduct.name;
+           
+            const clearIcon = createElement('span', {
+                className: 'mdc-list-item__graphic material-icons mdc-theme--error',
+                textContent: 'delete'
+            })
+            clearIcon.addEventListener('click', function () {
+                li.remove();
+                delete selectedProducts[selectedProduct.name];
+            })
+            const text = createElement("span", {
+                className: 'mdc-list-item__text'
+            })
+            const primaryText = createElement('span', {
+                className: 'mdc-list-item__primary-text',
+                style:'text-align:left',
+                textContent: selectedProduct.name
+            })
+            const secondaryText = createElement('span', {
+                className: 'mdc-list-item__secondary-text',
+                style:'text-align:left',
+                textContent:  selectedProduct.quantity ? 'Quantity : ' + selectedProduct.quantity : ''
+            })
+            text.appendChild(primaryText)
+            text.appendChild(secondaryText);
+            text.addEventListener('click',function(){
+                openProductScreen(products,selectedProduct)
+            })
+            const meta = createElement('span', {
+                className: 'mdc-list-item__meta mdc-theme--primary',
+                style:'font-size:18px',
+                textContent: selectedProduct.rate ? convertNumberToINR(selectedProduct.rate) : ''
+            })
+            li.appendChild(clearIcon)
+            li.appendChild(text)
+            li.appendChild(meta);
+            
+            productList.appendChild(li);
+        }
+
+        function createProductDatalist(products) {
+            const container = createElement('div', {
+                className: 'search-product-cont'
+            })
+            const input = createElement("input", {
+                className: 'mdc-text-field',
+                id: 'product-chooser',
+                name: 'product-chooser',
+            })
+            input.setAttribute('list', 'products');
+            const datalist = createElement('datalist', {
+                id: 'products'
+            })
+            products.forEach(function (product) {
+                datalist.appendChild(createElement('option', {
+                    value: product.attachment.Name.value
+                }))
+            })
+            container.appendChild(input);
+            container.appendChild(datalist);
+            return container;
+        }
     </script>
 </body>
+
+</html>
