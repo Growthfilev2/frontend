@@ -517,7 +517,7 @@ function createTimeLapse(timelineData,fat,lat) {
     if (totalCheckins) {
         // ul.style.paddingTop = '80px';
     }
-    if (timelineDuration.asMilliseconds()) {
+    if (fat && lat) {
         historyCont.appendChild(ul);
     } else {
         const emptyCont = createElement('div', {
