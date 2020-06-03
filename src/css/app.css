@@ -1368,46 +1368,6 @@ ul.tl li .item-detail {
   font-size: 12px;
 }
 
-
-.timeline--container {
-  height: 100%;
-}
-
-.timeline--container .timeline {
-  position: relative;
-  height: 80%;
-  /* margin-top: 80px; */
-  /* padding-top: 16px; */
-}
-
-.timeline--header {
-  /* position: fixed;
-  top: 0rem; */
-  background-color: white;
-  width: 100%;
-  z-index: 99;
-  padding: 16px;
-  border-bottom: 1px solid #ccc;
-}
-
-.timeline--footer {
-  position: fixed;
-  bottom: 0rem;
-  margin: 0 auto;
-  display: block;
-  width: 100%;
-  background-color: white;
-  padding: 16px;
-  margin-top: 80px;
-  /* z-index: 99; */
-}
-.timeline--footer .mdc-button {
-  width: 80%;
-  margin: 0 auto;
-  display: block;
-
-}
-
 .svg-list-empty {
   width: 100%;
   max-width: 200px;

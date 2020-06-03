@@ -368,6 +368,7 @@ function constructJobView(timelineData, duty) {
         el.querySelector('#pie .bar').style.transform = `rotate(${fillValue}deg)`;
     }
     el.querySelector('#pie').addEventListener('click', function () {
+        history.pushState(['timeLapse'],null,null);
         createTimeLapse(timelineData,firstActivityTimestamp,lastActivityTimestamp)
     })
     return el;
@@ -673,7 +674,7 @@ function showRating(callSubscription) {
 
     el.innerHTML = `
     <div id='rating-view'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/rating/index.html'></iframe>`;
+    <iframe id='form-iframe' src='${window.location.origin}/dist/v2/forms/rating/index.html'></iframe>`;
     Promise.all([getProdcuts(callSubscription.office),getSubscription(callSubscription.office,'product'),getSubscription(callSubscription.office,'customer'),getActivity(ApplicationState.venue ? ApplicationState.venue.activityId : '')]).then(function(response){
         const products = response[0];
         const customer = ApplicationState.venue;

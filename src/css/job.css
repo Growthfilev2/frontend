@@ -1,3 +1,41 @@
+.timeline--container {
+  height: 100%;
+}
+
+.timeline--container .timeline {
+  position: relative;
+  max-height: 80%;
+  overflow-y: auto;
+
+}
+
+.timeline--header {
+
+  background-color: white;
+  width: 100%;
+  z-index: 99;
+  padding: 16px;
+  border-bottom: 1px solid #ccc;
+}
+
+.timeline--footer {
+  position: fixed;
+  bottom: 0rem;
+  margin: 0 auto;
+  display: block;
+  width: 100%;
+  background-color: white;
+  padding: 16px;
+  margin-top: 80px;
+  /* z-index: 99; */
+}
+.timeline--footer .mdc-button {
+  width: 80%;
+  margin: 0 auto;
+  display: block;
+
+}
+
 svg {
   margin: auto;
   display: block;
@@ -70,3 +108,4 @@ path.purple {
 .coming--soon-container img {
   width: 100%;
 }
+
