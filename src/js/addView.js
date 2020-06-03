@@ -75,7 +75,10 @@ function sendFormToParent(formData) {
                 }
                 return;
             };
-
+            if (formData.template === 'call') {
+                skippedRating();
+                return
+            }
 
             if (formData.template === 'customer') {
                 ApplicationState.knownLocation = true;
