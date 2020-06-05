@@ -4,104 +4,14 @@ function jobView() {
     parent.classList.remove('mdc-top-app-bar--fixed-adjust')
     document.getElementById('app-header').classList.add('hidden')
     getTimelineAddendum(ApplicationState.location).then(function (addendums) {
-           console.log(addendums)
             return getTimelineActivityData(addendums)
-        })
-        .then(function (timelineData) {
-            const auth = firebase.auth().currentUser
-            const duty = {
-                attachment: {
-                    'Duty Type': {
-                        value: '',
-                        type: 'duty'
-                    },
-                    'Location': {
-                        value: ''
-                    },
-                    'Include': {
-                        value: ''
-                    },
-                    'Supervisor': {
-                        value: ''
-                    },
-                    'Products': {
-                        value: [{
-                            name: '',
-                            rate: '',
-                            date: '',
-                            quanity: ''
-                        }]
-                    }
-                },
-                schedule: [{
-                    startTime: '',
-                    endTime: '',
-                    name: 'Date'
-                }],
-                assignees: [{
-                    displayName: auth.displayName,
-                    photoURL: auth.photoURL,
-                    phoneNumber: auth.phoneNumber
-                }],
-                venue: [],
-                supervisior: null
-            }
-            // db.transaction('activity').objectStore('activity').index('timestamp').getAll(bound).onsuccess = function (e) {
-            //     console.log(e.target.result)
-            //     if (!e.target.result) return;
-            //     const filtered = e.target.result.sort(function (a, b) {
-            //         return a.timestamp - b.timestamp;
-            //     })
-                parent.appendChild(constructJobView(timelineData, duty));
-            // }
-        }).catch(console.error)
-
-    // if (newJob) {
-    //     showPreviousJobPopUp(oldJob)
-    //     return
-    // }
-    // parent.appendChild(constructJoBView(oldJob));
-}
-
-function showPreviousJobPopUp(oldJo) {
-    const heading = createElement('div', {
-        className: 'mdc-typography--headline5',
-        textContent: 'Your last job is not finished. Please finish or skip it now'
     })
-    getTimelineAddendum(oldJob.geopoint).then(function (addendums) {
-        return getTimelineActivityData(addendums, oldJob.geopoint)
-    }).then(function (timelineData) {
-        const dialog = new Dialog(heading, constructJoBView(timelineData), 'job-popup').create('simple');
-        dialog.open();
-        //dialog button click;
-        //new job start
-
-        //skip
-
-    });
-
-
+    .then(function (result) {
+            parent.appendChild(constructJobView(result));
+    }).catch(console.error)
 
 }
 
-function getOldLocation() {
-    return JSON.parse(localStorage.getItem('ApplicationState')).location
-}
-
-function getDutyCoordinates(location) {
-    return new Promise(function (resolve, reject) {
-
-        const tx = db.transaction('map');
-        const store = tx.objectStore('map');
-        let record;
-        store.index('location').get(location).onsuccess = function (evt) {
-            record = evt.target.result;
-        }
-        tx.oncomplete = function () {
-            resolve(record)
-        }
-    })
-}
 
 function getSupervisorContact(phoneNumber) {
     return new Promise(function (resolve, reject) {
@@ -225,7 +135,7 @@ function showUpcomingDuty(duty, currentGeopoint) {
 
 
 
-function constructJobView(timelineData, duty) {
+function constructJobView(result) {
 
     const el = createElement('div', {
         className: 'mdc-layout-grid job-screen'
@@ -240,7 +150,7 @@ function constructJobView(timelineData, duty) {
                                 <i class='material-icons'>location_on</i>
                             </div>
                             <div class='text mdc-typography--headline6 ml-10'>
-                               ${ApplicationState.venue ? ApplicationState.venue.location : '-'}
+                               ${result.currentDuty.attachment.Location.value || '-'}
                                <a href=''></a>
                             </div>
                         </div>
@@ -248,16 +158,17 @@ function constructJobView(timelineData, duty) {
                     <div class='duty-type mb-10'>
                         <span class='inline-flex mdc-theme--primary mb-10'>
                             <i class='material-icons'>assignment</i>
-                            <span class='mdc-typography--headline6 ml-10'>${duty.attachment['Duty Type'].value || '-'} </span>
+                            <span class='mdc-typography--headline6 ml-10'>${result.currentDuty.attachment['Duty Type'].value || '-'} </span>
                         </span>
                     </div>
                     <div class='products'>
+                    ${checkProductLength(result.currentDuty.attachment.Products.value) ? `
                         <span class='inline-flex mdc-theme--primary'>
                             <i class='material-icons'>settings</i>
                             <span class='mdc-typography--headline6 ml-10'>Products</span>
                         </span>
                         <ul class='mdc-list mdc-list--two-line'>
-                            ${checkProductLength(duty.attachment.Products.value) ?  duty.attachment.Products.value.map(function(product){
+                             ${result.currentDuty.attachment.Products.value.map(function(product){
                                 return `<li class='mdc-list-item'>
                                     <span class='mdc-list-item__text'>
                                         <span class='mdc-list-item__primary-text'>${product.name}</span>
@@ -265,32 +176,15 @@ function constructJobView(timelineData, duty) {
                                     </span>
                                     <span class='mdc-list-item__meta'>${convertNumberToInr(Number(product.rate))}</span>
                                 </li>`
-                            }) : '<div class="mdc-typography--caption1 text-center">No products found</div>'}
-                        </ul>
+                            })}
+                        </ul>`
+                        :''}
                     </div>
                     <div class='expanded-details hidden'>
                         <hr>
-                        <div class='supervisor'>
-                            <span class='inline-flex mdc-theme--primary'>
-                                <i class='material-icons'>supervisor_account</i>
-                                <span class='mdc-typography--headline6 ml-10'>Supervisor</span>
-                            </span>
-                            ${duty.attachment.Supervisor.value ? `<ul class='mdc-list mdc-list--two-line mdc-list--avatar-list'>
-                            <li class='mdc-list-item'>
-                                <span class='mdc-list-item__graphic'>
-                                    <img src='${duty.supervisior.photoURL || './img/empty-user.jpg'}'>
-                                    <span class='mdc-list-item__text'>
-                                        <span class='mdc-list-item__primary-text'>${duty.supervisior.displayName}</span>
-                                        <span class='mdc-list-item__secondary-text'>Customer</span>
-                                    </span>
-                                </span>
-                            </li>
-                        </ul>` : '<div class="mdc-typography--caption1 text-center">No supervisor found</div>'}
-                            
-                        </div>
                         <span class='inline-flex mdc-theme--primary'>
                             <i class='material-icons'>access_time</i>
-                            <span class='mdc-typography--headline6 ml-10'>${duty.schedule[0].startTime ? `${moment(duty.schedule[0].startTime).format('hh:mm A')} to ${moment(duty.schedule[0].endTime).format('hh:mm A')}` : '-'} </span>
+                            <span class='mdc-typography--headline6 ml-10'>${result.currentDuty.schedule[0].startTime ? `${moment(result.currentDuty.schedule[0].startTime).format('hh:mm A')} to ${moment(result.currentDuty.schedule[0].endTime).format('hh:mm A')}` : '-'} </span>
                         </span>
                         <hr>
                         <div class='staff'>
@@ -299,7 +193,7 @@ function constructJobView(timelineData, duty) {
                                 <span class='mdc-typography--headline6 ml-10'>Staff</span>
                             </span>
                             <div class="mdc-chip-set" role="grid">
-                                ${viewAssignee(duty)}
+                                ${viewAssignee(result.currentDuty)}
                             </div>
                         </div>
                     </div>
@@ -309,9 +203,11 @@ function constructJobView(timelineData, duty) {
                 </div>
             </div>
             <div class='mdc-card timeline-overview mt-20'>
-                      
+                <div class='startTime text-center mb-10'>${result.timelineData.length ? moment(result.timelineData[result.timelineData.length -1].timestamp).format('hh:mm A'):''}</div>
                 <div class="c100 p100 big center orange" id='pie'>
-                    <div class="slice"><div class="bar"></div><div class="fill"></div></div>
+                <span>${result.timelineData.length ? moment(result.timelineData[0].timestamp).format('hh:mm A') :''}</span>
+                    <div class="slice"><div class="bar">
+                    </div><div class="fill"></div></div>
                 </div>
             
                 <div class='photo-button--container'>
@@ -341,11 +237,11 @@ function constructJobView(timelineData, duty) {
         openCamera()
     });
     skip.addEventListener('click', function () {
-        history.pushState(['comingSoong'], null, null);
+        // history.pushState(['reportView'], null, null);
         comingSoon();
     })
     finish.addEventListener('click', function () {
-        getRatingSubsription(ApplicationState.venue ? ApplicationState.venue.office : '')
+        getRatingSubsription(result.currentDuty.office)
     })
     expand.addEventListener('click', function () {
         const details = el.querySelector(".expanded-details")
@@ -356,9 +252,9 @@ function constructJobView(timelineData, duty) {
             expand.textContent = 'expand_more'
         }
     })
-    if (timelineData.length) {
-        firstActivityTimestamp = timelineData[timelineData.length -1].timestamp;
-        lastActivityTimestamp = timelineData[0].timestamp;
+    if (result.timelineData.length) {
+        firstActivityTimestamp = result.timelineData[result.timelineData.length - 1].timestamp;
+        lastActivityTimestamp = result.timelineData[0].timestamp;
         console.log('fat', new Date(firstActivityTimestamp))
         console.log('lat', new Date(lastActivityTimestamp))
         const fillValue = getTimelineFillValue(firstActivityTimestamp, lastActivityTimestamp);
@@ -368,15 +264,15 @@ function constructJobView(timelineData, duty) {
         el.querySelector('#pie .bar').style.transform = `rotate(${fillValue}deg)`;
     }
     el.querySelector('#pie').addEventListener('click', function () {
-        history.pushState(['timeLapse'],null,null);
-        createTimeLapse(timelineData,firstActivityTimestamp,lastActivityTimestamp)
+        history.pushState(['timeLapse'], null, null);
+        createTimeLapse(result.timelineData, firstActivityTimestamp, lastActivityTimestamp)
     })
     return el;
 }
 
 function getRatingSubsription(office) {
     getSubscription(office, 'call').then(function (subs) {
-     
+
         if (!subs.length) return comingSoon();
         if (subs.length == 1) return showRating(subs[0]);
         const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
@@ -397,10 +293,13 @@ function checkProductLength(products) {
 }
 
 function getTimelineFillValue(firstActivityTimestamp, lastActivityTimestamp) {
-    const diff = moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp))
-    const duration = moment.duration(diff).asHours();
-    const timePercentage = (duration / 12) * 100;
-    return (360 * timePercentage) / 100
+    if (lastActivityTimestamp) {
+        const diff = moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp))
+        const duration = moment.duration(diff).asHours();
+        const timePercentage = (duration / 12) * 100;
+        return (360 * timePercentage) / 100
+    }
+    return 1;
 }
 
 function getTimelineAddendum(geopoint) {
@@ -410,15 +309,15 @@ function getTimelineAddendum(geopoint) {
         const store = tx.objectStore('addendum');
 
         const result = []
-        const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
+        const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
         // const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
-        store.index('timestamp').openCursor(null,'prev').onsuccess = function (evt) {
+        store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
             const cursor = evt.target.result;
             if (!cursor) return;
-            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({latitude:cursor.value.location._latitude,longitude:cursor.value.location._longitude}, geopoint))) {
-                cursor.continue();
-                return
-            }
+            // if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({latitude:cursor.value.location._latitude,longitude:cursor.value.location._longitude}, geopoint))) {
+            //         cursor.continue();
+            //     return
+            // }
             result.push(cursor.value)
             cursor.continue();
         }
@@ -438,18 +337,20 @@ function getTimelineActivityData(addendums) {
 
         const tx = db.transaction('activity');
         const store = tx.objectStore('activity');
-        const filteredResult = [];
-        const dutyTemplates = {
-            'check-in': true
-        }
+        const filteredResult = {
+            currentDuty: '',
+            timelineData: []
+        };
         addendums.forEach(function (addendum) {
             store.get(addendum.activityId).onsuccess = function (evt) {
                 const record = evt.target.result;
                 if (!record) return;
-                if (dutyTemplates[record.template]) {
-                    record.geopoint = addendum.geopoint
-                    filteredResult.push(record);
+                if (record.template !== 'duty') return;
+                if (addendum.timestamp === ApplicationState.lastCheckInCreated) {
+                    filteredResult.currentDuty = record;
                 }
+                record.geopoint = addendum.geopoint
+                filteredResult.timelineData.push(record)
             }
         })
         tx.oncomplete = function () {
@@ -458,7 +359,7 @@ function getTimelineActivityData(addendums) {
     })
 }
 
-function createTimeLapse(timelineData,fat,lat) {
+function createTimeLapse(timelineData, fat, lat) {
 
     const timeLine = createElement('div', {
         className: 'timeline'
@@ -470,8 +371,8 @@ function createTimeLapse(timelineData,fat,lat) {
     const ul = createElement('ul', {
         className: 'tl'
     })
-  
-  
+
+
     let totalCheckins = 0;
     let totalPhotoCheckins = 0;
 
@@ -615,8 +516,8 @@ function checkForDuty(duty) {
 }
 
 function comingSoon() {
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-        <span class="mdc-top-app-bar__title">Upcoming duties</span>
+    const backIcon = `
+        <span class="mdc-top-app-bar__title">Duties</span>
         `
     const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
@@ -637,59 +538,92 @@ function comingSoon() {
     cont.appendChild(img)
     cont.appendChild(div)
     el.appendChild(cont);
-
 }
 
-function getProdcuts(office) {
-    return new Promise(function(resolve,reject){
+function getAllCustomer(office) {
+    return new Promise(function (resolve, reject) {
 
-        const tx = db.transaction('children');
-        const store = tx.objectStore("children");
-        const products = [];
-        store.index('officeTemplate').openCursor([office,'product']).onsuccess = function(evt){
+
+        const tx = db.transaction('map');
+        const store = tx.objectStore('map');
+        const result = []
+        store.index('office').openCursor(office).onsuccess = function (evt) {
             const cursor = evt.target.result;
-            if(!cursor) return;
-            if(cursor.value.status === 'CANCELLED') {
+            if (!cursor) return;
+            if (!cursor.value.location || !cursor.value.address) {
                 cursor.continue();
-                return
+                return;
             }
-            products.push(cursor.value)
+            if (cursor.value.template !== 'customer') {
+                cursor.continue();
+                return;
+            }
+            result.push(cursor.value)
             cursor.continue();
         }
-        tx.oncomplete = function(){
-            resolve(products)
+        tx.oncomplete = function () {
+            resolve(result)
         }
     })
 }
+
+function getChildrenActivity(office, template) {
+    return new Promise(function (resolve, reject) {
+
+        const tx = db.transaction('children');
+        const store = tx.objectStore("children");
+        const result = [];
+        store.index('officeTemplate').openCursor([office, template]).onsuccess = function (evt) {
+            const cursor = evt.target.result;
+            if (!cursor) return;
+            if (cursor.value.status === 'CANCELLED') {
+                cursor.continue();
+                return
+            }
+            result.push(cursor.value)
+            cursor.continue();
+        }
+        tx.oncomplete = function () {
+            resolve(result)
+        }
+    })
+}
+
+
+
+
 function getActivity(activityId) {
     const tx = db.transaction('activity');
     const store = tx.objectStore('activity');
-    store.get(activityId).onsuccess = function(evt){
+    store.get(activityId).onsuccess = function (evt) {
         Promise.resolve(evt.target.result)
     }
 }
+
 function showRating(callSubscription) {
-   
+
     const el = document.getElementById("app-current-panel");
 
     el.innerHTML = `
     <div id='rating-view'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/dist/v2/forms/rating/index.html'></iframe>`;
-    Promise.all([getProdcuts(callSubscription.office),getSubscription(callSubscription.office,'product'),getSubscription(callSubscription.office,'customer'),getActivity(ApplicationState.venue ? ApplicationState.venue.activityId : '')]).then(function(response){
+    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>`;
+    Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'), getActivity(ApplicationState.venue ? ApplicationState.venue.activityId : ''), getAllCustomer(callSubscription.office)]).then(function (response) {
         const products = response[0];
         const customer = ApplicationState.venue;
         const productSubscription = response[1];
         const customerSubscription = response[2];
-        customer.phoneNumber = response[3] ? response[3].attachment['First Contact'].value || '' : ''
+        customer.phoneNumber = response[3] ? response[3].attachment['First Contact'].value || '' : '';
+        const customers = response[4];
         document.getElementById('form-iframe').addEventListener("load", ev => {
             passFormData({
                 name: 'init',
                 template: callSubscription,
                 body: {
-                    products:products,
-                    customer:customer,
-                    canEditProduct:productSubscription ? productSubscription.canEdit : '',
-                    canEditCustomer:customerSubscription ? customerSubscription.canEdit : ''
+                    products: products,
+                    customers: customers,
+                    customer: customer,
+                    canEditProduct: productSubscription ? productSubscription.canEdit : '',
+                    canEditCustomer: customerSubscription ? customerSubscription.canEdit : ''
                 },
                 deviceType: native.getName()
             });
@@ -701,6 +635,6 @@ function showRating(callSubscription) {
 
 
 function skippedRating() {
-    history.pushState(['comingSoon'], null, null);
+    // history.pushState(['reportView'], null, null);
     comingSoon();
 }

@@ -664,8 +664,10 @@ function updateCalendar(activity, tx) {
   calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
-      activity.schedule.forEach(function (schedule) {
+      if(!Array.isArray(activity.schedule)) return;
 
+      activity.schedule.forEach(function (schedule) {
+        if(typeof schedule !== 'object') return;
         const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,

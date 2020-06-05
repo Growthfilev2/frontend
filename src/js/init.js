@@ -611,9 +611,7 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
-  // openReportView();
-  // jobView()
-  // createTimeLapse();
+
 
   return new Promise(function (resolve, reject) {
     var prom;
@@ -662,7 +660,7 @@ function regulator() {
         return appLocation(3)
       })
       .then(function (geopoint) {
-     
+        
         handleCheckin(geopoint);
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
@@ -783,9 +781,9 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  runRead({
-    'read': '1'
-  })
+  // runRead({
+  //   'read': '1'
+  // })
   if (auth.displayName && auth.photoURL && auth.email) return openReportView()
   removeLoadingScreen()
   document.getElementById('app-header').classList.remove('hidden')

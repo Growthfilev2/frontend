@@ -4,9 +4,11 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+        integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
     <link href="../external/css/material.min.css" rel="stylesheet">
     <link href="../css/style.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
     <link href="./rating.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -15,10 +17,25 @@
 
     <form id='form'>
         <div class="feedback-card text-center">
-            <h1 class='mdc-typography--headline5 text-center bold'>How was your job ? </h1>
+            <h1 class='mdc-typography--headline5 mdc-theme--primary text-center bold'>How was your job ? </h1>
             <div class="customer-section mt-10 mdc-typography--headline6">
-                <div id="customer-name"></div>
-                <p id="customer-number"></p>
+                <div id="customer-name" style="display: inline-flex;">
+                    <div class="text"></div>
+                    <div class="edit-icon">
+                        <i class="material-icons" id='edit-name'>edit</i>
+                    </div>
+                </div>
+                <div class="mdc-text-field mdc-text-field--outlined mt-10" data-mdc-auto-init="MDCTextField"
+                    id='phone-number'>
+                    <input class="mdc-text-field__input" type="text" placeholder="Enter a phone number">
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+                </div>
             </div>
 
             <div class="products-section">
@@ -55,7 +72,8 @@
                 </div>
             </div>
             <div class="rating-action-buttons">
-                <button class="mdc-button mdc-button--outlined" data-mdc-auto-init="MDCRipple" id="skip-rating" type="button">
+                <button class="mdc-button mdc-button--outlined" data-mdc-auto-init="MDCRipple" id="skip-rating"
+                    type="button">
                     <span class="mdc-button__label">skip</span>
                 </button>
                 <input type="submit" value="give rating" class="mdc-button mdc-button--raised mdc-ripple-upgraded"
@@ -65,7 +83,10 @@
     </form>
     <div id='dialog-container'></div>
     <div id='snackbar-container'></div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
     <script src="../external/js/material.min.js"></script>
     <script src="./index.js"></script>
     <script src="../js/common.js?version=7"></script>
@@ -73,29 +94,39 @@
         window.mdc.autoInit();
         const customerNumber = document.getElementById("customer-number");
         const customerName = document.getElementById('customer-name');
+        const editName = document.getElementById('edit-name');
+        const phoneNumber = new mdc.textField.MDCTextField(document.getElementById('phone-number'));
         const feedback = document.getElementById('feedback');
         const skipRatingbtn = document.getElementById('skip-rating');
         const productsSection = document.querySelector('.products-section');
         const selectedProducts = {};
         let productDialog;
+        const iti = phoneFieldInit(phoneNumber.input_);
+        let customer;
         skipRatingbtn.addEventListener('click', function () {
             parent.postMessage({
                 name: 'skippedRating'
             }, parentOrigin)
         })
 
-
         function getRating() {
             return [...document.querySelectorAll('.rating-star.marked')].length;
         }
 
+        function setCustomerName(name) {
+            customerName.querySelector('.text').textContent = name
+        }
+
         function init(template, data) {
             const products = data.products;
-            const customer = data.customer;
+            customer = data.customer;
+            editName.addEventListener('click', function () {
+                chooseCustomer(data.customers);
+            })
             const canEditProducts = data.canEditProduct;
             const canEditCustomer = data.canEditCustomer;
-            customerNumber.innerHTML = customer ?`<a href='${customer.phoneNumber}'>${customer.phoneNumber}</a>` : '';
-            customerName.textContent = customer ?  customer.location : '';
+            setCustomerName(customer ? customer.location : '')
+          
             if (products.length) {
                 loadProducts(products)
             }
@@ -104,35 +135,49 @@
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(template));
                 const rating = getRating();
-                if(!rating) {
+                if (!rating) {
                     showSnacksApiResponse('Please give rating');
                     return
                 }
+
+                if (phoneNumber.value) {
+                    if (!isPhoneNumberValid(iti)) {
+                        setHelperInvalid(phoneNumber(phoneNumber, 'Please enter a valid phone number'))
+                        return;
+                    }
+                }
+                copy.share = [];
+                copy.share.push(iti.getNumber(intlTelInputUtils.numberFormat.E164))
                 copy.attachment['Creator Rating'].value = rating
                 copy.attachment['Creator Feedback'].value = feedback.value;
-                copy.attachment.Customer.value = customer ? customer.location : '';
+                copy.attachment.Location.value = customer ? customer.location : '';
                 const productArray = [];
-                Object.keys(selectedProducts).forEach(function(product){
+                Object.keys(selectedProducts).forEach(function (product) {
                     productArray.push(selectedProducts[product])
                 })
-                if(productArray.length == 0) {
-                    productArray.push({name:'',rate:'',date:'',quantity:''})
+                if (productArray.length == 0) {
+                    productArray.push({
+                        name: '',
+                        rate: '',
+                        date: '',
+                        quantity: ''
+                    })
                 }
                 copy.attachment.Products.value = productArray;
                 copy.venue = [{
-                    venueDescriptor:template.venue[0],
-                    location:customer ? customer.location :'',
-                    address:customer ? customer.address : '',
-                    geopoint:{
-                        latitude:customer ? customer.latitude:'',
-                        longitude:customer ? customer.longitude:''
+                    venueDescriptor: template.venue[0],
+                    location: customer ? customer.location : '',
+                    address: customer ? customer.address : '',
+                    geopoint: {
+                        latitude: customer ? customer.latitude : '',
+                        longitude: customer ? customer.longitude : ''
                     }
                 }]
-                copy.share = [];
+               
                 parent.postMessage({
-                    name:'sendFormToParent',
-                    body:copy
-                },parentOrigin);
+                    name: 'sendFormToParent',
+                    body: copy
+                }, parentOrigin);
             })
         }
 
@@ -145,7 +190,7 @@
                 openProductScreen(products);
                 // productDialog = new Dialog("New product", createProductScreen(products)).create('simple')
                 // productDialog.open();
-                
+
             })
             const ul = createElement('ul', {
                 className: 'mdc-list mdc-list--two-line mdc-list--avatar-list',
@@ -155,47 +200,51 @@
             productsSection.appendChild(ul);
         }
 
-        function openProductScreen(products,selectedProduct) {
-            productDialog = new Dialog("New product", createProductScreen(products,selectedProduct)).create('simple')
+        function openProductScreen(products, selectedProduct) {
+            productDialog = new Dialog("New product", createProductScreen(products, selectedProduct)).create('simple')
             productDialog.open();
         }
 
-        function createProductScreen(products,savedProduct = {rate:'',date:'',quantity:'',name:''}) {
+        function createProductScreen(products, savedProduct = {
+            rate: '',
+            date: '',
+            quantity: '',
+            name: ''
+        }) {
             const div = createElement('div', {
                 className: 'product-choose-container'
             })
-            const name = createProductDatalist(products);
-            const nameValue = name.querySelector('#product-chooser')
-            if(savedProduct.name){
+            const name = createProductSelect(products);
+            if (savedProduct.name) {
                 nameValue.value = savedProduct.name
             }
             const rate = new mdc.textField.MDCTextField(textField({
                 id: 'rate',
                 label: 'Rate',
-                type:'number',
+                type: 'number',
                 value: savedProduct.rate || ''
             }));
             const quantity = new mdc.textField.MDCTextField(textField({
                 id: 'quantity',
                 label: 'Quantity',
-                type:'number',
-                value:savedProduct.quantity || ''
+                type: 'number',
+                value: savedProduct.quantity || ''
             }));
             const date = new mdc.textField.MDCTextField(textField({
                 id: 'date',
                 type: 'date',
                 label: 'Date',
-                value: savedProduct.data ||  createDate(new Date())
+                value: savedProduct.data || createDate(new Date())
             }));
-            div.appendChild(name);
+            div.appendChild(name.root_);
             div.appendChild(rate.root_);
             div.appendChild(quantity.root_);
             div.appendChild(date.root_);
-            const actionButtons = createElement('div',{
-                className:'dialog-action-buttons'
+            const actionButtons = createElement('div', {
+                className: 'dialog-action-buttons'
             })
             const cancel = createButton('cancel');
-            cancel.addEventListener('click',function(e){
+            cancel.addEventListener('click', function (e) {
                 e.preventDefault();
                 productDialog.close();
             })
@@ -205,23 +254,23 @@
             actionButtons.appendChild(save);
             save.addEventListener('click', function (e) {
                 e.preventDefault();
-               
+
                 productDialog.close();
-                if(!nameValue.value) {
+                if (!name.value) {
                     showSnacksApiResponse('Please select a product name');
                     return
                 }
-                if(document.querySelector(`[data-product-name="${nameValue.value}"]`)) {
-                    document.querySelector(`[data-product-name="${nameValue.value}"]`).remove()
+                if (document.querySelector(`[data-product-name="${name.value}"]`)) {
+                    document.querySelector(`[data-product-name="${name.value}"]`).remove()
                 }
                 const selectedProduct = {
-                    rate:Number(rate.value),
-                    date:date.value,
-                    quantity:Number(quantity.value),
-                    name:nameValue.value
+                    rate: Number(rate.value),
+                    date: date.value,
+                    quantity: Number(quantity.value),
+                    name: name.value
                 }
-                selectedProducts[nameValue.value] = selectedProduct
-                appendProducts(products,selectedProduct);
+                selectedProducts[name.value] = selectedProduct
+                appendProducts(products, selectedProduct);
             })
             div.appendChild(actionButtons)
             return div;
@@ -234,7 +283,7 @@
                 className: 'mdc-list-item pl-0',
             })
             li.dataset.productName = selectedProduct.name;
-           
+
             const clearIcon = createElement('span', {
                 className: 'mdc-list-item__graphic material-icons mdc-theme--error',
                 textContent: 'delete'
@@ -248,52 +297,103 @@
             })
             const primaryText = createElement('span', {
                 className: 'mdc-list-item__primary-text',
-                style:'text-align:left',
+                style: 'text-align:left',
                 textContent: selectedProduct.name
             })
             const secondaryText = createElement('span', {
                 className: 'mdc-list-item__secondary-text',
-                style:'text-align:left',
-                textContent:  selectedProduct.quantity ? 'Quantity : ' + selectedProduct.quantity : ''
+                style: 'text-align:left',
+                textContent: selectedProduct.quantity ? 'Quantity : ' + selectedProduct.quantity : ''
             })
             text.appendChild(primaryText)
             text.appendChild(secondaryText);
-            text.addEventListener('click',function(){
-                openProductScreen(products,selectedProduct)
+            text.addEventListener('click', function () {
+                openProductScreen(products, selectedProduct)
             })
             const meta = createElement('span', {
                 className: 'mdc-list-item__meta mdc-theme--primary',
-                style:'font-size:18px',
+                style: 'font-size:18px',
                 textContent: selectedProduct.rate ? convertNumberToINR(selectedProduct.rate) : ''
             })
             li.appendChild(clearIcon)
             li.appendChild(text)
             li.appendChild(meta);
-            
+
             productList.appendChild(li);
         }
 
-        function createProductDatalist(products) {
+        function createProductSelect(products) {
+
+            const select = createElement('div', {
+                className: 'mdc-select full-width',
+
+            })
+            select.innerHTML = `<i class="mdc-select__dropdown-icon"></i>
+                                <select class="mdc-select__native-control">
+                                    ${products.map(function(product){
+                                        return `<option value="${product.attachment.Name.value}">${product.attachment.Name.value}</option>`
+                                    }).join("")}
+                                </select>
+                                <label class="mdc-floating-label">Choose product</label>
+                                <div class="mdc-line-ripple"></div>`;
+
+            return new mdc.select.MDCSelect(select);
+        }
+
+        function chooseCustomer(customers) {
             const container = createElement('div', {
-                className: 'search-product-cont'
+                className: 'choose-customer-container'
             })
-            const input = createElement("input", {
-                className: 'mdc-text-field',
-                id: 'product-chooser',
-                name: 'product-chooser',
+            const searchField = new mdc.textField.MDCTextField(textField({
+                label: 'Search customer'
+            }));
+            searchField.root_.classList.add('mt-10')
+            const ul = createElement('ul', {
+                className: 'mdc-list mdc-list--two-line customer-list'
+            });
+            const ulInit = new mdc.list.MDCList(ul)
+
+
+            searchField.input_.addEventListener('input', function (e) {
+                const value = e.target.value.trim();
+                if (!value) return;
+                ulInit.listElements.forEach(function (li) {
+                    if (li.dataset.location.toLowerCase().indexOf(value) > -1) {
+                        li.removeAttribute('hidden')
+                    } else {
+                        li.setAttribute('hidden', true)
+                    }
+                })
+
+
             })
-            input.setAttribute('list', 'products');
-            const datalist = createElement('datalist', {
-                id: 'products'
+            container.appendChild(searchField.root_)
+            customers.forEach(function (data, index) {
+
+                const li = createElement('li', {
+                    className: 'mdc-list-item'
+                })
+                li.innerHTML = `<span class='mdc-list-item__text'>
+                        <span class='mdc-list-item__primary-text'>${data.location}</span>
+                        <span class='mdc-list-item__secondary-text'>${data.address}</span>
+                    </span>`
+                li.dataset.location = data.location;             
+                li.addEventListener('click',function(){
+                    document.getElementById('dialog-container').innerHTML = ''
+                    customer = data
+                    setCustomerName(data.location)
+                })
+                ul.appendChild(li);
             })
-            products.forEach(function (product) {
-                datalist.appendChild(createElement('option', {
-                    value: product.attachment.Name.value
-                }))
+            container.appendChild(ul)
+            const close = createButton('close');
+            close.classList.add('mdc-button--outlined');
+            container.appendChild(close);
+            close.addEventListener('click',function(){
+                document.getElementById('dialog-container').innerHTML = ''
             })
-            container.appendChild(input);
-            container.appendChild(datalist);
-            return container;
+            const customerDialog = new Dialog("Choose customer", container).create('simple');            
+            customerDialog.open();
         }
     </script>
 </body>

@@ -76,11 +76,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    // return resolve({
-    //   latitude:12.9223462,
-    //   longitude:77.66367780000002,
-    //   lastLocationTime:Date.now()
-    // });
+    return resolve({
+      latitude:28.7066414,
+      longitude:77.1019638,
+      lastLocationTime:Date.now()
+    })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint

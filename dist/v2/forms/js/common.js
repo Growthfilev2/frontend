@@ -386,11 +386,11 @@ function textFieldTelephone(attr) {
     })
     textField.innerHTML = `<input placeholder="${attr.placeholder || 'Phone number'}" class="mdc-text-field__input" value='${attr.value || ''}' type='tel' ${attr.disabled ? 'disabled':''} ${attr.required ? 'required':''}>
     <div class="mdc-notched-outline">
-    <div class="mdc-notched-outline__leading"></div>
-    ${attr.label ?`<div class="mdc-notched-outline__notch">
-    <label for='tel' class="mdc-floating-label">${attr.label}</label>
-    </div>`  :''}
-    <div class="mdc-notched-outline__trailing"></div>
+        <div class="mdc-notched-outline__leading"></div>
+        ${attr.label ?`<div class="mdc-notched-outline__notch">
+        <label for='tel' class="mdc-floating-label">${attr.label}</label>
+        </div>`  :''}
+        <div class="mdc-notched-outline__trailing"></div>
     </div>`
     return textField
 }
