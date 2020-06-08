@@ -748,7 +748,7 @@ function showViewDialog(heading, activity, id) {
 
 function createDynamicChips(text, id, leadingIcon) {
     const chip = createElement('button', {
-        className: 'mdc-chip mdc-chip--selected',
+        className: 'mdc-chip',
         id: id
     });
 
@@ -860,6 +860,7 @@ function share(activity) {
                     src: clickedUser.photoURL || './img/empty-user.jpg'
                 })
                 const newChip = createDynamicChips(clickedUser.displayName || clickedUser.mobile, index, image);
+                newChip.classList.add('mdc-chip--selected')
                 chipSetEl.appendChild(newChip)
                 chipInit.addChip(newChip)
                 newChip.scrollIntoView({

@@ -5,10 +5,52 @@ function jobView() {
     document.getElementById('app-header').classList.add('hidden')
     getTimelineAddendum(ApplicationState.location).then(function (addendums) {
             return getTimelineActivityData(addendums)
-    })
-    .then(function (result) {
+        })
+        .then(function (result) {
+            if (!result.currentDuty) {
+                const auth = firebase.auth().currentUser
+                result.currentDuty = {
+                    attachment: {
+                        'Duty Type': {
+                            value: '',
+                            type: 'duty'
+                        },
+                        'Location': {
+                            value: ApplicationState.venue ? ApplicationState.venue.location : ''
+                        },
+                        'Include': {
+                            value: ''
+                        },
+                        'Supervisor': {
+                            value: ''
+                        },
+                        'Products': {
+                            value: [{
+                                name: '',
+                                rate: '',
+                                date: '',
+                                quanity: ''
+                            }]
+                        }
+                    },
+                    schedule: [{
+                        startTime: '',
+                        endTime: '',
+                        name: 'Date'
+                    }],
+                    assignees: [{
+                        displayName: auth.displayName,
+                        photoURL: auth.photoURL,
+                        phoneNumber: auth.phoneNumber
+                    }],
+                    venue: [],
+                    canEdit:false,
+                    supervisior: null
+                }
+            }
+
             parent.appendChild(constructJobView(result));
-    }).catch(console.error)
+        }).catch(console.error)
 
 }
 
@@ -27,23 +69,23 @@ function getSupervisorContact(phoneNumber) {
     })
 }
 
-function showUpcomingDuty(duty, currentGeopoint) {
+function showUpcomingDuty(duty) {
 
     const cont = createElement("div", {
         className: 'duty-pop--container'
     })
     const heading = createElement('div', {
-        className: 'inline-flex'
+        className: 'inline-flex full-width'
     })
-    const reject = createElement("button", {
-        className: 'mdc-theme--error',
-        textContent: 'Reject',
-        style: 'margin-left:auto'
-    })
+    const reject = createButton('REJECT','','close');
+    reject.classList.add('reject-duty');
+
     const close = createElement('i', {
-        className: 'material-icons',
-        textContent: 'close'
+        className: 'material-icons close-popup',
+        textContent: 'close',
+        style:'margin-left:auto'
     })
+    close.setAttribute('data-mdc-dialog-action','close')
     heading.appendChild(reject)
     heading.appendChild(close)
 
@@ -52,60 +94,61 @@ function showUpcomingDuty(duty, currentGeopoint) {
     })
     details.innerHTML = `
     <div class='details'>
-        <span>
-            <i class='material-icons'>bike</i>
-            <span>${calculateDistanceBetweenTwoPoints(duty.dutyGeopoint,currentGeopoint)}</span>
+        <span class='inline-flex mt-10 mb-10 mt-20 full-width'>
+            <i class='material-icons mdc-theme--primary'>directions_bike</i>
+            <span class='ml-10'>${duty.distance} Km</span>
         </span>
         <hr>
-        <div class='customer'>
-            ${duty.attachment['Duty Type'].value ?`<span>
-                <i class='material-icons'>assignment</i>
-                <span>${duty.attachment['Duty Type'].value} </span>
-            </span>` :''}
-            <span>
+        <div class='customer mt-10'>
+            <div class='inline-flex mt-10 mb-10 full-width mdc-theme--primary'>
                 <i class='material-icons'>location_on</i>
-                <span>${duty.attachment.Location.value} </span>
-             </span>
+                <span class='ml-10'>${duty.attachment.Location.value} </span>
+            </div>
+            ${duty.attachment['Duty Type'].value ?`<div class='inline-flex mt-10 mb-10 full-width mdc-theme--primary'>
+                <i class='material-icons'>assignment</i>
+                <span class='ml-10'>${duty.attachment['Duty Type'].value} </span>
+            </div>` :''}
         </div>
         <hr>
         <div class='supervisior'>
-            <ul class='mdc-list mdc-list--two-line mdc-list--avatar-list'>
-                <li class='mdc-list-item'>
-                    <span class='mdc-list-item__graphic'>
-                        <img src='${duty.supervisior.photoURL || './img/empty-user.jpg'}'>
-                        <span class='mdc-list-item__text'>
-                            <span class='mdc-list-item__primary-text'>${duty.supervisior.displayName}</span>
-                            <span class='mdc-list-item__secondary-text'>Customer</span>
-                        </span>
+            ${duty.supervisiorContact ? `<ul class='mdc-list mdc-list--two-line mdc-list--avatar-list'>
+            <li class='mdc-list-item pl-0'>
+               
+                    <img class='mdc-list-item__graphic' src='${duty.supervisiorContact.photoURL || './img/empty-user.jpg'}'>
+                    
+                    <span class='mdc-list-item__text'>
+                        <span class='mdc-list-item__primary-text'>${duty.supervisiorContact.displayName || duty.supervisiorContact.mobile}</span>
+                        <span class="mdc-list-item__secondary-text">Supervisor</span>
                     </span>
-                </li>
-            </ul>
-            <span>
-                <i class='material-icons'>time</i>
-                <span>${moment(duty.schedule[0].startTime).format('hh:mm A')} To ${moment(duty.schedule[0].endTime).format('hh:mm A')} </span>
+                    <a class='mdc-list-item__meta material-icons' href='${duty.supervisiorContact.mobile}'>phone</a>
+            </li>
+        </ul>` :''}
+           
+            <span class='inline-flex mt-10 mb-10 full-width'>
+                <i class='material-icons mdc-theme--primary'>access_time</i>
+                <span class='ml-10'>${moment(duty.schedule[0].startTime).format('hh:mm A')} to ${moment(duty.schedule[0].endTime).format('hh:mm A')} </span>
             </span>
-            <hr>
         </div>
-        <div class='staff'>
-            <span>
-                <i class='material-icons'>people_add</i>
-                <span>Staffs</span>
+        ${duty.assignees.length ? ` <hr><div class='staff mdc-theme--primary'>
+            <span class='inline-flex mt-10 mb-10 full-width'>
+                <i class='material-icons'>group</i>
+                <span class='ml-10'>Staffs</span>
             </span>
             <div class='mdc-chip-set'>
-                ${duty.assigness.map(function(contact,index){
+                ${duty.assignees.map(function(contact,index){
                     const image = createElement('img', {
                         className: 'mdc-chip__icon mdc-chip__icon--leading',
                         src: contact.photoURL || './img/empty-user.jpg'
                     })
-                    returncreateDynamicChips(contact.displayName || contact.mobile, index, image).outerHTML;
+                    return createDynamicChips(contact.displayName || contact.mobile, index, image).outerHTML;
                 }).join("")}
-            </div>
-        </div>
-        <hr>
-        <div class='products'>
-            <span>
+                </div>
+            </div>` :''}
+        
+        ${checkProductLength(duty.attachment.Products.value) ? `<hr><div class='products'>
+            <span class='inline-flex mt-10 mb-10 full-width'>
                 <i class='material-icons'>settings</i>
-                <span>Products</span>
+                <span class='ml-10'>Products</span>
             </span>
             <ul class='mdc-list mdc-list--two-line'>
             ${duty.attachment.Products.value.map(function(product){
@@ -114,15 +157,14 @@ function showUpcomingDuty(duty, currentGeopoint) {
                         <span class='mdc-list-item__primary-text'>${product.name}</span>
                         <span class='mdc-list-item__secondary-text'>Quantity : ${product.quanity}</span>
                     </span>
-                    <span class='mdc-list-item__meta'>${convertNumberToInr(Number(product.rate))}</span>
+                    <span class='mdc-list-item__meta'>${convertNumberToINR(Number(product.rate))}</span>
                 </li>`
-
             })}
             </ul>
-        </div>
+        </div>` :''}
     </div>
-    <div class='navigate'>
-        ${createExtendedFab('navigation','Navigate','navigate').outerHTML}
+    <div class='navigate text-center mt-10'>
+        ${createExtendedFab('navigation','Navigate','navigate','',`https://www.google.com/maps/dir/?api=1&origin=${ApplicationState.location.latitude}%2C${ApplicationState.location.longitude}&destination=${duty.coords.latitude}%2C${duty.coords.longitude}`).outerHTML}
     </div>
     `
     cont.appendChild(heading)
@@ -130,9 +172,79 @@ function showUpcomingDuty(duty, currentGeopoint) {
 
     const dialog = new Dialog('', cont, 'duty-dialog').create('simple')
     dialog.open();
+    dialog.scrimClickAction = '';
+    dialog.content_.querySelector('#navigate').setAttribute('data-mdc-dialog-action','accept')
+    console.log(dialog);
 }
 
 
+function dutyScreen(duty) {
+    const container = createElement('div', {
+        className: 'duty-container'
+    })
+    container.innerHTML = `<div class='mdc-card duty-overview'>
+      <i class='material-icons mdc-theme--primary' id='edit'>edit</i>
+       <div class='duty-details'>
+           <div class='customer'>
+               <div class='location full-width mb-10'>
+                   <div class='icon mdc-theme--primary' style='float:left;'>
+                       <i class='material-icons'>location_on</i>
+                   </div>
+                   <div class='text mdc-typography--headline6 ml-10'>
+                      ${duty.attachment.Location.value || '-'}
+                      <a href=''></a>
+                   </div>
+               </div>
+           </div>
+           <div class='duty-type mb-10'>
+               <span class='inline-flex mdc-theme--primary mb-10'>
+                   <i class='material-icons'>assignment</i>
+                   <span class='mdc-typography--headline6 ml-10'>${duty.attachment['Duty Type'].value || '-'} </span>
+               </span>
+           </div>
+           <div class='products'>
+           ${checkProductLength(duty.attachment.Products.value) ? `
+               <span class='inline-flex mdc-theme--primary'>
+                   <i class='material-icons'>settings</i>
+                   <span class='mdc-typography--headline6 ml-10'>Products</span>
+               </span>
+               <ul class='mdc-list mdc-list--two-line'>
+                    ${duty.attachment.Products.value.map(function(product){
+                       return `<li class='mdc-list-item'>
+                           <span class='mdc-list-item__text'>
+                               <span class='mdc-list-item__primary-text'>${product.name}</span>
+                               <span class='mdc-list-item__secondary-text'>Quantity : ${product.quanity}</span>
+                           </span>
+                           <span class='mdc-list-item__meta'>${convertNumberToInr(Number(product.rate))}</span>
+                       </li>`
+                   })}
+               </ul>`
+               :''}
+           </div>
+           <div class='expanded-details hidden'>
+               <hr>
+               <span class='inline-flex mdc-theme--primary'>
+                   <i class='material-icons'>access_time</i>
+                   <span class='mdc-typography--headline6 ml-10'>${duty.schedule[0].startTime ? `${moment(duty.schedule[0].startTime).format('hh:mm A')} to ${moment(duty.schedule[0].endTime).format('hh:mm A')}` : '-'} </span>
+               </span>
+               <hr>
+               <div class='staff'>
+                   <span class='inline-flex mdc-theme--primary'>
+                       <i class='material-icons'>group_add</i>
+                       <span class='mdc-typography--headline6 ml-10'>Staff</span>
+                   </span>
+                   <div class="mdc-chip-set" role="grid">
+                       ${viewAssignee(duty)}
+                   </div>
+               </div>
+           </div>
+           <div class='expand text-center'>
+               <i class='material-icons' id='expand'>expand_more</i>
+           </div>
+       </div>
+   </div>`
+    return container;
+}
 
 
 function constructJobView(result) {
@@ -140,68 +252,11 @@ function constructJobView(result) {
     const el = createElement('div', {
         className: 'mdc-layout-grid job-screen'
     })
-    el.innerHTML = `
-        <div class='duty-container'>
-             <div class='mdc-card duty-overview'>
-                <div class='duty-details'>
-                    <div class='customer'>
-                        <div class='location full-width mb-10'>
-                            <div class='icon mdc-theme--primary' style='float:left;'>
-                                <i class='material-icons'>location_on</i>
-                            </div>
-                            <div class='text mdc-typography--headline6 ml-10'>
-                               ${result.currentDuty.attachment.Location.value || '-'}
-                               <a href=''></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class='duty-type mb-10'>
-                        <span class='inline-flex mdc-theme--primary mb-10'>
-                            <i class='material-icons'>assignment</i>
-                            <span class='mdc-typography--headline6 ml-10'>${result.currentDuty.attachment['Duty Type'].value || '-'} </span>
-                        </span>
-                    </div>
-                    <div class='products'>
-                    ${checkProductLength(result.currentDuty.attachment.Products.value) ? `
-                        <span class='inline-flex mdc-theme--primary'>
-                            <i class='material-icons'>settings</i>
-                            <span class='mdc-typography--headline6 ml-10'>Products</span>
-                        </span>
-                        <ul class='mdc-list mdc-list--two-line'>
-                             ${result.currentDuty.attachment.Products.value.map(function(product){
-                                return `<li class='mdc-list-item'>
-                                    <span class='mdc-list-item__text'>
-                                        <span class='mdc-list-item__primary-text'>${product.name}</span>
-                                        <span class='mdc-list-item__secondary-text'>Quantity : ${product.quanity}</span>
-                                    </span>
-                                    <span class='mdc-list-item__meta'>${convertNumberToInr(Number(product.rate))}</span>
-                                </li>`
-                            })}
-                        </ul>`
-                        :''}
-                    </div>
-                    <div class='expanded-details hidden'>
-                        <hr>
-                        <span class='inline-flex mdc-theme--primary'>
-                            <i class='material-icons'>access_time</i>
-                            <span class='mdc-typography--headline6 ml-10'>${result.currentDuty.schedule[0].startTime ? `${moment(result.currentDuty.schedule[0].startTime).format('hh:mm A')} to ${moment(result.currentDuty.schedule[0].endTime).format('hh:mm A')}` : '-'} </span>
-                        </span>
-                        <hr>
-                        <div class='staff'>
-                            <span class='inline-flex mdc-theme--primary'>
-                                <i class='material-icons'>group_add</i>
-                                <span class='mdc-typography--headline6 ml-10'>Staff</span>
-                            </span>
-                            <div class="mdc-chip-set" role="grid">
-                                ${viewAssignee(result.currentDuty)}
-                            </div>
-                        </div>
-                    </div>
-                    <div class='expand text-center'>
-                        <i class='material-icons' id='expand'>expand_more</i>
-                    </div>
-                </div>
-            </div>
+    el.appendChild(dutyScreen(result.currentDuty));
+    const timeline = createElement('div', {
+        className: 'mdc-card timeline-overview mt-20'
+    })
+    timeline.innerHTML = `        
             <div class='mdc-card timeline-overview mt-20'>
                 <div class='startTime text-center mb-10'>${result.timelineData.length ? moment(result.timelineData[result.timelineData.length -1].timestamp).format('hh:mm A'):''}</div>
                 <div class="c100 p100 big center orange" id='pie'>
@@ -220,16 +275,18 @@ function constructJobView(result) {
                 ${createButton('finish job','finish','arrow_right_alt').outerHTML}
             </div>
         </div>`
-
+    el.appendChild(timeline)
 
 
     const photoBtn = el.querySelector('#take-job-photo');
     const skip = el.querySelector('#skip');
-    skip.classList.add("mdc-button--outlined")
     const finish = el.querySelector('#finish');
-    finish.classList.add('mdc-button--raised')
     const pie = el.querySelector('#pie');
     const expand = el.querySelector('#expand');
+    const editIcon  = el.querySelector('#edit');
+
+    finish.classList.add('mdc-button--raised')
+    skip.classList.add("mdc-button--outlined")
     let firstActivityTimestamp;
     let lastActivityTimestamp;
     photoBtn.addEventListener('click', function () {
@@ -251,6 +308,9 @@ function constructJobView(result) {
         } else {
             expand.textContent = 'expand_more'
         }
+    })
+    editIcon.addEventListener('click',function(){
+        
     })
     if (result.timelineData.length) {
         firstActivityTimestamp = result.timelineData[result.timelineData.length - 1].timestamp;
@@ -314,10 +374,10 @@ function getTimelineAddendum(geopoint) {
         store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
             const cursor = evt.target.result;
             if (!cursor) return;
-            // if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({latitude:cursor.value.location._latitude,longitude:cursor.value.location._longitude}, geopoint))) {
-            //         cursor.continue();
-            //     return
-            // }
+            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({latitude:cursor.value.location._latitude,longitude:cursor.value.location._longitude}, geopoint))) {
+                    cursor.continue();
+                    return
+            }
             result.push(cursor.value)
             cursor.continue();
         }
@@ -345,8 +405,8 @@ function getTimelineActivityData(addendums) {
             store.get(addendum.activityId).onsuccess = function (evt) {
                 const record = evt.target.result;
                 if (!record) return;
-                if (record.template !== 'duty') return;
-                if (addendum.timestamp === ApplicationState.lastCheckInCreated) {
+                
+                if (addendum.timestamp === ApplicationState.lastCheckInCreated && record.template === 'duty') {
                     filteredResult.currentDuty = record;
                 }
                 record.geopoint = addendum.geopoint
@@ -500,19 +560,27 @@ function mapTemplateNameToTimelineEvent(activity) {
 }
 
 function checkForDuty(duty) {
-
-    Promise.all([getDutyCoordinates(duty.attachment.Location.value), getSupervisorContact(duty.attachment.Supervisor.value)]).then(function (response) {
-        let dutyGeopoint;
-        if (response[0]) {
-            dutyGeopoint = {
-                latitude: response[0].latitude,
-                longitude: response[0].longitude
-            }
+    // db.transaction('activity').objectStore('activity').get('d1EbIdtHvw1x51yAcbFd').onsuccess = function(e){
+    //     const duty = e.target.result;
+        if (duty.schedule.startTime <= Date.now()) return;
+    
+        const tx = db.transaction('map');
+        const store = tx.objectStore('map');
+        store.index('location').get(duty.attachment.Location.value).onsuccess = function (evt) {
+            const record = evt.target.result;
+            if (!record) return;
+            duty.distance = calculateDistanceBetweenTwoPoints(record,ApplicationState.location).toFixed(1)
+            duty.coords = record;
         }
-        duty.dutyGeopoint = dutyGeopoint;
-        duty.supervisiorContact = response[1]
-        showUpcomingDuty(duty, ApplicationState.location)
-    })
+        tx.oncomplete = function () {
+            getSupervisorContact(duty.attachment.Supervisor.value).then(function (supervisiorContact) {
+             
+                duty.supervisiorContact = supervisiorContact;
+                showUpcomingDuty(duty);
+            })
+        }
+
+    // }
 }
 
 function comingSoon() {
@@ -637,4 +705,53 @@ function showRating(callSubscription) {
 function skippedRating() {
     // history.pushState(['reportView'], null, null);
     comingSoon();
+}
+
+
+
+function convertNumberToINR(amount) {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
+    }).format(amount)
+}
+
+
+
+
+function updateDuty(duty) {
+    const container = createElement('div',{
+        className:'update-duty--container'
+    })
+    const customerCard = createElement('div',{
+        className:'mdc-card customer-card'
+    })
+    customerCard.appendChild(createElement('h1',{
+        className:'mdc-typography--headline5 mdc-theme--primary',
+        textContent:'Customer'
+    }))    
+    const customerName = textField({
+        label:''
+    })
+
+    const productsCard = createElement('div',{
+        className:'mdc-card product-card'
+    })
+
+    container.appendChild(customerCard)
+    container.appendChild(productsCard);
+}
+
+
+function showAllDuties() {
+    const tx = db.transaction('activity');
+    const store = db.transaction('activity');
+    store.index('template').openCursor('duty').onsuccess = function(evt){
+        const cursor = evt.target.result;
+        if(!cursor) return
+        cursor.continue()
+    }
+    tx.oncomplete = function() {
+
+    }
 }

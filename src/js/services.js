@@ -53,7 +53,7 @@ function successDialog(text) {
 }
 
 
-function snacks(message, text, callback,timeout) {
+function snacks(message, text, callback, timeout) {
   snackBar.labelText = message;
   snackBar.open();
   snackBar.timeoutMs = timeout || 4000
@@ -76,11 +76,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude:28.7066414,
-      longitude:77.1019638,
-      lastLocationTime:Date.now()
-    })
+    // return resolve({
+    //   latitude: 12.9674128,
+    //   longitude: 77.57183309999999,
+    //   lastLocationTime: Date.now()
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -91,7 +91,7 @@ function appLocation(maxRetry) {
       if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
-          type:'geolocation',
+          type: 'geolocation',
           body: {
             geopoint: geopoint
           }
@@ -101,7 +101,7 @@ function appLocation(maxRetry) {
       ApplicationState.location = geopoint
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
-    }).catch(function(error){
+    }).catch(function (error) {
       error.type = 'geolocation';
       reject(error)
     })
@@ -322,7 +322,7 @@ function executeRequest(requestGenerator) {
               message: event.data.message,
               body: JSON.stringify(event.data.body)
             })
-          } 
+          }
         }
       } else {
         const resolve = workerResolves[event.data.id];
@@ -405,40 +405,40 @@ function updateIosLocation(geopointIos) {
 
 
 function handleComponentUpdation(readResponse) {
- 
-
-    getCheckInSubs().then(function (checkInSubs) {
-      ApplicationState.officeWithCheckInSubs = checkInSubs
-      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    });
-
-    // readResponse.activities.forEach(function(activity){
-    //     if(activity.template === 'duty') {
-    //       checkForDuty(activity)
-    //     }
-    // })
 
 
-    if (!history.state) return;
-    switch (history.state[0]) {
-      case 'enterChat':
-        if (!readResponse.addendum.length) return;
-        dynamicAppendChats(readResponse.addendum)
-        break;
-      case 'chatView':
-        if (!readResponse.addendum.length) return;
-        readLatestChats(false);
-        break;
-  
-      case 'reportView':
-        reportView(history.state[1]);
-        break;
-      case 'jobView':
-        if(document.getElementById('rating-view')) return;
-        jobView();
-      default:
-        console.log("no refresh")
+  getCheckInSubs().then(function (checkInSubs) {
+    ApplicationState.officeWithCheckInSubs = checkInSubs
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+  });
+
+  readResponse.activities.forEach(function (activity) {
+    if (activity.template === 'duty') {
+          checkForDuty(activity);
     }
+  })
+
+
+  if (!history.state) return;
+  switch (history.state[0]) {
+    case 'enterChat':
+      if (!readResponse.addendum.length) return;
+      dynamicAppendChats(readResponse.addendum)
+      break;
+    case 'chatView':
+      if (!readResponse.addendum.length) return;
+      readLatestChats(false);
+      break;
+
+    case 'reportView':
+      reportView(history.state[1]);
+      break;
+    case 'jobView':
+      if (document.getElementById('rating-view')) return;
+      jobView();
+    default:
+      console.log("no refresh")
+  }
 }
 
 /** function call to be removed from apk */
@@ -447,7 +447,7 @@ function backgroundTransition() {}
 function runRead(type) {
   console.log("run read notification")
   if (!firebase.auth().currentUser || !serverTimeUpdated) return;
-    
+
   if (type.read) {
     var readEvent = new CustomEvent('callRead', {
       detail: type.read
@@ -975,7 +975,7 @@ function idProofView(callback) {
       if (skipBtn) {
         skipBtn.setAttribute('disabled', true)
       }
-      
+
       requestCreator('idProof', ids).then(function (response) {
         const tx = db.transaction('root', 'readwrite');
         const store = tx.objectStore('root')
@@ -1077,7 +1077,7 @@ const phoneFieldInit = (input, dropEl, hiddenInput) => {
 function toDataURL(src, callback) {
   var img = new Image();
   // img.crossOrigin = 'Anonymous';
-  img.onload = function() {
+  img.onload = function () {
     var canvas = document.createElement('CANVAS');
     var ctx = canvas.getContext('2d');
     var dataURL;

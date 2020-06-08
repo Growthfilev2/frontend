@@ -109,23 +109,20 @@ path.purple {
   width: 100%;
 }
 
+#duty-dialog .mdc-dialog__surface {
+  width: 99vw;
 
+}
 
+.reject-duty {
+  background-color: var(--mdc-theme-error) !important;
+  color: white !important
+}
 
+.duty-popup--details .navigate .mdc-fab {
+  margin: 0 auto;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.duty-popup--details .mdc-chip {
+  border: none;
+}
