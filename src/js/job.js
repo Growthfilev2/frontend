@@ -44,7 +44,7 @@ function jobView() {
                         phoneNumber: auth.phoneNumber
                     }],
                     venue: [],
-                    canEdit:false,
+                    canEdit: false,
                     supervisior: null
                 }
             }
@@ -77,15 +77,15 @@ function showUpcomingDuty(duty) {
     const heading = createElement('div', {
         className: 'inline-flex full-width'
     })
-    const reject = createButton('REJECT','','close');
+    const reject = createButton('REJECT', '', 'close');
     reject.classList.add('reject-duty');
 
     const close = createElement('i', {
         className: 'material-icons close-popup',
         textContent: 'close',
-        style:'margin-left:auto'
+        style: 'margin-left:auto'
     })
-    close.setAttribute('data-mdc-dialog-action','close')
+    close.setAttribute('data-mdc-dialog-action', 'close')
     heading.appendChild(reject)
     heading.appendChild(close)
 
@@ -173,7 +173,7 @@ function showUpcomingDuty(duty) {
     const dialog = new Dialog('', cont, 'duty-dialog').create('simple')
     dialog.open();
     dialog.scrimClickAction = '';
-    dialog.content_.querySelector('#navigate').setAttribute('data-mdc-dialog-action','accept')
+    dialog.content_.querySelector('#navigate').setAttribute('data-mdc-dialog-action', 'accept')
     console.log(dialog);
 }
 
@@ -283,7 +283,7 @@ function constructJobView(result) {
     const finish = el.querySelector('#finish');
     const pie = el.querySelector('#pie');
     const expand = el.querySelector('#expand');
-    const editIcon  = el.querySelector('#edit');
+    const editIcon = el.querySelector('#edit');
 
     finish.classList.add('mdc-button--raised')
     skip.classList.add("mdc-button--outlined")
@@ -309,8 +309,8 @@ function constructJobView(result) {
             expand.textContent = 'expand_more'
         }
     })
-    editIcon.addEventListener('click',function(){
-        
+    editIcon.addEventListener('click', function () {
+
     })
     if (result.timelineData.length) {
         firstActivityTimestamp = result.timelineData[result.timelineData.length - 1].timestamp;
@@ -374,9 +374,12 @@ function getTimelineAddendum(geopoint) {
         store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
             const cursor = evt.target.result;
             if (!cursor) return;
-            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({latitude:cursor.value.location._latitude,longitude:cursor.value.location._longitude}, geopoint))) {
-                    cursor.continue();
-                    return
+            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({
+                    latitude: cursor.value.location._latitude,
+                    longitude: cursor.value.location._longitude
+                }, geopoint))) {
+                cursor.continue();
+                return
             }
             result.push(cursor.value)
             cursor.continue();
@@ -405,7 +408,7 @@ function getTimelineActivityData(addendums) {
             store.get(addendum.activityId).onsuccess = function (evt) {
                 const record = evt.target.result;
                 if (!record) return;
-                
+
                 if (addendum.timestamp === ApplicationState.lastCheckInCreated && record.template === 'duty') {
                     filteredResult.currentDuty = record;
                 }
@@ -562,23 +565,24 @@ function mapTemplateNameToTimelineEvent(activity) {
 function checkForDuty(duty) {
     // db.transaction('activity').objectStore('activity').get('d1EbIdtHvw1x51yAcbFd').onsuccess = function(e){
     //     const duty = e.target.result;
-        if (duty.schedule.startTime <= Date.now()) return;
-    
-        const tx = db.transaction('map');
-        const store = tx.objectStore('map');
-        store.index('location').get(duty.attachment.Location.value).onsuccess = function (evt) {
-            const record = evt.target.result;
-            if (!record) return;
-            duty.distance = calculateDistanceBetweenTwoPoints(record,ApplicationState.location).toFixed(1)
-            duty.coords = record;
-        }
-        tx.oncomplete = function () {
-            getSupervisorContact(duty.attachment.Supervisor.value).then(function (supervisiorContact) {
-             
-                duty.supervisiorContact = supervisiorContact;
-                showUpcomingDuty(duty);
-            })
-        }
+    if (duty.schedule[0].startTime <= Date.now()) return;
+    if (duty.schedule[0].endTime > Date.now()) return;
+
+    const tx = db.transaction('map');
+    const store = tx.objectStore('map');
+    store.index('location').get(duty.attachment.Location.value).onsuccess = function (evt) {
+        const record = evt.target.result;
+        if (!record) return;
+        duty.distance = calculateDistanceBetweenTwoPoints(record, ApplicationState.location).toFixed(1)
+        duty.coords = record;
+    }
+    tx.oncomplete = function () {
+        getSupervisorContact(duty.attachment.Supervisor.value).then(function (supervisiorContact) {
+
+            duty.supervisiorContact = supervisiorContact;
+            showUpcomingDuty(duty);
+        })
+    }
 
     // }
 }
@@ -720,38 +724,376 @@ function convertNumberToINR(amount) {
 
 
 function updateDuty(duty) {
-    const container = createElement('div',{
-        className:'update-duty--container'
+    const container = createElement('div', {
+        className: 'update-duty--container'
     })
-    const customerCard = createElement('div',{
-        className:'mdc-card customer-card'
+    const progressBarCard = linearProgress();
+    container.appendChild(progressBarCard.root_)
+    const customerCard = createElement('div', {
+        className: 'mdc-card customer-card'
     })
-    customerCard.appendChild(createElement('h1',{
-        className:'mdc-typography--headline5 mdc-theme--primary',
-        textContent:'Customer'
-    }))    
-    const customerName = textField({
-        label:''
+    customerCard.appendChild(createElement('h1', {
+        className: 'mdc-typography--headline5 mdc-theme--primary',
+        textContent: 'Customer'
+    }))
+    const customerName = new mdc.textField.MDCTextField(textField({
+        label: 'Name',
+        value: duty.attachment.Location.value
+    }))
+    customerName.focus();
+    customerCard.appendChild(customerName.root_);
+    const productsCard = createElement('div', {
+        className: 'mdc-card product-card  mt-10'
+    })
+    productsCard.appendChild(createElement('h1', {
+        className: 'mdc-typography--headline5 mdc-theme--primary',
+        textContent: 'Products'
+    }))
+
+
+
+    const ul = createElement('ul', {
+        className: 'mdc-list',
+        id:'product-list'
+    })
+    getChildrenActivity(duty.office, 'product').then(function (products) {
+
+        if (checkProductLength(duty.attachment.Products.value)) {
+            duty.attachment.Products.value.forEach(function (product) {
+                createProductLi(products,product)
+                
+            })
+
+        }
+        productsCard.appendChild(ul)
+        if (!products.length) return
+        const addMore = createFab('add', '', false);
+        addMore.classList.add('add-more--products')
+        addMore.addEventListener('click', function () {
+            openProductScreen(products);
+        })
+        const addMoreWrapper = createElement('div',{
+            className:'add-more--wrapper',
+        })
+        addMoreWrapper.appendChild(addMore)
+        productsCard.appendChild(addMoreWrapper)
     })
 
-    const productsCard = createElement('div',{
-        className:'mdc-card product-card'
+    const cancel = createButton('cancel');
+    cancel.classList.add('mdc-button--outlined')
+    const save = createButton('save');
+    save.classList.add('mdc-button--raised');
+    cancel.addEventListener('click', function () {
+        history.back();
     })
+    save.addEventListener('click', function () {
+        progressBarCard.open()
+        duty.attachment.Location.value = customerName.value;
+        const choosenProducts = [];
+        [...ul.querySelectorAll('li')].forEach(function(li){
+            choosenProducts.push({
+                name:li.dataset.name,
+                rate:Number(li.dataset.rate) || '',
+                quanity:Number(li.dataset.quanity) || '',
+                date:li.dataset.date
+            })
+        });
+        duty.attachment.Products.value = choosenProducts;
+        appLocation(3).then(function(geopoint) {
+            return  requestCreator('update',duty,geopoint)
+        }).then(function(){
+            progressBarCard.close()
+            history.back();
+        }).catch(function (error) {
+            progressBarCard.close();
+        })
+    })
+
+    const fixed = createElement('div', {
+        className: 'full-width bottom-buttons'
+    })
+    const actionButtons = createElement('div', {
+        className: 'action-buttons'
+    })
+    fixed.appendChild(actionButtons);
+    actionButtons.appendChild(cancel)
+    actionButtons.appendChild(save);
 
     container.appendChild(customerCard)
     container.appendChild(productsCard);
+    container.appendChild(fixed);
+    document.getElementById('app-current-panel').innerHTML = '';
+    document.getElementById('app-current-panel').appendChild(container)
+}
+
+function createProductLi(products,product) {
+    const li = createElement('li', {
+        className: 'mdc-list-item',
+        textContent: product.name
+    })  
+
+    li.dataset.name = product.name;
+    li.dataset.date = product.date;
+    li.dataset.quanity = product.quanity;
+    li.dataset.rate = product.date;
+
+    const edit = createElement('span', {
+        className: 'mdc-list-item__meta material-icons mdc-theme--primary',
+        textContent: 'edit'
+    });
+    edit.addEventListener('click', function () {
+        openProductScreen(products, product)
+    })
+    const remove = createElement('span', {
+        className: 'mdc-list-item__meta material-icons mdc-theme--error ml-20',
+        textContent: 'delete'
+    })
+    remove.addEventListener('click', function () {
+        li.remove();
+    })
+    li.appendChild(edit)
+    li.appendChild(remove)
+    return li;
+}
+
+function openProductScreen(products, selectedProduct) {
+    productDialog = new Dialog("New product", createProductScreen(products, selectedProduct)).create('simple')
+    productDialog.open();
+}
+
+function createProductScreen(products, savedProduct = {
+    rate: '',
+    date: '',
+    quantity: '',
+    name: ''
+}) {
+    const div = createElement('div', {
+        className: 'product-choose-container'
+    })
+    const name = createProductSelect(products);
+    if (savedProduct.name) {
+        name.value = savedProduct.name
+    }
+    const rate = new mdc.textField.MDCTextField(textField({
+        id: 'rate',
+        label: 'Rate',
+        type: 'number',
+        value: savedProduct.rate || ''
+    }));
+    const quantity = new mdc.textField.MDCTextField(textField({
+        id: 'quantity',
+        label: 'Quantity',
+        type: 'number',
+        value: savedProduct.quantity || ''
+    }));
+    const date = new mdc.textField.MDCTextField(textField({
+        id: 'date',
+        type: 'date',
+        label: 'Date',
+        value: savedProduct.data || createDate(new Date())
+    }));
+    div.appendChild(name.root_);
+    div.appendChild(rate.root_);
+    div.appendChild(quantity.root_);
+    div.appendChild(date.root_);
+    const actionButtons = createElement('div', {
+        className: 'dialog-action-buttons'
+    })
+    const cancel = createButton('cancel');
+    cancel.addEventListener('click', function (e) {
+        e.preventDefault();
+        productDialog.close();
+    })
+    const save = createButton('save');
+    save.classList.add("mdc-button--raised");
+    actionButtons.appendChild(cancel);
+    actionButtons.appendChild(save);
+    save.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        productDialog.close();
+        if (!name.value) {
+            showSnacksApiResponse('Please select a product name');
+            return
+        }
+        if (document.querySelector(`[data-product-name="${name.value}"]`)) {
+            document.querySelector(`[data-product-name="${name.value}"]`).remove()
+        }
+        const selectedProduct = {
+            rate: Number(rate.value),
+            date: date.value,
+            quantity: Number(quantity.value),
+            name: name.value
+        }
+        const ul = document.getElementById('product-list');
+        [...ul.querySelectorAll('li')].forEach(function(li){
+            if(li.dataset.name === name.value) {
+                li.remove();
+            }
+        })
+        ul.appendChild(createProductLi(products,selectedProduct))
+
+    })
+    div.appendChild(actionButtons)
+    return div;
+
 }
 
 
-function showAllDuties() {
+function jobs(office) {
+    history.pushState(['jobs'],null,null);
+
     const tx = db.transaction('activity');
-    const store = db.transaction('activity');
-    store.index('template').openCursor('duty').onsuccess = function(evt){
+    const store = tx.objectStore('activity');
+    const dateObject = {}
+    
+    const header = setHeader(`
+    <span class="mdc-top-app-bar__title">All duties</span>
+    `,`<img class="mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>`);
+    header.root_.classList.remove('hidden');
+    
+    document.getElementById('profile-header-icon').addEventListener('click',function(){
+        history.pushState(['profileView'], null, null)
+        profileView();
+    });
+
+    store.index('template').openCursor('duty').onsuccess = function (evt) {
         const cursor = evt.target.result;
-        if(!cursor) return
+        if (!cursor) return;
+        if(office && cursor.value.office !== office) {
+            cursor.continue();
+            return
+        } 
+        if(!Array.isArray(cursor.value.schedule)) {
+            cursor.continue();
+            return
+        }
+        if(!cursor.value.schedule[0].startTime || !cursor.value.schedule[0].endTime) {
+            cursor.continue();
+            return
+        }
+        const dutyStartDate = moment(cursor.value.schedule[0].startTime).startOf('day').valueOf()
+      
+        if(!dateObject[dutyStartDate]) {
+            dateObject[dutyStartDate] = [cursor.value]
+        }
+        else {
+            dateObject[dutyStartDate].push(cursor.value)
+        }
         cursor.continue()
     }
-    tx.oncomplete = function() {
-
+    tx.oncomplete = function () {
+   
+        const sortedDates = Object.keys(dateObject).sort(function(a,b){
+            return Number(b) - Number(a);
+        })
+        let month;
+        console.log(sortedDates);
+        const frag = document.createDocumentFragment();
+        sortedDates.forEach(function(timestamp){
+            const dutyDate = new Date(Number(timestamp));
+            console.log(dutyDate)
+            if(month !== dutyDate.getMonth() +1) {
+                const sect = createElement('div',{
+                    className:'hr-sect mdc-theme--primary mdc-typography--headline5',
+                    textContent:`${moment(`${dutyDate.getMonth() + 1}-${dutyDate.getFullYear()}`,'MM-YYYY').format('MMMM YYYY')}`
+                })
+                month = dutyDate.getMonth() +1
+                frag.appendChild(sect)
+            }
+            const li = dutyDateList(dateObject[timestamp],dutyDate);
+            li.querySelector('.dropdown').addEventListener('click',function(){
+                li.querySelector('.detail-container').classList.toggle('hidden')
+            })
+            frag.appendChild(li);
+        })
+        document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust')
+        document.getElementById('app-current-panel').innerHTML = ``;
+        document.getElementById('app-current-panel').appendChild(frag);
     }
+}
+
+function dutyDateList(duties,dutyDate) {
+   
+    const card = createElement('div',{
+        className:'mdc-card report-card job-card mdc-card--outlined attendance-card mdc-layout-grid__cell mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-8-tablet'
+    })
+  
+    card.innerHTML = `<div class='mdc-card__primary-action'>
+    <div class="demo-card__primary">
+        <div class='left'>
+            <div class="month-date-cont">
+                <div class="day">${moment(`${dutyDate.getDate()}-${dutyDate.getMonth() + 1}-${dutyDate.getFullYear()}`, 'DD-MM-YYYY').format('ddd')}</div>
+                <div class="date">${dutyDate.getDate()}</div>
+            </div>
+            <div class='heading-container mdc-theme--primary'>
+                <h1 class='mdc-typography--headline5'>${duties.length == 1 ? `1 Duty` : `${duties.length} Duties`}</h3>
+            </div>
+        </div>
+        <div class='right'>
+                <div class="dropdown-container dropdown">
+                    <i class="material-icons">keyboard_arrow_down</i>
+                </div>
+        </div>
+    </div>
+    <div class='detail-container hidden'>
+        <ul class='mdc-list mdc-list--two-line'>
+            ${duties.map(function(duty){
+                return `<li class='mdc-list-item'>
+                    <span class='mdc-list-item__text'>
+                        <span class='mdc-list-item__primary-text'>${duty.activityName}</span>
+                        <span class='mdc-list-item__secondary-text'>${moment(duty.schedule[0].startTime).format('hh:mm A')} To ${moment(duty.schedule[0].endTime).format('hh:mm A')}</span>
+                    </span>
+                    <span class='mdc-list-item__meta'>${getDutyStatus(duty)}</span>
+                </li>`
+            }).join("")}
+        </ul>
+    </div>
+</div>`
+   return card;
+    
+}
+
+
+
+function createProductSelect(products) {
+
+    const select = createElement('div', {
+        className: 'mdc-select full-width',
+
+    })
+    select.innerHTML = `<i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            ${products.map(function(product){
+                                return `<option value="${product.attachment.Name.value}">${product.attachment.Name.value}</option>`
+                            }).join("")}
+                        </select>
+                        <label class="mdc-floating-label">Choose product</label>
+                        <div class="mdc-line-ripple"></div>`;
+
+    return new mdc.select.MDCSelect(select);
+}
+
+function createDate(dateObject) {
+    console.log(dateObject)
+    let month = dateObject.getMonth() + 1;
+    let date = dateObject.getDate()
+    if (month < 10) {
+        month = '0' + month
+    }
+    if (date < 10) {
+        date = '0' + date
+    };
+
+    return `${dateObject.getFullYear()}-${month}-${date}`
+}
+
+
+
+
+function getDutyStatus(duty) {
+    const currentTimestamp = Date.now()
+    if(duty.schedule[0].endTime <  currentTimestamp) return 'Finished';
+    if(duty.schedule[0].startTime > currentTimestamp) return 'Upcoming';
+    if(duty.schedule[0].startTime <= currentTimestamp  && currentTimestamp <= duty.schedule[0].endTime) return 'Open';
 }

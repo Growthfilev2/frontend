@@ -95,24 +95,24 @@ function attendaceCard(data, employeeRecord) {
         </div>
         </div>
         <div class='detail-container hidden'>
-        <div class='text-container pt-10 pb-10 mdc-typography--body1'>
-          ${data.addendum.length ? `
-            <div class='detail count'>
-              ${getMinimumDalyCount(data,employeeRecord)}
-            </div>
-            <div class='detail working-hour'>
-              ${getWorkingHoursText(data,employeeRecord)}
-            </div>
-          ` :'No Activities Found'}
-        </div>
-      <div class='time-container'>
-          ${data.addendum.map(ad => {
-              return ` <a class='time addendum-value mdc-typography--headline6 ${ad.latitude && ad.longitude ? 'mdc-theme--primary' :''}' ${ad.latitude && ad.longitude ? `href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'` : ''}>
-                  ${getAttendanceTime(ad)}
-                  <div class='mdc-typography--caption'>Check-in</div>
-              </a>`
-          }).join("")}
-         </div>         
+          <div class='text-container pt-10 pb-10 mdc-typography--body1'>
+            ${data.addendum.length ? `
+              <div class='detail count'>
+                ${getMinimumDalyCount(data,employeeRecord)}
+              </div>
+              <div class='detail working-hour'>
+                ${getWorkingHoursText(data,employeeRecord)}
+              </div>
+            ` :'No Activities Found'}
+          </div>
+          <div class='time-container'>
+              ${data.addendum.map(ad => {
+                  return ` <a class='time addendum-value mdc-typography--headline6 ${ad.latitude && ad.longitude ? 'mdc-theme--primary' :''}' ${ad.latitude && ad.longitude ? `href='geo:${ad.latitude},${ad.longitude}?q=${ad.latitude},${ad.longitude}'` : ''}>
+                      ${getAttendanceTime(ad)}
+                      <div class='mdc-typography--caption'>Check-in</div>
+                  </a>`
+              }).join("")}
+          </div>         
         </div>
       </div>
         ${data.attendance == 1 ? '' :`<div class="mdc-card__actions ${data.attendance > 0 && data.attendance < 1 ? 'mdc-card__actions--full-bleed' :''}">

@@ -612,7 +612,7 @@ function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
 
-
+  return initProfileView();
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({

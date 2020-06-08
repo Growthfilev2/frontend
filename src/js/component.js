@@ -11,12 +11,15 @@ function createElement(tagName, attrs) {
 
 
 
-function createFab(icon, id = '') {
+function createFab(icon, id = '',absolute = true) {
     const button = createElement('button', {
-        className: 'mdc-fab  mdc-button--raised mdc-fab app-fab--absolute ',
+        className: 'mdc-fab  mdc-button--raised',
         id: id
     });
 
+    if(absolute) {
+        button.classList.add('mdc-fab app-fab--absolute')
+    }
 
     const span = createElement('span', {
         className: 'mdc-fab__icon material-icons',
@@ -568,4 +571,22 @@ const copyRegionToClipboard = (el) => {
     el.setSelectionRange(0, 9999);
     document.execCommand("copy")
     snacks('Link copied','OKay',null,8000)
+}
+
+
+const linearProgress = (id) => {
+    const div = createElement('div',{
+        className:'mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed',
+        id:id
+    })
+    div.setAttribute('role','progressbar');
+    div.innerHTML = ` <div class="mdc-linear-progress__buffering-dots"></div>
+    <div class="mdc-linear-progress__buffer"></div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>`
+    return new mdc.linearProgress.MDCLinearProgress(div);
 }
