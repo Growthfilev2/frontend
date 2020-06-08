@@ -76,7 +76,6 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -84,7 +83,7 @@ function appLocation(maxRetry) {
         return resolve(geopoint);
       }
 
-      if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+      if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
           type:'geolocation',
@@ -152,7 +151,7 @@ function getLocation() {
 
 
     if (!navigator.onLine) return reject({
-      message: 'BROKEN INTERNET CONNECTION'
+      message: 'BROKEN INTERNET CONNECTION',
     })
 
     if (native.getName() !== 'Android') {
@@ -251,7 +250,7 @@ function html5Geolocation() {
       })
     }, {
       maximumAge: 0,
-      timeout: 8000,
+      timeout: 5000,
       enableHighAccuracy: false
     })
   })
