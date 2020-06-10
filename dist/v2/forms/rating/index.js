@@ -70,12 +70,11 @@ function init(template, data) {
     editName.addEventListener('click', function () {
         chooseCustomer(data.customers);
     })
-    const canEditProducts = data.canEditProduct;
-    const canEditCustomer = data.canEditCustomer;
-    if(!canEditCustomer) {
+    // const canEditProducts = data.canEditProduct;
+    if(!data.canEditCustomer) {
         editName.remove();
     }
-    
+
     if (products.length) {
         loadProducts(products)
     }

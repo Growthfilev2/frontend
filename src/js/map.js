@@ -486,9 +486,7 @@ function choosePhotoCheckinOffice(callback) {
   officeList.listen('MDCList:action', function (officeEvent) {
     const selectedSubscription = subs[officeEvent.detail.index];
     officeDialog.close();
-    callback(selectedSubscription)
-    // history.pushState(['addView'], null, null);
-    // addView(selectedSubscription)
+    callback(selectedSubscription);
   })
 }
 

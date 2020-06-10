@@ -411,7 +411,21 @@ function getRatingSubsription(duty) {
     getSubscription(duty.office, 'call').then(function (subs) {
 
         if (!subs.length) return jobs();
-        getCustomer(duty.attachment.Location.value).then(function(customer){
+        const tx = db.transaction('map');
+        const store = tx.objectStore('map');
+        let customer;
+        store.index('location').get(duty.attachment.Location.value).onsuccess = function(evt) {
+           customer = evt.target.result;
+        }
+        tx.oncomplete = function() {
+            if(!customer) {
+                customer = {
+                    location:'',
+                    address:'',
+                    latitude:'',
+                    longitude:''
+                }
+            }
             if (subs.length == 1) return showRating(subs[0],customer);
             const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
             const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
@@ -421,8 +435,7 @@ function getRatingSubsription(duty) {
                 const selectedSubscription = subs[officeEvent.detail.index];
                 showRating(selectedSubscription,customer);
             })
-        })
-      
+        }
     })
 }
 
@@ -739,22 +752,6 @@ function getChildrenActivity(office, template) {
 }
 
 
-
-
-function getActivity(activityId) {
-    const tx = db.transaction('activity');
-    const store = tx.objectStore('activity');
-    store.get(activityId).onsuccess = function (evt) {
-        Promise.resolve(evt.target.result)
-    }
-}
-function getCustomer(location) {
-    const tx = db.transaction('map');
-    const store = tx.objectStore('map');
-    store.index('location').get(location).onsuccess = function(evt) {
-        Promise.resolve(evt.target.result);
-    }
-}
 function showRating(callSubscription,customer) {
     history.pushState(['showRating'],null,null);
     const el = document.getElementById("app-current-panel");
@@ -775,8 +772,8 @@ function showRating(callSubscription,customer) {
                     products: products,
                     customers: customers,
                     customer: customer,
-                    canEditProduct: productSubscription ? productSubscription.canEdit : '',
-                    canEditCustomer: customerSubscription ? customerSubscription.canEdit : ''
+                    canEditProduct: productSubscription,
+                    canEditCustomer: customerSubscription
                 },
                 deviceType: native.getName()
             });
