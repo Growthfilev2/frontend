@@ -983,7 +983,7 @@ function activityDomCustomer(activityRecord) {
 }
 
 function addAssignee(record, userArray) {
-
+    console.log(userArray);
     closeSearchBar();
     appLocation(3).then(function (geopoint) {
         requestCreator('share', {
@@ -1006,11 +1006,11 @@ function setActivityStatus(record, status) {
 
         requestCreator('statusChange', {
             activityId: record.activityId,
+            office:record.office,
+            template:record.template,
             status: status
         }, geopoint).then(function () {
             snacks(`${record.activityName} is ${status}`)
-
-
         }).catch(console.error)
     }).catch(handleLocationError)
 }

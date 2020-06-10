@@ -219,8 +219,8 @@ function bankAccount() {
     const addNewBtn = actionButton('Add BANK ACCOUNT');
     addNewBtn.querySelector('.mdc-button').addEventListener('click', function () {
       if (!auth.email || !auth.emailVerified) {
-        history.pushState(['emailUpdation'], null, null)
-        emailUpdation(true, profileView)
+        history.pushState(['profileScreen'], null, null)
+        emailUpdation(true, profileScreen)
         return
       }
       history.pushState(['addNewBankAccount'], null, null);

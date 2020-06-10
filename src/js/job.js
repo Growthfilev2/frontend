@@ -411,16 +411,18 @@ function getRatingSubsription(duty) {
     getSubscription(duty.office, 'call').then(function (subs) {
 
         if (!subs.length) return jobs();
-        const customer = duty.attachment.Location.value;
-        if (subs.length == 1) return showRating(subs[0],customer);
-        const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
-        const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-        bottomDialog(officeDialog, officeList)
-        officeList.listen('MDCList:action', function (officeEvent) {
-            officeDialog.close();
-            const selectedSubscription = subs[officeEvent.detail.index];
-            showRating(selectedSubscription,customer);
+        getCustomer(duty.attachment.Location.value).then(function(customer){
+            if (subs.length == 1) return showRating(subs[0],customer);
+            const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+            const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+            bottomDialog(officeDialog, officeList)
+            officeList.listen('MDCList:action', function (officeEvent) {
+                officeDialog.close();
+                const selectedSubscription = subs[officeEvent.detail.index];
+                showRating(selectedSubscription,customer);
+            })
         })
+      
     })
 }
 
@@ -516,14 +518,15 @@ function createTimeLapse(timelineData, fat, lat) {
 
     let totalCheckins = 0;
     let totalPhotoCheckins = 0;
-
+    
     timelineData.forEach(function (activity) {
         if (activity.template === 'check-in') {
             totalCheckins++
             if (activity.attachment.Photo.value) {
                 totalPhotoCheckins++
             }
-        }
+        };
+
         ul.appendChild(createTimelineLi(activity))
     })
 
@@ -745,21 +748,25 @@ function getActivity(activityId) {
         Promise.resolve(evt.target.result)
     }
 }
-
+function getCustomer(location) {
+    const tx = db.transaction('map');
+    const store = tx.objectStore('map');
+    store.index('location').get(location).onsuccess = function(evt) {
+        Promise.resolve(evt.target.result);
+    }
+}
 function showRating(callSubscription,customer) {
-
+    history.pushState(['showRating'],null,null);
     const el = document.getElementById("app-current-panel");
 
     el.innerHTML = `
     <div id='rating-view'></div>
     <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/rating/index.html'></iframe>`;
-    Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'), getActivity(ApplicationState.venue ? ApplicationState.venue.activityId : ''), getAllCustomer(callSubscription.office)]).then(function (response) {
+    Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'),getAllCustomer(callSubscription.office)]).then(function (response) {
         const products = response[0];
-     
         const productSubscription = response[1];
         const customerSubscription = response[2];
-        customer.phoneNumber = response[3] ? response[3].attachment['First Contact'].value || '' : '';
-        const customers = response[4];
+        const customers = response[3];
         document.getElementById('form-iframe').addEventListener("load", ev => {
             passFormData({
                 name: 'init',
