@@ -4,6 +4,9 @@ function profileScreen() {
   const help = `<a href="https://wa.me/918595422858">HELP</a>`
   setHeader(backIcon, help);
   // const tabs
+  const appEl = document.getElementById('app-current-panel');
+  appEl.innerHTML = createUserDetails()  
+  
   
 }
 
@@ -462,12 +465,12 @@ function setHelperValid(field) {
   field.helperTextContent = ''
 }
 
-function createUserDetails() {
+function createUserDetails(id) {
   return `
   <div class="mdc-tab-bar" role="tablist">
   <div class="mdc-tab-scroller">
       <div class="mdc-tab-scroller__scroll-area">
-          <div class="mdc-tab-scroller__scroll-content" id='tab-scroller'>
+          <div class="mdc-tab-scroller__scroll-content" id=${id}>
           </div>
       </div>
   </div>
