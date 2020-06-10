@@ -1,8 +1,14 @@
-function profileView() {
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Profile</span>`
 
-  setHeader(backIcon, '');
+function profileScreen() {
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>`
+  const help = `<a href="https://wa.me/918595422858">HELP</a>`
+  setHeader(backIcon, help);
+  
+}
+
+
+function profileView() {
+
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   

@@ -1024,6 +1024,7 @@ function jobs(office) {
     
     document.getElementById('profile-header-icon').addEventListener('click',function(){
         history.pushState(['profileView'], null, null);
+        
         profileView();
     });
 

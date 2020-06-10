@@ -37,14 +37,6 @@ function isAdmin(idTokenResult) {
     return true;
 }
 
-function isDeviceVersionLower(requiredVersionAndroid, requiredVersionIos) {
-    const device = native.getInfo();
-
-    if (native.getName() === 'Android') {
-        return Number(device.appVersion) < requiredVersionAndroid
-    }
-    return Number(device.appVersion) < requiredVersionIos;
-}
 
 function giveSubscriptionInit(office) {
     requestCreator('shareLink',{
@@ -60,26 +52,4 @@ function giveSubscriptionInit(office) {
         header.root_.classList.remove('hidden')
         el.appendChild(shareWidget(link, office));
     }).catch(console.log)
-}
-
-function createDynamicLinkSocialTags(office) {
-    return new Promise(function (resolve, reject) {
-        
-        const socialInfo = {
-            "socialTitle": `${office} @Growthfile`,
-            "socialDescription": "No More Conflicts On Attendance & Leaves. Record Them Automatically!",
-            "socialImageLink": 'https://growthfile-207204.firebaseapp.com/v2/img/ic_launcher.png'
-        }
-        const tx = db.transaction('children');
-        const index = tx.objectStore('children').index('officeTemplate');
-        index.get(IDBKeyRange.only([name, 'office'])).onsuccess = function (e) {
-            const record = e.target.result;
-            if (!record) return;
-            socialInfo.socialImageLink = record.attachment['Company Logo'].value;
-
-        }
-        tx.oncomplete = function () {
-            resolve(socialInfo);
-        }
-    })
 }
