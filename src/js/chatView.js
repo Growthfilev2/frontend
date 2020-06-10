@@ -704,7 +704,8 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                     showViewDialog(heading, activity, 'view-form')
                     break;
                 case 'Share':
-                    share(activity)
+                    
+                    share(activity,document.querySelector('.tabs-section .data-container'))
                     break;
                 case 'Undo':
                     setActivityStatus(activity, 'PENDING')
@@ -769,21 +770,21 @@ function createDynamicChips(text, id, leadingIcon) {
 
 }
 
-function share(activity) {
-    const sectionContent = document.querySelector('.tabs-section .data-container');
-    if (!sectionContent) return;
+function share(activity,parent) {
+    if(!parent) return;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add People</span>
     `
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
-
+    const header = setHeader(backIcon, searchIcon);
+    header.root_.classList.remove('hidden')
     const alreadySelected = {};
     const newSelected = {};
 
     const content = `
-    <div id='search-users-container'>
+    <div id='search-users-container' class='mdc-top-app-bar--fixed-adjust'>
     </div>
     <div class='share-user-container'>
     <div class="mdc-chip-set hidden" id='share'>
@@ -799,9 +800,9 @@ function share(activity) {
         alreadySelected[ass.phoneNumber] = true
     });
 
-    sectionContent.innerHTML = content;
+    parent.innerHTML = content;
 
-    setHeader(backIcon, searchIcon);
+  
     const chipSetEl = document.getElementById('share')
     const chipInit = new mdc.chips.MDCChipSet(chipSetEl)
     const ulSelector = document.getElementById('users-list')
@@ -988,9 +989,10 @@ function addAssignee(record, userArray) {
     appLocation(3).then(function (geopoint) {
         requestCreator('share', {
             activityId: record.activityId,
-            share: userArray
+            share: userArray,
+            office:record.office,
+            template:record.template
         }, geopoint).then(function () {
-
             snacks(`You added ${userArray.length} people`)
             history.back();
         }).catch(console.error)

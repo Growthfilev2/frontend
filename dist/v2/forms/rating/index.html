@@ -20,21 +20,44 @@
             <h1 class='mdc-typography--headline5 mdc-theme--primary text-center bold'>How was your job ? </h1>
             <div class="customer-section mt-10 mdc-typography--headline6">
                 <div id="customer-name" style="display: inline-flex;">
-                    <div class="text"></div>
+                    <div class="text mdc-theme--primary"></div>
                     <div class="edit-icon">
                         <i class="material-icons" id='edit-name'>edit</i>
                     </div>
                 </div>
-                <div class="mdc-text-field mdc-text-field--outlined mt-10" data-mdc-auto-init="MDCTextField"
-                    id='phone-number'>
-                    <input class="mdc-text-field__input" type="text" placeholder="Enter a phone number">
-                    <div class="mdc-notched-outline">
-                        <div class="mdc-notched-outline__leading"></div>
-                        <div class="mdc-notched-outline__trailing"></div>
+                <div class="contact-section mt-10">
+                    <div class="inline-flex">
+                        <h1 class="mdc-typography--body1">
+                            Add  contact
+                        </h1>
+                        <i class="material-icons mdc-theme--primary" id='contact-btn' style="margin-left:auto;">add_ic_call</i>
+                       
                     </div>
-                </div>
-                <div class="mdc-text-field-helper-line">
-                    <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
+                    <div class="contact-container hidden">
+                        <div class="">
+                            <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--no-label" id='contact-number'>
+                                <input class="mdc-text-field__input"   type="tel" 
+                                aria-controls="phonenumber-helper-text" aria-describedby="phonenumber-helper-text" placeholder="phone number">
+                                <div class="mdc-notched-outline">
+                                  <div class="mdc-notched-outline__leading"></div>
+                                  <div class="mdc-notched-outline__trailing"></div>
+                                </div>
+                              </div>
+                           
+                              <div class="mdc-text-field-helper-line">
+                                <div class="mdc-text-field-helper-text"></div>
+                              </div>
+                        </div>
+                        <div class="">
+                            <div class="mdc-text-field" id="contact-name">
+            
+                                <input class="mdc-text-field__input">
+                                <div class="mdc-line-ripple"></div>
+                                <label for="contact-name" class="mdc-floating-label">Name</label>
+                            </div>
+                        </div>
+                      
+                    </div>
                 </div>
             </div>
 
@@ -95,18 +118,29 @@
         const customerNumber = document.getElementById("customer-number");
         const customerName = document.getElementById('customer-name');
         const editName = document.getElementById('edit-name');
-        const phoneNumber = new mdc.textField.MDCTextField(document.getElementById('phone-number'));
         const feedback = document.getElementById('feedback');
         const skipRatingbtn = document.getElementById('skip-rating');
         const productsSection = document.querySelector('.products-section');
         const selectedProducts = {};
+        const contactBtn = document.getElementById('contact-btn')
+        let reviewerNumber = new mdc.textField.MDCTextField(document.getElementById('contact-number'))
+        let reviewerName =  new mdc.textField.MDCTextField(document.getElementById('contact-name'));
+
         let productDialog;
-        const iti = phoneFieldInit(phoneNumber.input_);
+        const iti = phoneFieldInit(reviewerNumber.input_);
+      
         let customer;
         skipRatingbtn.addEventListener('click', function () {
             parent.postMessage({
                 name: 'skippedRating'
             }, parentOrigin)
+        })
+        contactBtn.addEventListener('click',function(){
+            setContact({
+                phoneNumber:'+919999288921',
+                displayName:'Shikhar kapila'
+            })
+        //    callContact('setContactForReviewer'); 
         })
 
         function getRating() {
@@ -115,6 +149,11 @@
 
         function setCustomerName(name) {
             customerName.querySelector('.text').textContent = name
+        }
+        function setContact(contactObject){
+            document.querySelector('.contact-container').classList.remove('hidden');
+            reviewerNumber.value = contactObject.phoneNumber;
+            reviewerName.value = contactObject.displayName;
         }
 
         function init(template, data) {
@@ -140,17 +179,21 @@
                     return
                 }
 
-                if (phoneNumber.value) {
-                    if (!isPhoneNumberValid(iti)) {
-                        setHelperInvalid(phoneNumber(phoneNumber, 'Please enter a valid phone number'))
+                copy.attachment['Reviewer Name'].value = reviewerName.value || '';
+
+                if(reviewerNumber.value) {
+                    if(!isPhoneNumberValid(iti)) {
+                        setHelperInvalid(reviewerNumber, 'Please enter a valid phone number')
                         return;
                     }
+                    setHelperValid(reviewerNumber);
+                    copy.attachment['Reviewer Number'].value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
                 }
+             
                 copy.share = [];
-                copy.share.push(iti.getNumber(intlTelInputUtils.numberFormat.E164))
                 copy.attachment['Creator Rating'].value = rating
                 copy.attachment['Creator Feedback'].value = feedback.value;
-                copy.attachment.Location.value = customer ? customer.location : '';
+                copy.attachment.Customer.value = customer ? customer.location : '';
                 const productArray = [];
                 Object.keys(selectedProducts).forEach(function (product) {
                     productArray.push(selectedProducts[product])
@@ -188,8 +231,7 @@
             addProductsBtn.addEventListener('click', function (evt) {
                 evt.preventDefault();
                 openProductScreen(products);
-                // productDialog = new Dialog("New product", createProductScreen(products)).create('simple')
-                // productDialog.open();
+               
 
             })
             const ul = createElement('ul', {

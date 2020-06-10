@@ -76,7 +76,7 @@ function sendFormToParent(formData) {
                 return;
             };
             if (formData.template === 'call') {
-                skippedRating();
+                jobs(formData.office);
                 return
             }
 
@@ -157,6 +157,7 @@ function setContactForCustomerFailed(exceptionMessage) {
         body: ''
     })
 }
+
 
 function getContactManager(contactString) {
     const contactDetails = parseContact(contactString);

@@ -33,6 +33,9 @@ function jobView() {
                             }]
                         }
                     },
+                    office:'Puja Capital',
+                    template:'duty',
+                    activityId:'AF1Pa6h3BTPYGnHdfLIK',
                     schedule: [{
                         startTime: '',
                         endTime: '',
@@ -44,7 +47,7 @@ function jobView() {
                         phoneNumber: auth.phoneNumber
                     }],
                     venue: [],
-                    canEdit: false,
+                    canEdit: true,
                     supervisior: null
                 }
             }
@@ -69,6 +72,43 @@ function getSupervisorContact(phoneNumber) {
     })
 }
 
+function createDutyRejection(){
+    const container = createElement("div",{
+        className:'full-width'
+    })
+    const textField  = textAreaWithHelper({
+        label:'Reason',
+        required:true
+    });
+    const field = new mdc.textField.MDCTextField(textField.querySelector('.mdc-text-field'))
+    field.root_.classList.add('full-width');
+    const reasonSubmit = createButton('submit');
+    reasonSubmit.classList.add("mdc-button--raised",'full-width');
+    reasonSubmit.addEventListener('click',function(){
+        reasonSubmit.toggleAttribute('disabled')
+        if(!field.value.trim()) {
+            setHelperInvalid(field,'Please give a reason')
+            return
+        };
+        setHelperValid(field);
+
+        appLocation(3).then(function(geopoint){
+            return  requestCreator('comment',{
+                comment:field.value.trim()
+            },geopoint)
+        }).then(function(){
+            document.getElementById('dialog-container').innerHTML = ''
+            reasonSubmit.toggleAttribute('disabled')
+        }).catch(function(){
+            reasonSubmit.toggleAttribute('disabled')
+        })
+    })
+
+    container.appendChild(textField);
+    container.appendChild(reasonSubmit);
+    return container;
+}
+
 function showUpcomingDuty(duty) {
 
     const cont = createElement("div", {
@@ -77,9 +117,15 @@ function showUpcomingDuty(duty) {
     const heading = createElement('div', {
         className: 'inline-flex full-width'
     })
+    const reasonContainer = createElement('div',{
+        className:'reason--container mt-20 hidden'
+    })
     const reject = createButton('REJECT', '', 'close');
     reject.classList.add('reject-duty');
-
+    reject.addEventListener('click',function(){
+        reasonContainer.classList.remove('hidden')
+        reasonContainer.appendChild(createDutyRejection());
+    })
     const close = createElement('i', {
         className: 'material-icons close-popup',
         textContent: 'close',
@@ -88,15 +134,21 @@ function showUpcomingDuty(duty) {
     close.setAttribute('data-mdc-dialog-action', 'close')
     heading.appendChild(reject)
     heading.appendChild(close)
-
+    cont.appendChild(heading);
+    cont.appendChild(reasonContainer);
+    
     const details = createElement('div', {
         className: 'duty-popup--details'
     })
     details.innerHTML = `
     <div class='details'>
-        <span class='inline-flex mt-10 mb-10 mt-20 full-width'>
+        <span class='inline-flex mb-10 mt-20'>
             <i class='material-icons mdc-theme--primary'>directions_bike</i>
             <span class='ml-10'>${duty.distance} Km</span>
+        </span>
+        <span class='inline-flex mb-10 mt-20'>
+            <i class='material-icons mdc-theme--primary'>hourglass_top</i>
+            <span class='ml-10'>${getTimeToReach(duty.distance,20)}</span>
         </span>
         <hr>
         <div class='customer mt-10'>
@@ -167,7 +219,7 @@ function showUpcomingDuty(duty) {
         ${createExtendedFab('navigation','Navigate','navigate','',`https://www.google.com/maps/dir/?api=1&origin=${ApplicationState.location.latitude}%2C${ApplicationState.location.longitude}&destination=${duty.coords.latitude}%2C${duty.coords.longitude}`).outerHTML}
     </div>
     `
-    cont.appendChild(heading)
+   
     cont.appendChild(details)
 
     const dialog = new Dialog('', cont, 'duty-dialog').create('simple')
@@ -177,13 +229,19 @@ function showUpcomingDuty(duty) {
     console.log(dialog);
 }
 
+function getTimeToReach(distance,speed) {
+
+    const time = distance/speed;
+    if(time < 1) return `${(time.toFixed(1) * 40)} minutes`;
+    return `${time.toFixed(1)} Hours`
+}
 
 function dutyScreen(duty) {
     const container = createElement('div', {
         className: 'duty-container'
     })
     container.innerHTML = `<div class='mdc-card duty-overview'>
-      <i class='material-icons mdc-theme--primary' id='edit'>edit</i>
+      ${duty.canEdit ? `<i class='material-icons mdc-theme--primary text-right' id='edit'>edit</i>` :''}
        <div class='duty-details'>
            <div class='customer'>
                <div class='location full-width mb-10'>
@@ -236,6 +294,7 @@ function dutyScreen(duty) {
                    <div class="mdc-chip-set" role="grid">
                        ${viewAssignee(duty)}
                    </div>
+                   ${createButton('Add','add-more--users','add').outerHTML}
                </div>
            </div>
            <div class='expand text-center'>
@@ -284,6 +343,7 @@ function constructJobView(result) {
     const pie = el.querySelector('#pie');
     const expand = el.querySelector('#expand');
     const editIcon = el.querySelector('#edit');
+    const addMoreUsers = el.querySelector('#add-more--users');
 
     finish.classList.add('mdc-button--raised')
     skip.classList.add("mdc-button--outlined")
@@ -295,10 +355,20 @@ function constructJobView(result) {
     });
     skip.addEventListener('click', function () {
         // history.pushState(['reportView'], null, null);
-        comingSoon();
+        // comingSoon();
+        let office = result.currentDuty.office;
+        if(office) {
+            jobs(office);
+            return
+        }
+        if(ApplicationState.venue.office) {
+            jobs(office);
+            return
+        }
+       jobs();
     })
     finish.addEventListener('click', function () {
-        getRatingSubsription(result.currentDuty.office)
+        getRatingSubsription(result.currentDuty)
     })
     expand.addEventListener('click', function () {
         const details = el.querySelector(".expanded-details")
@@ -309,9 +379,16 @@ function constructJobView(result) {
             expand.textContent = 'expand_more'
         }
     })
-    editIcon.addEventListener('click', function () {
+    if(editIcon) {
+        editIcon.addEventListener('click', function () {
+            updateDuty(result.currentDuty);  
+        })
+    }
+    addMoreUsers.addEventListener('click',function(){
+        history.pushState(['share'],null,null);
+        share(result.currentDuty,document.getElementById('app-current-panel'))
+    });
 
-    })
     if (result.timelineData.length) {
         firstActivityTimestamp = result.timelineData[result.timelineData.length - 1].timestamp;
         lastActivityTimestamp = result.timelineData[0].timestamp;
@@ -330,18 +407,19 @@ function constructJobView(result) {
     return el;
 }
 
-function getRatingSubsription(office) {
-    getSubscription(office, 'call').then(function (subs) {
+function getRatingSubsription(duty) {
+    getSubscription(duty.office, 'call').then(function (subs) {
 
-        if (!subs.length) return comingSoon();
-        if (subs.length == 1) return showRating(subs[0]);
+        if (!subs.length) return jobs();
+        const customer = duty.attachment.Location.value;
+        if (subs.length == 1) return showRating(subs[0],customer);
         const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
         const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
         bottomDialog(officeDialog, officeList)
         officeList.listen('MDCList:action', function (officeEvent) {
             officeDialog.close();
             const selectedSubscription = subs[officeEvent.detail.index];
-            showRating(selectedSubscription);
+            showRating(selectedSubscription,customer);
         })
     })
 }
@@ -562,11 +640,11 @@ function mapTemplateNameToTimelineEvent(activity) {
     return 'Created ' + activity.template;
 }
 
-function checkForDuty(duty) {
-    // db.transaction('activity').objectStore('activity').get('d1EbIdtHvw1x51yAcbFd').onsuccess = function(e){
-    //     const duty = e.target.result;
-    if (duty.schedule[0].startTime <= Date.now()) return;
-    if (duty.schedule[0].endTime > Date.now()) return;
+function checkForDuty() {
+    db.transaction('activity').objectStore('activity').get('d1EbIdtHvw1x51yAcbFd').onsuccess = function(e){
+        const duty = e.target.result;
+    // if (duty.schedule[0].startTime <= Date.now()) return;
+    // if (duty.schedule[0].endTime > Date.now()) return;
 
     const tx = db.transaction('map');
     const store = tx.objectStore('map');
@@ -584,7 +662,7 @@ function checkForDuty(duty) {
         })
     }
 
-    // }
+    }
 }
 
 function comingSoon() {
@@ -672,16 +750,16 @@ function getActivity(activityId) {
     }
 }
 
-function showRating(callSubscription) {
+function showRating(callSubscription,customer) {
 
     const el = document.getElementById("app-current-panel");
 
     el.innerHTML = `
     <div id='rating-view'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>`;
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/rating/index.html'></iframe>`;
     Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'), getActivity(ApplicationState.venue ? ApplicationState.venue.activityId : ''), getAllCustomer(callSubscription.office)]).then(function (response) {
         const products = response[0];
-        const customer = ApplicationState.venue;
+     
         const productSubscription = response[1];
         const customerSubscription = response[2];
         customer.phoneNumber = response[3] ? response[3].attachment['First Contact'].value || '' : '';
@@ -703,14 +781,6 @@ function showRating(callSubscription) {
     })
 
 }
-
-
-
-function skippedRating() {
-    // history.pushState(['reportView'], null, null);
-    comingSoon();
-}
-
 
 
 function convertNumberToINR(amount) {
@@ -780,7 +850,7 @@ function updateDuty(duty) {
     })
 
     const cancel = createButton('cancel');
-    cancel.classList.add('mdc-button--outlined')
+    cancel.classList.add('mdc-button--outlined')        
     const save = createButton('save');
     save.classList.add('mdc-button--raised');
     cancel.addEventListener('click', function () {
@@ -953,7 +1023,7 @@ function jobs(office) {
     header.root_.classList.remove('hidden');
     
     document.getElementById('profile-header-icon').addEventListener('click',function(){
-        history.pushState(['profileView'], null, null)
+        history.pushState(['profileView'], null, null);
         profileView();
     });
 
