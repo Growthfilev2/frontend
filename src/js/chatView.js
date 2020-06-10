@@ -26,7 +26,9 @@ function chatView() {
 
     sectionContent.innerHTML = chatDom();
 
-    getSubscription().then(function (subscriptions) {
+    Promise.all([ firebase.auth().currentUser.getIdTokenResult(),getSubscription()]).then(function(result){
+        // const isUserAdmin =  isAdmin(result[0]);
+        const subscriptions = result[1]
         const usersTemplate = {}
         subscriptions.forEach(function(sub){
             if(sub.template === 'customer') {
@@ -37,20 +39,21 @@ function chatView() {
                     usersTemplate[sub.template].push(sub)
                 }
             }
-            else {
+            if(isAdmin(result[0],sub.office)) {
                 if(!usersTemplate['Add users']) {
                     usersTemplate['Add users'] = [{office:sub.office}]
                 }
                 else {
                     usersTemplate['Add users'].push({office:sub.office})
                 }
+
             }
         })
-
+    
         const addContactBtn = createFab('add');
         document.querySelector('.user-chats').appendChild(addContactBtn);
         addContactBtn.addEventListener('click', function () {
-
+    
           
             const dialog = new Dialog('', templateSelectionList(usersTemplate), 'choose-office-subscription').create('simple');
             const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
@@ -75,7 +78,7 @@ function chatView() {
                     giveSubscriptionInit(usersTemplate[selectedType][0].office);
                     return
                }
-
+    
          
                const officeDialog = new Dialog('Choose office', officeSelectionList(usersTemplate[selectedType]), 'choose-office-subscription').create('simple');
                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
@@ -97,11 +100,12 @@ function chatView() {
                     history.pushState(['share'], null, null);
                     giveSubscriptionInit(selectedSubscription.office);
                })
-
+    
          
             })
         });
     })
+   
 
     readLatestChats(true);
 }
@@ -703,8 +707,8 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                     showViewDialog(heading, activity, 'view-form')
                     break;
                 case 'Share':
-                    
-                    share(activity,document.getElementById('tab-content'))
+                    history.pushState(['share'],null,null);
+                    share(activity,document.getElementById('app-current-panel'))
                     break;
                 case 'Undo':
                     setActivityStatus(activity, 'PENDING')
@@ -783,7 +787,7 @@ function share(activity,parent) {
     const newSelected = {};
 
     const content = `
-    <div id='search-users-container' class='mdc-top-app-bar--fixed-adjust'>
+    <div id='search-users-container'>
     </div>
     <div class='share-user-container'>
     <div class="mdc-chip-set hidden" id='share'>

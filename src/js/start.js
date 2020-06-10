@@ -30,11 +30,13 @@ function chooseAlternativePhoneNumber(alternatePhoneNumbers) {
     confirmBtn.addEventListener('click', revokeSession);
 
 }
-function isAdmin(idTokenResult) {
+function isAdmin(idTokenResult,office) {
     if (!idTokenResult.claims.hasOwnProperty('admin')) return;
     if (!Array.isArray(idTokenResult.claims.admin)) return;
     if (!idTokenResult.claims.admin.length) return;
-    return true;
+    if(!office) return true;
+    return idTokenResult.claims.admin.indexOf(office) > -1
+   
 }
 
 

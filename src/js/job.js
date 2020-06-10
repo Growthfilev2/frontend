@@ -120,19 +120,19 @@ function showUpcomingDuty(duty) {
     const reasonContainer = createElement('div',{
         className:'reason--container mt-20 hidden'
     })
-    const reject = createButton('REJECT', '', 'close');
-    reject.classList.add('reject-duty');
-    reject.addEventListener('click',function(){
-        reasonContainer.classList.remove('hidden')
-        reasonContainer.appendChild(createDutyRejection());
-    })
+    // const reject = createButton('REJECT', '', 'close');
+    // reject.classList.add('reject-duty');
+    // reject.addEventListener('click',function(){
+    //     reasonContainer.classList.remove('hidden')
+    //     reasonContainer.appendChild(createDutyRejection());
+    // })
     const close = createElement('i', {
         className: 'material-icons close-popup',
         textContent: 'close',
         style: 'margin-left:auto'
     })
     close.setAttribute('data-mdc-dialog-action', 'close')
-    heading.appendChild(reject)
+    // heading.appendChild(reject)
     heading.appendChild(close)
     cont.appendChild(heading);
     cont.appendChild(reasonContainer);
@@ -467,13 +467,13 @@ function getTimelineAddendum(geopoint) {
         store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
             const cursor = evt.target.result;
             if (!cursor) return;
-            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({
-                    latitude: cursor.value.location._latitude,
-                    longitude: cursor.value.location._longitude
-                }, geopoint))) {
-                cursor.continue();
-                return
-            }
+            // if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({
+            //         latitude: cursor.value.location._latitude,
+            //         longitude: cursor.value.location._longitude
+            //     }, geopoint))) {
+            //     cursor.continue();
+            //     return
+            // }
             result.push(cursor.value)
             cursor.continue();
         }

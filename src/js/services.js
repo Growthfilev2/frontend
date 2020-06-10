@@ -1084,3 +1084,36 @@ function toDataURL(src, callback) {
   };
   img.src = src;
 }
+
+
+
+
+function templateSelectionList(uniqueSubs) {
+  return `<ul class='mdc-list subscription-list' id='dialog-office'>
+     ${Object.keys(uniqueSubs).map(function(name){
+       return `<li class='mdc-list-item'>
+        <span class="mdc-list-item__text">
+          ${name}
+        </span>      
+       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+         keyboard_arrow_right
+       </span>
+       </li>`
+     }).join("")}
+     </ul>`
+};
+
+function officeSelectionList(subscriptions) {
+  return `<ul class='mdc-list subscription-list' id='dialog-office'>
+     ${subscriptions.map(function(sub){
+       return `<li class='mdc-list-item'>
+        <span class="mdc-list-item__text">
+          ${sub.office} 
+        </span>      
+       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+         keyboard_arrow_right
+       </span>
+       </li>`
+     }).join("")}
+     </ul>`
+};
