@@ -665,13 +665,9 @@ function checkForDuty(duty) {
     // }
 }
 
-function comingSoon() {
-    const backIcon = `
-        <span class="mdc-top-app-bar__title">Duties</span>
-        `
-    const header = setHeader(backIcon, '');
-    header.root_.classList.remove('hidden')
-    const el = document.getElementById('app-current-panel')
+function comingSoon(id) {
+  
+    const el = document.getElementById(id)
     el.innerHTML = ``
 
     const cont = createElement('div', {
@@ -1023,9 +1019,8 @@ function jobs(office) {
     header.root_.classList.remove('hidden');
     
     document.getElementById('profile-header-icon').addEventListener('click',function(){
-        history.pushState(['profileView'], null, null);
-
-        profileView();
+        history.pushState(['profileScreen'], null, null);
+        profileScreen();
     });
 
     store.index('template').openCursor('duty').onsuccess = function (evt) {

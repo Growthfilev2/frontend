@@ -589,6 +589,7 @@ function startApp() {
       if (error.type === 'geolocation') return handleLocationError(error)
       contactSupport()
     })
+    // profileScreen();
   };
 
   req.onerror = function () {

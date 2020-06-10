@@ -1,7 +1,7 @@
 
 function profileScreen() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>`
-  const help = `<a href="https://wa.me/918595422858">HELP</a>`
+  const help = `<a href="https://wa.me/918595422858" class='mdc-theme--on-primary'>HELP</a>`
   setHeader(backIcon, help);
   // const tabs
   const appEl = document.getElementById('app-current-panel');
@@ -11,11 +11,68 @@ function profileScreen() {
     name:'Earnings'
   },{
     id:'profile',
-    icon:''
+    icon:'account_circle',
+    name:'Profile'
+  },{
+    id:'account',
+    icon:'settings',
+    name:'Account'
   }]
-  appEl.innerHTML = `${showTabs()}`
+  appEl.innerHTML = `
+  <div class='tabs-section'>
+      ${showTabs(tabs)}
+      <div id='tab-content'></div>
+  </div>`
+  const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+  tabList.listen('MDCTabBar:activated', function (evt) {
+    if(evt.detail.index == 1) {
+      // profileView();
+      chatView()
+      return
+    }
+    if (document.getElementById('search-btn')) {
+      document.getElementById('search-btn').remove();
+    }
+    if(evt.detail.index == 2) {
+      
+      profileView();
+      return
+    }
+    comingSoon('tab-content');
+    return
     
+  });
+  tabList.activateTab(1)
 }
+
+
+
+function showTabs(tabs) {
+
+  return `<div class="mdc-tab-bar" role="tablist" style='margin-top:5px;'>
+    <div class="mdc-tab-scroller">
+      <div class="mdc-tab-scroller__scroll-area">
+        <div class="mdc-tab-scroller__scroll-content">
+      
+          ${tabs.map(function(tab){
+              return `
+              <button class="mdc-tab mdc-tab--stacked" role="tab" aria-selected="false" tabindex="-1" id=${tab.id || ''}>
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons" aria-hidden="true">${tab.icon}</span>
+                <span class="mdc-tab__text-label">${tab.name}</span>
+                <span class="mdc-tab-indicator">
+                  <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+                </span>
+              </span>
+              <span class="mdc-tab__ripple"></span>
+            </button>`
+          }).join("")}
+        </div>
+      </div>
+    </div>
+  </div>`
+}
+
 
 
 function profileView() {
@@ -38,8 +95,8 @@ function profileView() {
 <div id='user-details'></div>  
 
 `;
-
-  document.getElementById('app-current-panel').innerHTML = root;
+  
+  document.getElementById('tab-content').innerHTML = root;
   setDetails()
 }
 
@@ -497,7 +554,7 @@ function createViewProfile() {
       officeDom += addTabs(activity.office);
     })
     document.getElementById('tab-scroller').innerHTML = officeDom;
-    const tabInit = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
+    const tabInit = new mdc.tabBar.MDCTabBar(document.getElementById('tab-scroller'));
 
     tabInit.listen('MDCTabBar:activated', function (evt) {
 
@@ -577,7 +634,7 @@ function createViewProfile() {
         }
       })
     })
-    tabInit.activateTab(0);
+    // tabInit.activateTab(0);
   })
 }
 

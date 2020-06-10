@@ -16,11 +16,9 @@ function createFab(icon, id = '',absolute = true) {
         className: 'mdc-fab  mdc-button--raised',
         id: id
     });
-
     if(absolute) {
-        button.classList.add('mdc-fab app-fab--absolute')
+        button.classList.add('app-fab--absolute')
     }
-
     const span = createElement('span', {
         className: 'mdc-fab__icon material-icons',
         textContent: icon

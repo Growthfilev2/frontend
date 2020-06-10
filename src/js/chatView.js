@@ -7,8 +7,8 @@ let timer = null;
 const duration = 800;
 
 function chatView() {
-    document.getElementById('app-header').classList.remove("hidden")
-    const sectionContent = document.querySelector('.tabs-section .data-container');
+    // document.getElementById('app-header').classList.remove("hidden")
+    const sectionContent = document.getElementById('tab-content');
     if (!sectionContent) return;
     if (!document.getElementById('search-btn')) {
         const searchIcon = createElement('button', {
@@ -346,7 +346,6 @@ function readLatestChats(initList) {
         if (!chatsEl) return
         if (!currentChatsArray.length) {
             chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
-                <p class='text-center'>Choose From Below or Search</p>
                 `
         } else {
             chatsEl.innerHTML = currentChats
@@ -475,7 +474,7 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
-    const sectionContent = document.querySelector('.tabs-section .data-container')
+    const sectionContent = document.getElementById('tab-content')
     if (!sectionContent) return;
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -705,7 +704,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                     break;
                 case 'Share':
                     
-                    share(activity,document.querySelector('.tabs-section .data-container'))
+                    share(activity,document.getElementById('tab-content'))
                     break;
                 case 'Undo':
                     setActivityStatus(activity, 'PENDING')

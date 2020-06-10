@@ -537,11 +537,6 @@ function emailReg(email) {
 function handleNav(evt) {
   console.log(evt)
   if (!history.state) return;
-  if (history.state[0] === 'reportView') {
-    history.pushState(['profileView'], null, null)
-    profileView();
-    return;
-  }
   return history.back();
 }
 
