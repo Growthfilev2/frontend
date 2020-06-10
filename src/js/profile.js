@@ -5,9 +5,16 @@ function profileScreen() {
   setHeader(backIcon, help);
   // const tabs
   const appEl = document.getElementById('app-current-panel');
-  appEl.innerHTML = createUserDetails()  
-  
-  
+  const tabs = [{
+    id:'earning',
+    icon:'payment',
+    name:'Earnings'
+  },{
+    id:'profile',
+    icon:''
+  }]
+  appEl.innerHTML = `${showTabs()}`
+    
 }
 
 
@@ -45,7 +52,7 @@ function profileView() {
 function setDetails() {
   progressBar.close();
   document.getElementById('base-details').innerHTML = createBaseDetails()
-  document.getElementById('user-details').innerHTML = createUserDetails();
+  document.getElementById('user-details').innerHTML = createUserDetails('tab-scroller');
   new mdc.list.MDCList(document.getElementById('basic-info-edit'));
   const input = document.getElementById('choose-profile-image')
   input.addEventListener('change', function (evt) {
