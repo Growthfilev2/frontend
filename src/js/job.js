@@ -47,7 +47,7 @@ function jobView() {
                         phoneNumber: auth.phoneNumber
                     }],
                     venue: [],
-                    canEdit: true,
+                    canEdit: false,
                     supervisior: null
                 }
             }
