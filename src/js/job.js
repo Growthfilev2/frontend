@@ -640,11 +640,11 @@ function mapTemplateNameToTimelineEvent(activity) {
     return 'Created ' + activity.template;
 }
 
-function checkForDuty() {
-    db.transaction('activity').objectStore('activity').get('d1EbIdtHvw1x51yAcbFd').onsuccess = function(e){
-        const duty = e.target.result;
-    // if (duty.schedule[0].startTime <= Date.now()) return;
-    // if (duty.schedule[0].endTime > Date.now()) return;
+function checkForDuty(duty) {
+    // db.transaction('activity').objectStore('activity').get('d1EbIdtHvw1x51yAcbFd').onsuccess = function(e){
+    //     const duty = e.target.result;
+    if (duty.schedule[0].startTime <= Date.now()) return;
+    if (duty.schedule[0].endTime > Date.now()) return;
 
     const tx = db.transaction('map');
     const store = tx.objectStore('map');
@@ -662,7 +662,7 @@ function checkForDuty() {
         })
     }
 
-    }
+    // }
 }
 
 function comingSoon() {
@@ -1024,7 +1024,7 @@ function jobs(office) {
     
     document.getElementById('profile-header-icon').addEventListener('click',function(){
         history.pushState(['profileView'], null, null);
-        
+
         profileView();
     });
 

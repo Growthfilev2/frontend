@@ -3,6 +3,7 @@ function profileScreen() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>`
   const help = `<a href="https://wa.me/918595422858">HELP</a>`
   setHeader(backIcon, help);
+  // const tabs
   
 }
 
