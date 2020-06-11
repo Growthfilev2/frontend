@@ -51,12 +51,35 @@ function jobView() {
                     supervisior: null
                 }
             }
-
-            parent.appendChild(constructJobView(result));
+            getCustomerPhoneNumber(result.currentDuty.attachment.Location.value).then(function(customerPhonenumber){
+                result.currentDuty.customerPhonenumber = customerPhonenumber;
+                parent.appendChild(constructJobView(result));
+            })
         }).catch(console.error)
 
 }
 
+function getCustomerPhoneNumber(location) {
+    return new Promise(function(resolve,reject){
+
+        const tx = db.transaction(['map','activity']);
+        const mapStore = tx.objectStore('map');
+        let activity;
+        mapStore.index('location').get(location).onsuccess = function(e){
+            const record = e.target.result;
+            if(!record) return resolve('');
+            const activityStore = tx.objectStore('activity');
+            activityStore.get(record.activityId).onsuccess = function(evt){
+                activity = evt.target.result;
+                if(activity) {
+                    resolve(activity.attachment['First Contact'].value || activity.attachment['Second Contact'].value)
+                    return
+                }
+                resolve('')
+            }
+        }
+    })
+}
 
 function getSupervisorContact(phoneNumber) {
     return new Promise(function (resolve, reject) {
@@ -172,7 +195,7 @@ function showUpcomingDuty(duty) {
                         <span class='mdc-list-item__primary-text'>${duty.supervisiorContact.displayName || duty.supervisiorContact.mobile}</span>
                         <span class="mdc-list-item__secondary-text">Supervisor</span>
                     </span>
-                    <a class='mdc-list-item__meta material-icons' href='${duty.supervisiorContact.mobile}'>phone</a>
+                    <a class='mdc-list-item__meta material-icons' href='tel:${duty.supervisiorContact.mobile}'>phone</a>
             </li>
         </ul>` :''}
            
@@ -250,9 +273,16 @@ function dutyScreen(duty) {
                    </div>
                    <div class='text mdc-typography--headline6 ml-10'>
                       ${duty.attachment.Location.value || '-'}
-                      <a href=''></a>
-                   </div>
-               </div>
+                    </div>
+                </div>
+                ${duty.customerPhonenumber ?`
+                    <span class='inline-flex mdc-theme--primary mb-10 customer-contact'>
+                    <i class='material-icons'>phone</i>
+                    <span class='mdc-typography--headline6 ml-10'>
+                        <a href='tel:${duty.customerPhonenumber}'>${duty.customerPhonenumber}</a>
+                    </span>
+                </span>` :''}
+                
            </div>
            <div class='duty-type mb-10'>
                <span class='inline-flex mdc-theme--primary mb-10'>
@@ -313,7 +343,7 @@ function constructJobView(result) {
     })
     el.appendChild(dutyScreen(result.currentDuty));
     const timeline = createElement('div', {
-        className: 'mdc-card timeline-overview mt-20'
+        className: 'mdc-card timeline-overview'
     })
     timeline.innerHTML = `        
             <div class='mdc-card timeline-overview mt-20'>
@@ -385,7 +415,7 @@ function constructJobView(result) {
         })
     }
     addMoreUsers.addEventListener('click',function(){
-        history.pushState(['share'],null,null);
+        document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust');
         share(result.currentDuty,document.getElementById('app-current-panel'))
     });
 
@@ -463,17 +493,22 @@ function getTimelineAddendum(geopoint) {
 
         const result = []
         const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
-        // const bound = IDBKeyRange.bound(1565549625746, 1580385787130)
         store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
             const cursor = evt.target.result;
             if (!cursor) return;
-            // if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({
-            //         latitude: cursor.value.location._latitude,
-            //         longitude: cursor.value.location._longitude
-            //     }, geopoint))) {
-            //     cursor.continue();
-            //     return
-            // }
+            if(typeof cursor.value.location !== 'object') {
+                cursor.continue();
+                return
+            }
+            
+            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({
+                    latitude: cursor.value.location._latitude,
+                    longitude: cursor.value.location._longitude
+                }, geopoint))) {
+                cursor.continue();
+                return
+            }
+        
             result.push(cursor.value)
             cursor.continue();
         }
@@ -498,6 +533,7 @@ function getTimelineActivityData(addendums) {
             timelineData: []
         };
         addendums.forEach(function (addendum) {
+            if(!addendum.activityId) return;
             store.get(addendum.activityId).onsuccess = function (evt) {
                 const record = evt.target.result;
                 if (!record) return;
@@ -659,8 +695,8 @@ function mapTemplateNameToTimelineEvent(activity) {
 function checkForDuty(duty) {
     // db.transaction('activity').objectStore('activity').get('d1EbIdtHvw1x51yAcbFd').onsuccess = function(e){
     //     const duty = e.target.result;
-    if (duty.schedule[0].startTime <= Date.now()) return;
-    if (duty.schedule[0].endTime > Date.now()) return;
+    // if (duty.schedule[0].startTime <= Date.now()) return;
+    if (duty.schedule[0].endTime < Date.now()) return;
 
     const tx = db.transaction('map');
     const store = tx.objectStore('map');
@@ -758,7 +794,7 @@ function showRating(callSubscription,customer) {
 
     el.innerHTML = `
     <div id='rating-view'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/rating/index.html'></iframe>`;
+    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>`;
     Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'),getAllCustomer(callSubscription.office)]).then(function (response) {
         const products = response[0];
         const productSubscription = response[1];
@@ -1065,7 +1101,7 @@ function jobs(office) {
             console.log(dutyDate)
             if(month !== dutyDate.getMonth() +1) {
                 const sect = createElement('div',{
-                    className:'hr-sect mdc-theme--primary mdc-typography--headline5',
+                    className:'hr-sect mdc-typography--headline5',
                     textContent:`${moment(`${dutyDate.getMonth() + 1}-${dutyDate.getFullYear()}`,'MM-YYYY').format('MMMM YYYY')}`
                 })
                 month = dutyDate.getMonth() +1

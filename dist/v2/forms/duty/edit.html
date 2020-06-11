@@ -326,7 +326,11 @@
         function loadEmployees(employees, ul) {
             employees.forEach(function (employee, index) {
                 const number = employee.attachment['Phone Number'].value;
-                const name = employee.attachment.Name.value
+                if(ul.querySelector(`li[data-number="${number}"]`)) return;
+                let name;
+                if(employee.attachment.Name) {
+                    name = employee.attachment.Name.value;
+                }
                 const li = checkboxLi(name || number, index, number);
                 li.dataset.number = number;
                 li.dataset.name = name;
@@ -413,6 +417,7 @@
         }
 
         function validateList(list) {
+            if(!list) return;
             if(Array.isArray(list.selectedIndex)) {
                 if(!list.selectedIndex.length) return
                 return true

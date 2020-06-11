@@ -137,6 +137,7 @@ function createUnkownCheckIn(geopoint, retries = {subscriptionRetry:0,invalidRet
   })
   document.getElementById("app-header").classList.add('hidden')
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
+  
   ApplicationState.knownLocation = false;
   const prom = []
   offices.forEach(function (office) {

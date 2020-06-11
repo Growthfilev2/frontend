@@ -1297,6 +1297,7 @@ function getCheckInSubs() {
         cursor.continue();
       }
     tx.oncomplete = function () {
+      delete checkInSubs['xanadu']
       return resolve(checkInSubs)
     }
   })

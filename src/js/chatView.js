@@ -74,7 +74,7 @@ function chatView() {
                         });
                         return
                     }
-                    history.pushState(['share'], null, null);
+                    history.pushState(['shareLink'], null, null);
                     giveSubscriptionInit(usersTemplate[selectedType][0].office);
                     return
                }
@@ -97,7 +97,7 @@ function chatView() {
                         });
                         return
                     }
-                    history.pushState(['share'], null, null);
+                    history.pushState(['shareLink'], null, null);
                     giveSubscriptionInit(selectedSubscription.office);
                })
     
@@ -707,17 +707,19 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                     showViewDialog(heading, activity, 'view-form')
                     break;
                 case 'Share':
-                    history.pushState(['share'],null,null);
                     share(activity,document.getElementById('app-current-panel'))
                     break;
                 case 'Undo':
-                    setActivityStatus(activity, 'PENDING')
+                    activity.status = 'PENDING';
+                    setActivityStatus(activity)
                     break;
                 case 'Confirm':
-                    setActivityStatus(activity, 'CONFIRMED')
+                    activity.status = 'CONFIRMED';
+                    setActivityStatus(activity)
                     break;
                 case 'Delete':
-                    setActivityStatus(activity, 'CANCELLED')
+                    activity.status = 'CANCELLED';
+                    setActivityStatus(activity)
                     break;
                 default:
                     break;
@@ -800,7 +802,8 @@ function share(activity,parent) {
     </button>
     `
     activity.assignees.forEach(function (ass) {
-        alreadySelected[ass.phoneNumber] = true
+        alreadySelected[ass.phoneNumber] = true;
+        newSelected[ass.phoneNumber] = true;
     });
 
     parent.innerHTML = content;
@@ -823,7 +826,8 @@ function share(activity,parent) {
                 return;
             }
             console.log(newSelected);
-            addAssignee(activity, userArray);
+            activity.share = userArray;
+            addAssignee(activity);
 
         })
         document.getElementById('users-list').innerHTML = userResult.domString;
@@ -986,17 +990,12 @@ function activityDomCustomer(activityRecord) {
 </div>`
 }
 
-function addAssignee(record, userArray) {
-    console.log(userArray);
+function addAssignee(record) {
+
     closeSearchBar();
     appLocation(3).then(function (geopoint) {
-        requestCreator('share', {
-            activityId: record.activityId,
-            share: userArray,
-            office:record.office,
-            template:record.template
-        }, geopoint).then(function () {
-            snacks(`You added ${userArray.length} people`)
+        requestCreator('share', record, geopoint).then(function () {
+            snacks(`You added ${record.assignees.length} people`)
             history.back();
         }).catch(console.error)
 
@@ -1004,17 +1003,11 @@ function addAssignee(record, userArray) {
 }
 
 
-function setActivityStatus(record, status) {
+function setActivityStatus(record) {
 
     appLocation(3).then(function (geopoint) {
-
-        requestCreator('statusChange', {
-            activityId: record.activityId,
-            office:record.office,
-            template:record.template,
-            status: status
-        }, geopoint).then(function () {
-            snacks(`${record.activityName} is ${status}`)
+        requestCreator('statusChange', record, geopoint).then(function () {
+            snacks(`${record.activityName} is ${record.status}`)
         }).catch(console.error)
     }).catch(handleLocationError)
 }

@@ -3,7 +3,7 @@ const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
-    'http://localhost:5000': true,
+    'http://localhost:5005': true,
     'http://localhost': true,
     'https://growthfilev2-0.firebaseapp.com': true,
     'https://dev-growthfile.firebaseapp.com': true
@@ -159,7 +159,9 @@ function initializeDates(subscriptionTemplate, defaultDateString, defaultTimeStr
         const endField = document.querySelector(`[data-name="${name} end date"]`);
         const startTime = document.querySelector(`[data-name="${name} start time"]`);
         const endTime = document.querySelector(`[data-name="${name} end time"]`);
-        startTime.value = endTime.value = defaultTimeString;
+        if(startTime && endTime) {
+            startTime.value = endTime.value = defaultTimeString;
+        }
         startfield.addEventListener('change', function (evt) {
             endField.value = evt.target.value
             endField.min = evt.target.value
@@ -202,8 +204,13 @@ function getNewSchedule(subscriptionTemplate) {
             parent.snacks(name + ' end date cannot be blank')
             break;
         }
-        const startDate_UTS = Date.parse(startDate);
-        const endDate_UTS = Date.parse(endDate)
+        const startTime = document.querySelector(`[data-name="${name} start time"]`).value || ''
+        console.log(startTime);
+        const endTime = document.querySelector(`[data-name="${name} end time"]`).value || ''
+        
+        const startDate_UTS = Date.parse(startDate+' ' +startTime);
+        const endDate_UTS = Date.parse(endDate+' '+endTime)
+        debugger;
         if (startDate_UTS > endDate_UTS) {
             parent.snacks('start date in ' + name + ' cannot be greater than end date');
             break;

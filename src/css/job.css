@@ -112,6 +112,9 @@ path.purple {
   display: flex;
   align-items: center;
 }
+.job-screen .duty-overview .customer-contact a{
+  text-decoration: none;
+}
 
 .coming--soon-container {
   display: block;
@@ -198,3 +201,4 @@ path.purple {
 .job-card .demo-card__primary .right {
   margin-left: auto;
 }
+
