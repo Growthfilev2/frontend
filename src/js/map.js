@@ -60,7 +60,6 @@ function handleLocationError(error) {
   })
   switch (error.message) {
     case 'THRESHOLD EXCEED':
-      if (history.state)
         mapView(error.body.geopoint);
       break;
 
