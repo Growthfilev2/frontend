@@ -76,11 +76,6 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    // return resolve({
-    //   latitude: 26.8467088,
-    //   longitude: 80.9461592,
-    //   lastLocationTime: Date.now()
-    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -88,10 +83,10 @@ function appLocation(maxRetry) {
         return resolve(geopoint);
       }
 
-      if (history.state && history.state[0] !== 'profileCheck' && isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+      if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
-          type: 'geolocation',
+          type:'geolocation',
           body: {
             geopoint: geopoint
           }
@@ -101,7 +96,7 @@ function appLocation(maxRetry) {
       ApplicationState.location = geopoint
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
-    }).catch(function (error) {
+    }).catch(function(error){
       error.type = 'geolocation';
       reject(error)
     })
