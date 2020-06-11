@@ -60,7 +60,7 @@ function handleLocationError(error) {
   })
   switch (error.message) {
     case 'THRESHOLD EXCEED':
-        mapView(error.body.geopoint);
+        handleCheckin(error.body.geopoint)
       break;
 
     case 'BROKEN INTERNET CONNECTION':
