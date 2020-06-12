@@ -1359,7 +1359,7 @@ function reloadPage() {
 
 
 function shouldCheckin(geopoint, checkInSubs) {
-
+  return true
   ApplicationState.officeWithCheckInSubs = checkInSubs;
   const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
   if (!oldState) return true

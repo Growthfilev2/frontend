@@ -64,15 +64,42 @@
     font-size: 80px;
   }
   .c100 > span {
+    width: 100%;
+    position: absolute;
+    font-weight: 500;
+    width: 100%;
+    z-index: 1;
+    left: 0rem;
+    top: 2rem;
+    line-height: 1em;
+    font-size: 90px;
+    color: var(--mdc-theme-primary);
+    display: block;
+    text-align: center;
+    white-space: nowrap;
+    -webkit-transition-property: all;
+    -moz-transition-property: all;
+    -o-transition-property: all;
+    transition-property: all;
+    -webkit-transition-duration: 0.2s;
+    -moz-transition-duration: 0.2s;
+    -o-transition-duration: 0.2s;
+    transition-duration: 0.2s;
+    -webkit-transition-timing-function: ease-out;
+    -moz-transition-timing-function: ease-out;
+    -o-transition-timing-function: ease-out;
+    transition-timing-function: ease-out;
+  }
+  .c100 .tap {
     position: absolute;
     width: 100%;
     z-index: 1;
-    left: 26px;
-    top: 0;
+    left: 2.3rem;
+    top: 5.3rem;
     width: 5em;
     line-height: 6em;
-    font-size: 0.160em;
-    color: var(--mdc-theme-primary);
+    font-size: 15px;
+
     display: block;
     text-align: center;
     white-space: nowrap;

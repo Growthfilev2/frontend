@@ -1340,6 +1340,7 @@ iframe {
 .history-tl-container ul.tl li.check-in::before {
   content: 'check_circle';
 }
+
 .history-tl-container ul.tl li.customer::before {
   content:'directions_walk'
 }

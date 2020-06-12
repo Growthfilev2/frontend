@@ -343,13 +343,14 @@ function constructJobView(result) {
     })
     el.appendChild(dutyScreen(result.currentDuty));
     const timeline = createElement('div', {
-        className: 'mdc-card timeline-overview'
+        className: 'mdc-card timeline-overview mt-10'
     })
     timeline.innerHTML = `        
             <div class='mdc-card timeline-overview mt-20'>
                 <div class='startTime text-center mb-10'>${result.timelineData.length ? moment(result.timelineData[result.timelineData.length -1].timestamp).format('hh:mm A'):''}</div>
                 <div class="c100 p100 big center orange" id='pie'>
-                <span>${result.timelineData.length ? moment(result.timelineData[0].timestamp).format('hh:mm A') :''}</span>
+                <span>${result.timelineData.length}</span>
+                <div class='tap'>Tap to view details</div>
                     <div class="slice"><div class="bar">
                     </div><div class="fill"></div></div>
                 </div>
@@ -490,7 +491,7 @@ function getTimelineAddendum(geopoint) {
 
         const tx = db.transaction('addendum');
         const store = tx.objectStore('addendum');
-
+        const unique = {}
         const result = []
         const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
         store.index('timestamp').openCursor(bound).onsuccess = function (evt) {
@@ -500,15 +501,18 @@ function getTimelineAddendum(geopoint) {
                 cursor.continue();
                 return
             }
-            
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({
-                    latitude: cursor.value.location._latitude,
-                    longitude: cursor.value.location._longitude
-                }, geopoint))) {
+                latitude: cursor.value.location._latitude,
+                longitude: cursor.value.location._longitude
+            }, geopoint))) {
                 cursor.continue();
                 return
             }
-        
+            if(unique[cursor.value.addendumId]) {
+                cursor.continue();
+                return
+            }
+            unique[cursor.value.addendumId] = true;
             result.push(cursor.value)
             cursor.continue();
         }
@@ -574,8 +578,8 @@ function createTimeLapse(timelineData, fat, lat) {
             if (activity.attachment.Photo.value) {
                 totalPhotoCheckins++
             }
-        };
-
+        };  
+        if(activity.template === 'duty') return;
         ul.appendChild(createTimelineLi(activity))
     })
 
@@ -655,14 +659,15 @@ function createTimeLapse(timelineData, fat, lat) {
 
 
 function createTimelineLi(activity) {
+    const eventName = mapTemplateNameToTimelineEvent(activity)
     const li = createElement("li", {
-        className: 'tl-item ' + activity.template
+        className: `tl-item ${activity.template}` 
     })
     li.dataset.activity = JSON.stringify(activity);
 
     const div = createElement('div', {
         className: 'item-title',
-        textContent: mapTemplateNameToTimelineEvent(activity)
+        textContent: eventName
     })
     const span = createElement('span', {
         className: 'event-time mdc-typography--caption',
@@ -679,13 +684,15 @@ function createTimelineLi(activity) {
 }
 
 function mapTemplateNameToTimelineEvent(activity) {
+    if(ApplicationState.venue && activity.template === 'check-in') {
+            if(activity.venue[0].location === ApplicationState.venue.location)  return "Reached customer's location";
+    }
+    
     if (activity.template === 'check-in') {
         if (activity.attachment.Photo.value) return 'Uploaded photo'
         return 'Check-In'
     }
-    if (activity.template === 'Customer') {
-        return "Reached customer's location";
-    }
+
     if (activity.template === 'leave') {
         return "On leave"
     }
@@ -1193,9 +1200,6 @@ function createDate(dateObject) {
 
     return `${dateObject.getFullYear()}-${month}-${date}`
 }
-
-
-
 
 function getDutyStatus(duty) {
     const currentTimestamp = Date.now()
