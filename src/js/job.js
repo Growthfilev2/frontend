@@ -265,7 +265,7 @@ function dutyScreen(duty) {
     })
     container.innerHTML = `<div class='mdc-card duty-overview'>
       ${duty.canEdit ? `<i class='material-icons mdc-theme--primary text-right' id='edit'>edit</i>` :''}
-       <div class='duty-details'>
+       <div class='duty-details pt-10'>
            <div class='customer'>
                <div class='location full-width mb-10'>
                    <div class='icon mdc-theme--primary' style='float:left;'>
@@ -284,7 +284,7 @@ function dutyScreen(duty) {
                 </span>` :''}
                 
            </div>
-           <div class='duty-type mb-10'>
+           <div class='duty-type'>
                <span class='inline-flex mdc-theme--primary mb-10'>
                    <i class='material-icons'>assignment</i>
                    <span class='mdc-typography--headline6 ml-10'>${duty.attachment['Duty Type'].value || '-'} </span>
@@ -346,7 +346,7 @@ function constructJobView(result) {
         className: 'mdc-card timeline-overview mt-10'
     })
     timeline.innerHTML = `        
-            <div class='mdc-card timeline-overview mt-20'>
+            <div class='mdc-card timeline-overview'>
                 <div class='startTime text-center mb-10'>${result.timelineData.length ? moment(result.timelineData[result.timelineData.length -1].timestamp).format('hh:mm A'):''}</div>
                 <div class="c100 p100 big center orange" id='pie'>
                 <span>${result.timelineData.length}</span>
@@ -386,17 +386,6 @@ function constructJobView(result) {
         openCamera()
     });
     skip.addEventListener('click', function () {
-        // history.pushState(['reportView'], null, null);
-        // comingSoon();
-        let office = result.currentDuty.office;
-        if(office) {
-            jobs(office);
-            return
-        }
-        if(ApplicationState.venue.office) {
-            jobs(office);
-            return
-        }
        jobs();
     })
     finish.addEventListener('click', function () {
@@ -413,6 +402,7 @@ function constructJobView(result) {
     })
     if(editIcon) {
         editIcon.addEventListener('click', function () {
+            history.pushState(['updateDuty'],null,null);
             updateDuty(result.currentDuty);  
         })
     }
@@ -489,7 +479,6 @@ function getTimelineFillValue(firstActivityTimestamp, lastActivityTimestamp) {
 
 function getTimelineAddendum(geopoint) {
     return new Promise(function (resolve, reject) {
-
         const tx = db.transaction('addendum');
         const store = tx.objectStore('addendum');
         const unique = {}
@@ -509,11 +498,11 @@ function getTimelineAddendum(geopoint) {
                 cursor.continue();
                 return
             }
-            if(unique[cursor.value.addendumId]) {
+            if(unique[cursor.value.activityId]) {
                 cursor.continue();
                 return
-            }
-            unique[cursor.value.addendumId] = true;
+            };
+            unique[cursor.value.activityId] = true;
             result.push(cursor.value)
             cursor.continue();
         }
@@ -605,7 +594,7 @@ function createTimeLapse(timelineData, fat, lat) {
                     :''}
                     ${totalPhotoCheckins  ? 
                         `<li class='mdc-list-item pl-0 pr-0 mdc-typography--headline6'>
-                                <span class='mdc-list-item__graphic material-icons'>done</span>
+                                <span class='mdc-list-item__graphic material-icons'>image</span>
                                 ${totalPhotoCheckins} Photos uploaded
                         </li>`
                     :''}
@@ -802,7 +791,7 @@ function showRating(callSubscription,customer) {
 
     el.innerHTML = `
     <div id='rating-view'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>`;
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/rating/index.html'></iframe>`;
     Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'),getAllCustomer(callSubscription.office)]).then(function (response) {
         const products = response[0];
         const productSubscription = response[1];
@@ -854,8 +843,9 @@ function updateDuty(duty) {
         label: 'Name',
         value: duty.attachment.Location.value
     }))
-    customerName.focus();
+   
     customerCard.appendChild(customerName.root_);
+    customerName.focus();
     const productsCard = createElement('div', {
         className: 'mdc-card product-card  mt-10'
     })
@@ -1064,7 +1054,7 @@ function jobs(office) {
     const header = setHeader(`
     <span class="mdc-top-app-bar__title">All duties</span>
     `,`<img class="mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>`);
-    header.root_.classList.remove('hidden');
+    // header.root_.classList.remove('hidden');
     
     document.getElementById('profile-header-icon').addEventListener('click',function(){
         history.pushState(['profileScreen'], null, null);
@@ -1097,7 +1087,7 @@ function jobs(office) {
         cursor.continue()
     }
     tx.oncomplete = function () {
-   
+        
         const sortedDates = Object.keys(dateObject).sort(function(a,b){
             return Number(b) - Number(a);
         })
@@ -1153,10 +1143,11 @@ function dutyDateList(duties,dutyDate) {
     <div class='detail-container hidden'>
         <ul class='mdc-list mdc-list--two-line'>
             ${duties.map(function(duty){
-                return `<li class='mdc-list-item'>
+                return `<li class='mdc-list-item' style='height:80px'>
                     <span class='mdc-list-item__text'>
                         <span class='mdc-list-item__primary-text'>${duty.activityName}</span>
                         <span class='mdc-list-item__secondary-text'>${moment(duty.schedule[0].startTime).format('hh:mm A')} To ${moment(duty.schedule[0].endTime).format('hh:mm A')}</span>
+                        <span class='mdc-list-item__secondary-text'>${duty.office}</span>
                     </span>
                     <span class='mdc-list-item__meta'>${getDutyStatus(duty)}</span>
                 </li>`

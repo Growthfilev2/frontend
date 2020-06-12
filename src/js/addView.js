@@ -57,9 +57,14 @@ function sendFormToParent(formData) {
     appLocation(3).then(function (geopoint) {
 
         requestCreator('create', formData, geopoint).then(function () {
-            console.log(formData)
-            successDialog(`You Created a ${formData.template}`);
+            console.log(formData);
+            if (formData.template === 'call') {
+                successDialog(`Job completed`);
+                jobs(formData.office);
+                return
+            }
 
+            successDialog(`You Created a ${formData.template}`);
 
             if (formData.report === 'attendance' && formData.id) {
                 const tx = db.transaction('attendance', 'readwrite');
@@ -75,11 +80,6 @@ function sendFormToParent(formData) {
                 }
                 return;
             };
-            if (formData.template === 'call') {
-                jobs(formData.office);
-                return
-            }
-
             if (formData.template === 'customer') {
                 ApplicationState.knownLocation = true;
                 ApplicationState.venue = {

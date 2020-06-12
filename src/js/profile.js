@@ -2,7 +2,8 @@
 function profileScreen() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>`
   const help = `<a href="https://wa.me/918595422858" class='mdc-theme--on-primary'>HELP</a>`
-  setHeader(backIcon, help);
+  const header = setHeader(backIcon, help);
+  header.root_.classList.remove('hidden')
   // const tabs
   const appEl = document.getElementById('app-current-panel');
   const tabs = [{

@@ -253,13 +253,13 @@ window.onpopstate = function (event) {
     'profileCheck': true,
     'login': true,
     'addView': true,
-    'share': true
-  }
+    'share': true,
+  };
+
   if (!event.state) return;
   if (nonRefreshViews[event.state[0]]) return
-
-  if (event.state[0] === 'reportView') {
-    this.reportView(event.state[1])
+  if(event.state[0] === 'showRating') {
+    this.jobs();
     return;
   }
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
@@ -1329,12 +1329,8 @@ function checkIDBCount(storeNames) {
 
 
 function openReportView() {
-  logReportEvent('IN Reports')
-  logReportEvent('IN ReportsView');
-  logFirebaseAnlyticsEvent("report_view");
-  history.pushState(['jobView'], null, null);
   document.getElementById('step-ui').innerHTML = ''
-  // reportView()
+  history.pushState(['jobView'], null, null);
   jobView();
 }
 

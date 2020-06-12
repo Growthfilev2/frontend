@@ -239,7 +239,6 @@ function loadCardData(venues, geopoint) {
     const selectedVenue = venues[evt.detail.index];
     createKnownCheckIn(selectedVenue, geopoint);
   })
-  logFirebaseAnlyticsEvent('map_view_check-in');
 };
 
 function createKnownCheckIn(selectedVenue, geopoint, retries = {subscriptionRetry:0,invalidRetry:0}) {

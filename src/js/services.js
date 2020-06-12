@@ -77,8 +77,8 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     resolve({
-      latitude:28.70669991666667,
-      longitude:77.10201823333334,
+      latitude:28.70690478125,
+      longitude:77.10187316250001,
       lastLocationTime:Date.now()
     })
     manageLocation(maxRetry).then(function (geopoint) {
@@ -317,6 +317,9 @@ function executeRequest(requestGenerator) {
         const reject = workerRejects[event.data.id];
         if (reject) {
           reject(event.data);
+          if(event.data.apiRejection && event.data.body.code === 500) {
+            snacks(event.data.body.message);
+          }
           if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
@@ -429,13 +432,16 @@ function handleComponentUpdation(readResponse) {
       if (!readResponse.addendum.length) return;
       readLatestChats(false);
       break;
-
     case 'reportView':
       reportView(history.state[1]);
       break;
     case 'jobView':
       if (document.getElementById('rating-view')) return;
       jobView();
+      break;
+    case 'jobs':
+      jobs();
+      break;
     default:
       console.log("no refresh")
   }
