@@ -28,6 +28,7 @@ function chatView() {
 
     Promise.all([ firebase.auth().currentUser.getIdTokenResult(),getSubscription()]).then(function(result){
         // const isUserAdmin =  isAdmin(result[0]);
+        console.log(result);
         const subscriptions = result[1]
         const usersTemplate = {}
         subscriptions.forEach(function(sub){
@@ -49,61 +50,61 @@ function chatView() {
 
             }
         })
-    
-        const addContactBtn = createFab('add');
-        document.querySelector('.user-chats').appendChild(addContactBtn);
-        addContactBtn.addEventListener('click', function () {
-    
-          
-            const dialog = new Dialog('', templateSelectionList(usersTemplate), 'choose-office-subscription').create('simple');
-            const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(dialog, ul);
-            ul.listen('MDCList:action', function (typeEvent) {
-                dialog.close()
-                const selectedType = Object.keys(usersTemplate)[typeEvent.detail.index]
-          
-               if(usersTemplate[selectedType].length == 1) {
-                    if(selectedType === 'customer') {
-                        getDropDownContent(usersTemplate['customer'][0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                            history.pushState(['addView'], null, null);
-                            fillVenueInSub(usersTemplate['customer'][0], {
-                                latitude: ApplicationState.location.latitude,
-                                longitude: ApplicationState.location.longitude
+        if(!Object.keys(usersTemplate).length)  return;
+            const addContactBtn = createFab('add');
+            document.querySelector('.user-chats').appendChild(addContactBtn);
+            addContactBtn.addEventListener('click', function () {
+        
+            
+                const dialog = new Dialog('', templateSelectionList(usersTemplate), 'choose-office-subscription').create('simple');
+                const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+                bottomDialog(dialog, ul);
+                ul.listen('MDCList:action', function (typeEvent) {
+                    dialog.close()
+                    const selectedType = Object.keys(usersTemplate)[typeEvent.detail.index]
+            
+                if(usersTemplate[selectedType].length == 1) {
+                        if(selectedType === 'customer') {
+                            getDropDownContent(usersTemplate['customer'][0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                                history.pushState(['addView'], null, null);
+                                fillVenueInSub(usersTemplate['customer'][0], {
+                                    latitude: ApplicationState.location.latitude,
+                                    longitude: ApplicationState.location.longitude
+                                });
+                                addView(usersTemplate['customer'][0], customerTypes);
                             });
-                            addView(usersTemplate['customer'][0], customerTypes);
-                        });
+                            return
+                        }
+                        history.pushState(['shareLink'], null, null);
+                        giveSubscriptionInit(usersTemplate[selectedType][0].office);
                         return
-                    }
-                    history.pushState(['shareLink'], null, null);
-                    giveSubscriptionInit(usersTemplate[selectedType][0].office);
-                    return
-               }
-    
-         
-               const officeDialog = new Dialog('Choose office', officeSelectionList(usersTemplate[selectedType]), 'choose-office-subscription').create('simple');
-               const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-               bottomDialog(officeDialog, offieList);
-               offieList.listen('MDCList:action', function (officeEvent) {
-                officeDialog.close();
-                    const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
-                    if(selectedType === 'customer') {
-                        getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                            history.pushState(['addView'], null, null);
-                            fillVenueInSub(selectedSubscription, {
-                                latitude: ApplicationState.location.latitude,
-                                longitude: ApplicationState.location.longitude
+                }
+        
+            
+                const officeDialog = new Dialog('Choose office', officeSelectionList(usersTemplate[selectedType]), 'choose-office-subscription').create('simple');
+                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+                bottomDialog(officeDialog, offieList);
+                offieList.listen('MDCList:action', function (officeEvent) {
+                    officeDialog.close();
+                        const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
+                        if(selectedType === 'customer') {
+                            getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                                history.pushState(['addView'], null, null);
+                                fillVenueInSub(selectedSubscription, {
+                                    latitude: ApplicationState.location.latitude,
+                                    longitude: ApplicationState.location.longitude
+                                });
+                                addView(selectedSubscription, customerTypes);
                             });
-                            addView(selectedSubscription, customerTypes);
-                        });
-                        return
-                    }
-                    history.pushState(['shareLink'], null, null);
-                    giveSubscriptionInit(selectedSubscription.office);
-               })
-    
-         
-            })
-        });
+                            return
+                        }
+                        history.pushState(['shareLink'], null, null);
+                        giveSubscriptionInit(selectedSubscription.office);
+                })
+        
+            
+                })
+            });
     })
    
 

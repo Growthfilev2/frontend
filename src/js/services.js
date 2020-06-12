@@ -79,7 +79,7 @@ function appLocation(maxRetry) {
     resolve({
       latitude:28.70669991666667,
       longitude:77.10201823333334,
-      lastLocationTime:Date.now();
+      lastLocationTime:Date.now()
     })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {

@@ -374,6 +374,7 @@ function constructJobView(result) {
     const pie = el.querySelector('#pie');
     const expand = el.querySelector('#expand');
     const editIcon = el.querySelector('#edit');
+    
     const addMoreUsers = el.querySelector('#add-more--users');
 
     finish.classList.add('mdc-button--raised')
