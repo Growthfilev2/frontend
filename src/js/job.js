@@ -1112,9 +1112,14 @@ function jobs(office) {
             })
             frag.appendChild(li);
         })
+        getReportSubscriptions('attendance').then(function (subs) {
+            if (!subs.length) return;
+            frag.appendChild(createTemplateButton(subs))
+        })
         document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust')
         document.getElementById('app-current-panel').innerHTML = ``;
         document.getElementById('app-current-panel').appendChild(frag);
+     
     }
 }
 
@@ -1200,3 +1205,52 @@ function getDutyStatus(duty) {
     if(duty.schedule[0].startTime > currentTimestamp) return 'Upcoming';
     if(duty.schedule[0].startTime <= currentTimestamp  && currentTimestamp <= duty.schedule[0].endTime) return 'Open';
 }
+
+
+
+function createTemplateButton(subs) {
+
+    const button = createFab('add')
+    button.addEventListener('click', function () {
+      if (subs.length == 1) {
+        history.pushState(['addView'], null, null);
+        addView(subs[0])
+        return
+      }
+
+      const uniqueSubs = {}
+        subs.forEach(function (sub) {
+        if (!uniqueSubs[sub.template]) {
+          uniqueSubs[sub.template] = [sub]
+        } else {
+          uniqueSubs[sub.template].push(sub)
+        }
+      })
+
+      const dialog = new Dialog('', templateSelectionList(uniqueSubs), 'choose-office-subscription').create('simple');
+      const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+      bottomDialog(dialog, ul)
+
+      ul.listen('MDCList:action', function (subscriptionEvent) {
+        const selectedSubscriptions = uniqueSubs[Object.keys(uniqueSubs)[subscriptionEvent.detail.index]];
+        dialog.close()
+        if (selectedSubscriptions.length == 1) {
+          history.pushState(['addView'], null, null);
+          addView(selectedSubscriptions[0])
+          return
+        }
+        const officeDialog = new Dialog('Choose office', officeSelectionList(selectedSubscriptions), 'choose-office-subscription').create('simple');
+        const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+        bottomDialog(officeDialog, officeList)
+        officeList.listen('MDCList:action', function (officeEvent) {
+          const selectedSubscription = selectedSubscriptions[officeEvent.detail.index];
+          officeDialog.close();
+          history.pushState(['addView'], null, null);
+          addView(selectedSubscription)
+        })
+      })
+    })
+    return button;
+ 
+}
+
