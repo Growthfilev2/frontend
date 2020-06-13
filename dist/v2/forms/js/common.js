@@ -3,10 +3,7 @@ const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
-    'http://localhost:5005': true,
-    'http://localhost': true,
     'https://growthfilev2-0.firebaseapp.com': true,
-    'https://dev-growthfile.firebaseapp.com': true
 }
 
 function sendFrameDimensions() {

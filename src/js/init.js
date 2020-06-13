@@ -144,6 +144,7 @@ function updatedWifiScans(wifiString) {
 window.addEventListener('error', function (event) {
   this.console.error(event.message)
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
+  if(event.message === "You can't have a focus-trap without at least one focusable element") return;
   handleError({
     message: 'global error :' + event.message,
     body: {

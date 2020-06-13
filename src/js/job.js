@@ -569,7 +569,7 @@ function createTimeLapse(timelineData, fat, lat) {
                 totalPhotoCheckins++
             }
         };  
-        if(activity.template === 'duty') return;
+       
         ul.appendChild(createTimelineLi(activity))
     })
 
@@ -791,7 +791,7 @@ function showRating(callSubscription,customer) {
 
     el.innerHTML = `
     <div id='rating-view'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/rating/index.html'></iframe>`;
+    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>`;
     Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'),getAllCustomer(callSubscription.office)]).then(function (response) {
         const products = response[0];
         const productSubscription = response[1];
@@ -1054,13 +1054,13 @@ function jobs(office) {
     const header = setHeader(`
     <span class="mdc-top-app-bar__title">All duties</span>
     `,`<img class="mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>`);
-    // header.root_.classList.remove('hidden');
+    header.root_.classList.remove('hidden');
     
     document.getElementById('profile-header-icon').addEventListener('click',function(){
         history.pushState(['profileScreen'], null, null);
         profileScreen();
     });
-
+    
     store.index('template').openCursor('duty').onsuccess = function (evt) {
         const cursor = evt.target.result;
         if (!cursor) return;
