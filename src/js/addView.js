@@ -76,7 +76,7 @@ function sendFormToParent(formData) {
                     store.put(record)
                 }
                 tx.oncomplete = function () {
-                    reportView()
+                    jobs()
                 }
                 return;
             };
@@ -99,8 +99,7 @@ function sendFormToParent(formData) {
                     }).catch(console.error)
                 })
             }
-
-            return reportView()
+            return jobs();
         }).catch(function (err) {
             snacks(err.message);
             passFormData({

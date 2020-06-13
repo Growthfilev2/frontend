@@ -201,13 +201,12 @@ function getNewSchedule(subscriptionTemplate) {
             parent.snacks(name + ' end date cannot be blank')
             break;
         }
-        const startTime = document.querySelector(`[data-name="${name} start time"]`).value || ''
-        console.log(startTime);
-        const endTime = document.querySelector(`[data-name="${name} end time"]`).value || ''
+      
+        const startTime = document.querySelector(`[data-name="${name} start time"]`)
+        const endTime = document.querySelector(`[data-name="${name} end time"]`);
         
-        const startDate_UTS = Date.parse(startDate+' ' +startTime);
-        const endDate_UTS = Date.parse(endDate+' '+endTime)
-        debugger;
+        const startDate_UTS = Date.parse(startDate+' ' +(startTime ? startTime.value : ''));
+        const endDate_UTS = Date.parse(endDate+' '+(endTime ? endTime.value : ''))
         if (startDate_UTS > endDate_UTS) {
             parent.snacks('start date in ' + name + ' cannot be greater than end date');
             break;
@@ -220,9 +219,7 @@ function getNewSchedule(subscriptionTemplate) {
         })
     }
     if (isScheduleValid) return newSchedules;
-
     return;
-
 }
 
 function getDropDownContent(office, template, indexName) {

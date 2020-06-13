@@ -387,7 +387,11 @@ function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
     </div>
   </div>
   `
-
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title">Upload photo</span>
+        `
+  const header = setHeader(backIcon,'');
+  header.root_.classList.remove('hidden');
   const content = document.getElementById('snap')
   const textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'))
   const submit = new mdc.ripple.MDCRipple(document.getElementById('snap-submit'))

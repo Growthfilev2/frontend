@@ -767,6 +767,9 @@ body {
 /**iframe **/
 iframe {
   border: 0px;
+  width: 100%;
+  height: 100%;
+  position: relative;
 
 }
 
@@ -774,13 +777,6 @@ iframe {
   width: 100%;
 }
 
-#form-iframe {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  
-  /* min-height: 70vh; */
-}
 
 
 

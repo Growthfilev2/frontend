@@ -125,7 +125,7 @@ function init(template, data) {
                 longitude:  dutyCustomer.longitude
             }
         }]
-        showSnacksApiResponse('Please wait');
+       
         parent.postMessage({
             name: 'sendFormToParent',
             body: copy

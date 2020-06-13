@@ -142,7 +142,8 @@ function updatedWifiScans(wifiString) {
  */
 
 window.addEventListener('error', function (event) {
-  this.console.error(event.message)
+  this.console.error(event.message);
+  return;
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
   if(event.message === "You can't have a focus-trap without at least one focusable element") return;
   handleError({
@@ -303,7 +304,7 @@ window.addEventListener('load', function () {
 
     panel.classList.remove('hidden');
     if (EMAIL_REAUTH) {
-      history.pushState(['reportView'], null, null);
+      history.pushState(['jobs'], null, null);
       history.pushState(['profileView'], null, null);
       history.pushState(['emailUpdation'], null, null);
       emailUpdation(false, function () {

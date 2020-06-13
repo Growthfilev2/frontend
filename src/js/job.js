@@ -788,9 +788,14 @@ function getChildrenActivity(office, template) {
 function showRating(callSubscription,customer) {
     history.pushState(['showRating'],null,null);
     const el = document.getElementById("app-current-panel");
-
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title mdc-typography--headline5 bold">How was your job ?</span>
+    `
+    const header = setHeader(backIcon,'');
+    header.root_.classList.remove('hidden');
+    
     el.innerHTML = `
-    <div id='rating-view'>
+    <div id='rating-view' class='mdc-top-app-bar--fixed-adjust'>
         <iframe id='rating-form' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>;
     </div>`
     Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'),getAllCustomer(callSubscription.office)]).then(function (response) {
@@ -1051,7 +1056,9 @@ function jobs(office) {
     const tx = db.transaction('activity');
     const store = tx.objectStore('activity');
     const dateObject = {}
-    
+    const dutiesCont = createElement('div',{
+        className:'all-duties'
+    })
     const header = setHeader(`
     <span class="mdc-top-app-bar__title">All duties</span>
     `,`<img class="mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>`);
@@ -1112,13 +1119,14 @@ function jobs(office) {
             })
             frag.appendChild(li);
         })
+        dutiesCont.appendChild(frag);
         getReportSubscriptions('attendance').then(function (subs) {
             if (!subs.length) return;
-            frag.appendChild(createTemplateButton(subs))
+            dutiesCont.appendChild(createTemplateButton(subs))
         })
         document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust')
         document.getElementById('app-current-panel').innerHTML = ``;
-        document.getElementById('app-current-panel').appendChild(frag);
+        document.getElementById('app-current-panel').appendChild(dutiesCont);
      
     }
 }
@@ -1254,3 +1262,43 @@ function createTemplateButton(subs) {
  
 }
 
+
+
+function getReportSubscriptions(name) {
+    return new Promise(function (resolve, reject) {
+      const result = []
+      const tx = db.transaction('subscriptions');
+      const store = tx.objectStore('subscriptions').index('report');
+      store.openCursor(name).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.status === 'CANCELLED') {
+          cursor.continue();
+          return;
+        }
+        if (cursor.value.template === 'attendance regularization') {
+          cursor.continue();
+          return;
+        }
+        result.forEach(function (sub, index, object) {
+          if (sub.office === cursor.value.office && sub.template === cursor.value.template) {
+            if (!sub.hasOwnProperty('timestamp') || !cursor.value.hasOwnProperty('timestamp')) {
+              object.splice(index, 1)
+            } else {
+              if (sub.timestamp < cursor.value.timestamp) {
+                object.splice(index, 1)
+              }
+            }
+          }
+        })
+        result.push(cursor.value);
+        cursor.continue();
+      }
+      tx.oncomplete = function () {
+        console.log(result)
+        resolve(result);
+      }
+    });
+  }
+  
+  
