@@ -55,7 +55,7 @@ function setCustomerName(name) {
     document.querySelector('#customer-name .text').textContent = name
 }
 function setContact(contactObject){
-    document.querySelector('.contact-container').classList.remove('hidden');
+    document.querySelector('.contact-container').removeAttribute('hidden')
     reviewerNumber.value = contactObject.phoneNumber;
     reviewerName.value = contactObject.displayName;
 }
@@ -306,8 +306,8 @@ function chooseCustomer(customers) {
 
 
     searchField.input_.addEventListener('input', function (e) {
-        const value = e.target.value.trim();
-        if (!value) return;
+        const value = e.target.value.toLowerCase().trim();
+        // if (!value) return;
         ulInit.listElements.forEach(function (li) {
             if (li.dataset.location.toLowerCase().indexOf(value) > -1) {
                 li.removeAttribute('hidden')

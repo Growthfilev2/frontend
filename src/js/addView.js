@@ -25,19 +25,20 @@ function addView(sub, body) {
 }
 
 function passFormData(data) {
-    const frame = document.getElementById('form-iframe');
+    const frame = document.getElementById('form-iframe') || document.getElementById('rating-form')
     if (!frame) return;
     frame.contentWindow.postMessage(data, window.location.origin);
 }
 
-function resizeFrame() {
-
+function resizeFrame(frameDimensions) {
+ const frame = document.getElementById('rating-form');
+ if(!frame) return;
+ frame.style.height = frameDimensions.height+'px'
 }
 
 
 
 window.addEventListener('message', function (event) {
-    console.log(event)
     if (!allowedOrigins[event.origin]) return;
     this.console.log(event.data);
     if (typeof event.data === 'object' && event.data != null) {
@@ -142,7 +143,7 @@ function parseContact(contactString) {
 
 function setContactForCustomer(contactString) {
     const contactDetails = parseContact(contactString);
-    const frame = document.getElementById('form-iframe')
+    const frame = document.getElementById('form-iframe') || document.getElementById('rating-form')
     if (!frame) return;
     frame.contentWindow.postMessage({
         name: 'setContact',

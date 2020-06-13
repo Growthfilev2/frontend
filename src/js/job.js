@@ -790,14 +790,15 @@ function showRating(callSubscription,customer) {
     const el = document.getElementById("app-current-panel");
 
     el.innerHTML = `
-    <div id='rating-view'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>`;
+    <div id='rating-view'>
+        <iframe id='rating-form' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>;
+    </div>`
     Promise.all([getChildrenActivity(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'product'), getSubscription(callSubscription.office, 'customer'),getAllCustomer(callSubscription.office)]).then(function (response) {
         const products = response[0];
         const productSubscription = response[1];
         const customerSubscription = response[2];
         const customers = response[3];
-        document.getElementById('form-iframe').addEventListener("load", ev => {
+        document.getElementById('rating-form').addEventListener("load", ev => {
             passFormData({
                 name: 'init',
                 template: callSubscription,
