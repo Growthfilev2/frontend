@@ -108,6 +108,9 @@ body {
 .mb-10 {
   margin-bottom: 10px;
 }
+.mb-20 {
+  margin-bottom: 20px;
+}
 
 .mt-0 {
   margin-top: 0px !important;
@@ -123,6 +126,9 @@ body {
 
 .ml-10 {
   margin-left: 10px;
+}
+.ml-20 {
+  margin-left: 20px;
 }
 
 .pb-0 {
@@ -164,6 +170,16 @@ body {
 .pr-0 {
   padding-right: 0px;
 }
+.bold {
+  font-weight: bold;
+}
+.veritical-horizontal-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
 
 .width-100 {
   width: 100%;
@@ -178,9 +194,16 @@ body {
   visibility: hidden;
 }
 
+.inline-flex {
+  display: inline-flex;
+  align-items: center;
+}
 
 .text-center {
   text-align: center
+}
+.text-right {
+  text-align: right;
 }
 
 .freeze {
@@ -1264,4 +1287,101 @@ iframe {
   margin: 0 auto;
 
   margin-top: 50px;
+}
+
+
+.history-tl-container {
+  cursor: pointer;
+  margin: auto;
+  display: block;
+  position: relative;
+  margin-left: 0px;
+  padding: 0px 16px 10px 16px;
+  height: 100%;
+
+}
+
+
+.history-tl-container ul.tl {
+  margin: 20px 0;
+  padding: 20px 0px 20px 0px;
+  overflow-y: auto;
+  width: 100%;
+  padding: 0px 0px 60px 0px;
+  overflow-y: auto;
+  height: 100%;
+  /* padding-top:80px; */
+  /* margin-bottom: 80px; */
+
+}
+
+.history-tl-container ul.tl li {
+  list-style: none;
+  margin: auto;
+  margin-left: 20px;
+  min-height: 10px;
+  border-left: 1px dashed #89273e6b;
+  padding: 0 0 25px 30px;
+  position: relative;
+
+}
+
+.history-tl-container ul.tl li:last-child {
+  border-left: 0;
+  padding-bottom: 0px;
+
+}
+.history-tl-container ul.tl li:first-child {
+  margin-top: 10px;
+}
+.history-tl-container ul.tl li::before {
+  content: 'done'; 
+}
+.history-tl-container ul.tl li.check-in::before {
+  content: 'check_circle';
+}
+
+.history-tl-container ul.tl li.customer::before {
+  content:'directions_walk'
+}
+.history-tl-container ul.tl li::before {
+  font-family: 'Material Icons';
+  position: absolute;
+  left: -20px;
+  top: -5px;
+  border: 8px solid rgba(255, 255, 255, 0.74);
+  border-radius: 100%;
+  background: #89273E;
+  height: 20px;
+  width: 20px;
+  padding: 3px;
+  font-size: 20px;
+  transition: all 500ms ease-in-out;
+  color: white;
+  text-align: center;
+  box-sizing: content-box;
+}
+
+.item-title {
+  padding: 3px;
+}
+.event-time {
+  padding: 3px;
+
+}
+
+ul.tl li .item-detail {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+}
+
+.svg-list-empty {
+  width: 100%;
+  max-width: 200px;
+  display: block;
+  margin: 0 auto;
+}
+
+.empty-list {
+  background-color: #f5f5f5;
 }

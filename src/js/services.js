@@ -53,7 +53,7 @@ function successDialog(text) {
 }
 
 
-function snacks(message, text, callback,timeout) {
+function snacks(message, text, callback, timeout) {
   snackBar.labelText = message;
   snackBar.open();
   snackBar.timeoutMs = timeout || 4000
@@ -256,7 +256,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=127');
+const apiHandler = new Worker('js/apiHandler.js?version=129');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -312,12 +312,15 @@ function executeRequest(requestGenerator) {
         const reject = workerRejects[event.data.id];
         if (reject) {
           reject(event.data);
+          if(event.data.apiRejection && event.data.body.code === 500) {
+            snacks(event.data.body.message);
+          }
           if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
               body: JSON.stringify(event.data.body)
             })
-          } 
+          }
         }
       } else {
         const resolve = workerResolves[event.data.id];
@@ -398,31 +401,45 @@ function updateIosLocation(geopointIos) {
   window.dispatchEvent(iosLocation)
 }
 
-function handleComponentUpdation(readResponse) {
- 
 
-    getCheckInSubs().then(function (checkInSubs) {
-      ApplicationState.officeWithCheckInSubs = checkInSubs
-      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    });
-    
-    if (!history.state) return;
-    switch (history.state[0]) {
-      case 'enterChat':
-        if (!readResponse.addendum.length) return;
-        dynamicAppendChats(readResponse.addendum)
-        break;
-      case 'chatView':
-        if (!readResponse.addendum.length) return;
-        readLatestChats(false);
-        break;
-  
-      case 'reportView':
-        reportView(history.state[1]);
-        break;
-      default:
-        console.log("no refresh")
+function handleComponentUpdation(readResponse) {
+
+
+  getCheckInSubs().then(function (checkInSubs) {
+    ApplicationState.officeWithCheckInSubs = checkInSubs
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+  });
+
+  readResponse.activities.forEach(function (activity) {
+    if (activity.template === 'duty') {
+          checkForDuty(activity);
     }
+  })
+
+
+  if (!history.state) return;
+  switch (history.state[0]) {
+    case 'enterChat':
+      if (!readResponse.addendum.length) return;
+      dynamicAppendChats(readResponse.addendum)
+      break;
+    case 'chatView':
+      if (!readResponse.addendum.length) return;
+      readLatestChats(false);
+      break;
+    case 'reportView':
+      reportView(history.state[1]);
+      break;
+    case 'jobView':
+      if (document.getElementById('rating-view')) return;
+      jobView();
+      break;
+    case 'jobs':
+      jobs();
+      break;
+    default:
+      console.log("no refresh")
+  }
 }
 
 /** function call to be removed from apk */
@@ -431,7 +448,7 @@ function backgroundTransition() {}
 function runRead(type) {
   console.log("run read notification")
   if (!firebase.auth().currentUser || !serverTimeUpdated) return;
-    
+
   if (type.read) {
     var readEvent = new CustomEvent('callRead', {
       detail: type.read
@@ -521,11 +538,6 @@ function emailReg(email) {
 function handleNav(evt) {
   console.log(evt)
   if (!history.state) return;
-  if (history.state[0] === 'reportView') {
-    history.pushState(['profileView'], null, null)
-    profileView();
-    return;
-  }
   return history.back();
 }
 
@@ -959,7 +971,7 @@ function idProofView(callback) {
       if (skipBtn) {
         skipBtn.setAttribute('disabled', true)
       }
-      
+
       requestCreator('idProof', ids).then(function (response) {
         const tx = db.transaction('root', 'readwrite');
         const store = tx.objectStore('root')
@@ -1061,7 +1073,7 @@ const phoneFieldInit = (input, dropEl, hiddenInput) => {
 function toDataURL(src, callback) {
   var img = new Image();
   // img.crossOrigin = 'Anonymous';
-  img.onload = function() {
+  img.onload = function () {
     var canvas = document.createElement('CANVAS');
     var ctx = canvas.getContext('2d');
     var dataURL;
@@ -1073,3 +1085,36 @@ function toDataURL(src, callback) {
   };
   img.src = src;
 }
+
+
+
+
+function templateSelectionList(uniqueSubs) {
+  return `<ul class='mdc-list subscription-list' id='dialog-office'>
+     ${Object.keys(uniqueSubs).map(function(name){
+       return `<li class='mdc-list-item'>
+        <span class="mdc-list-item__text">
+          ${name}
+        </span>      
+       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+         keyboard_arrow_right
+       </span>
+       </li>`
+     }).join("")}
+     </ul>`
+};
+
+function officeSelectionList(subscriptions) {
+  return `<ul class='mdc-list subscription-list' id='dialog-office'>
+     ${subscriptions.map(function(sub){
+       return `<li class='mdc-list-item'>
+        <span class="mdc-list-item__text">
+          ${sub.office} 
+        </span>      
+       <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+         keyboard_arrow_right
+       </span>
+       </li>`
+     }).join("")}
+     </ul>`
+};

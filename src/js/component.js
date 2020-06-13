@@ -11,13 +11,14 @@ function createElement(tagName, attrs) {
 
 
 
-function createFab(icon, id = '') {
+function createFab(icon, id = '',absolute = true) {
     const button = createElement('button', {
-        className: 'mdc-fab  mdc-button--raised mdc-fab app-fab--absolute ',
+        className: 'mdc-fab  mdc-button--raised',
         id: id
     });
-
-
+    if(absolute) {
+        button.classList.add('app-fab--absolute')
+    }
     const span = createElement('span', {
         className: 'mdc-fab__icon material-icons',
         textContent: icon
@@ -57,11 +58,14 @@ function actionButton(name, id = '',link) {
     return actionContainer;
 }
 
-function createExtendedFab(icon, name, id, absolute) {
-    const button = createElement('button', {
+function createExtendedFab(icon, name, id, absolute,link) {
+    const button = createElement(link ? 'a' : 'button', {
         className: 'mdc-fab mdc-fab--extended mdc-button--raised mdc-fab-custom',
-        id: id
+        id: id,
     })
+    if(link) {
+        button.href = link;
+    }
     if (absolute) {
         button.classList.add('app-fab--absolute')
     }
@@ -110,8 +114,6 @@ function Dialog(title, content, id) {
     this.id = id;
 
 }
-
-
 
 Dialog.prototype.create = function (type) {
     const parent = createElement('div', {
@@ -257,7 +259,17 @@ function textFieldTelephone(attr) {
 }
 
 function textField(attr) {
-    return `<div class="mdc-text-field mdc-text-field--outlined full-width ${attr.leadingIcon ? 'mdc-text-field--with-leading-icon' :''} ${attr.trailingIcon ? 'mdc-text-field--with-trailing-icon' :''} ${attr.disabled ? 'mdc-text-field--disabled' :''}" id='${attr.id}'>
+    const div = createElement('div',{
+        className:'mdc-text-field mdc-text-field--outlined full-width',
+        id:attr.id
+    })
+    if(attr.trailingIcon) {
+        div.classList.add('mdc-text-field--with-trailing-icon')
+    }
+    if(attr.leadingIcon) {
+        div.classList.add('mdc-text-field--with-leading-icon')
+    }
+    div.innerHTML = `
     ${attr.leadingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.leadingIcon}</i>`:''}
     <input autocomplete=${attr.autocomplete ? attr.autocomplete : 'off'} type="${attr.type || 'text'}" class="mdc-text-field__input" value="${attr.value || ''}" ${attr.required ? 'required' :''} ${attr.disabled ? 'disabled':''} ${attr.readonly ? 'readonly' :''} >
     ${attr.trailingIcon ? `<i class="material-icons mdc-text-field__icon" tabindex="0" role="button">${attr.trailingIcon}</i>` :''}
@@ -269,7 +281,8 @@ function textField(attr) {
       </div>
       <div class="mdc-notched-outline__trailing"></div>
     </div>
-  </div>`
+  `
+  return div;
 }
 
 function textFieldWithHelper(attr) {
@@ -281,12 +294,12 @@ function textFieldWithHelper(attr) {
             cont.classList.add(name)
         });
     }
-    cont.innerHTML = `
-    ${textField(attr)}
-    <div class="mdc-text-field-helper-line">
-      <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
-    </div>
-`
+    cont.appendChild(textField(attr))
+    const helper = createElement('div',{
+        className:'mdc-text-field-helper-line',
+    })
+    helper.innerHTML = `  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>`
+    cont.appendChild(helper)
     return cont
 }
 
@@ -501,11 +514,11 @@ const shareWidget = (link, office) => {
     const linkManager = createElement('div', {
         className: 'link-manager'
     })
-    linkManager.innerHTML = textField({
+    linkManager.appendChild(textField({
         value:link,
         trailingIcon:'share',
         readonly:true,
-    })
+    }));
     const field = new mdc.textField.MDCTextField(linkManager.querySelector('.mdc-text-field'))
     console.log(field)
     field.trailingIcon_.root_.addEventListener('click',function(){
@@ -562,4 +575,22 @@ const copyRegionToClipboard = (el) => {
     el.setSelectionRange(0, 9999);
     document.execCommand("copy")
     snacks('Link copied','OKay',null,8000)
+}
+
+
+const linearProgress = (id) => {
+    const div = createElement('div',{
+        className:'mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed',
+        id:id
+    })
+    div.setAttribute('role','progressbar');
+    div.innerHTML = ` <div class="mdc-linear-progress__buffering-dots"></div>
+    <div class="mdc-linear-progress__buffer"></div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>`
+    return new mdc.linearProgress.MDCLinearProgress(div);
 }

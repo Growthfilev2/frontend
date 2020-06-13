@@ -2,7 +2,7 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-let DB_VERSION = 31;
+let DB_VERSION = 32;
 var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
@@ -11,7 +11,7 @@ var sliderInterval;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
-
+var newJob = false
 var firebaseAnalytics;
 var serverTimeUpdated = false;
 var updatedWifiAddresses = {
@@ -144,6 +144,7 @@ function updatedWifiScans(wifiString) {
 window.addEventListener('error', function (event) {
   this.console.error(event.message)
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
+  if(event.message === "You can't have a focus-trap without at least one focusable element") return;
   handleError({
     message: 'global error :' + event.message,
     body: {
@@ -244,13 +245,13 @@ window.onpopstate = function (event) {
     'profileCheck': true,
     'login': true,
     'addView': true,
-    'share': true
-  }
+    'share': true,
+  };
+
   if (!event.state) return;
   if (nonRefreshViews[event.state[0]]) return
-
-  if (event.state[0] === 'reportView') {
-    this.reportView(event.state[1])
+  if(event.state[0] === 'showRating') {
+    this.jobs();
     return;
   }
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
@@ -549,7 +550,12 @@ function startApp() {
         createMapObjectStore(db);
         createCalendarObjectStore(db);
         break;
+        case 31:
+        const addendumStore = req.transaction.objectStore('addendum');
+        const timestampIndex = addendumStore.createIndex('timestamp','timestamp');
+
     }
+
 
     if (db.objectStoreNames.contains('root')) {
       var rootStore = req.transaction.objectStore('root')
@@ -570,10 +576,12 @@ function startApp() {
     console.log("request success")
     db = req.result;
     console.log("run app")
-    regulator().then(console.log).catch(function (error) {
+    regulator()
+    .then(console.log).catch(function (error) {
       if (error.type === 'geolocation') return handleLocationError(error)
       contactSupport()
     })
+    // profileScreen();
   };
 
   req.onerror = function () {
@@ -596,6 +604,8 @@ function getDeepLink() {
 function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
+
+  // return initProfileView();
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
@@ -643,6 +653,7 @@ function regulator() {
         return appLocation(3)
       })
       .then(function (geopoint) {
+        
         handleCheckin(geopoint);
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
@@ -706,6 +717,7 @@ function handleCheckin(geopoint, noUser) {
     }
 
     if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
+    newJob = isNewJob(geopoint);
 
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
@@ -762,9 +774,9 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  runRead({
-    'read': '1'
-  })
+  // runRead({
+  //   'read': '1'
+  // })
   if (auth.displayName && auth.photoURL && auth.email) return openReportView()
   removeLoadingScreen()
   document.getElementById('app-header').classList.remove('hidden')
@@ -1113,7 +1125,8 @@ function createObjectStores(db, uid) {
 
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
-  addendum.createIndex('key', 'key')
+  addendum.createIndex('key', 'key');
+  addendum.createIndex('timestamp','timestamp');
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
 
 
@@ -1276,6 +1289,7 @@ function getCheckInSubs() {
         cursor.continue();
       }
     tx.oncomplete = function () {
+      delete checkInSubs['xanadu']
       return resolve(checkInSubs)
     }
   })
@@ -1307,11 +1321,9 @@ function checkIDBCount(storeNames) {
 
 
 function openReportView() {
-  logReportEvent('IN Reports')
-  logReportEvent('IN ReportsView');
-  logFirebaseAnlyticsEvent("report_view")
-  history.pushState(['reportView'], null, null);
-  reportView()
+  document.getElementById('step-ui').innerHTML = ''
+  history.pushState(['jobView'], null, null);
+  jobView();
 }
 
 function fillVenueInSub(sub, venue) {
@@ -1335,7 +1347,7 @@ function reloadPage() {
 
 
 function shouldCheckin(geopoint, checkInSubs) {
-
+  return true
   ApplicationState.officeWithCheckInSubs = checkInSubs;
   const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
   if (!oldState) return true
@@ -1344,7 +1356,29 @@ function shouldCheckin(geopoint, checkInSubs) {
   const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
   if (isOlder || hasChangedLocation) return true
-
   ApplicationState = oldState;
   return false
 }
+
+function isNewJob(geopoint) {
+  const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
+  if (!oldState) return true
+  if (!oldState.lastCheckInCreated) return true;
+  const today = isToday(oldState.lastCheckInCreated)
+  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
+  
+  if(today) {
+    if(hasChangedLocation) return true
+    return false;
+  }
+  return true
+
+}
+
+
+function isToday(timestamp) {
+  return moment(timestamp).isSame(moment().clone().startOf('day'),'d')
+}
+
+
+

@@ -7,8 +7,8 @@ let timer = null;
 const duration = 800;
 
 function chatView() {
-    document.getElementById('app-header').classList.remove("hidden")
-    const sectionContent = document.querySelector('.tabs-section .data-container');
+    // document.getElementById('app-header').classList.remove("hidden")
+    const sectionContent = document.getElementById('tab-content');
     if (!sectionContent) return;
     if (!document.getElementById('search-btn')) {
         const searchIcon = createElement('button', {
@@ -26,7 +26,10 @@ function chatView() {
 
     sectionContent.innerHTML = chatDom();
 
-    getSubscription().then(function (subscriptions) {
+    Promise.all([ firebase.auth().currentUser.getIdTokenResult(),getSubscription()]).then(function(result){
+        // const isUserAdmin =  isAdmin(result[0]);
+        console.log(result);
+        const subscriptions = result[1]
         const usersTemplate = {}
         subscriptions.forEach(function(sub){
             if(sub.template === 'customer') {
@@ -37,71 +40,73 @@ function chatView() {
                     usersTemplate[sub.template].push(sub)
                 }
             }
-            else {
+            if(isAdmin(result[0],sub.office)) {
                 if(!usersTemplate['Add users']) {
                     usersTemplate['Add users'] = [{office:sub.office}]
                 }
                 else {
                     usersTemplate['Add users'].push({office:sub.office})
                 }
+
             }
         })
-
-        const addContactBtn = createFab('add');
-        document.querySelector('.user-chats').appendChild(addContactBtn);
-        addContactBtn.addEventListener('click', function () {
-
-          
-            const dialog = new Dialog('', templateSelectionList(usersTemplate), 'choose-office-subscription').create('simple');
-            const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(dialog, ul);
-            ul.listen('MDCList:action', function (typeEvent) {
-                dialog.close()
-                const selectedType = Object.keys(usersTemplate)[typeEvent.detail.index]
-          
-               if(usersTemplate[selectedType].length == 1) {
-                    if(selectedType === 'customer') {
-                        getDropDownContent(usersTemplate['customer'][0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                            history.pushState(['addView'], null, null);
-                            fillVenueInSub(usersTemplate['customer'][0], {
-                                latitude: ApplicationState.location.latitude,
-                                longitude: ApplicationState.location.longitude
+        if(!Object.keys(usersTemplate).length)  return;
+            const addContactBtn = createFab('add');
+            document.querySelector('.user-chats').appendChild(addContactBtn);
+            addContactBtn.addEventListener('click', function () {
+        
+            
+                const dialog = new Dialog('', templateSelectionList(usersTemplate), 'choose-office-subscription').create('simple');
+                const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
+                bottomDialog(dialog, ul);
+                ul.listen('MDCList:action', function (typeEvent) {
+                    dialog.close()
+                    const selectedType = Object.keys(usersTemplate)[typeEvent.detail.index]
+            
+                if(usersTemplate[selectedType].length == 1) {
+                        if(selectedType === 'customer') {
+                            getDropDownContent(usersTemplate['customer'][0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                                history.pushState(['addView'], null, null);
+                                fillVenueInSub(usersTemplate['customer'][0], {
+                                    latitude: ApplicationState.location.latitude,
+                                    longitude: ApplicationState.location.longitude
+                                });
+                                addView(usersTemplate['customer'][0], customerTypes);
                             });
-                            addView(usersTemplate['customer'][0], customerTypes);
-                        });
+                            return
+                        }
+                        history.pushState(['shareLink'], null, null);
+                        giveSubscriptionInit(usersTemplate[selectedType][0].office);
                         return
-                    }
-                    history.pushState(['share'], null, null);
-                    giveSubscriptionInit(usersTemplate[selectedType][0].office);
-                    return
-               }
-
-         
-               const officeDialog = new Dialog('Choose office', officeSelectionList(usersTemplate[selectedType]), 'choose-office-subscription').create('simple');
-               const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-               bottomDialog(officeDialog, offieList);
-               offieList.listen('MDCList:action', function (officeEvent) {
-                officeDialog.close();
-                    const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
-                    if(selectedType === 'customer') {
-                        getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                            history.pushState(['addView'], null, null);
-                            fillVenueInSub(selectedSubscription, {
-                                latitude: ApplicationState.location.latitude,
-                                longitude: ApplicationState.location.longitude
+                }
+        
+            
+                const officeDialog = new Dialog('Choose office', officeSelectionList(usersTemplate[selectedType]), 'choose-office-subscription').create('simple');
+                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+                bottomDialog(officeDialog, offieList);
+                offieList.listen('MDCList:action', function (officeEvent) {
+                    officeDialog.close();
+                        const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
+                        if(selectedType === 'customer') {
+                            getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                                history.pushState(['addView'], null, null);
+                                fillVenueInSub(selectedSubscription, {
+                                    latitude: ApplicationState.location.latitude,
+                                    longitude: ApplicationState.location.longitude
+                                });
+                                addView(selectedSubscription, customerTypes);
                             });
-                            addView(selectedSubscription, customerTypes);
-                        });
-                        return
-                    }
-                    history.pushState(['share'], null, null);
-                    giveSubscriptionInit(selectedSubscription.office);
-               })
-
-         
-            })
-        });
+                            return
+                        }
+                        history.pushState(['shareLink'], null, null);
+                        giveSubscriptionInit(selectedSubscription.office);
+                })
+        
+            
+                })
+            });
     })
+   
 
     readLatestChats(true);
 }
@@ -346,7 +351,6 @@ function readLatestChats(initList) {
         if (!chatsEl) return
         if (!currentChatsArray.length) {
             chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
-                <p class='text-center'>Choose From Below or Search</p>
                 `
         } else {
             chatsEl.innerHTML = currentChats
@@ -475,7 +479,7 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
-    const sectionContent = document.querySelector('.tabs-section .data-container')
+    const sectionContent = document.getElementById('tab-content')
     if (!sectionContent) return;
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -704,16 +708,19 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                     showViewDialog(heading, activity, 'view-form')
                     break;
                 case 'Share':
-                    share(activity)
+                    share(activity,document.getElementById('app-current-panel'))
                     break;
                 case 'Undo':
-                    setActivityStatus(activity, 'PENDING')
+                    activity.status = 'PENDING';
+                    setActivityStatus(activity)
                     break;
                 case 'Confirm':
-                    setActivityStatus(activity, 'CONFIRMED')
+                    activity.status = 'CONFIRMED';
+                    setActivityStatus(activity)
                     break;
                 case 'Delete':
-                    setActivityStatus(activity, 'CANCELLED')
+                    activity.status = 'CANCELLED';
+                    setActivityStatus(activity)
                     break;
                 default:
                     break;
@@ -748,7 +755,7 @@ function showViewDialog(heading, activity, id) {
 
 function createDynamicChips(text, id, leadingIcon) {
     const chip = createElement('button', {
-        className: 'mdc-chip mdc-chip--selected',
+        className: 'mdc-chip',
         id: id
     });
 
@@ -769,16 +776,16 @@ function createDynamicChips(text, id, leadingIcon) {
 
 }
 
-function share(activity) {
-    const sectionContent = document.querySelector('.tabs-section .data-container');
-    if (!sectionContent) return;
+function share(activity,parent) {
+    if(!parent) return;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add People</span>
     `
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
-
+    const header = setHeader(backIcon, searchIcon);
+    header.root_.classList.remove('hidden')
     const alreadySelected = {};
     const newSelected = {};
 
@@ -796,12 +803,13 @@ function share(activity) {
     </button>
     `
     activity.assignees.forEach(function (ass) {
-        alreadySelected[ass.phoneNumber] = true
+        alreadySelected[ass.phoneNumber] = true;
+        newSelected[ass.phoneNumber] = true;
     });
 
-    sectionContent.innerHTML = content;
+    parent.innerHTML = content;
 
-    setHeader(backIcon, searchIcon);
+  
     const chipSetEl = document.getElementById('share')
     const chipInit = new mdc.chips.MDCChipSet(chipSetEl)
     const ulSelector = document.getElementById('users-list')
@@ -819,7 +827,8 @@ function share(activity) {
                 return;
             }
             console.log(newSelected);
-            addAssignee(activity, userArray);
+            activity.share = userArray;
+            addAssignee(activity);
 
         })
         document.getElementById('users-list').innerHTML = userResult.domString;
@@ -860,6 +869,7 @@ function share(activity) {
                     src: clickedUser.photoURL || './img/empty-user.jpg'
                 })
                 const newChip = createDynamicChips(clickedUser.displayName || clickedUser.mobile, index, image);
+                newChip.classList.add('mdc-chip--selected')
                 chipSetEl.appendChild(newChip)
                 chipInit.addChip(newChip)
                 newChip.scrollIntoView({
@@ -981,16 +991,12 @@ function activityDomCustomer(activityRecord) {
 </div>`
 }
 
-function addAssignee(record, userArray) {
+function addAssignee(record) {
 
     closeSearchBar();
     appLocation(3).then(function (geopoint) {
-        requestCreator('share', {
-            activityId: record.activityId,
-            share: userArray
-        }, geopoint).then(function () {
-
-            snacks(`You added ${userArray.length} people`)
+        requestCreator('share', record, geopoint).then(function () {
+            snacks(`You added ${record.assignees.length} people`)
             history.back();
         }).catch(console.error)
 
@@ -998,17 +1004,11 @@ function addAssignee(record, userArray) {
 }
 
 
-function setActivityStatus(record, status) {
+function setActivityStatus(record) {
 
     appLocation(3).then(function (geopoint) {
-
-        requestCreator('statusChange', {
-            activityId: record.activityId,
-            status: status
-        }, geopoint).then(function () {
-            snacks(`${record.activityName} is ${status}`)
-
-
+        requestCreator('statusChange', record, geopoint).then(function () {
+            snacks(`${record.activityName} is ${record.status}`)
         }).catch(console.error)
     }).catch(handleLocationError)
 }

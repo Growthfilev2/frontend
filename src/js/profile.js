@@ -1,8 +1,83 @@
-function profileView() {
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Profile</span>`
 
-  setHeader(backIcon, '');
+function profileScreen() {
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>`
+  const help = `<a href="https://wa.me/918595422858" class='mdc-theme--on-primary'>HELP</a>`
+  const header = setHeader(backIcon, help);
+  header.root_.classList.remove('hidden')
+  // const tabs
+  const appEl = document.getElementById('app-current-panel');
+  const tabs = [{
+    id:'earning',
+    icon:'payment',
+    name:'Earnings'
+  },{
+    id:'profile',
+    icon:'account_circle',
+    name:'Profile'
+  },{
+    id:'account',
+    icon:'settings',
+    name:'Account'
+  }]
+  appEl.innerHTML = `
+  <div class='tabs-section'>
+      ${showTabs(tabs)}
+      <div id='tab-content'></div>
+  </div>`
+  const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+  tabList.listen('MDCTabBar:activated', function (evt) {
+    if(evt.detail.index == 1) {
+      // profileView();
+      chatView()
+      return
+    }
+    if (document.getElementById('search-btn')) {
+      document.getElementById('search-btn').remove();
+    }
+    if(evt.detail.index == 2) {
+      
+      profileView();
+      return
+    }
+    comingSoon('tab-content');
+    return
+    
+  });
+  tabList.activateTab(1)
+}
+
+
+
+function showTabs(tabs) {
+
+  return `<div class="mdc-tab-bar" role="tablist" style='margin-top:5px;'>
+    <div class="mdc-tab-scroller">
+      <div class="mdc-tab-scroller__scroll-area">
+        <div class="mdc-tab-scroller__scroll-content">
+      
+          ${tabs.map(function(tab){
+              return `
+              <button class="mdc-tab mdc-tab--stacked" role="tab" aria-selected="false" tabindex="-1" id=${tab.id || ''}>
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons" aria-hidden="true">${tab.icon}</span>
+                <span class="mdc-tab__text-label">${tab.name}</span>
+                <span class="mdc-tab-indicator">
+                  <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+                </span>
+              </span>
+              <span class="mdc-tab__ripple"></span>
+            </button>`
+          }).join("")}
+        </div>
+      </div>
+    </div>
+  </div>`
+}
+
+
+
+function profileView() {
+
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
@@ -21,8 +96,8 @@ function profileView() {
 <div id='user-details'></div>  
 
 `;
-
-  document.getElementById('app-current-panel').innerHTML = root;
+  
+  document.getElementById('tab-content').innerHTML = root;
   setDetails()
 }
 
@@ -35,7 +110,7 @@ function profileView() {
 function setDetails() {
   progressBar.close();
   document.getElementById('base-details').innerHTML = createBaseDetails()
-  document.getElementById('user-details').innerHTML = createUserDetails();
+  document.getElementById('user-details').innerHTML = createUserDetails('tab-scroller');
   new mdc.list.MDCList(document.getElementById('basic-info-edit'));
   const input = document.getElementById('choose-profile-image')
   input.addEventListener('change', function (evt) {
@@ -145,8 +220,8 @@ function bankAccount() {
     const addNewBtn = actionButton('Add BANK ACCOUNT');
     addNewBtn.querySelector('.mdc-button').addEventListener('click', function () {
       if (!auth.email || !auth.emailVerified) {
-        history.pushState(['emailUpdation'], null, null)
-        emailUpdation(true, profileView)
+        history.pushState(['profileScreen'], null, null)
+        emailUpdation(true, profileScreen)
         return
       }
       history.pushState(['addNewBankAccount'], null, null);
@@ -455,12 +530,12 @@ function setHelperValid(field) {
   field.helperTextContent = ''
 }
 
-function createUserDetails() {
+function createUserDetails(id) {
   return `
   <div class="mdc-tab-bar" role="tablist">
   <div class="mdc-tab-scroller">
       <div class="mdc-tab-scroller__scroll-area">
-          <div class="mdc-tab-scroller__scroll-content" id='tab-scroller'>
+          <div class="mdc-tab-scroller__scroll-content" id=${id}>
           </div>
       </div>
   </div>
@@ -480,7 +555,7 @@ function createViewProfile() {
       officeDom += addTabs(activity.office);
     })
     document.getElementById('tab-scroller').innerHTML = officeDom;
-    const tabInit = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
+    const tabInit = new mdc.tabBar.MDCTabBar(document.getElementById('tab-scroller'));
 
     tabInit.listen('MDCTabBar:activated', function (evt) {
 
@@ -560,7 +635,7 @@ function createViewProfile() {
         }
       })
     })
-    tabInit.activateTab(0);
+    // tabInit.activateTab(0);
   })
 }
 

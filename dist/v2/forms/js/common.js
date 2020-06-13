@@ -3,9 +3,7 @@ const parentOrigin = new URL(document.referrer).origin;
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
-    'http://localhost:5000':true,
-    'https://growthfilev2-0.firebaseapp.com':true,
-    'https://dev-growthfile.firebaseapp.com':true
+    'https://growthfilev2-0.firebaseapp.com': true,
 }
 
 function sendFrameDimensions() {
@@ -151,14 +149,16 @@ function showSecondDate(event, className, dataName) {
 }
 
 
-function initializeDates(subscriptionTemplate, defaultDateString,defaultTimeString) {
+function initializeDates(subscriptionTemplate, defaultDateString, defaultTimeString) {
 
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);
-        const startTime= document.querySelector(`[data-name="${name} start time"]`);
+        const startTime = document.querySelector(`[data-name="${name} start time"]`);
         const endTime = document.querySelector(`[data-name="${name} end time"]`);
-        startTime.value = endTime.value = defaultTimeString;
+        if(startTime && endTime) {
+            startTime.value = endTime.value = defaultTimeString;
+        }
         startfield.addEventListener('change', function (evt) {
             endField.value = evt.target.value
             endField.min = evt.target.value
@@ -173,7 +173,7 @@ function createEmptySchedule(subscriptionTemplate) {
     const length = subscriptionTemplate.schedule.length;
     for (index; index < length; index++) {
         const name = subscriptionTemplate.schedule[index];
-    
+
         newSchedules.push({
             name: name,
             startTime: '',
@@ -201,8 +201,13 @@ function getNewSchedule(subscriptionTemplate) {
             parent.snacks(name + ' end date cannot be blank')
             break;
         }
-        const startDate_UTS = Date.parse(startDate);
-        const endDate_UTS = Date.parse(endDate)
+        const startTime = document.querySelector(`[data-name="${name} start time"]`).value || ''
+        console.log(startTime);
+        const endTime = document.querySelector(`[data-name="${name} end time"]`).value || ''
+        
+        const startDate_UTS = Date.parse(startDate+' ' +startTime);
+        const endDate_UTS = Date.parse(endDate+' '+endTime)
+        debugger;
         if (startDate_UTS > endDate_UTS) {
             parent.snacks('start date in ' + name + ' cannot be greater than end date');
             break;
@@ -385,11 +390,11 @@ function textFieldTelephone(attr) {
     })
     textField.innerHTML = `<input placeholder="${attr.placeholder || 'Phone number'}" class="mdc-text-field__input" value='${attr.value || ''}' type='tel' ${attr.disabled ? 'disabled':''} ${attr.required ? 'required':''}>
     <div class="mdc-notched-outline">
-    <div class="mdc-notched-outline__leading"></div>
-    ${attr.label ?`<div class="mdc-notched-outline__notch">
-    <label for='tel' class="mdc-floating-label">${attr.label}</label>
-    </div>`  :''}
-    <div class="mdc-notched-outline__trailing"></div>
+        <div class="mdc-notched-outline__leading"></div>
+        ${attr.label ?`<div class="mdc-notched-outline__notch">
+        <label for='tel' class="mdc-floating-label">${attr.label}</label>
+        </div>`  :''}
+        <div class="mdc-notched-outline__trailing"></div>
     </div>`
     return textField
 }
@@ -608,7 +613,7 @@ function checkboxLi(label, id, value) {
     return li;
 }
 
-function radioLi(label,id,value) {
+function radioLi(label, id, value) {
     const li = createElement('li', {
         className: 'mdc-list-item'
     })
@@ -633,7 +638,7 @@ function radioLi(label,id,value) {
         <span class='mdc-list-item__secondary-text mdc-theme--primary'>${value}</span>
     </span>
   </li>`
-  return li
+    return li
 }
 
 function createTime(dateObject) {
@@ -646,7 +651,7 @@ function createTime(dateObject) {
 }
 
 
-function showSnacksApiResponse(message,buttonText = 'OK') { 
+function showSnacksApiResponse(message, buttonText = 'OK') {
     const sb = snackBar(message, buttonText);
     sb.open();
 
@@ -655,37 +660,155 @@ function showSnacksApiResponse(message,buttonText = 'OK') {
 const snackBar = (labelText, buttonText) => {
 
     const container = createElement('div', {
-      className: 'mdc-snackbar'
+        className: 'mdc-snackbar'
     })
     const surface = createElement('div', {
-      className: 'mdc-snackbar__surface'
+        className: 'mdc-snackbar__surface'
     })
     const label = createElement('div', {
-      className: 'mdc-snackbar__label',
-      role: 'status',
-      'aria-live': 'polite',
-      textContent: labelText
+        className: 'mdc-snackbar__label',
+        role: 'status',
+        'aria-live': 'polite',
+        textContent: labelText
     })
     surface.appendChild(label)
-    if(buttonText) {
-      const actions = createElement('div', {
-        className: 'mdc-snackbar__actions'
-      })
-      const button = createElement('button', {
-        type: 'button',
-        className: 'mdc-button mdc-snackbar__action',
-        textContent: buttonText
-      })
-      actions.appendChild(button)
-      surface.appendChild(actions)
+    if (buttonText) {
+        const actions = createElement('div', {
+            className: 'mdc-snackbar__actions'
+        })
+        const button = createElement('button', {
+            type: 'button',
+            className: 'mdc-button mdc-snackbar__action',
+            textContent: buttonText
+        })
+        actions.appendChild(button)
+        surface.appendChild(actions)
     }
-  
+
     container.appendChild(surface)
     const el = document.getElementById("snackbar-container")
     el.innerHTML = '';
     el.appendChild(container)
     const sb = new mdc.snackbar.MDCSnackbar(container);
     return sb;
-  
-  }
-  
+
+}
+
+
+function createButton(name, id, icon) {
+    const button = createElement('button', {
+        className: 'mdc-button',
+        id: id || ''
+    })
+    const span = createElement('span', {
+        className: 'mdc-button__label',
+        textContent: name
+    })
+
+    if (icon) {
+        const i = createElement('i', {
+            className: 'material-icons mdc-button__icon',
+            textContent: icon
+        })
+        button.appendChild(i)
+    }
+    button.appendChild(span)
+    return button
+}
+
+function Dialog(title, content, id) {
+    this.title = title;
+    this.content = content;
+    this.id = id;
+
+}
+
+Dialog.prototype.create = function (type) {
+    const parent = createElement('div', {
+        className: 'mdc-dialog',
+        role: 'alertDialog',
+        id: this.id
+    })
+    parent.setAttribute('aria-modal', 'true')
+    parent.setAttribute('aria-labelledby', 'Title')
+    parent.setAttribute('aria-describedby', 'content')
+    const container = createElement('div', {
+        className: 'mdc-dialog__container'
+    })
+    const surface = createElement('div', {
+        className: 'mdc-dialog__surface'
+    })
+    const h2 = createElement('h2', {
+        className: 'mdc-dialog__title',
+    })
+    h2.innerHTML = this.title
+    this.footer = createElement('footer', {
+        className: 'mdc-dialog__actions'
+    })
+    const contentContainer = createElement('div', {
+        className: 'mdc-dialog__content'
+    });
+
+    if (this.content instanceof HTMLElement) {
+        contentContainer.appendChild(this.content)
+    } else {
+        contentContainer.innerHTML = this.content
+    }
+
+    if (this.title) {
+        surface.appendChild(h2)
+    }
+    surface.appendChild(contentContainer);
+    if (type !== 'simple') {
+
+        this.cancelButton = createElement('button', {
+            className: 'mdc-button mdc-dialog__button',
+            type: 'button',
+            textContent: 'Close'
+        })
+        this.cancelButton.setAttribute('data-mdc-dialog-action', 'close');
+        this.cancelButton.style.marginRight = 'auto';
+
+        this.okButton = createElement('button', {
+            className: 'mdc-button mdc-dialog__button',
+            type: 'button',
+            textContent: 'Okay'
+        });
+
+
+        this.okButton.setAttribute('data-mdc-dialog-action', 'accept')
+        this.footer.appendChild(this.cancelButton)
+        this.footer.appendChild(this.okButton);
+        surface.appendChild(this.footer)
+    }
+
+    container.appendChild(surface)
+    parent.appendChild(container);
+    parent.appendChild(createElement('div', {
+        className: 'mdc-dialog__scrim'
+    }))
+
+    const dialogParent = document.getElementById('dialog-container')
+    dialogParent.innerHTML = ''
+    dialogParent.appendChild(parent)
+    return new mdc.dialog.MDCDialog(parent);
+}
+
+function dialogButton(name, action) {
+    const button = createElement('button', {
+        className: 'mdc-button mdc-dialog__button',
+        type: 'button',
+        textContent: name
+    });
+    button.setAttribute('data-mdc-dialog-action', action)
+    return button;
+}
+
+
+
+function convertNumberToINR(amount) {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
+    }).format(amount)
+}

@@ -664,9 +664,10 @@ function updateCalendar(activity, tx) {
   calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
-      if(!Array.isArray(activity.schedule)) return
+      if(!Array.isArray(activity.schedule)) return;
+
       activity.schedule.forEach(function (schedule) {
-        if(typeof schedule === 'object') return;
+        if(typeof schedule !== 'object') return;
         const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,
@@ -817,13 +818,10 @@ function successResponse(read, param, db, resolve, reject) {
           counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
         }
       }
-
       addendumObjectStore.add(addendum)
     } else {
-
       addendum.key = param.user.phoneNumber + addendum.user;
       userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
-
       if (addendum.user !== param.user.phoneNumber) {
         counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
       }
