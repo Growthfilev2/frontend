@@ -143,7 +143,6 @@ function updatedWifiScans(wifiString) {
 
 window.addEventListener('error', function (event) {
   this.console.error(event.message);
-  return;
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
   if(event.message === "You can't have a focus-trap without at least one focusable element") return;
   handleError({
@@ -554,22 +553,9 @@ function startApp() {
         case 31:
         const addendumStore = req.transaction.objectStore('addendum');
         const timestampIndex = addendumStore.createIndex('timestamp','timestamp');
-
     }
-
-
-    if (db.objectStoreNames.contains('root')) {
-      var rootStore = req.transaction.objectStore('root')
-      rootStore.get(dbName).onsuccess = function (rootEvent) {
-        const record = rootEvent.target.result;
-        record.fromTime = 0;
-        rootStore.put(record);
-      }
-    };
     console.log('version upgrade')
   }
-
-
 
 
 
