@@ -75,11 +75,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    // return resolve({
-    //     latitude:39.0014639,
-    //     longitude:30.687181,
-    //     lastLocationTime:Date.now()
-    // })
+    return resolve({
+        latitude:28.6537239,
+        longitude:77.352183,
+        lastLocationTime:Date.now()
+    })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -288,7 +288,13 @@ function requestCreator(requestType, requestBody, geopoint) {
 
   if (!geopoint) return executeRequest(requestGenerator);
   return getRootRecord().then(function (rootRecord) {
-    const time = fetchCurrentTime(rootRecord.serverTime);
+    let time;
+    if(requestGenerator.body['timestamp']) {
+      time = requestGenerator.body['timestamp']
+    }
+    else {
+      time = fetchCurrentTime(rootRecord.serverTime);
+    }
     requestGenerator.body['timestamp'] = time
     requestGenerator.body['geopoint'] = geopoint;
     if (requestBody.template === 'check-in') {

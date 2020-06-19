@@ -28,10 +28,15 @@ body,
   display: none
 }
 
+.mdc-fab , .mdc-button--raised {
+  background-color: #011A2D !important;
+  color: var(--mdc-theme-on-primary) !important;
+}
+
 :root {
-  --mdc-theme-primary: #89273E;
-  --mdc-theme-secondary: #cccccc;
-  --mdc-theme-background: #cccccc;
+  --mdc-theme-primary: #013153;
+  --mdc-theme-secondary: #7C909E;
+  --mdc-theme-background: #7C909E;
   --mdc-theme-on-primary: #ffffff;
   --mdc-theme-on-secondary: #ffffff;
   --mdc-theme-text-primary-on-light: #FFFFFF;
@@ -1345,7 +1350,7 @@ iframe {
   top: -5px;
   border: 8px solid rgba(255, 255, 255, 0.74);
   border-radius: 100%;
-  background: #89273E;
+  background: #27628E;
   height: 20px;
   width: 20px;
   padding: 3px;

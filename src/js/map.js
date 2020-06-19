@@ -137,11 +137,15 @@ function createUnkownCheckIn(geopoint, retries = {subscriptionRetry:0,invalidRet
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   
   ApplicationState.knownLocation = false;
-  const prom = []
-  offices.forEach(function (office) {
-    const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
-    copy.share = [];
-    prom.push(requestCreator('create', fillVenueInSub(copy, ''), geopoint))
+  const prom = [];
+  getRootRecord().then(function(rootRecord){
+    const timestamp = fetchCurrentTime(rootRecord.serverTime)
+    offices.forEach(function (office) {
+      const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
+      copy.share = [];
+      copy.timestamp = timestamp
+      prom.push(requestCreator('create', fillVenueInSub(copy, ''), geopoint))
+    })
   })
 
   progressBar.open()
@@ -241,7 +245,7 @@ function loadCardData(venues, geopoint) {
 };
 
 function createKnownCheckIn(selectedVenue, geopoint, retries = {subscriptionRetry:0,invalidRetry:0}) {
-
+  console.log(selectedVenue)
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
     document.getElementById('app-header').classList.add('hidden')
@@ -573,5 +577,3 @@ function loadNearByLocations(o, location) {
     }
   })
 }
-
-

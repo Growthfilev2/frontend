@@ -87,6 +87,7 @@ function getJobData(office) {
                 if (result.currentDuty.finished) {
                     if(worker) {
                         worker.terminate();
+                        worker = null;
                     }
                     handleFinishedDuty(result.currentDuty);
                     return;
@@ -98,6 +99,7 @@ function getJobData(office) {
                 }
                 if (worker) {
                     worker.terminate();
+                    worker = null;
                 }
             })
         }).catch(console.error)
@@ -146,6 +148,10 @@ function createJobHeader() {
     select.root_.classList.add('office-select--header');
     sectionStart.appendChild(select.root_)
     select.listen('MDCSelect:change', function (e) {
+        if(worker) {
+            worker.terminate();
+            worker = null;
+        }
         getJobData(e.detail.value);
     })
     getJobData(select.value)
@@ -378,16 +384,16 @@ function dutyScreen(duty) {
        <div class='duty-details pt-10'>
            <div class='customer'>
                <div class='location full-width mb-10'>
-                   <div class='icon mdc-theme--primary' style='float:left;'>
-                       <i class='material-icons'>location_on</i>
+                   <div class='icon' style='float:left;'>
+                       <i class='material-icons mdc-theme--primary'>location_on</i>
                    </div>
                    <div class='text mdc-typography--headline6 ml-10'>
                       ${duty.attachment.Location.value || '-'}
                     </div>
                 </div>
                 ${duty.customerPhonenumber ?`
-                    <span class='inline-flex mdc-theme--primary mb-10 customer-contact'>
-                    <i class='material-icons'>phone</i>
+                    <span class='inline-flex mb-10 customer-contact'>
+                    <i class='material-icons mdc-theme--secondary'>phone</i>
                     <span class='mdc-typography--headline6 ml-10'>
                         <a href='tel:${duty.customerPhonenumber}'>${duty.customerPhonenumber}</a>
                     </span>
@@ -402,20 +408,20 @@ function dutyScreen(duty) {
 
                 ${duty.creator.phoneNumber ?`<div class='schedule mt-10'>
                     <span class='inline-flex'>
-                        <i class='material-icons  mdc-theme--primary'>access_time</i>
+                        <i class='material-icons  mdc-theme--secondary'>access_time</i>
                         <span class='mdc-typography--headline6 ml-10'>${showDutySchedule(duty)}</span>
                     </span>
                 </div>` :''}
            </div>
            ${duty.attachment['Duty Type'].value ? `<div class='duty-type'>
                 <span class='inline-flex mb-10'>
-                    <i class='material-icons mdc-theme--primary'>assignment</i>
+                    <i class='material-icons mdc-theme--secondary'>assignment</i>
                     <span class='mdc-typography--headline6 ml-10'>${duty.attachment['Duty Type'].value || '-'} </span>
                 </span>
             </div>` :''}
            <div class='staff mt-10'>
-                <span class='inline-flex mdc-theme--primary'>
-                    <i class='material-icons'>group_add</i>
+                <span class='inline-flex'>
+                    <i class='material-icons mdc-theme--secondary'>group_add</i>
                     <span class='mdc-typography--headline6 ml-10'>Staff</span>
                 </span>
                 <div class="mdc-chip-set" role="grid">
@@ -425,8 +431,8 @@ function dutyScreen(duty) {
 
            <div class='products'>
            ${checkProductLength(duty.attachment.Products.value) ? `
-               <span class='inline-flex mdc-theme--primary'>
-                   <i class='material-icons'>settings</i>
+               <span class='inline-flex'>
+                   <i class='material-icons mdc-theme--secondary'>settings</i>
                    <span class='mdc-typography--headline6 ml-10'>Products</span>
                </span>
                <ul class='mdc-list mdc-list--two-line'>
@@ -511,7 +517,7 @@ function constructJobView(result) {
         const checkinLi = createElement('li', {
             className: 'mdc-list-item  pl-0 pr-0 mdc-typography--headline6'
         })
-        checkinLi.innerHTML = `<span class='mdc-list-item__graphic material-icons mdc-theme--primary'>check_circle</span>
+        checkinLi.innerHTML = `<span class='mdc-list-item__graphic material-icons mdc-theme--secondary'>check_circle</span>
         ${totalCheckins} Check-Ins
         <span class='mdc-list-item__meta material-icons'>history</span>`;
         checkinLi.addEventListener('click', function () {
@@ -525,7 +531,7 @@ function constructJobView(result) {
         const photoCheckinLi = createElement('li', {
             className: 'mdc-list-item  pl-0 pr-0 mdc-typography--headline6'
         })
-        photoCheckinLi.innerHTML = `<span class='mdc-list-item__graphic material-icons mdc-theme--primary'>image</span>
+        photoCheckinLi.innerHTML = `<span class='mdc-list-item__graphic material-icons mdc-theme--secondary'>image</span>
         ${totalPhotoCheckins} Photos uploaded`
 
         imageList.appendChild(photoLi);
@@ -563,8 +569,7 @@ function getRatingSubsription(duty) {
     getSubscription(duty.office, 'call').then(function (subs) {
         console.log(subs)
         if (!subs.length) {
-            history.pushState(['jobs'], null, null)
-            jobs();
+            markDutyFinished({dutyId:duty.activityId,office:duty.office});
             return
         }
         const tx = db.transaction('map');
@@ -692,24 +697,6 @@ function createTimeLapse(timeLineUl) {
     const screen = createElement('div', {
         className: 'timeline--container',
     })
-
-    if (timeLineUl) {} else {
-        const emptyCont = createElement('div', {
-            className: 'width-100 veritical-horizontal-center'
-        })
-        historyCont.classList.add('empty-list')
-
-        emptyCont.appendChild(createElement('img', {
-            src: './img/empty-list.svg',
-            className: 'svg-list-empty'
-        }))
-        emptyCont.appendChild(createElement('p', {
-            className: 'text-center  mdc-typography--headline5',
-            textContent: 'No details found'
-        }))
-
-        historyCont.appendChild(emptyCont)
-    }
     timeLine.appendChild(historyCont);
 
     dom_root.innerHTML = '';

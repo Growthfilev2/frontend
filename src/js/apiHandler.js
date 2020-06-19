@@ -842,7 +842,12 @@ function successResponse(read, param, db, resolve, reject) {
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
 
-    activityObjectStore.put(activity);
+    if(activity.template === 'duty') {
+      handleDutyActivity(activity,updateTx);
+    }
+    else {
+      activityObjectStore.put(activity);
+    }
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
 
@@ -897,6 +902,19 @@ function successResponse(read, param, db, resolve, reject) {
       }
     })
   })
+
+  function handleDutyActivity(activity,updateTx){
+    const store = updateTx.objectStore('activity');
+    store.get(activity.activityId).onsuccess = function(e) {
+      const record = e.target.result;
+      if(!record) {
+        store.put(activity);
+        return
+      }
+      activity.timer = record.timer;
+      store.put(activity);
+    }
+  }
 
 
   if (read.products) {

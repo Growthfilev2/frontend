@@ -204,8 +204,9 @@ path.purple {
 .job-card .demo-card__primary {
   display: flex;
   align-items: center;
-  background-color: #cccccc8a;
+  background-color:#7c909e52;
 }
+
 .job-card .demo-card__primary .right {
   margin-left: auto;
 }
