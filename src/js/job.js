@@ -643,6 +643,7 @@ function getTimelineAddendum(geopoint) {
         }
         tx.oncomplete = function () {
             const result = []
+            console.log(result);
             Object.keys(unique).forEach(function (id) {
                 result.push(unique[id])
             })
@@ -938,9 +939,7 @@ function updateDuty(duty) {
         if (checkProductLength(duty.attachment.Products.value)) {
             duty.attachment.Products.value.forEach(function (product) {
                 createProductLi(products, product)
-
             })
-
         }
         productsCard.appendChild(ul)
         if (!products.length) return
@@ -1010,8 +1009,8 @@ function createProductLi(products, product) {
 
     li.dataset.name = product.name;
     li.dataset.date = product.date;
-    li.dataset.quanity = product.quanity;
-    li.dataset.rate = product.date;
+    li.dataset.quantity = product.quantity;
+    li.dataset.rate = product.rate;
 
     const edit = createElement('span', {
         className: 'mdc-list-item__meta material-icons mdc-theme--primary',

@@ -875,6 +875,7 @@ function successResponse(read, param, db, resolve, reject) {
     })
   })
 
+  console.log(userTimestamp);
   Object.keys(userTimestamp).forEach(function (number) {
 
     const currentAddendums = userTimestamp[number]
@@ -884,7 +885,6 @@ function successResponse(read, param, db, resolve, reject) {
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
         if (!record) {
-         
           console.log('no activity id found for addendum')
           return;
         }
@@ -892,6 +892,9 @@ function successResponse(read, param, db, resolve, reject) {
         record.assignees.forEach(function (user) {
           addendum.key = param.user.phoneNumber + user.phoneNumber;
           addendumObjectStore.put(addendum);
+          if(record.template === 'duty') {
+            console.log('duty addendum added');
+          }
           if (number === param.user.phoneNumber) {
             updateUserStore(userStore, user.phoneNumber, addendum, counter)
           }

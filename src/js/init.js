@@ -145,6 +145,7 @@ window.addEventListener('error', function (event) {
   this.console.error(event.message);
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
   if(event.message === "You can't have a focus-trap without at least one focusable element") return;
+ 
   handleError({
     message: 'global error :' + event.message,
     body: {
@@ -298,7 +299,8 @@ window.addEventListener('load', function () {
     const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.add("hidden");
-    // if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
+
+    if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
     dom_root.classList.remove('hidden');
     if (EMAIL_REAUTH) {
@@ -590,7 +592,6 @@ function regulator() {
   const queryLink = getDeepLink();
   const deviceInfo = native.getInfo();
 
-  // return initProfileView();
   return new Promise(function (resolve, reject) {
     var prom;
     loadingScreen({
@@ -759,9 +760,6 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  // runRead({
-  //   'read': '1'
-  // })
   if (auth.displayName && auth.photoURL && auth.email) return openReportView()
   removeLoadingScreen()
   document.getElementById('app-header').classList.remove('hidden')
@@ -1332,7 +1330,6 @@ function reloadPage() {
 
 
 function shouldCheckin(geopoint, checkInSubs) {
-  // return 
   ApplicationState.officeWithCheckInSubs = checkInSubs;
   const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
   if (!oldState) return true
