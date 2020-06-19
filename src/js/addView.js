@@ -1,6 +1,8 @@
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
+    'https://growthfilev2-0.firebaseapp.com':true
+
 }
 
 function addView(sub, body) {
