@@ -481,6 +481,10 @@ function sendPhotoCheckinRequest(request) {
 
 function choosePhotoCheckinOffice(callback) {
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
+  if(offices.length == 1) {
+    callback(ApplicationState.officeWithCheckInSubs[offices[0]]);
+    return
+  }
   const subs = [];
   offices.forEach(function(office){
     subs.push(ApplicationState.officeWithCheckInSubs[office])
