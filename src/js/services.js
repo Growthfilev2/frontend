@@ -40,14 +40,13 @@ function handleError(error) {
 function successDialog(text) {
 
   const successMark = document.getElementById('success-animation');
-  const viewContainer = document.getElementById('app-current-panel');
   successMark.classList.remove('hidden');
   document.getElementById('app-header').style.opacity = '0.1'
-  viewContainer.style.opacity = '0.1';
+  dom_root.style.opacity = '0.1';
   successMark.querySelector('.success-text').textContent = text;
   setTimeout(function () {
     successMark.classList.add('hidden');
-    viewContainer.style.opacity = '1';
+    dom_root.style.opacity = '1';
     document.getElementById('app-header').style.opacity = '1'
   }, 2000);
 }
@@ -76,7 +75,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    
+    // return resolve({
+    //     latitude:39.0014639,
+    //     longitude:30.687181,
+    //     lastLocationTime:Date.now()
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -257,7 +260,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=129');
+const apiHandler = new Worker('js/apiHandler.js?version=130');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -594,7 +597,7 @@ function updateName(callback) {
   }
 
   setHeader(backIcon, '');
-  document.getElementById('app-current-panel').innerHTML = `
+  dom_root.innerHTML = `
   
   <div class='mdc-layout-grid change-name'>
     <p class='mdc-typography--body1'>
@@ -678,7 +681,7 @@ function emailUpdation(skip, callback) {
   const header = setHeader(backIcon, actionBtn);
   header.root_.classList.remove('hidden');
 
-  document.getElementById('app-current-panel').innerHTML = updateEmailDom(headings)
+  dom_root.innerHTML = updateEmailDom(headings)
   const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
   emailField.focus();
   document.getElementById('email-btn').addEventListener('click', function () {
@@ -841,8 +844,7 @@ function idProofView(callback) {
     }
     setHeader(backIcon, actionBtn);
 
-    const panel = document.getElementById('app-current-panel');
-    panel.innerHTML = `
+    dom_root.innerHTML = `
   <div class='id-container app-padding'>
   
 

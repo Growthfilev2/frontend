@@ -13,16 +13,9 @@ let customerName;
 let dutyCustomer;
 window.addEventListener('load',function(){
     window.mdc.autoInit();
-    skipRatingbtn.addEventListener('click', function () {
-        parent.postMessage({
-            name: 'jobs'
-        }, parentOrigin)
-    })
+   
     contactBtn.addEventListener('click',function(){
-        // setContact({
-        //     phoneNumber:'+919999288921',
-        //     displayName:'Shikhar kapila'
-        // })
+      
        callContact('setContactForCustomer'); 
     });
     [...this.document.querySelectorAll('.rating-star')].forEach(function(el){
@@ -62,6 +55,7 @@ function setContact(contactObject){
 
 function init(template, data) {
     console.log(data);
+    console.log(template)
     const products = data.products;
     customerName = data.customer.location;
     dutyCustomer = data.customer;
@@ -77,7 +71,18 @@ function init(template, data) {
 
     if (products.length) {
         loadProducts(products)
-    }
+    };
+
+    skipRatingbtn.addEventListener('click', function () {
+        parent.postMessage({
+            name: 'markDutyFinished',
+            body:{
+                dutyId:data.dutyId,
+                office:template.office
+            }
+        }, parentOrigin)
+    });
+
     const form = document.getElementById('form');
     form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -103,6 +108,7 @@ function init(template, data) {
         copy.attachment['Creator Rating'].value = rating
         copy.attachment['Creator Feedback'].value = feedback.value;
         copy.attachment.Customer.value = customerName;
+        copy.dutyId = data.dutyId;
         const productArray = [];
         Object.keys(selectedProducts).forEach(function (product) {
             productArray.push(selectedProducts[product])

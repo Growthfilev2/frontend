@@ -38,7 +38,7 @@
 
 .month-date-cont .date {
   font-weight: bold;
-  color: black;
+  color:black;
   margin-top: 5px;
   margin-bottom: 5px;
   font-size: 25px;
@@ -46,7 +46,7 @@
 
 .month-date-cont .day {
   text-transform: uppercase;
-  color: #716c6c;
+  color: black
 }
 
 .sfd {
@@ -89,6 +89,7 @@
 
 .heading-container {
   float: left;
+  color: black;
 }
 
 .dropdown {

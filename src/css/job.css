@@ -4,9 +4,7 @@
 
 .timeline--container .timeline {
   position: relative;
-  max-height: 80%;
   overflow-y: auto;
-  height: 100%;
 }
 
 .timeline--header {
@@ -26,12 +24,16 @@
   width: 100%;
   background-color: white;
   padding: 16px;
-  margin-top: 80px;
+  /* margin-top: 80px; */
   /* z-index: 99; */
 }
 
 .timeline--footer .mdc-button {
-  width: 80%;
+  border-top-right-radius: 15px;
+  border-top-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 15px;
+  width: 250px;
   margin: 0 auto;
   display: block;
 
@@ -115,6 +117,9 @@ path.purple {
 .job-screen .duty-overview .customer-contact a{
   text-decoration: none;
 }
+.job-screen .timeline-overview .mdc-image-list {
+  padding-bottom: 100px;
+}
 
 .coming--soon-container {
   display: block;
@@ -193,12 +198,59 @@ path.purple {
   margin-left: auto;
 }
 
-
+.job-card {
+  margin-bottom: 10px;
+}
 .job-card .demo-card__primary {
   display: flex;
   align-items: center;
+  background-color: #cccccc8a;
 }
 .job-card .demo-card__primary .right {
   margin-left: auto;
 }
 
+
+.counter-container {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+.office-select--header.mdc-select {
+  background: none;
+  max-width: 300px;
+  height: 30px;
+}
+.office-select--header .mdc-select__dropdown-icon{
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='18px' height='18px'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  bottom: 0px;
+  background-size: 32px;
+  height: 32px;
+  width: 32px;
+}
+.office-select--header .mdc-select__selected-text {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: white !important;
+  text-overflow: ellipsis;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  padding-top: 0px;
+  height: 30px;
+  border-bottom: none;
+}
+
+.Finished {
+  color: var(--mdc-theme-error);
+}
+.Open {
+  color: var(--mdc-theme-success);
+}
+.Upcoming {
+  color: var(--mdc-theme-warning);
+
+}
+.all-duties {
+  padding-bottom: 60px;
+}

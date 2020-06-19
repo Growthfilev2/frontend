@@ -27,7 +27,7 @@ function failureScreen(error, callback) {
 
   document.getElementById('app-header').classList.add('hidden')
 
-  document.getElementById('app-current-panel').innerHTML = `
+  dom_root.innerHTML = `
     <div class="center-abs location-not-found">
     <i class='material-icons mdc-theme--secondary'>${error.icon || 'location_off'}</i>
     <p class='mdc-typography--headline5'>
@@ -96,8 +96,7 @@ function mapView(location) {
 
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
-  const panel = document.getElementById('app-current-panel')
-  panel.classList.add("mdc-top-app-bar--fixed-adjust")
+  dom_root.classList.add("mdc-top-app-bar--fixed-adjust")
   progressBar.close();
 
   const latLng = {
@@ -116,7 +115,7 @@ function mapView(location) {
     ApplicationState.nearByLocations = nearByLocations;
     if (!nearByLocations.length) return createUnkownCheckIn(location)
     if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
-    panel.innerHTML = `
+    dom_root.innerHTML = `
     <div id='map-view'>
       <div class="selection-box-auto" id='selection-box'>
           <div class="content-body"></div>
@@ -372,7 +371,7 @@ function setFilePathFailed(error) {
 
 function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
   const url = `data:image/jpg;base64,${base64}`
-  document.getElementById('app-current-panel').innerHTML = `
+  dom_root.innerHTML = `
   <div class='image-container'>
     <div id='snap' class="snap-bckg">
       <div class="form-meta snap-form">
@@ -454,9 +453,8 @@ function sendPhotoCheckinRequest(request) {
     history.back();
   }).catch(function (error) {
     const queryLink = getDeepLink();
-
     if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
-    
+  
       if(retries.subscriptionRetry  <= 2) {
         setTimeout(function(){
             retries.subscriptionRetry++
@@ -571,7 +569,7 @@ function loadNearByLocations(o, location) {
       cursor.continue();
     }
     tx.oncomplete = function () {
-      return resolve(result)
+      return resolve(result);
     }
   })
 }

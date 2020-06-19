@@ -708,7 +708,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                     showViewDialog(heading, activity, 'view-form')
                     break;
                 case 'Share':
-                    share(activity,document.getElementById('app-current-panel'))
+                    share(activity,dom_root)
                     break;
                 case 'Undo':
                     activity.status = 'PENDING';

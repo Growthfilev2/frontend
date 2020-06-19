@@ -594,3 +594,23 @@ const linearProgress = (id) => {
     </div>`
     return new mdc.linearProgress.MDCLinearProgress(div);
 }
+
+
+const mdcSelect = (values) => {
+
+    const div = createElement('div',{
+        className:'mdc-select mdc-select--no-label'
+    })
+    div.innerHTML = `<div class="mdc-select__anchor demo-width-class">
+        <i class="mdc-select__dropdown-icon"></i>
+        <div class="mdc-select__selected-text"></div>
+        <div class="mdc-line-ripple"></div>
+    </div>
+    <div class="mdc-select__menu mdc-menu mdc-menu-surface demo-width-class">
+    <ul class="mdc-list">
+        ${values.map(function(value,index){
+            return `<li class="mdc-list-item ${index == 0 ?'mdc-list-item--selected' :''}" data-value="${value}" aria-selected="${index == 0 ?'true':'false'}">${value}</li>`
+        }).join("")}
+    </ul>`
+    return new mdc.select.MDCSelect(div);
+}

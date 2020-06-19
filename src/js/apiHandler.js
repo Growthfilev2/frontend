@@ -878,7 +878,11 @@ function successResponse(read, param, db, resolve, reject) {
       const activityId = addendum.activityId
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
-        if (!record) return;
+        if (!record) {
+         
+          console.log('no activity id found for addendum')
+          return;
+        }
 
         record.assignees.forEach(function (user) {
           addendum.key = param.user.phoneNumber + user.phoneNumber;

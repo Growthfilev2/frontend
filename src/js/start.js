@@ -1,7 +1,5 @@
 function chooseAlternativePhoneNumber(alternatePhoneNumbers) {
-    const auth = firebase.auth().currentUser;
-    const appEl = document.getElementById('app-current-panel');
-    appEl.innerHTML = `<div class='phone-number-choose ${alternatePhoneNumbers.length == 1 ? 'slider' :''}'>
+    dom_root.innerHTML = `<div class='phone-number-choose ${alternatePhoneNumbers.length == 1 ? 'slider' :''}'>
             <div class='phone-number-choose-cont ${alternatePhoneNumbers.length == 1 ? 'slider-container' :''}''>
                
                 ${alternatePhoneNumbers.length == 1 ? `<p class='mdc-typography--body1 pl-20 pr-20'>
@@ -45,13 +43,12 @@ function giveSubscriptionInit(office) {
         office:office
     }).then(function(response){
         const link = response.shortLink;
-        const el = document.getElementById('app-current-panel')
-        el.innerHTML = '';
+        dom_root.innerHTML = '';
         const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <span class="mdc-top-app-bar__title">Add users</span>
         `
         const header = setHeader(backIcon, '');
         header.root_.classList.remove('hidden')
-        el.appendChild(shareWidget(link, office));
+        dom_root.appendChild(shareWidget(link, office));
     }).catch(console.log)
 }

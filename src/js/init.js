@@ -1,3 +1,4 @@
+const dom_root = document.getElementById('app-current-panel');
 const appKey = new AppKeys();
 let progressBar;
 var db;
@@ -20,7 +21,6 @@ var updatedWifiAddresses = {
 }
 
 var isNewUser = false;
-
 function setFirebaseAnalyticsUserId(id) {
   if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
     window.AndroidInterface.setFirebaseAnalyticsUserId(id)
@@ -276,7 +276,6 @@ window.addEventListener('load', function () {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  const panel = this.document.getElementById('app-current-panel');
 
   if (!window.Worker && !window.indexedDB) {
     const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile  is incompatible with this device').create();
@@ -299,9 +298,9 @@ window.addEventListener('load', function () {
     const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
     header.listen('MDCTopAppBar:nav', handleNav);
     header.root_.classList.add("hidden");
-    if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
+    // if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
 
-    panel.classList.remove('hidden');
+    dom_root.classList.remove('hidden');
     if (EMAIL_REAUTH) {
       history.pushState(['jobs'], null, null);
       history.pushState(['profileView'], null, null);
@@ -418,8 +417,8 @@ function userSignedOut() {
     firebaseUI.delete();
   }
 
-  const panel = document.getElementById('app-current-panel');
-  panel.innerHTML = `
+  
+  dom_root.innerHTML = `
     <div class='slider' id='app-slider' style="background-image:url('./img/welcome.jpg')">
  
     <div class="action-button-container">
@@ -445,7 +444,7 @@ function userSignedOut() {
   const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
   btn.root_.addEventListener('click', function () {
     removeSwipe()
-    panel.innerHTML = '';
+    dom_root.innerHTML = '';
     history.pushState(['login'], null, null);
     initializeFirebaseUI();
   })
@@ -509,9 +508,7 @@ function loadSlider() {
 
 
 function loadingScreen(data) {
-  const panel = document.getElementById('app-current-panel');
-
-  panel.innerHTML = `
+  dom_root.innerHTML = `
   <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
     <div class='text-container' style="${data.src === './img/fetching-location.jpg' ? 'margin-top:110px':''}"> 
       <div class='text mdc-typography--headline6'>${data.text || ''}</div>
@@ -527,7 +524,9 @@ function loadingScreen(data) {
 }
 
 function removeLoadingScreen() {
-  document.getElementById('loading-screen').remove()
+  if(document.getElementById('loading-screen')) {
+    document.getElementById('loading-screen').remove()
+  }
 }
 
 function startApp() {
@@ -568,7 +567,6 @@ function startApp() {
       if (error.type === 'geolocation') return handleLocationError(error)
       contactSupport()
     })
-    // profileScreen();
   };
 
   req.onerror = function () {
@@ -661,7 +659,7 @@ function contactSupport() {
   <p class='mdc-typography--headline6 mb-10 mt-0'>Having trouble ? </p>
   <a class='mdc-typography--subtitle2 mdc-theme--primary' href="https://wa.me/918595422858">Contact support</a>
   `
-  document.getElementById('app-current-panel').appendChild(div)
+  dom_root.appendChild(div)
 
 }
 
@@ -754,7 +752,7 @@ function noOfficeFoundScreen() {
    
 
   `
-  document.getElementById('app-current-panel').innerHTML = content;
+  dom_root.innerHTML = content;
 
 }
 
@@ -829,7 +827,7 @@ function checkForPhoto() {
       </div>
   
       `
-  document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
+      dom_root.innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
   document.getElementById('choose').addEventListener('change', function (evt) {
     getImageBase64(evt).then(function (dataURL) {
       document.getElementById('image-update').src = dataURL;
@@ -1334,7 +1332,7 @@ function reloadPage() {
 
 
 function shouldCheckin(geopoint, checkInSubs) {
-  return true
+  // return 
   ApplicationState.officeWithCheckInSubs = checkInSubs;
   const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
   if (!oldState) return true

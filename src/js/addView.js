@@ -1,7 +1,9 @@
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
-    'https://growthfilev2-0.firebaseapp.com':true
+    'https://growthfilev2-0.firebaseapp.com':true,
+    'http://localhost':true
+
 }
 
 function addView(sub, body) {
@@ -11,8 +13,8 @@ function addView(sub, body) {
     `
     const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
-    document.getElementById('app-current-panel').classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
-    document.getElementById('app-current-panel').innerHTML = `
+    dom_root.classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
+    dom_root.innerHTML = `
         <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;
     document.getElementById('form-iframe').addEventListener("load", ev => {
         passFormData({
@@ -59,13 +61,11 @@ function sendFormToParent(formData) {
         requestCreator('create', formData, geopoint).then(function () {
             console.log(formData);
             if (formData.template === 'call') {
-                successDialog(`Job completed`);
-                jobs(formData.office);
+                markDutyFinished(formData)
                 return
-            }
-
+            };
+            
             successDialog(`You Created a ${formData.template}`);
-
             if (formData.report === 'attendance' && formData.id) {
                 const tx = db.transaction('attendance', 'readwrite');
                 const store = tx.objectStore('attendance')
@@ -127,6 +127,22 @@ function sendFormToParent(formData) {
     }).catch(handleLocationError)
 }
 
+
+function markDutyFinished(formData) {
+    const tx = db.transaction('activity','readwrite');
+    const store = tx.objectStore('activity');
+    let dutyRecord;
+    store.get(formData.dutyId).onsuccess = function(e) {
+        dutyRecord = e.target.result;
+        if(!dutyRecord)  return;
+        dutyRecord.finished = true;
+        store.put(dutyRecord);
+    }
+    tx.oncomplete = function() {
+        successDialog(`Job completed`);
+        jobs(formData.office);
+    }
+}
 
 function parseContact(contactString) {
     const displayName = contactString.split("&")[0].split("=")[1];
