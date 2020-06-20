@@ -213,6 +213,8 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) return false;
+      const storedInfo = JSON.parse(localStorage.getItem('deviceInfo'));
+      if(storedInfo) return storedInfo;
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
         deviceInfo.idbVersion = DB_VERSION
