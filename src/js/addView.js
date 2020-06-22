@@ -131,6 +131,12 @@ function markDutyFinished(formData) {
     const tx = db.transaction('activity','readwrite');
     const store = tx.objectStore('activity');
     let dutyRecord;
+    if(!formData.dutyId) {
+        successDialog(`Job completed`);
+        jobs(formData.office);
+        return
+    };
+
     store.get(formData.dutyId).onsuccess = function(e) {
         dutyRecord = e.target.result;
         if(!dutyRecord)  return;

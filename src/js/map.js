@@ -355,7 +355,6 @@ function snapView(selector) {
 
   document.querySelector('.snap-container .mdc-fab').addEventListener('click', openCamera)
   openCamera();
-
 }
 
 function openCamera() {

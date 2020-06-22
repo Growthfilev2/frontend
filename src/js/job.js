@@ -569,6 +569,7 @@ function getRatingSubsription(duty) {
     getSubscription(duty.office, 'call').then(function (subs) {
         console.log(subs)
         if (!subs.length) {
+
             markDutyFinished({dutyId:duty.activityId,office:duty.office});
             return
         }
