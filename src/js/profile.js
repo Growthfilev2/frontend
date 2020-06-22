@@ -4,49 +4,8 @@ function profileScreen() {
   const help = `<a href="https://wa.me/918595422858" class='mdc-theme--on-primary'>HELP</a>`
   const header = setHeader(backIcon, help);
   header.root_.classList.remove('hidden')
-  // const tabs
-  
-  const tabs = [{
-    id:'earning',
-    icon:'payment',
-    name:'Earnings'
-  },{
-    id:'profile',
-    icon:'account_circle',
-    name:'Profile'
-  },{
-    id:'account',
-    icon:'settings',
-    name:'Account'
-  }]
-  dom_root.innerHTML = `
-  <div class='tabs-section'>
-      ${showTabs(tabs)}
-      <div id='tab-content'></div>
-  </div>`
-  const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-  tabList.listen('MDCTabBar:activated', function (evt) {
-    if(evt.detail.index == 1) {
-      // profileView();
-      chatView()
-      return
-    }
-    if (document.getElementById('search-btn')) {
-      document.getElementById('search-btn').remove();
-    }
-    if(evt.detail.index == 2) {
-      
-      profileView();
-      return
-    }
-    comingSoon('tab-content');
-    return
-    
-  });
-  tabList.activateTab(1)
+  profileView();
 }
-
-
 
 function showTabs(tabs) {
 
@@ -97,7 +56,7 @@ function profileView() {
 
 `;
   
-  document.getElementById('tab-content').innerHTML = root;
+ dom_root.innerHTML = root;
   setDetails()
 }
 

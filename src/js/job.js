@@ -43,9 +43,9 @@ function getJobData(office) {
                             }]
                         }
                     },
-                    
-                    timer:{
-                        time:'00:00:00'
+
+                    timer: {
+                        time: '00:00:00'
                     },
                     creator: {
                         phoneNumber: '',
@@ -85,7 +85,7 @@ function getJobData(office) {
                 result.currentDuty.customerPhonenumber = customerPhonenumber;
                 dom_root.appendChild(constructJobView(result));
                 if (result.currentDuty.finished) {
-                    if(worker) {
+                    if (worker) {
                         worker.terminate();
                         worker = null;
                     }
@@ -107,10 +107,10 @@ function getJobData(office) {
 
 function handleFinishedDuty(duty) {
     const el = document.querySelector('#time-clock');
-    
-        const key = Object.keys(duty.timer);
-        el.innerHTML = duty.timer[key[0]].time
-    
+
+    const key = Object.keys(duty.timer);
+    el.innerHTML = duty.timer[key[0]].time
+
 }
 
 function createJobHeader() {
@@ -125,7 +125,7 @@ function createJobHeader() {
 
     const reportIcon = createElement('button', {
         className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
-        textContent: 'event_note'
+        textContent: 'home'
     })
     reportIcon.addEventListener('click', function () {
         history.pushState(['jobs'], null, null);
@@ -148,7 +148,7 @@ function createJobHeader() {
     select.root_.classList.add('office-select--header');
     sectionStart.appendChild(select.root_)
     select.listen('MDCSelect:change', function (e) {
-        if(worker) {
+        if (worker) {
             worker.terminate();
             worker = null;
         }
@@ -541,14 +541,14 @@ function constructJobView(result) {
     timeline.appendChild(imageList);
 
     const finish = el.querySelector('#finish');
-    if(finish) {
+    if (finish) {
         finish.classList.add('mdc-button--raised');
         finish.addEventListener('click', function () {
             getRatingSubsription(result.currentDuty)
         });
     }
 
-    if(!result.currentDuty.finished) {
+    if (!result.currentDuty.finished) {
 
         const photoBtn = createExtendedFab('add_a_photo', 'Upload photo', '', true);
         photoBtn.style.zIndex = '99'
@@ -570,7 +570,10 @@ function getRatingSubsription(duty) {
         console.log(subs)
         if (!subs.length) {
 
-            markDutyFinished({dutyId:duty.activityId,office:duty.office});
+            markDutyFinished({
+                dutyId: duty.activityId,
+                office: duty.office
+            });
             return
         }
         const tx = db.transaction('map');
@@ -864,7 +867,6 @@ function showRating(callSubscription, customer, dutyId) {
     `
     const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden');
-
     dom_root.innerHTML = `
     <div id='rating-view'>
         <iframe id='rating-form' src='${window.location.origin}/v2/forms/rating/index.html'></iframe>;
@@ -1117,22 +1119,56 @@ function createProductScreen(products, savedProduct = {
 
 
 function jobs(office) {
+    const header = setHeader(`
+    <a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title"></span>
+    `, `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Profile" id='profile-icon'>account_circle</button>`);
+    header.root_.classList.remove('hidden');
+    document.getElementById('profile-icon').addEventListener('click', function () {
+        history.pushState(['profileScreen'], null, null);
+        profileScreen();
+    });
+    const tabs = [{
+        id: 'home-icon',
+        icon: 'home',
+        name: 'Home'
+    }, {
+        id: 'contacts-icon',
+        icon: 'contacts',
+        name: 'Contacts'
+    }]
+    dom_root.innerHTML = `
+      <div class='tabs-section'>
+          ${showTabs(tabs)}
+          <div id='tab-content'></div>
+      </div>`
+    const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+    tabList.listen('MDCTabBar:activated', function (evt) {
+        if (document.getElementById('search-btn')) {
+            document.getElementById('search-btn').remove();
+        }
+        if (evt.detail.index == 0) {
+            document.querySelector('.mdc-top-app-bar__title').textContent = 'Home'
+            calendarView(office);
+            return
+        }
+        if (evt.detail.index == 1) {
+            document.querySelector('.mdc-top-app-bar__title').textContent = 'Contacts'
+            chatView()
+            return
+        }
+    });
+    tabList.activateTab(0)
+}
+function calendarView(office)  {
     const tx = db.transaction('activity');
     const store = tx.objectStore('activity');
     const dateObject = {}
     const dutiesCont = createElement('div', {
         className: 'all-duties mdc-layout-grid'
     })
-    const header = setHeader(`
-    <a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">All duties</span>
-    `, `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Profile" id='profile-icon'>account_circle</button>`);
-    header.root_.classList.remove('hidden');
+  
 
-    document.getElementById('profile-icon').addEventListener('click', function () {
-        history.pushState(['profileScreen'], null, null);
-        profileScreen();
-    });
 
     store.index('template').openCursor('duty').onsuccess = function (evt) {
         const cursor = evt.target.result;
@@ -1184,13 +1220,12 @@ function jobs(office) {
             if (!subs.length) return;
             dutiesCont.appendChild(createTemplateButton(subs))
         })
-        dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
-        dom_root.innerHTML = ``;
-        dom_root.appendChild(dutiesCont);
+        const el = document.getElementById('tab-content');
+        el.innerHTML = ``;
+        el.appendChild(dutiesCont);
 
     }
 }
-
 function dutyDateList(duties, dutyDate) {
 
     const card = createElement('div', {
@@ -1203,11 +1238,6 @@ function dutyDateList(duties, dutyDate) {
             <div class="month-date-cont">
                 <div class="day">${moment(`${dutyDate.getDate()}-${dutyDate.getMonth() + 1}-${dutyDate.getFullYear()}`, 'DD-MM-YYYY').format('ddd')}</div>
                 <div class="date">${dutyDate.getDate()}</div>
-            </div>
-        </div>
-        <div class='right'>
-            <div class="heading-container">
-                <h1 class="mdc-typography--headline6">${duties.length === 1 ? '1 Duty' : `${duties.length} Duties`}</h1>
             </div>
         </div>
     </div>
