@@ -553,13 +553,18 @@ function startApp() {
         createMapObjectStore(db);
         createCalendarObjectStore(db);
         break;
-        case 31:
+      case 31:
         const addendumStore = req.transaction.objectStore('addendum');
-        const timestampIndex = addendumStore.createIndex('timestamp','timestamp');
-    }
-    console.log('version upgrade')
-  }
+        if(!addendumStore.indexNames.contains('timestamp')) {
+          addendumStore.createIndex('timestamp','timestamp');
+        }
+        break;
 
+      default:
+        console.log('version upgrade');
+        break;
+    }
+  }
 
 
   req.onsuccess = function () {
