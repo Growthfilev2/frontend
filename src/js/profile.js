@@ -86,7 +86,7 @@ function helpView() {
   })
   faq.innerHTML = `
   <i class="mdc-list-item__graphic material-icons mdc-theme--secondary" aria-hidden="true">question_answer</i>
-  <a href='https://growthfile.com/FAQ'>FAQ</a>`;
+  <a href='https://growthfile.com/faq'>FAQ</a>`;
 
   const privacy = createElement('li',{
     className:'mdc-list-item'
