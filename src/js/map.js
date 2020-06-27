@@ -1,10 +1,9 @@
 let selectedSubs;
 var ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   location: '',
-  knownLocation: false,
   venue: '',
+  knownLocation: false,
   iframeVersion: 13,
-  nearByLocations: []
 }
 
 
@@ -60,17 +59,17 @@ function handleLocationError(error) {
   })
   switch (error.message) {
     case 'THRESHOLD EXCEED':
-        handleCheckin(error.body.geopoint)
+      handleCheckin(error.body.geopoint)
       break;
 
     case 'BROKEN INTERNET CONNECTION':
-      
+
       alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
       alertDialog.open();
       break;
 
     case 'TURN ON YOUR WIFI':
-      
+
       alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
       alertDialog.open();
       break;
@@ -83,7 +82,7 @@ function handleLocationError(error) {
           stack: error.stack || ''
         }
       })
-      
+
       alertDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
       alertDialog.open();
       break;
@@ -96,7 +95,6 @@ function mapView(location) {
 
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
-  dom_root.classList.add("mdc-top-app-bar--fixed-adjust")
   progressBar.close();
 
   const latLng = {
@@ -112,74 +110,100 @@ function mapView(location) {
     east: offsetBounds.east(),
     west: offsetBounds.west()
   }, location).then(function (nearByLocations) {
-    ApplicationState.nearByLocations = nearByLocations;
-    if (!nearByLocations.length) return createUnkownCheckIn(location)
-    if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
     dom_root.innerHTML = `
     <div id='map-view'>
       <div class="selection-box-auto" id='selection-box'>
           <div class="content-body"></div>
       </div>
-    </div>
-  `
+    </div>`
 
+    if (!nearByLocations.length) return createUnkownCheckIn(location)
+    if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
     loadCardData(nearByLocations, location)
   })
-
 }
 
-function createUnkownCheckIn(geopoint, retries = {subscriptionRetry:0,invalidRetry:0}) {
-  loadingScreen({
-    src:'./img/fetching-location.jpg',
-    text:'Checking in ...'
-  })
+function createUnkownCheckIn(geopoint) {
   document.getElementById("app-header").classList.add('hidden')
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
-  
   ApplicationState.knownLocation = false;
-  const prom = [];
-  getRootRecord().then(function(rootRecord){
-    const timestamp = fetchCurrentTime(rootRecord.serverTime)
-    offices.forEach(function (office) {
-      const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
-      copy.share = [];
-      copy.timestamp = timestamp
-      prom.push(requestCreator('create', fillVenueInSub(copy, ''), geopoint))
-    })
+  if (offices.length == 1) {
+    generateRequestForUnknownCheckin(offices[0], geopoint)
+    return
+  }
+  const header = setHeader('<span class="mdc-top-app-bar__title">Choose company</span>', '', 'app-header')
+  header.root_.classList.remove("hidden");
+  dom_root.classList.add("mdc-top-app-bar--fixed-adjust")
+  const officeList = createElement('ul', {
+    className: 'mdc-list pt-0'
+  })
+  offices.forEach(function (office) {
+    const li = createList({
+      primaryText: office
+    });
+    officeList.appendChild(li);
   })
 
-  progressBar.open()
-  Promise.all(prom).then(function () {
+  document.querySelector('#selection-box .content-body').appendChild(officeList)
+  const ul = new mdc.list.MDCList(officeList)
+  ul.singleSelection = true;
+  ul.selectedIndex = 0;
+  ul.listen('MDCList:action', function (evt) {
+    console.log(evt.detail.index)
+    const selectedOffice = offices[evt.detail.index];
+    generateRequestForUnknownCheckin(selectedOffice, geopoint)
+  })
+}
 
-    successDialog('Check-In Created')
-    ApplicationState.venue = ''
-    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    initProfileView()
-  }).catch(function (error) {
 
-    progressBar.close()
-    const queryLink = getDeepLink();
+function generateRequestForUnknownCheckin(office, geopoint, retries = {
+  subscriptionRetry: 0,
+  invalidRetry: 0
+}) {
+  loadingScreen({
+    src: './img/fetching-location.jpg',
+    text: 'Checking in ...'
+  })
+  getRootRecord().then(function (rootRecord) {
+    const timestamp = fetchCurrentTime(rootRecord.serverTime)
 
-    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
-      
-      if(retries.subscriptionRetry  <= 2) {
-        setTimeout(function(){
+    const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
+    copy.share = [];
+    copy.timestamp = timestamp
+    requestCreator('create', fillVenueInSub(copy, ''), geopoint).then(function () {
+
+      successDialog('Check-In Created')
+      ApplicationState.venue = ''
+      ApplicationState.selectedOffice = office;
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+      initProfileView()
+    }).catch(function (error) {
+
+      progressBar.close()
+      const queryLink = getDeepLink();
+
+      if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+
+        if (retries.subscriptionRetry <= 2) {
+          setTimeout(function () {
             retries.subscriptionRetry++
-            createUnkownCheckIn(geopoint, retries)
-        },5000)
-      }  
-      return
-    }
-    
-    if (error.message === 'Invalid check-in') {
-      
-      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
-        ApplicationState.location = newGeopoint;
-        retries.invalidRetry++
-        createUnkownCheckIn(newGeopoint, retries);
-      });
-      return
-    };
+            generateRequestForUnknownCheckin(office, geopoint, retries)
+          }, 5000)
+        }
+        return
+      }
+
+      if (error.message === 'Invalid check-in') {
+
+        handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
+          ApplicationState.location = newGeopoint;
+          retries.invalidRetry++
+          generateRequestForUnknownCheckin(office, newGeopoint, retries);
+        });
+        return
+      };
+
+    })
 
   })
 }
@@ -225,7 +249,11 @@ function handleInvalidCheckinLocation(retry, callback) {
 function loadCardData(venues, geopoint) {
   ApplicationState.knownLocation = true;
   const header = setHeader('<span class="mdc-top-app-bar__title">Choose your location</span>', '', 'app-header')
-  header.root_.classList.remove("hidden")
+  header.root_.classList.remove("hidden");
+  dom_root.classList.add("mdc-top-app-bar--fixed-adjust")
+  // const venuesUl = createElement('ul',{
+  //   className:'mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list'
+  // })
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${venues.map(function(venue) {
       return `${venueList(venue)}`
@@ -244,36 +272,43 @@ function loadCardData(venues, geopoint) {
   })
 };
 
-function createKnownCheckIn(selectedVenue, geopoint, retries = {subscriptionRetry:0,invalidRetry:0}) {
+function createKnownCheckIn(selectedVenue, geopoint, retries = {
+  subscriptionRetry: 0,
+  invalidRetry: 0
+}) {
   console.log(selectedVenue)
+
   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
   copy.share = []
-    document.getElementById('app-header').classList.add('hidden')
+  document.getElementById('app-header').classList.add('hidden')
   progressBar.open()
   loadingScreen({
-    src:'./img/fetching-location.jpg',
-    text:'Checking in at ' + selectedVenue.location
+    src: './img/fetching-location.jpg',
+    text: 'Checking in at ' + selectedVenue.location
   })
   // return
   requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
     successDialog('Check-In Created')
-    ApplicationState.venue = selectedVenue
+    ApplicationState.venue = selectedVenue;
+    ApplicationState.selectedOffice = selectedVenue.office;
+
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     initProfileView()
   }).catch(function (error) {
     progressBar.close()
     const queryLink = getDeepLink();
 
-    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
-      
-      if(retries.subscriptionRetry  <= 2) {
-        setTimeout(function(){
-            retries.subscriptionRetry++
-            createUnkownCheckIn(geopoint, retries)
-        },5000)
-      }  
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+
+      if (retries.subscriptionRetry <= 2) {
+        setTimeout(function () {
+          retries.subscriptionRetry++
+          createKnownCheckIn(selectedVenue, geopoint, retries);
+        }, 5000)
+      }
       return
-    }
+    };
+
     if (error.message === 'Invalid check-in') {
 
       handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
@@ -283,8 +318,6 @@ function createKnownCheckIn(selectedVenue, geopoint, retries = {subscriptionRetr
       });
       return
     };
-
-
   })
 }
 
@@ -306,14 +339,6 @@ function venueList(venue) {
 
 
 }
-
-
-function newOfficeView() {
-
-}
-
-
-
 
 
 function toggleCardHeight(toggle, cardSelector) {
@@ -372,7 +397,10 @@ function setFilePathFailed(error) {
 
 
 
-function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
+function setFilePath(base64, retries = {
+  subscriptionRetry: 0,
+  invalidRetry: 0
+}) {
   const url = `data:image/jpg;base64,${base64}`
   dom_root.innerHTML = `
   <div class='image-container'>
@@ -392,7 +420,7 @@ function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <span class="mdc-top-app-bar__title">Upload photo</span>
         `
-  const header = setHeader(backIcon,'');
+  const header = setHeader(backIcon, '');
   header.root_.classList.remove('hidden');
   const content = document.getElementById('snap')
   const textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'))
@@ -422,22 +450,12 @@ function setFilePath(base64, retries = {subscriptionRetry:0,invalidRetry:0}) {
 
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    if(ApplicationState.venue) {
-      sendPhotoCheckinRequest({
-        sub:ApplicationState.officeWithCheckInSubs[ApplicationState.venue.office],
-        base64:url,
-        retries:retries,
-        textValue:textValue,
-      })
-      return
-    }
-    choosePhotoCheckinOffice(function(checkinSubscription){
-      sendPhotoCheckinRequest({
-        sub:checkinSubscription,
-        base64:url,
-        retries:retries,
-        textValue:textValue,
-      })
+    sendPhotoCheckinRequest({
+      sub: ApplicationState.officeWithCheckInSubs[ApplicationState.selectedOffice],
+      base64: url,
+      retries: retries,
+      textValue: textValue,
+      knownLocation: true
     })
   })
 }
@@ -451,22 +469,27 @@ function sendPhotoCheckinRequest(request) {
   sub.attachment.Photo.value = url || ''
   sub.attachment.Comment.value = textValue;
   sub.share = []
+  history.back();
   requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
-    successDialog('Photo uploaded')
-    history.back();
+    successDialog('Photo uploaded');
+
   }).catch(function (error) {
     const queryLink = getDeepLink();
-    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) { 
-  
-      if(retries.subscriptionRetry  <= 2) {
-        setTimeout(function(){
-            retries.subscriptionRetry++
-            createUnkownCheckIn(geopoint, retries)
-        },5000)
-      }  
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+
+      if (retries.subscriptionRetry <= 2) {
+        setTimeout(function () {
+          retries.subscriptionRetry++
+          if (request.knownLocation) {
+            createKnownCheckIn(ApplicationState.venue, geopoint, retries);
+          } else {
+            createUnkownCheckIn(sub.office, geopoint, retries);
+          }
+        }, 5000)
+      }
       return
     }
-    
+
     if (error.message === 'Invalid check-in') {
       handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
         ApplicationState.location = newGeopoint;
@@ -476,26 +499,6 @@ function sendPhotoCheckinRequest(request) {
       return
     };
   });
-}
-
-function choosePhotoCheckinOffice(callback) {
-  const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
-  if(offices.length == 1) {
-    callback(ApplicationState.officeWithCheckInSubs[offices[0]]);
-    return
-  }
-  const subs = [];
-  offices.forEach(function(office){
-    subs.push(ApplicationState.officeWithCheckInSubs[office])
-  })
-  const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
-  const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-  bottomDialog(officeDialog, officeList)
-  officeList.listen('MDCList:action', function (officeEvent) {
-    const selectedSubscription = subs[officeEvent.detail.index];
-    officeDialog.close();
-    callback(selectedSubscription);
-  })
 }
 
 function mdcDefaultSelect(data, label, id, option) {

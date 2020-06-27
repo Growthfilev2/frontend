@@ -67,15 +67,13 @@ function snacks(message, text, callback, timeout) {
 }
 
 
-
-
 function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-  
+
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -86,7 +84,7 @@ function appLocation(maxRetry) {
       if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
         return reject({
           message: 'THRESHOLD EXCEED',
-          type:'geolocation',
+          type: 'geolocation',
           body: {
             geopoint: geopoint
           }
@@ -96,7 +94,7 @@ function appLocation(maxRetry) {
       ApplicationState.location = geopoint
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
       return resolve(geopoint)
-    }).catch(function(error){
+    }).catch(function (error) {
       error.type = 'geolocation';
       reject(error)
     })
@@ -256,7 +254,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=150');
+const apiHandler = new Worker('js/apiHandler.js?version=160');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -285,10 +283,9 @@ function requestCreator(requestType, requestBody, geopoint) {
   if (!geopoint) return executeRequest(requestGenerator);
   return getRootRecord().then(function (rootRecord) {
     let time;
-    if(requestGenerator.body['timestamp']) {
+    if (requestGenerator.body['timestamp']) {
       time = requestGenerator.body['timestamp']
-    }
-    else {
+    } else {
       time = fetchCurrentTime(rootRecord.serverTime);
     }
     requestGenerator.body['timestamp'] = time
@@ -319,7 +316,7 @@ function executeRequest(requestGenerator) {
         if (reject) {
           reject(event.data);
           snacks(event.data.body.message);
-        
+
           if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
@@ -417,7 +414,7 @@ function handleComponentUpdation(readResponse) {
 
   readResponse.activities.forEach(function (activity) {
     if (activity.template === 'duty') {
-          checkForDuty(activity);
+      checkForDuty(activity);
     }
   })
 
@@ -436,8 +433,11 @@ function handleComponentUpdation(readResponse) {
       if (document.getElementById('rating-view')) return;
       jobView();
       break;
-    case 'jobs':
-      jobs();
+    case 'appView':
+      if (appTabBar && document.getElementById('app-tab-content')) {
+        const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
+        appTabBar.activateTab(selectedIndex);
+      }
       break;
     default:
       console.log("no refresh")
@@ -822,7 +822,7 @@ function showAadhar(record) {
 function idProofView(callback) {
   getRootRecord().then(function (rootRecord) {
     const auth = firebase.auth().currentUser;
-    const ids = rootRecord.idProof || {
+    const ids =  {
       'aadhar': {
         'front': '',
         'back': '',
@@ -832,6 +832,15 @@ function idProofView(callback) {
         'front': '',
         'number': ''
       }
+    }
+    if(rootRecord.aadhar) {
+        ids.aadhar.front = rootRecord.aadhar.front
+        ids.aadhar.back = rootRecord.aadhar.back;
+        ids.aadhar.number = rootRecord.aadhar.number
+    }
+    if(rootRecord.pan) {
+      ids.pan.front = rootRecord.pan.front;
+      ids.pan.number = rootRecord.pan.number;
     }
 
     let backIcon = ''
@@ -845,6 +854,7 @@ function idProofView(callback) {
     `
     }
     setHeader(backIcon, actionBtn);
+    dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
 
     dom_root.innerHTML = `
   <div class='id-container app-padding'>

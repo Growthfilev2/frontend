@@ -5,7 +5,8 @@ self.onmessage = function (e) {
             req.onsuccess = function () {
                 db = req.result;
                 getStoredTimer(e.data.dutyId).then(function (currentTime) {
-                    this.startTimer(e.data.dutyId,e.data.location,currentTime);
+    
+                    this.startTimer(e.data.dutyId,currentTime);
                 })
             }
             return
@@ -14,6 +15,7 @@ self.onmessage = function (e) {
 
     function getStoredTimer(dutyId) {
         return new Promise(function(resolve){
+            if(!dutyId) return resolve(`00:00:00`);
 
             const tx = db.transaction('activity');
             const store = tx.objectStore('activity');
@@ -23,14 +25,13 @@ self.onmessage = function (e) {
                 if (!record.timer) {
                     return resolve(`00:00:00`)
                 };
-                const key = Object.keys(record.timer);
                 const currentTimestamp = Date.now();
-                const storedTimestamp = record.timer[key[0]].timestamp;
+                const storedTimestamp = record.timer.timestamp;
                 const timeDifference = getTimeDifference(currentTimestamp,storedTimestamp);
                 if(timeDifference.seconds == 0) {
-                    return resolve(record.timer[key[0]].time);
+                    return resolve(record.timer.time);
                 }
-                const storedTimer = parseTimeString(record.timer[key[0]].time);
+                const storedTimer = parseTimeString(record.timer.time);
                 return resolve(`${storedTimer.hours + timeDifference.hours}:${storedTimer.minutes + timeDifference.minutes}:${storedTimer.seconds+timeDifference.seconds}`);
             }
         })
@@ -66,7 +67,7 @@ self.onmessage = function (e) {
        
     }
 
-    function startTimer(uid,location, currentTime) {
+    function startTimer(uid, currentTime) {
      
         const split = currentTime.split(':')
         let seconds = Number(split[2]);
@@ -86,21 +87,24 @@ self.onmessage = function (e) {
             };
             const timeString = `${formatTimerValues(hours)}:${formatTimerValues(minutes)}:${formatTimerValues(seconds)}`
             self.postMessage(timeString);
-            updateTimer(uid,location,timeString);
+            updateTimer(uid,timeString);
         }, 1000)
     }
 
-    function updateTimer(dutyId,location,timeString) {
+    function updateTimer(dutyId,timeString) {
         const tx = db.transaction('activity', 'readwrite');
         const store = tx.objectStore('activity');
         store.get(dutyId).onsuccess = function (e) {
             const record = e.target.result;
-            const timerRecord = {}
-            timerRecord[location] = {
+            // const timerRecord = {}
+            // timerRecord[location] = {
+            //     time:timeString,
+            //     timestamp:Date.now()
+            // };
+            record.timer = {
                 time:timeString,
                 timestamp:Date.now()
             };
-            record.timer = timerRecord;
             store.put(record)
         }
         tx.oncomplete = function () {

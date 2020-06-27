@@ -1,42 +1,140 @@
-
 function profileScreen() {
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>`
-  const help = `<a href="https://wa.me/918595422858" class='mdc-theme--on-primary'>HELP</a>`
-  const header = setHeader(backIcon, help);
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Settings</span>`
+  const header = setHeader(backIcon, '');
   header.root_.classList.remove('hidden')
-  profileView();
+  const auth = firebase.auth().currentUser;
+  dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
+  dom_root.innerHTML = ''
+  const ul = createElement('ul', {
+    className: 'mdc-list mdc-list--two-line mdc-list--avatar-list'
+  })
+  const profileLi = createElement('li', {
+    className: 'mdc-list-item'
+  })
+  profileLi.innerHTML = `<img class="mdc-list-item__graphic"  aria-hidden="true" src=${auth.photoURL || './img/empty-user.jpg'}  onerror="imgErr(this)">
+  <span class="mdc-list-item__text">
+    <span class="mdc-list-item__primary-text">
+        ${auth.displayName}
+    </span>
+    <span class="mdc-list-item__secondary-text">
+        ${auth.phoneNumber}
+    </span>
+  </span>`
+  new mdc.ripple.MDCRipple(profileLi)
+
+  profileLi.addEventListener('click',function(){
+    history.pushState(['profileView'],null,null);
+    profileView();
+  })
+
+  const bank = createList({
+    icon: 'account_balance',
+    primaryText: 'Bank account',
+    secondaryText: 'Add or edit bank accounts'
+  })
+  bank.addEventListener('click', function () {
+    history.pushState(['bankAccount'], null, null);
+    bankAccount()
+  })
+  const ids = createList({
+    icon: 'verified_user',
+    primaryText: 'Id proofs',
+    secondaryText: 'Aadhar , PAN'
+  })
+  ids.addEventListener('click', function () {
+    history.pushState(['idProofView'], null, null);
+    idProofView(function () {
+      history.back()
+    })
+  });
+
+  const help = createList({
+    icon: 'help',
+    primaryText: 'Help',
+    secondaryText: 'Contact us,privacy,FAQ'
+  })
+  help.addEventListener('click', function () {
+    history.pushState(['helpView'], null, null);
+    helpView();
+  })
+  ul.appendChild(profileLi)
+  ul.appendChild(createListDivider())
+  ul.appendChild(bank)
+  ul.appendChild(ids)
+  ul.appendChild(help);
+  dom_root.appendChild(ul)
 }
 
-function showTabs(tabs) {
 
-  return `<div class="mdc-tab-bar" role="tablist" style='margin-top:5px;'>
-    <div class="mdc-tab-scroller">
-      <div class="mdc-tab-scroller__scroll-area">
-        <div class="mdc-tab-scroller__scroll-content">
-      
-          ${tabs.map(function(tab){
-              return `
-              <button class="mdc-tab mdc-tab--stacked" role="tab" aria-selected="false" tabindex="-1" id=${tab.id || ''}>
-              <span class="mdc-tab__content">
-                <span class="mdc-tab__icon material-icons" aria-hidden="true">${tab.icon}</span>
-                <span class="mdc-tab__text-label">${tab.name}</span>
-                <span class="mdc-tab-indicator">
-                  <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
-                </span>
-              </span>
-              <span class="mdc-tab__ripple"></span>
-            </button>`
-          }).join("")}
-        </div>
-      </div>
-    </div>
-  </div>`
+function helpView() {
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Help</span>`
+  const header = setHeader(backIcon, '');
+  const ul = createElement('ul',{
+    className:'mdc-list mdc-list--avatar-list help-list'
+  });
+  const contactUs = createElement('li',{
+    className:'mdc-list-item'
+  })
+  contactUs.innerHTML = `
+  <i class="mdc-list-item__graphic material-icons mdc-theme--secondary" aria-hidden="true">help</i>
+  <a href='https://wa.me/+918595422858'>Contact us</a>`
+
+  const faq = createElement('li',{
+    className:'mdc-list-item'
+  })
+  faq.innerHTML = `
+  <i class="mdc-list-item__graphic material-icons mdc-theme--secondary" aria-hidden="true">question_answer</i>
+  <a href='https://growthfile.com/FAQ'>FAQ</a>`;
+
+  const privacy = createElement('li',{
+    className:'mdc-list-item'
+  })
+  privacy.innerHTML = `
+  <i class="mdc-list-item__graphic material-icons mdc-theme--secondary" aria-hidden="true">privacy_tip</i>
+  <a href='https://growthfile.com/legal'>Privacy policy</a>`;
+  
+  ul.appendChild(contactUs)
+  ul.appendChild(createListDivider())
+  ul.appendChild(faq)
+  ul.appendChild(createListDivider())
+  ul.appendChild(privacy);
+  dom_root.innerHTML = '';
+  dom_root.appendChild(ul);
 }
 
+function createList(attr) {
+  const li = createElement('li', {
+    className: 'mdc-list-item'
+  });
+  li.innerHTML = `
+    ${attr.icon ? `<i class="mdc-list-item__graphic material-icons mdc-theme--secondary" aria-hidden="true">${attr.icon}</i>` :''}
+    ${attr.primaryText && attr.secondaryText ? ` <span class="mdc-list-item__text">
+      <span class="mdc-list-item__primary-text">
+        ${attr.primaryText}
+      </span>
+       <span class="mdc-list-item__secondary-text">
+        ${attr.secondaryText}
+      </span>` : attr.primaryText}
+      ${attr.meta ? `<span class='mdc-list-item__meta material-icons'>${attr.meta}</span>` :''}
+    </span>
+  `
+  new mdc.ripple.MDCRipple(li)
+  return li;
+}
 
+function createListDivider(){
+  return createElement('li',{
+    className:'mdc-list-divider'
+  })
+}
 
 function profileView() {
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Account</span>`
 
+  const header = setHeader(backIcon, '');
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
@@ -55,8 +153,8 @@ function profileView() {
 <div id='user-details'></div>  
 
 `;
-  
- dom_root.innerHTML = root;
+
+  dom_root.innerHTML = root;
   setDetails()
 }
 
@@ -80,11 +178,11 @@ function setDetails() {
     }).then(function () {
       snacks('Profile picture updated')
       firebase.auth().currentUser.reload();
-    }).catch(function(error){
+    }).catch(function (error) {
       snacks('Try again later')
     })
   })
- 
+
 }
 
 function createBaseDetails() {
@@ -106,16 +204,6 @@ function createBaseDetails() {
     <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
     ${auth.phoneNumber}
     <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="phoneNumberChangeUI()">edit</span>
-  </li>
-  <li class='mdc-list-item'>
-    <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_balance</span>
-    Bank accounts
-    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['bankAccount'], null, null);bankAccount()">edit</span>
-  </li>
-  <li class='mdc-list-item'>
-    <span class="mdc-list-item__graphic material-icons" aria-hidden="true">verified_user</span>
-    Id proofs
-    <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['idProofView'],null,null);idProofView(function(){history.back()})">edit</span>
   </li>
   </ul>
 </div>`
@@ -168,7 +256,7 @@ function bankAccount() {
             el.parentNode.remove();
             snacks(`Account removed`)
           }
-        }).catch(function(error){
+        }).catch(function (error) {
           snacks(error.message);
         });
       })
@@ -205,7 +293,7 @@ function addNewBankAccount(callback) {
   let actionBtn = ''
   if (history.state[0] === 'profileCheck') {
     backIcon = '<span class="mdc-top-app-bar__title">Add bank account</span>';
-    actionBtn = createButton('SKIP','skip-header').outerHTML;
+    actionBtn = createButton('SKIP', 'skip-header').outerHTML;
   } else {
 
     backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
@@ -280,13 +368,14 @@ function addNewBankAccount(callback) {
     field.root_.classList.add('full-width')
     fields[field.label_.root_.textContent] = field;
   });
+  console.log(fields)
 
-  fields['Re-enter Bank Account Number'].input_.addEventListener('input', function () {
-    if (fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
-      setHelperInvalid(fields['Re-enter Bank Account Number'], '')
+  fields['Re-enter bank account number'].input_.addEventListener('input', function () {
+    if (fields['Re-enter bank account number'].value !== fields['Bank account number'].value) {
+      setHelperInvalid(fields['Re-enter bank account number'], '')
       submitBtn.root_.setAttribute('disabled', 'true')
     } else {
-      setHelperValid(fields['Re-enter Bank Account Number'])
+      setHelperValid(fields['Re-enter bank account number'])
       submitBtn.root_.removeAttribute('disabled')
 
     }
@@ -294,7 +383,6 @@ function addNewBankAccount(callback) {
 
 
   submitBtn.root_.addEventListener('click', function () {
-    console.log(fields)
     const labels = Object.keys(fields);
 
     for (let index = 0; index < labels.length; index++) {
@@ -308,8 +396,8 @@ function addNewBankAccount(callback) {
       field.helperTextContent = ''
     }
 
-    if (fields['Re-enter Bank Account Number'].value !== fields['Bank Account Number'].value) {
-      setHelperInvalid(fields['Re-enter Bank Account Number'], `Bank Account number do not match`)
+    if (fields['Re-enter bank account number'].value !== fields['Bank account number'].value) {
+      setHelperInvalid(fields['Re-enter bank account number'], `Bank account number do not match`)
       return;
     }
 
@@ -317,31 +405,22 @@ function addNewBankAccount(callback) {
       setHelperInvalid(fields['IFSC'], `Invalid IFSC code`);
       return;
     }
-
-
-    if(!auth.email) {
-      emailUpdate(fields['Email'],function(){
-            requestCreator('newBankAccount', {
-              bankAccount: fields['Bank account number'].value,
-              ifsc: fields['IFSC'].value,
-              address1: fields['IFSC'].value,
-              displayName:auth.displayName,
-              email:auth.email
-            }).then(function () {
-              snacks('New bank account added');
-              if (callback) {
-                callback()
-              } else {
-                history.back();
-              }
-            }).catch(function(error){
-              snacks(error.message);
-            })
-      },function(){
-        
-      })
+    
+    const requestBody =  {
+      bankAccount: fields['Bank account number'].value,
+      ifsc: fields['IFSC'].value,
+      address1: fields['IFSC'].value,
+      displayName: auth.displayName,
+      email: auth.email,
+      upi:fields['UPI'].value
     }
-
+    if (!auth.email) {
+      emailUpdate(fields['Email'], function () {
+        createNewAccount(requestBody)
+      })
+      return
+    }
+    createNewAccount(requestBody)
   });
 
   const skipBtn = document.getElementById('skip-header');
@@ -365,6 +444,15 @@ function addNewBankAccount(callback) {
     }
     history.back();
   });
+}
+
+function createNewAccount(body) {
+  return requestCreator('newBankAccount', body).then(function () {
+    snacks('New bank account added');
+      history.back();
+  }).catch(function (error) {
+    snacks(error.message);
+  })
 }
 
 function phoneNumberChangeUI() {
@@ -498,7 +586,7 @@ function timeDiff(lastSignInTime) {
 function isEmailValid(newEmail, currentEmail) {
   if (!newEmail) {
     return false;
-  }
+  };
   return !(newEmail === currentEmail)
+};
 
-}

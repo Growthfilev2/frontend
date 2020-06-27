@@ -92,7 +92,10 @@ function init(template, data) {
             showSnacksApiResponse('Please give rating');
             return
         }
-
+        if(!reviewerName.value || !reviewerNumber.value) {
+            showSnacksApiResponse("Please add a customer contact");
+            return
+        }
         copy.attachment['Reviewer Name'].value = reviewerName.value || '';
 
         if(reviewerNumber.value) {

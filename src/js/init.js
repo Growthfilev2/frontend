@@ -3,6 +3,7 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
+let appTabBar;
 let DB_VERSION = 32;
 var EMAIL_REAUTH;
 var firebaseUI;
@@ -12,7 +13,6 @@ var sliderInterval;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
-var newJob = false
 var firebaseAnalytics;
 var serverTimeUpdated = false;
 var updatedWifiAddresses = {
@@ -254,13 +254,14 @@ window.onpopstate = function (event) {
   if (!event.state) return;
   if (nonRefreshViews[event.state[0]]) return
   if(event.state[0] === 'showRating') {
-    this.jobs();
+    
     return;
   }
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
     history.go(-1);
     return;
   };
+
   if (window[event.state[0]]) {
     window[event.state[0]](event.state[1]);
   }
@@ -405,7 +406,6 @@ function initializeFirebaseUI() {
   <span class="mdc-top-app-bar__title">Login</span>
   `;
   header = setHeader(backIcon, '');
-  header.listen('MDCTopAppBar:nav', handleNav);
   firebaseUI = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
 
@@ -566,7 +566,6 @@ function startApp() {
     }
   }
 
-
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
@@ -589,6 +588,7 @@ function startApp() {
 
 
 function getDeepLink() {
+  // return new URLSearchParams('?office=Puja Capital&utm_campaign=share_link&action=get-subscription');
   if (firebaseDeepLink) return firebaseDeepLink
   if (facebookDeepLink) return facebookDeepLink;
   if (isNewUser) return new URLSearchParams('?utm_source=organic')
@@ -606,13 +606,13 @@ function regulator() {
       text: 'Loading ... '
     })
 
-    if (!native.isFCMTokenChanged()) {
-      prom = Promise.resolve();
-    } else {
+    // if (!native.isFCMTokenChanged()) {
+      // prom = Promise.resolve();
+    // } else {
       prom = requestCreator('fcmToken', {
         token: native.getFCMToken()
       })
-    }
+    // }
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
      
@@ -710,7 +710,6 @@ function handleCheckin(geopoint, noUser) {
     }
 
     if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
-    newJob = isNewJob(geopoint);
 
     if (Object.keys(checkInSubs).length) {
       ApplicationState.officeWithCheckInSubs = checkInSubs;
@@ -757,8 +756,6 @@ function noOfficeFoundScreen() {
         <a class='mdc-button mdc-button--raised create-office--link' target='_blank' href='https://www.growthfile.com/signup'>Create office</a>
       </div>
     </div>
-   
-
   `
   dom_root.innerHTML = content;
 
@@ -901,7 +898,7 @@ function getProfileInformation() {
           store.get(dbName).onsuccess = function (event) {
             record = event.target.result;
             delete record.idProof;
-            record.linkedAccounts = response.linkSharedComponent;
+            record.linkedAccounts = response.linkedAccounts;
             record.pan = response.pan;
             record.aadhar = response.aadhar;
             store.put(record);
@@ -1279,11 +1276,12 @@ function getCheckInSubs() {
         cursor.continue();
       }
     tx.oncomplete = function () {
-      delete checkInSubs['xanadu']
+      delete checkInSubs['xanadu'];
       return resolve(checkInSubs)
     }
   })
 };
+
 
 function checkIDBCount(storeNames) {
   return new Promise(function (resolve, reject) {
@@ -1312,6 +1310,7 @@ function checkIDBCount(storeNames) {
 
 function openReportView() {
   document.getElementById('step-ui').innerHTML = ''
+  history.pushState(['appView'],null,null);
   history.pushState(['jobView'], null, null);
   jobView();
 }

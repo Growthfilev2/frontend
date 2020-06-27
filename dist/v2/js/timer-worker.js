@@ -5,7 +5,8 @@ self.onmessage = function (e) {
         req.onsuccess = function () {
             db = req.result;
             getStoredTimer(e.data.dutyId).then(function (currentTime) {
-                this.startTimer(e.data.dutyId, e.data.location, currentTime);
+
+                this.startTimer(e.data.dutyId, currentTime);
             });
         };
         return;
@@ -14,6 +15,7 @@ self.onmessage = function (e) {
 
 function getStoredTimer(dutyId) {
     return new Promise(function (resolve) {
+        if (!dutyId) return resolve('00:00:00');
 
         var tx = db.transaction('activity');
         var store = tx.objectStore('activity');
@@ -23,14 +25,13 @@ function getStoredTimer(dutyId) {
             if (!record.timer) {
                 return resolve('00:00:00');
             };
-            var key = Object.keys(record.timer);
             var currentTimestamp = Date.now();
-            var storedTimestamp = record.timer[key[0]].timestamp;
+            var storedTimestamp = record.timer.timestamp;
             var timeDifference = getTimeDifference(currentTimestamp, storedTimestamp);
             if (timeDifference.seconds == 0) {
-                return resolve(record.timer[key[0]].time);
+                return resolve(record.timer.time);
             }
-            var storedTimer = parseTimeString(record.timer[key[0]].time);
+            var storedTimer = parseTimeString(record.timer.time);
             return resolve(storedTimer.hours + timeDifference.hours + ':' + (storedTimer.minutes + timeDifference.minutes) + ':' + (storedTimer.seconds + timeDifference.seconds));
         };
     });
@@ -65,7 +66,7 @@ function getTimeDifference(currentTimestamp, storedTimestamp) {
     };
 }
 
-function startTimer(uid, location, currentTime) {
+function startTimer(uid, currentTime) {
 
     var split = currentTime.split(':');
     var seconds = Number(split[2]);
@@ -85,21 +86,24 @@ function startTimer(uid, location, currentTime) {
         };
         var timeString = formatTimerValues(hours) + ':' + formatTimerValues(minutes) + ':' + formatTimerValues(seconds);
         self.postMessage(timeString);
-        updateTimer(uid, location, timeString);
+        updateTimer(uid, timeString);
     }, 1000);
 }
 
-function updateTimer(dutyId, location, timeString) {
+function updateTimer(dutyId, timeString) {
     var tx = db.transaction('activity', 'readwrite');
     var store = tx.objectStore('activity');
     store.get(dutyId).onsuccess = function (e) {
         var record = e.target.result;
-        var timerRecord = {};
-        timerRecord[location] = {
+        // const timerRecord = {}
+        // timerRecord[location] = {
+        //     time:timeString,
+        //     timestamp:Date.now()
+        // };
+        record.timer = {
             time: timeString,
             timestamp: Date.now()
         };
-        record.timer = timerRecord;
         store.put(record);
     };
     tx.oncomplete = function () {};

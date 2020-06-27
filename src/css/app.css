@@ -42,7 +42,7 @@ body,
   --mdc-theme-text-primary-on-light: #FFFFFF;
   --mdc-theme-text-primary-on-dark: #cccccc;
   --mdc-theme--error:red;
-  --mdc-theme--success:green;
+  --mdc-theme--success:#20bd20;
   --mdc-theme--warning:yellow;
 }
 
@@ -76,7 +76,9 @@ body {
 }
 
 .app-padding {
-  padding: 20px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 16px;
 }
 
 
@@ -210,6 +212,9 @@ body {
 }
 .text-right {
   text-align: right;
+}
+.text-left  {
+  text-align: left;
 }
 
 .freeze {
@@ -568,6 +573,9 @@ body {
 
 
 /** Dialog **/
+.mdc-dialog {
+  z-index: 99;
+}
 .mdc-dialog footer .mdc-button:nth-child(1):not([disabled]) {
   color: red;
 }
@@ -1391,4 +1399,23 @@ ul.tl li .item-detail {
 .mdc-image-list li {
   width: calc(100% / 3 - 4.3333333333px);
   margin: 2px;
+}
+
+
+
+.app-tabs .mdc-tab-bar{
+  background-color: var(--mdc-theme-primary);
+  color: var(--mdc-theme-on-primary);
+}
+.app-tabs .mdc-tab__text-label{
+  color: var(--mdc-theme-on-primary);
+}
+.app-tabs .mdc-tab-indicator--active .mdc-tab-indicator__content {
+  background-color: var(--mdc-theme-on-primary);
+}
+.app-tabs .mdc-tab-indicator>.mdc-tab-indicator__content--underline {
+  height: 3px;
+}
+.app-tabs .mdc-tab__content {
+  width: 100%;
 }

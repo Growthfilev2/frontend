@@ -1,8 +1,6 @@
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
-    'https://growthfilev2-0.firebaseapp.com':true
-
 }
 
 function addView(sub, body) {
@@ -32,9 +30,9 @@ function passFormData(data) {
 }
 
 function resizeFrame(frameDimensions) {
- const frame = document.getElementById('rating-form');
- if(!frame) return;
- frame.style.height = frameDimensions.height+'px'
+    const frame = document.getElementById('rating-form');
+    if (!frame) return;
+    frame.style.height = frameDimensions.height + 'px'
 }
 
 
@@ -63,7 +61,7 @@ function sendFormToParent(formData) {
                 markDutyFinished(formData)
                 return
             };
-            
+
             successDialog(`You Created a ${formData.template}`);
             if (formData.report === 'attendance' && formData.id) {
                 const tx = db.transaction('attendance', 'readwrite');
@@ -75,7 +73,7 @@ function sendFormToParent(formData) {
                     store.put(record)
                 }
                 tx.oncomplete = function () {
-                    jobs()
+                    appView()
                 }
                 return;
             };
@@ -98,7 +96,7 @@ function sendFormToParent(formData) {
                     }).catch(console.error)
                 })
             }
-            return jobs();
+            return appView();
         }).catch(function (err) {
             snacks(err.message);
             passFormData({
@@ -127,26 +125,10 @@ function sendFormToParent(formData) {
 }
 
 
-function markDutyFinished(formData) {
-    const tx = db.transaction('activity','readwrite');
-    const store = tx.objectStore('activity');
-    let dutyRecord;
-    if(!formData.dutyId) {
-        successDialog(`Job completed`);
-        jobs(formData.office);
-        return
-    };
+function markDutyFinished() {
 
-    store.get(formData.dutyId).onsuccess = function(e) {
-        dutyRecord = e.target.result;
-        if(!dutyRecord)  return;
-        dutyRecord.finished = true;
-        store.put(dutyRecord);
-    }
-    tx.oncomplete = function() {
-        successDialog(`Job completed`);
-        jobs(formData.office);
-    }
+    successDialog(`Job completed`);
+    history.back();
 }
 
 function parseContact(contactString) {

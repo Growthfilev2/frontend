@@ -259,7 +259,7 @@
 }
 
 .message.me {
-  background: #bd5668;
+  background: var(--mdc-theme-background);
   border-radius: 5px 0px 5px 5px;
   float: right;
   color: white;

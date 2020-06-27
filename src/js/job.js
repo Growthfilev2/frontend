@@ -1,177 +1,162 @@
 let worker;
 
+
 function jobView() {
 
-    progressBar.close();
-    createJobHeader();
-}
-
-function getJobData(office) {
-
+    let duty;
     dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = '';
-    getTimelineAddendum(ApplicationState.location).then(function (addendums) {
-            return getTimelineActivityData(addendums, office)
-        })
-        .then(function (result) {
-            console.log(result.currentDuty)
-            if (!result.currentDuty) {
-                console.log('no current duty')
-
-                const auth = firebase.auth().currentUser
-                result.currentDuty = {
-                    attachment: {
-                        'Duty Type': {
-                            value: '',
-                            type: 'duty'
-                        },
-                        'Location': {
-                            value: ApplicationState.venue ? ApplicationState.venue.location : ''
-                        },
-                        'Include': {
-                            value: ''
-                        },
-                        'Supervisor': {
-                            value: ''
-                        },
-                        'Products': {
-                            value: [{
-                                name: '',
-                                rate: '',
-                                date: '',
-                                quanity: ''
-                            }]
-                        }
-                    },
-
-                    timer: {
-                        time: '00:00:00'
-                    },
-                    creator: {
-                        phoneNumber: '',
-                    },
-                    office: 'Puja Capital',
-                    template: 'duty',
-                    schedule: [{
-                        startTime: Date.now(),
-                        endTime: Date.now(),
-                        name: 'Date'
-                    }],
-                    assignees: [{
-                        displayName: auth.displayName,
-                        photoURL: auth.photoURL,
-                        phoneNumber: auth.phoneNumber
-                    }],
-                    venue: [],
-                    canEdit: false,
-                    supervisior: null,
-                    currentDuty: true,
-                }
-            }
-            if (result.currentDuty.canEdit && !result.currentDuty.finished) {
-                const editBtn = createElement('button', {
-                    className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
-                    textContent: 'edit',
-                    id: 'edit-duty'
-                })
-                editBtn.addEventListener('click', function () {
-                    history.pushState(['updateDuty'], null, null);
-                    updateDuty(result.currentDuty);
-                })
-                document.getElementById('section-end').insertBefore(editBtn, document.getElementById('section-end').firstChild)
-            }
-
-            getCustomerPhoneNumber(result.currentDuty.attachment.Location.value).then(function (customerPhonenumber) {
-                result.currentDuty.customerPhonenumber = customerPhonenumber;
-                dom_root.appendChild(constructJobView(result));
-                if (result.currentDuty.finished) {
-                    if (worker) {
-                        worker.terminate();
-                        worker = null;
-                    }
-                    handleFinishedDuty(result.currentDuty);
-                    return;
-                }
-
-                if (result.currentDuty.activityId) {
-                    updateTimer(result.currentDuty.activityId, result.currentDuty.attachment.Location.value)
-                    return
-                }
-                if (worker) {
-                    worker.terminate();
-                    worker = null;
-                }
-            })
-        }).catch(console.error)
-}
-
-function handleFinishedDuty(duty) {
-    const el = document.querySelector('#time-clock');
-
-    const key = Object.keys(duty.timer);
-    el.innerHTML = duty.timer[key[0]].time
-
-}
-
-function createJobHeader() {
-
-    const keys = Object.keys(ApplicationState.officeWithCheckInSubs);
-    const appHeader = document.getElementById('app-header');
-    const sectionStart = document.getElementById('section-start')
-    const sectionEnd = document.getElementById('section-end');
-    sectionStart.innerHTML = '';
-    sectionEnd.innerHTML = '';
-    appHeader.classList.remove('hidden');
-
-    const reportIcon = createElement('button', {
-        className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
-        textContent: 'home'
-    })
-    reportIcon.addEventListener('click', function () {
-        history.pushState(['jobs'], null, null);
-        jobs();
-    })
-    sectionEnd.appendChild(reportIcon);
-
-    if (ApplicationState.venue) {
-        sectionStart.innerHTML = `<span class="mdc-top-app-bar__title">${ApplicationState.venue.office}</span>`
-        getJobData(ApplicationState.venue.office);
-        return
-    }
-    if (keys.length == 1) {
-        sectionStart.innerHTML = `<span class="mdc-top-app-bar__title">${keys[0]}</span>`
-        getJobData(keys[0])
-        return
-    }
-
-    const select = mdcSelect(keys);
-    select.root_.classList.add('office-select--header');
-    sectionStart.appendChild(select.root_)
-    select.listen('MDCSelect:change', function (e) {
+    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Duty</span>`, ``);
+    header.root_.classList.remove("hidden");
+    getCurrentJob().then(function (currentDuty) {
+        duty = currentDuty;
+        duty.isActive = true
+        return getCustomerPhoneNumber(currentDuty.attachment.Location.value)
+    }).then(function (customerPhonenumber) {
+        console.log(duty);
+        duty.customerPhonenumber = customerPhonenumber;
+        dom_root.appendChild(constructJobView(duty));
+    
+        if (duty.activityId) {
+            updateTimer(duty.activityId)
+            return
+        }
         if (worker) {
             worker.terminate();
             worker = null;
         }
-        getJobData(e.detail.value);
+    });
+};
+
+
+
+
+function getCurrentJob() {
+    return new Promise(function (resolve, reject) {
+        const office = ApplicationState.selectedOffice;
+        const tx = db.transaction('activity');
+        const store = tx.objectStore('activity');
+        const auth = firebase.auth().currentUser;
+
+        let record = {
+            attachment: {
+                'Duty Type': {
+                    value: '',
+                    type: 'duty'
+                },
+                'Location': {
+                    value: ApplicationState.venue ? ApplicationState.venue.location : ''
+                },
+                'Include': {
+                    value: ''
+                },
+                'Supervisor': {
+                    value: ''
+                },
+                'Products': {
+                    value: [{
+                        name: '',
+                        rate: '',
+                        date: '',
+                        quanity: ''
+                    }]
+                }
+            },
+            "checkins": [],
+            "calls": [],
+            creator: {
+                phoneNumber: '',
+                displayName:'',
+                photoURL:''
+            },
+            office: ApplicationState.selectedOffice,
+            template: 'duty',
+            schedule: [{
+                startTime: Date.now(),
+                endTime: Date.now(),
+                name: 'Date'
+            }],
+            assignees: [{
+                displayName: auth.displayName,
+                photoURL: auth.photoURL,
+                phoneNumber: auth.phoneNumber
+            }],
+            venue: [],
+            canEdit: false,
+            supervisior: null,
+            currentDuty: true,
+            timestamp: Date.now(),
+        };
+        store.index('timestamp').openCursor(ApplicationState.lastCheckInCreated).onsuccess = function (e) {
+            const cursor = e.target.result;
+            if (!cursor) return;
+            if (cursor.value.office !== office) {
+                cursor.continue();
+                return;
+            }
+            if (cursor.value.template !== 'duty') {
+                cursor.continue();
+                return;
+            }
+            record = cursor.value;
+            cursor.continue();
+        }
+        tx.oncomplete = function () {
+
+            resolve(record)
+        }
     })
-    getJobData(select.value)
 }
 
-function updateTimer(activityId, location) {
+
+function handleFinishedDuty(duty) {
+    const el = document.querySelector('#time-clock');
+    el.innerHTML = duty.timer.time
+}
+
+function createAppHeader() {
+
+    const header = setHeader(`
+    <span class="mdc-top-app-bar__title">OnDuty</span>
+    `, `<div class="mdc-menu-surface--anchor">
+        <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Profile" id='settings-icon'>more_vert</button>
+        <div class="mdc-menu mdc-menu-surface">
+            <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
+                <li class="mdc-list-item" role="menuitem">
+                    <span class="mdc-list-item__text">Settings</span>
+                </li>
+            </ul>
+        </div>
+    </div>`);
+    header.root_.classList.remove('hidden');
+    const menu = new mdc.menu.MDCMenu(header.root_.querySelector('.mdc-menu-surface'));
+    document.getElementById('settings-icon').addEventListener('click', function () {
+        menu.open = true;
+        menu.listen('MDCMenu:selected', function () {
+            history.pushState(['profileScreen'], null, null);
+            profileScreen();
+        })
+    });
+    return header;
+}
+
+function updateTimer(activityId) {
     if (!worker) {
         worker = new Worker('js/timer-worker.js');
     }
     worker.onmessage = function (e) {
         const time = e.data;
         const el = document.querySelector('#time-clock');
-        if (!el) return
+        
+        if (!el) return;
+        // if(el.dataset.id !== activityId) return;
         el.innerHTML = time;
     }
     worker.postMessage({
         name: 'startTimer',
         uid: firebase.auth().currentUser.uid,
         dutyId: activityId,
-        location: location
+
     });
 }
 
@@ -400,13 +385,16 @@ function dutyScreen(duty) {
                 </span>` :''}            
            </div>
            <div class='full-width mb-10 mt-10 counter-container text-center'>
-                ${duty.finished ? `<div class='mdc-typography--headline6 bold' style='color:#7C909E;'>Duty finished at ${moment(duty.timer.timestamp).format('hh:mm A')}</div>` : `<div class='mdc-typography--headline6 bold' style='color:#7C909E;'>Duty started ${duty.creator.phoneNumber ? '' :`at ${showDutySchedule(duty)}`}</div>`}
-                <div id='time-clock' class='mdc-typography--headline3 bold mb-10'></div>
-                ${duty.finished ? '' :`<div class='finish-button--container mt-20'>
+                
+        
+                ${duty.isActive ? `
+                <div class='mdc-typography--headline6 bold' style='color:#7C909E;'>Duty started ${duty.creator.phoneNumber ? '' :`at ${formatCreatedTime(duty.schedule[0].startTime)}`}</div>
+                <div id='time-clock' class='mdc-typography--headline3 bold mb-10' data-id="${duty.activityId}"></div>
+                <div class='finish-button--container mt-20'>
                         ${createExtendedFab('check','finish job','finish').outerHTML}
-                </div>`}
+                </div>` :''}
 
-                ${duty.creator.phoneNumber ?`<div class='schedule mt-10'>
+                ${duty.creator.phoneNumber || !duty.isActive ?`<div class='schedule mt-10 text-left'>
                     <span class='inline-flex'>
                         <i class='material-icons  mdc-theme--secondary'>access_time</i>
                         <span class='mdc-typography--headline6 ml-10'>${showDutySchedule(duty)}</span>
@@ -455,113 +443,110 @@ function dutyScreen(duty) {
 
 function showDutySchedule(duty) {
 
-    if (!duty.creator.phoneNumber) {
-        return moment(duty.schedule[0].startTime).format('hh:mm A')
-    }
     return `${moment(duty.schedule[0].startTime).format('hh:mm A')} to ${moment(duty.schedule[0].endTime).format('hh:mm A')}`
 }
 
 
-function constructJobView(result) {
-
-    let totalCheckins = 0;
-    let totalPhotoCheckins = 0;
-    const timeLineUl = createElement('ul', {
-        className: 'tl'
+const createImageLi = (url, supportingText) => {
+    const li = createElement('li', {
+        className: 'mdc-image-list__item'
     })
-    let photoLi = document.createDocumentFragment();
-    result.timelineData.forEach(function (activity) {
-        if (activity.template === 'check-in') {
-            totalCheckins++
-            if (activity.attachment.Photo.value) {
-                totalPhotoCheckins++
-                const li = createElement('li', {
-                    className: 'mdc-image-list__item'
-                })
-                li.innerHTML = `<div class="mdc-image-list__image-aspect-container">
-                        <img class="mdc-image-list__image" src="${activity.attachment.Photo.value}" alt="Text label">
-                </div>
-                <div class="mdc-image-list__supporting">
-                    <span class="mdc-image-list__label">${moment(activity.timestamp).format('hh:mm A')}</span>
-                </div>`;
-                li.addEventListener('click', function () {
-                    const dialog = new Dialog(activity.attachment.Comment.value, createElement('img', {
-                        src: activity.attachment.Photo.value,
-                        style: 'width:100%'
-                    })).create('')
-                    dialog.open();
-                })
-                photoLi.appendChild(li);
-            }
-        };
-        if (activity.template === 'duty') return;
-        timeLineUl.appendChild(createTimelineLi(activity))
-    });
+    li.innerHTML = `<div class="mdc-image-list__image-aspect-container">
+                <img class="mdc-image-list__image" src="${url}" alt="Text label">
+        </div>
+        <div class="mdc-image-list__supporting">
+            <span class="mdc-image-list__label">${supportingText}</span>
+        </div>`;
+    return li;
+}
 
+function constructJobView(duty) {
+    if (duty.canEdit && duty.isActive) {
+        const editBtn = createElement('button', {
+            className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
+            textContent: 'edit',
+            id: 'edit-duty'
+        })
+        editBtn.addEventListener('click', function () {
+            history.pushState(['updateDuty'], null, null);
+            updateDuty(result.currentDuty);
+        })
+        document.getElementById('section-end').insertBefore(editBtn, document.getElementById('section-end').firstChild)
+    }
     const el = createElement('div', {
         className: 'mdc-layout-grid job-screen'
     })
-    el.appendChild(dutyScreen(result.currentDuty));
-
+    
+    el.appendChild(dutyScreen(duty));
     const timeline = createElement('div', {
         className: 'mdc-card timeline-overview mt-10'
-    })
-    const checkinUl = createElement('ul', {
-        className: 'mdc-list'
     })
     const imageList = createElement('ul', {
         className: 'mdc-image-list standard-image-list mdc-image-list--with-text-protection'
     })
+    if (duty.hasOwnProperty('checkins')) {
+        duty.checkins.forEach(function (activity) {
+            if (activity.attachment.Photo.value) {
 
-    if (totalCheckins) {
-        const checkinLi = createElement('li', {
-            className: 'mdc-list-item  pl-0 pr-0 mdc-typography--headline6'
-        })
-        checkinLi.innerHTML = `<span class='mdc-list-item__graphic material-icons mdc-theme--secondary'>check_circle</span>
-        ${totalCheckins} Check-Ins
-        <span class='mdc-list-item__meta material-icons'>history</span>`;
-        checkinLi.addEventListener('click', function () {
-            history.pushState(['timeline'], null, null);
-            createTimeLapse(timeLineUl)
-        })
-        checkinUl.appendChild(checkinLi)
-    }
+                const imageLi = createImageLi(activity.attachment.Photo.value, formatCreatedTime(activity.timestamp))
+                imageLi.addEventListener('click', function () {
+                    const cont = createElement('div', {
+                        className: 'full-width'
+                    })
+                    const ul = createElement('ul', {
+                        className: 'mdc-list mdc-list--two-line mdc-list--avatar-list pt-0'
+                    })
+                    const creatorLi = createElement('li', {
+                        className: 'mdc-list-item pl-0 pr-0'
+                    })
+                    creatorLi.innerHTML = `<img src="${activity.creator.photoURL || './img/empty-user.jpg'}" class="mdc-list-item__graphic">
+                    <span class="mdc-list-item__text">
+                           <span class="mdc-list-item__primary-text">${activity.creator.displayName || activity.creator.phoneNumber}</span>
+                           <span class="mdc-list-item__secondary-text">${formatCreatedTime(activity.timestamp)}</span>
+                       </span>`
+                    ul.appendChild(creatorLi);
 
-    if (totalPhotoCheckins) {
-        const photoCheckinLi = createElement('li', {
-            className: 'mdc-list-item  pl-0 pr-0 mdc-typography--headline6'
-        })
-        photoCheckinLi.innerHTML = `<span class='mdc-list-item__graphic material-icons mdc-theme--secondary'>image</span>
-        ${totalPhotoCheckins} Photos uploaded`
+                    cont.appendChild(ul);
+                    if (activity.attachment.Comment.value) {
+                        cont.appendChild(createElement('p', {
+                            className: 'mdc-typography--body1 mt-0',
+                            textContent: activity.attachment.Comment.value
+                        }));
+                    }
+                    cont.appendChild(createElement('img', {
+                        src: activity.attachment.Photo.value,
+                        style: 'width:100%'
+                    }))
+                    const dialog = new Dialog('', cont).create('')
+                    dialog.open();
+                })
 
-        imageList.appendChild(photoLi);
-        checkinUl.appendChild(photoCheckinLi)
-    }
-    timeline.appendChild(checkinUl);
-    timeline.appendChild(imageList);
+                imageList.appendChild(imageLi);
+            }
+        });
+    };
 
-    const finish = el.querySelector('#finish');
-    if (finish) {
+    if (imageList.childElementCount) {
+        timeline.appendChild(imageList);
+    };
+
+    if(duty.isActive) {
+        const finish = el.querySelector('#finish');
         finish.classList.add('mdc-button--raised');
         finish.addEventListener('click', function () {
-            getRatingSubsription(result.currentDuty)
+            getRatingSubsription(duty)
         });
-    }
-
-    if (!result.currentDuty.finished) {
-
         const photoBtn = createExtendedFab('add_a_photo', 'Upload photo', '', true);
         photoBtn.style.zIndex = '99'
-        el.appendChild(photoBtn);
         photoBtn.addEventListener('click', function () {
             history.pushState(['cameraView'], null, null)
             openCamera()
         });
+        el.appendChild(photoBtn);
+
     }
 
-    if (totalCheckins || totalPhotoCheckins) {
-        el.appendChild(timeline)
-    }
+    el.appendChild(timeline)
     return el;
 }
 
@@ -788,26 +773,6 @@ function checkForDuty(duty) {
     // }
 }
 
-function comingSoon(id) {
-
-    const el = document.getElementById(id)
-    el.innerHTML = ``
-
-    const cont = createElement('div', {
-        className: 'coming--soon-container mdc-top-app-bar--fixed-adjust'
-    })
-
-    const img = createElement('img', {
-        src: './img/coming-soon.svg',
-    })
-    const div = createElement('div', {
-        className: 'mdc-typography--headline4 bold text-center mt-20',
-        textContent: "Coming soon"
-    })
-    cont.appendChild(img)
-    cont.appendChild(div)
-    el.appendChild(cont);
-}
 
 function getAllCustomer(office) {
     return new Promise(function (resolve, reject) {
@@ -1118,16 +1083,8 @@ function createProductScreen(products, savedProduct = {
 }
 
 
-function jobs(office) {
-    const header = setHeader(`
-    <a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title"></span>
-    `, `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Profile" id='profile-icon'>account_circle</button>`);
-    header.root_.classList.remove('hidden');
-    document.getElementById('profile-icon').addEventListener('click', function () {
-        history.pushState(['profileScreen'], null, null);
-        profileScreen();
-    });
+function appView() {
+    createAppHeader();
     const tabs = [{
         id: 'home-icon',
         icon: 'home',
@@ -1137,46 +1094,50 @@ function jobs(office) {
         icon: 'contacts',
         name: 'Contacts'
     }]
+    dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = `
-      <div class='tabs-section'>
+      <div class='tabs-section app-tabs'>
           ${showTabs(tabs)}
-          <div id='tab-content'></div>
+          <div id='app-tab-content'></div>
       </div>`
-    const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-    tabList.listen('MDCTabBar:activated', function (evt) {
+    appTabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+    appTabBar.listen('MDCTabBar:activated', function (evt) {
         if (document.getElementById('search-btn')) {
             document.getElementById('search-btn').remove();
         }
         if (evt.detail.index == 0) {
-            document.querySelector('.mdc-top-app-bar__title').textContent = 'Home'
-            calendarView(office);
+            showAllDuties();
             return
         }
         if (evt.detail.index == 1) {
-            document.querySelector('.mdc-top-app-bar__title').textContent = 'Contacts'
             chatView()
             return
         }
     });
-    tabList.activateTab(0)
+    appTabBar.activateTab(0)
 }
-function calendarView(office)  {
+
+
+
+
+
+
+function showAllDuties() {
     const tx = db.transaction('activity');
     const store = tx.objectStore('activity');
-    const dateObject = {}
+
     const dutiesCont = createElement('div', {
-        className: 'all-duties mdc-layout-grid'
+        className: 'all-duties'
     })
-  
+    const dutiesUl = createElement('ul', {
+        className: 'mdc-list mdc-list--two-line mdc-list--avatar-list duties--ul'
+    })
 
-
+    const activities = []
     store.index('template').openCursor('duty').onsuccess = function (evt) {
         const cursor = evt.target.result;
         if (!cursor) return;
-        if (office && cursor.value.office !== office) {
-            cursor.continue();
-            return
-        }
+
         if (!Array.isArray(cursor.value.schedule)) {
             cursor.continue();
             return
@@ -1185,82 +1146,81 @@ function calendarView(office)  {
             cursor.continue();
             return
         }
-        const dutyStartDate = moment(cursor.value.schedule[0].startTime).startOf('day').valueOf()
-
-        if (!dateObject[dutyStartDate]) {
-            dateObject[dutyStartDate] = [cursor.value]
-        } else {
-            dateObject[dutyStartDate].push(cursor.value)
-        }
+        activities.push(cursor.value)
         cursor.continue()
     }
     tx.oncomplete = function () {
 
-        const sortedDates = Object.keys(dateObject).sort(function (a, b) {
-            return Number(b) - Number(a);
+        const sortedDates = activities.sort(function (a, b) {
+            return b.timestamp - a.timestamp;
         })
-        let month;
-        const frag = document.createDocumentFragment();
-        sortedDates.forEach(function (timestamp) {
-            const dutyDate = new Date(Number(timestamp));
-            if (month !== dutyDate.getMonth() + 1) {
-                const sect = createElement('div', {
-                    className: 'hr-sect mdc-typography--headline5',
-                    textContent: `${moment(`${dutyDate.getMonth() + 1}-${dutyDate.getFullYear()}`,'MM-YYYY').format('MMMM YYYY')}`
-                })
-                month = dutyDate.getMonth() + 1
-                frag.appendChild(sect)
-            }
-            const li = dutyDateList(dateObject[timestamp], dutyDate);
+        const hasMultipleOffice = Object.keys(ApplicationState.officeWithCheckInSubs).length > 1;
+        sortedDates.forEach(function (activity) {
 
-            frag.appendChild(li);
+            const li = dutyDateList(activity, hasMultipleOffice);
+            li.addEventListener('click', function () {
+                if (activity.timestamp === ApplicationState.lastCheckInCreated) {
+                    history.pushState(['jobView'],null,null)
+                    jobView();
+                    return
+                }
+                getCustomerPhoneNumber(activity.attachment.Location.value).then(function (customerPhonenumber) {
+                    history.pushState(['jobView'],null,null)
+                    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Duty</span>`, ``);
+                    activity.customerPhonenumber = customerPhonenumber;
+                    dom_root.innerHTML = '';
+                    if (worker) {
+                        worker.terminate();
+                        worker = null;
+                    }
+                    activity.isActive = false;
+                    dom_root.appendChild(constructJobView(activity));
+                })
+            })
+            dutiesUl.appendChild(li);
+            dutiesUl.appendChild(createElement('li', {
+                className: 'mdc-list-divider'
+            }))
         })
-        dutiesCont.appendChild(frag);
+        dutiesCont.appendChild(dutiesUl);
+        new mdc.list.MDCList(dutiesUl)
         getReportSubscriptions('attendance').then(function (subs) {
             if (!subs.length) return;
             dutiesCont.appendChild(createTemplateButton(subs))
         })
-        const el = document.getElementById('tab-content');
+        const el = document.getElementById('app-tab-content');
         el.innerHTML = ``;
         el.appendChild(dutiesCont);
-
     }
 }
-function dutyDateList(duties, dutyDate) {
 
-    const card = createElement('div', {
-        className: 'mdc-card report-card job-card mdc-card--outlined attendance-card mdc-layout-grid__cell mdc-layout-grid__cell--span-6-desktop mdc-layout-grid__cell--span-8-tablet'
+
+
+function dutyDateList(duty, multipleOffice) {
+    const li = createElement('li', {
+        className: 'mdc-list-item'
     })
 
-    card.innerHTML = `<div class='mdc-card__primary-action'>
-    <div class="demo-card__primary">
-        <div class='left'>
-            <div class="month-date-cont">
-                <div class="day">${moment(`${dutyDate.getDate()}-${dutyDate.getMonth() + 1}-${dutyDate.getFullYear()}`, 'DD-MM-YYYY').format('ddd')}</div>
-                <div class="date">${dutyDate.getDate()}</div>
-            </div>
-        </div>
-    </div>
-    <div class='detail-container'>
-            <ul class='mdc-list mdc-list--two-line'>
-                ${duties.map(function(duty){
-                    return `<li class='mdc-list-item' style='height:110px'>
-                        <span class='mdc-list-item__text'>
-                            <span class='mdc-list-item__primary-text'>${duty.activityName}</span>
-                            <span class='mdc-list-item__secondary-text'>${moment(duty.schedule[0].startTime).format('hh:mm A')} To ${moment(duty.schedule[0].endTime).format('hh:mm A')}</span>
-                            <span class='mdc-list-item__secondary-text'>${duty.office}</span>
-                            <div class='${getDutyStatus(duty)}'>${getDutyStatus(duty)}</div>
-                        </span>
-                    </li>`
-                }).join("")}
-            </ul>
-    </div>
-</div>`
-    return card;
-
+    if (multipleOffice) {
+        li.classList.add('mdc-list--with-office')
+    }
+    li.innerHTML = `<span class="mdc-list-item__text">
+      
+        <span class="mdc-list-item__primary-text">
+            ${duty.timestamp === ApplicationState.lastCheckInCreated ? `<span class='active'>●</span>`:''}
+            ${duty.attachment.Location.value}
+        </span>
+        <span class="mdc-list-item__secondary-text bold">
+            ${formatCreatedTime(duty.schedule[0].startTime)} - ${formatCreatedTime(duty.schedule[0].endTime)}
+        </span>
+        ${multipleOffice ?  `<span class="mdc-list-item__secondary-text">
+            ${duty.office}
+        </span>` :''}
+        
+    </span>`
+    new mdc.ripple.MDCRipple(li);
+    return li
 }
-
-
 
 function createProductSelect(products) {
 
@@ -1386,4 +1346,30 @@ function getReportSubscriptions(name) {
             resolve(result);
         }
     });
+}
+
+
+function showTabs(tabs) {
+
+    return `<div class="mdc-tab-bar" role="tablist">
+      <div class="mdc-tab-scroller">
+        <div class="mdc-tab-scroller__scroll-area">
+          <div class="mdc-tab-scroller__scroll-content">
+        
+            ${tabs.map(function(tab){
+                return `
+                <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${tab.id || ''}>
+                <span class="mdc-tab__content">
+                  <span class="mdc-tab__text-label">${tab.name}</span>
+                  <span class="mdc-tab-indicator">
+                    <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+                  </span>
+                </span>
+                <span class="mdc-tab__ripple"></span>
+              </button>`
+            }).join("")}
+          </div>
+        </div>
+      </div>
+    </div>`
 }

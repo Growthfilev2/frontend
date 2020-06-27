@@ -195,3 +195,13 @@
 .id-container .image-container .add-icon-cont .mdc-icon-button {
     border-radius: 50%;
 }
+
+
+.help-list li a {
+    text-decoration: none;
+    color: black;
+}
+
+.add-bank-container .text-field-container {
+    margin-top: 10px;
+}
