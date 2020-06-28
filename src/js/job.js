@@ -2,7 +2,7 @@ let worker;
 
 
 function jobView() {
-
+    progressBar.close();
     let duty;
     dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = '';
@@ -469,7 +469,7 @@ function constructJobView(duty) {
         })
         editBtn.addEventListener('click', function () {
             history.pushState(['updateDuty'], null, null);
-            updateDuty(result.currentDuty);
+            updateDuty(duty);
         })
         document.getElementById('section-end').insertBefore(editBtn, document.getElementById('section-end').firstChild)
     }
@@ -872,6 +872,7 @@ function convertNumberToINR(amount) {
 
 
 function updateDuty(duty) {
+    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Edit duty</span>`,``)
     const container = createElement('div', {
         className: 'update-duty--container'
     })

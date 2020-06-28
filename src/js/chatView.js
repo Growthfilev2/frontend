@@ -16,7 +16,7 @@ function chatView() {
             id: 'search-btn',
             textContent: 'search'
         });
-        document.getElementById('section-end').appendChild(searchIcon);
+        document.getElementById('section-end').insertBefore(searchIcon, document.getElementById('section-end').firstChild);
         searchIcon.addEventListener('click', function () {
             history.pushState(['searchChats'], null, null)
             search()
@@ -163,6 +163,8 @@ function search() {
     document.querySelector('#search-users-container .search-field').innerHTML = searchBar();
     const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
     searchInit.focus();
+    appTabBar.root_.classList.add('hidden')
+
     searchInit.input_.addEventListener('input', function (evt) {
         searchInit.trailingIcon_.root_.classList.remove('hidden')
         if (!evt.target.value) {
@@ -371,7 +373,7 @@ function readLatestChats(initList) {
 function initializeChatList(chatsUl) {
 
     chatsUl.listen('MDCList:action', function (evt) {
-        const userRecord = currentChatsArray[evt.detail.index]
+        const userRecord = currentChatsArray[evt.detail.index];
         if (history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
         } else {
@@ -955,6 +957,7 @@ function closeSearchBar() {
         document.getElementById('search-users').classList.add('hidden')
     }
     document.getElementById('app-header').classList.remove("hidden")
+    appTabBar.root_.classList.remove('hidden')
 }
 
 function searchInitBack(searchInit) {
