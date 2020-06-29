@@ -729,7 +729,7 @@ function handleCheckin(geopoint, noUser) {
           })
           return
         }
-        if (isAdmin(result[0] || result[1])) return initProfileView();
+        if (isAdmin(result[0]) || result[1]) return initProfileView();
         if (noUser) return noOfficeFoundScreen();
       })
    
