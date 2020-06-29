@@ -84,10 +84,11 @@ function getCurrentJob() {
             venue: [],
             canEdit: false,
             supervisior: null,
-            currentDuty: true,
+            isActive:false,
             timestamp: Date.now(),
         };
-        store.index('timestamp').openCursor(ApplicationState.lastCheckInCreated).onsuccess = function (e) {
+        const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
+        store.index('timestamp').openCursor(bound).onsuccess = function (e) {
             const cursor = e.target.result;
             if (!cursor) return;
             if (cursor.value.office !== office) {
@@ -97,12 +98,25 @@ function getCurrentJob() {
             if (cursor.value.template !== 'duty') {
                 cursor.continue();
                 return;
+            };
+            if(!isToday(cursor.value.schedule[0].startTime)) {
+                cursor.continue();
+                return;
             }
+            if(!ApplicationState.venue) {
+                cursor.continue();
+                return
+            }
+            if(cursor.value.attachment.Location.value !== ApplicationState.venue.location)  {
+                cursor.continue();
+                return
+            };
+            console.log('matched location with duty location')
+            console.log(record);
             record = cursor.value;
             cursor.continue();
         }
         tx.oncomplete = function () {
-
             resolve(record)
         }
     })

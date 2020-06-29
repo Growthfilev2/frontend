@@ -412,36 +412,49 @@ function handleComponentUpdation(readResponse) {
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
   });
 
+  const tx = db.transaction('map');
+  const store = tx.objectStore('map');
+  let mapRecord;
   readResponse.activities.forEach(function (activity) {
-    if (activity.template === 'duty') {
-      checkForDuty(activity);
+    if (activity.template !== 'duty') return;
+    if(!ApplicationState.venue) {
+        store.index('location').get(activity.attachment.Location.value).onsuccess = function(e){
+          mapRecord = e.target.result;
+        }
     }
+    checkForDuty(activity);
   })
-
-
-  if (!history.state) return;
-  switch (history.state[0]) {
-    case 'enterChat':
-      if (!readResponse.addendum.length) return;
-      dynamicAppendChats(readResponse.addendum)
-      break;
-    case 'chatView':
-      if (!readResponse.addendum.length) return;
-      readLatestChats(false);
-      break;
-    case 'jobView':
-      if (document.getElementById('rating-view')) return;
-      jobView();
-      break;
-    case 'appView':
-      if (appTabBar && document.getElementById('app-tab-content')) {
-        const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
-        appTabBar.activateTab(selectedIndex);
-      }
-      break;
-    default:
-      console.log("no refresh")
+  tx.oncomplete = function(){
+    if(mapRecord) {
+      console.log('setting venue as',mapRecord)
+      ApplicationState.venue = mapRecord;
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    }
+    if (!history.state) return;
+    switch (history.state[0]) {
+      case 'enterChat':
+        if (!readResponse.addendum.length) return;
+        dynamicAppendChats(readResponse.addendum)
+        break;
+      case 'chatView':
+        if (!readResponse.addendum.length) return;
+        readLatestChats(false);
+        break;
+      case 'jobView':
+        if (document.getElementById('rating-view')) return;
+        jobView();
+        break;
+      case 'appView':
+        if (appTabBar && document.getElementById('app-tab-content')) {
+          const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
+          appTabBar.activateTab(selectedIndex);
+        }
+        break;
+      default:
+        console.log("no refresh")
+    }
   }
+
 }
 
 /** function call to be removed from apk */
@@ -822,7 +835,7 @@ function showAadhar(record) {
 function idProofView(callback) {
   getRootRecord().then(function (rootRecord) {
     const auth = firebase.auth().currentUser;
-    const ids =  {
+    const ids = {
       'aadhar': {
         'front': '',
         'back': '',
@@ -833,12 +846,12 @@ function idProofView(callback) {
         'number': ''
       }
     }
-    if(rootRecord.aadhar) {
-        ids.aadhar.front = rootRecord.aadhar.front
-        ids.aadhar.back = rootRecord.aadhar.back;
-        ids.aadhar.number = rootRecord.aadhar.number
+    if (rootRecord.aadhar) {
+      ids.aadhar.front = rootRecord.aadhar.front
+      ids.aadhar.back = rootRecord.aadhar.back;
+      ids.aadhar.number = rootRecord.aadhar.number
     }
-    if(rootRecord.pan) {
+    if (rootRecord.pan) {
       ids.pan.front = rootRecord.pan.front;
       ids.pan.number = rootRecord.pan.number;
     }
