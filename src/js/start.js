@@ -39,16 +39,14 @@ function isAdmin(idTokenResult,office) {
 
 
 function giveSubscriptionInit(office) {
-    requestCreator('shareLink',{
-        office:office
-    }).then(function(response){
-        const link = response.shortLink;
-        dom_root.innerHTML = '';
-        const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-        <span class="mdc-top-app-bar__title">Add users</span>
-        `
-        const header = setHeader(backIcon, '');
-        header.root_.classList.remove('hidden')
-        dom_root.appendChild(shareWidget(link, office));
-    }).catch(console.log)
+    
+    // requestCreator('shareLink',{
+    //     office:office
+    // }).then(function(response){
+        history.pushState(['shareLink'], null, null);
+        // const link = response.shortLink;    
+        const link = 'https://growthfile.page.link/naxz'    
+        const dialog = new Dialog('Invitation link',shareWidget(link, office)).create('simple'); 
+        dialog.open();      
+    // }).catch(console.log)
 }

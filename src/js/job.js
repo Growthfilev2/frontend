@@ -129,14 +129,14 @@ function handleFinishedDuty(duty) {
 }
 
 function createAppHeader() {
-
+    
     const header = setHeader(`
     <span class="mdc-top-app-bar__title">OnDuty</span>
     `, `<div class="mdc-menu-surface--anchor">
         <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Profile" id='settings-icon'>more_vert</button>
-        <div class="mdc-menu mdc-menu-surface">
+        <div class="mdc-menu mdc-menu-surface" id='app-menu'>
             <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
-                <li class="mdc-list-item" role="menuitem">
+                <li class="mdc-list-item" role="menuitem" data-type='settings'>
                     <span class="mdc-list-item__text">Settings</span>
                 </li>
             </ul>
@@ -146,9 +146,30 @@ function createAppHeader() {
     const menu = new mdc.menu.MDCMenu(header.root_.querySelector('.mdc-menu-surface'));
     document.getElementById('settings-icon').addEventListener('click', function () {
         menu.open = true;
-        menu.listen('MDCMenu:selected', function () {
-            history.pushState(['profileScreen'], null, null);
-            profileScreen();
+        menu.listen('MDCMenu:selected', function (e) {
+            console.log(e)
+            if(e.detail.item.dataset.type == 'settings') {
+                history.pushState(['profileScreen'], null, null);
+                profileScreen();
+                return
+            };
+            if(e.detail.item.dataset.type == 'share') {
+                const offices = JSON.parse(e.detail.item.dataset.offices);
+                if(offices.length == 1) {
+                   
+                    giveSubscriptionInit(offices[0]);
+                    return
+                };
+
+                const officeDialog = new Dialog('Choose office', officeSelectionList(offices), 'choose-office-subscription').create('simple');
+                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+                bottomDialog(officeDialog, offieList);
+                offieList.listen('MDCList:action', function (officeEvent) {
+                    officeDialog.close();
+                  
+                    giveSubscriptionInit(offices[officeEvent.detail.index]);
+                })
+            }
         })
     });
     return header;
@@ -568,7 +589,6 @@ function getRatingSubsription(duty) {
     getSubscription(duty.office, 'call').then(function (subs) {
         console.log(subs)
         if (!subs.length) {
-
             markDutyFinished({
                 dutyId: duty.activityId,
                 office: duty.office
@@ -591,14 +611,14 @@ function getRatingSubsription(duty) {
                 }
             }
             if (subs.length == 1) return showRating(subs[0], customer, duty.activityId);
-            const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
-            const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(officeDialog, officeList)
-            officeList.listen('MDCList:action', function (officeEvent) {
-                officeDialog.close();
-                const selectedSubscription = subs[officeEvent.detail.index];
-                showRating(selectedSubscription, customer, duty.activityId);
-            })
+            // const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+            // const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+            // bottomDialog(officeDialog, officeList)
+            // officeList.listen('MDCList:action', function (officeEvent) {
+            //     officeDialog.close();
+            //     const selectedSubscription = subs[officeEvent.detail.index];
+            //     showRating(selectedSubscription, customer, duty.activityId);
+            // })
         }
     })
 }
@@ -1121,6 +1141,10 @@ function appView() {
             document.getElementById('search-btn').remove();
         }
         if (evt.detail.index == 0) {
+            const shareMenu =  document.querySelector('#app-menu ul li[data-type="share"]')
+            if(shareMenu) {
+                shareMenu.remove()
+            }
             showAllDuties();
             return
         }
@@ -1198,9 +1222,10 @@ function showAllDuties() {
             }))
         })
         dutiesCont.appendChild(dutiesUl);
-        new mdc.list.MDCList(dutiesUl)
+        new mdc.list.MDCList(dutiesUl);
         getReportSubscriptions('attendance').then(function (subs) {
-            if (!subs.length) return;
+            if (!subs.length) return;   
+
             dutiesCont.appendChild(createTemplateButton(subs))
         })
         const el = document.getElementById('app-tab-content');
@@ -1280,7 +1305,7 @@ function getDutyStatus(duty) {
 
 function createTemplateButton(subs) {
 
-    const button = createFab('add')
+    const button = createExtendedFab('add','Apply leave','',true);
     button.addEventListener('click', function () {
         if (subs.length == 1) {
             history.pushState(['addView'], null, null);

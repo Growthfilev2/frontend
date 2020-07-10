@@ -73,7 +73,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-
+    return resolve({
+      latitude:24.123123,
+      longitude:76.566464,
+      lastLocationTime:Date.now()
+    })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -414,20 +418,28 @@ function handleComponentUpdation(readResponse) {
 
   const tx = db.transaction('map');
   const store = tx.objectStore('map');
-  let mapRecord;
+  const dutyLocations = []
   readResponse.activities.forEach(function (activity) {
     if (activity.template !== 'duty') return;
-    if(!ApplicationState.venue) {
-        store.index('location').get(activity.attachment.Location.value).onsuccess = function(e){
-          mapRecord = e.target.result;
-        }
+
+    if (!ApplicationState.venue) {
+      console.log('no Application state venue')
+      store.index('location').get(activity.attachment.Location.value).onsuccess = function (e) {
+        const locationRecord = e.target.result;
+        if(!locationRecord) return
+        locationRecord.distance = calculateDistanceBetweenTwoPoints(locationRecord,ApplicationState.location);
+        dutyLocations.push(locationRecord)
+      }
     }
     checkForDuty(activity);
-  })
-  tx.oncomplete = function(){
-    if(mapRecord) {
-      console.log('setting venue as',mapRecord)
-      ApplicationState.venue = mapRecord;
+  });
+  tx.oncomplete = function () {
+    if (dutyLocations.length) {
+      const sorted = dutyLocations.sort(function(a,b){
+        return a.distance - b.distance
+      });
+      console.log('setting venue as', sorted[0])
+      ApplicationState.venue = sorted[0];
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     }
     if (!history.state) return;
@@ -454,7 +466,6 @@ function handleComponentUpdation(readResponse) {
         console.log("no refresh")
     }
   }
-
 }
 
 /** function call to be removed from apk */
@@ -530,7 +541,7 @@ function getSubscription(office, template) {
       }
       return;
     }
-
+    
     if (office) {
       index = subscription.index('validSubscription')
       range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
@@ -1133,7 +1144,7 @@ function officeSelectionList(subscriptions) {
      ${subscriptions.map(function(sub){
        return `<li class='mdc-list-item'>
         <span class="mdc-list-item__text">
-          ${sub.office} 
+          ${typeof sub === 'string' ? sub : sub.office} 
         </span>      
        <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
          keyboard_arrow_right

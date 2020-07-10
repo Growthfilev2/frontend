@@ -60,8 +60,8 @@ function profileScreen() {
   })
   ul.appendChild(profileLi)
   ul.appendChild(createListDivider())
-  ul.appendChild(bank)
-  ul.appendChild(ids)
+  // ul.appendChild(bank)
+  // ul.appendChild(ids)
   ul.appendChild(help);
   dom_root.appendChild(ul)
 }

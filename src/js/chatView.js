@@ -25,92 +25,57 @@ function chatView() {
 
 
     sectionContent.innerHTML = chatDom();
-
-    Promise.all([firebase.auth().currentUser.getIdTokenResult(), getSubscription()]).then(function (result) {
-        // const isUserAdmin =  isAdmin(result[0]);
-        console.log(result);
-        const subscriptions = result[1]
-        const usersTemplate = {}
-        subscriptions.forEach(function (sub) {
-            if (sub.template === 'customer') {
-                if (!usersTemplate[sub.template]) {
-                    usersTemplate[sub.template] = [sub]
-                } else {
-                    usersTemplate[sub.template].push(sub)
-                }
+    getSubscription('','customer').then(function(subscriptions){
+        if(!subscriptions.length) return;
+        const btn = createExtendedFab('add','Add customer','',true);
+        btn.addEventListener('click',function(){
+            if(subscriptions.length == 1) {
+                getDropDownContent(subscriptions[0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                    history.pushState(['addView'], null, null);
+                    fillVenueInSub(subscriptions[0], {
+                        latitude: ApplicationState.location.latitude,
+                        longitude: ApplicationState.location.longitude
+                    });
+                    addView(subscriptions[0], customerTypes);
+                });
+                return
             }
+            const officeDialog = new Dialog('Choose office', officeSelectionList(subscriptions), 'choose-office-subscription').create('simple');
+            const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+            bottomDialog(officeDialog, offieList);
+            offieList.listen('MDCList:action', function (officeEvent) {
+                officeDialog.close();
+                getDropDownContent(subscriptions[officeEvent.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+                    history.pushState(['addView'], null, null);
+                    fillVenueInSub(subscriptions[officeEvent.detail.index], {
+                        latitude: ApplicationState.location.latitude,
+                        longitude: ApplicationState.location.longitude
+                    });
+                    addView(subscriptions[officeEvent.detail.index], customerTypes);
+                });
+            })
         })
-        if (isAdmin(result[0])) {
-            result[0].claims.admin.forEach(function(office) {
-                if (!usersTemplate['Add users']) {
-                    usersTemplate['Add users'] = [{
-                        office: office
-                    }]
-                } else {
-                    usersTemplate['Add users'].push({
-                        office: office
-                    })
-                }
-            })
-        }
-
-        if (!Object.keys(usersTemplate).length) return;
-        const addContactBtn = createFab('add');
-        document.querySelector('.user-chats').appendChild(addContactBtn);
-        addContactBtn.addEventListener('click', function () {
-
-
-            const dialog = new Dialog('', templateSelectionList(usersTemplate), 'choose-office-subscription').create('simple');
-            const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(dialog, ul);
-            ul.listen('MDCList:action', function (typeEvent) {
-                dialog.close()
-                const selectedType = Object.keys(usersTemplate)[typeEvent.detail.index]
-
-                if (usersTemplate[selectedType].length == 1) {
-                    if (selectedType === 'customer') {
-                        getDropDownContent(usersTemplate['customer'][0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                            history.pushState(['addView'], null, null);
-                            fillVenueInSub(usersTemplate['customer'][0], {
-                                latitude: ApplicationState.location.latitude,
-                                longitude: ApplicationState.location.longitude
-                            });
-                            addView(usersTemplate['customer'][0], customerTypes);
-                        });
-                        return
-                    }
-                    history.pushState(['shareLink'], null, null);
-                    giveSubscriptionInit(usersTemplate[selectedType][0].office);
-                    return
-                }
-
-
-                const officeDialog = new Dialog('Choose office', officeSelectionList(usersTemplate[selectedType]), 'choose-office-subscription').create('simple');
-                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-                bottomDialog(officeDialog, offieList);
-                offieList.listen('MDCList:action', function (officeEvent) {
-                    officeDialog.close();
-                    const selectedSubscription = usersTemplate[selectedType][officeEvent.detail.index];
-                    if (selectedType === 'customer') {
-                        getDropDownContent(selectedSubscription.office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                            history.pushState(['addView'], null, null);
-                            fillVenueInSub(selectedSubscription, {
-                                latitude: ApplicationState.location.latitude,
-                                longitude: ApplicationState.location.longitude
-                            });
-                            addView(selectedSubscription, customerTypes);
-                        });
-                        return
-                    }
-                    history.pushState(['shareLink'], null, null);
-                    giveSubscriptionInit(selectedSubscription.office);
-                })
-
-
-            })
-        });
+        sectionContent.appendChild(btn)
     })
 
+    firebase.auth().currentUser.getIdTokenResult().then(function(idTokenResult){
+        if(!isAdmin(idTokenResult)) return;
+        const li =  createElement('li',{
+            className:'mdc-list-item'
+        })
+        li.setAttribute('role','menuitem');
+        li.dataset.type = 'share';
+
+        li.dataset.offices = JSON.stringify([...new Set(idTokenResult.claims.admin)]);
+        const span = createElement('span',{
+            className:'mdc-list-item__text',
+            textContent:'Add users'
+        })
+        li.appendChild(span);
+        document.querySelector('#app-menu ul').insertBefore(li,document.querySelector('#app-menu ul').firstChild)
+        
+    })
+  
 
     readLatestChats(true);
 }

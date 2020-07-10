@@ -497,19 +497,13 @@ const shareWidget = (link, office) => {
     const el = createElement('div', {
         className: 'share-widget'
     })
-    const grid = createElement('div',{
-        className:'mdc-layout-grid'
-    })
-   
 
-    grid.appendChild(createElement('h3', {
-        className: 'mdc-typography--headline6 mb-10 mt-0 text-center',
-        textContent: 'Invite users to join'
-    }))
-    grid.appendChild(createElement('h3', {
-        className: 'mdc-typography--headline5 mt-10 text-center mdc-theme--primary',
-        textContent: office
-    }))
+    const widgetMessage = createElement('div', {
+        className: 'mdc-typography--body1 mb-10 mt-0',
+        innerHTML: `Invite users to join <span class='mdc-theme--primary bold'>${office}</span>`
+    })
+
+    el.appendChild(widgetMessage)
 
     const linkManager = createElement('div', {
         className: 'link-manager'
@@ -530,11 +524,10 @@ const shareWidget = (link, office) => {
         value: shareText + link
     })
     document.body.appendChild(tempInput)
-    copyRegionToClipboard(tempInput)
+    // copyRegionToClipboard(tempInput)
     tempInput.remove();
     
-    grid.appendChild(linkManager)
-    el.appendChild(grid)
+    el.appendChild(linkManager)
     
     return el;
 }

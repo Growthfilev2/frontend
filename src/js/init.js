@@ -607,11 +607,11 @@ function regulator() {
     })
 
     // if (!native.isFCMTokenChanged()) {
-      // prom = Promise.resolve();
+      prom = Promise.resolve();
     // } else {
-      prom = requestCreator('fcmToken', {
-        token: native.getFCMToken()
-      })
+      // prom = requestCreator('fcmToken', {
+      //   token: native.getFCMToken()
+      // })
     // }
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
@@ -1340,10 +1340,13 @@ function shouldCheckin(geopoint, checkInSubs) {
   const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
   if (!oldState) return true
   if (!oldState.lastCheckInCreated) return true
-
   const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
-  if (isOlder || hasChangedLocation) return true
+  if (isOlder || hasChangedLocation) {
+    console.log('Application state will be : new')
+    return true
+  }
+  console.log('Application state will be : old')
   ApplicationState = oldState;
   return false
 }
