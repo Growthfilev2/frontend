@@ -1406,6 +1406,10 @@ ul.tl li .item-detail {
 .app-tabs .mdc-tab-bar{
   background-color: var(--mdc-theme-primary);
   color: var(--mdc-theme-on-primary);
+  position: fixed;
+  top: 60px;
+  width: 100%;
+  z-index: 4;
 }
 .app-tabs .mdc-tab__text-label{
   color: var(--mdc-theme-on-primary);
@@ -1418,4 +1422,8 @@ ul.tl li .item-detail {
 }
 .app-tabs .mdc-tab__content {
   width: 100%;
+}
+.app-tabs #app-tab-content {
+  padding-top: 56px;
+  overflow-y: auto;
 }

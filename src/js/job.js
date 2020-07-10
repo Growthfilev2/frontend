@@ -4,10 +4,12 @@ let worker;
 function jobView() {
     progressBar.close();
     let duty;
-    dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
+    dom_root.classList.remove('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = '';
-    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Duty</span>`, ``);
-    header.root_.classList.remove("hidden");
+    document.getElementById('app-header').classList.add('hidden')
+    // const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Duty</span>`, ``);
+    // header.root_.classList.remove("hidden");
+
     getCurrentJob().then(function (currentDuty) {
         duty = currentDuty;
         duty.isActive = true
@@ -400,7 +402,12 @@ function dutyScreen(duty) {
     const container = createElement('div', {
         className: 'duty-container'
     })
-    container.innerHTML = `<div class='mdc-card duty-overview'>
+    container.innerHTML = `
+    <div class='duty-header'>
+    <button class='material-icons  mdc-icon-button' id='duty-back'>arrow_back</button>
+    ${duty.canEdit && duty.isActive ? `<button class='material-icons mdc-icon-button mdc-button--raised' id='edit-duty'>edit</button>` :''}
+    </div>
+    <div class='mdc-card duty-overview'>
        <div class='duty-details pt-10'>
            <div class='customer'>
                <div class='location full-width mb-10'>
@@ -496,18 +503,7 @@ const createImageLi = (url, supportingText) => {
 }
 
 function constructJobView(duty) {
-    if (duty.canEdit && duty.isActive) {
-        const editBtn = createElement('button', {
-            className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
-            textContent: 'edit',
-            id: 'edit-duty'
-        })
-        editBtn.addEventListener('click', function () {
-            history.pushState(['updateDuty'], null, null);
-            updateDuty(duty);
-        })
-        document.getElementById('section-end').insertBefore(editBtn, document.getElementById('section-end').firstChild)
-    }
+  
     const el = createElement('div', {
         className: 'mdc-layout-grid job-screen'
     })
@@ -563,7 +559,13 @@ function constructJobView(duty) {
 
     if (imageList.childElementCount) {
         timeline.appendChild(imageList);
-    };
+    }
+    else {
+        timeline.appendChild(createElement('div',{
+            className:'mdc-typography--subtitle2 text-center',
+            textContent:'No photos uploaded'
+        }))
+    }
 
     if(duty.isActive) {
         const finish = el.querySelector('#finish');
@@ -580,7 +582,13 @@ function constructJobView(duty) {
         el.appendChild(photoBtn);
 
     }
-
+    if (duty.canEdit && duty.isActive) {
+        const editBtn = document.getElementById('edit-btn');
+        editBtn.addEventListener('click', function () {
+            history.pushState(['updateDuty'], null, null);
+            updateDuty(duty);
+        })
+    }
     el.appendChild(timeline)
     return el;
 }
@@ -1119,7 +1127,7 @@ function createProductScreen(products, savedProduct = {
 
 
 function appView() {
-    createAppHeader();
+    const header = createAppHeader();
     const tabs = [{
         id: 'home-icon',
         icon: 'home',
@@ -1153,15 +1161,40 @@ function appView() {
             return
         }
     });
-    appTabBar.activateTab(0)
+    appTabBar.activateTab(0);
+ 
 }
 
-
+let lastScrollTop = 0
+window.addEventListener('scroll',function(e){
+    const parent = document.getElementById('app-tab-content');
+    const header = document.getElementById('app-header');
+    if(!parent) return;
+    console.log(e)
+    let st = window.pageYOffset || document.documentElement.scrollTop;
+    if(st > lastScrollTop) {
+        //downward
+        header.classList.add('hidden');
+        if(appTabBar) {
+            appTabBar.root_.style.top='0px'
+        }
+    }
+    else {
+        header.classList.remove('hidden')
+        if(appTabBar) {
+            appTabBar.root_.style.top='60px'
+        }
+        //upward
+    }
+    lastScrollTop = st <= 0 ? 0 : st;
+},false)
 
 
 
 
 function showAllDuties() {
+    dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
+    document.getElementById('app-header').classList.remove('hidden')
     const tx = db.transaction('activity');
     const store = tx.objectStore('activity');
 
@@ -1307,47 +1340,27 @@ function createTemplateButton(subs) {
 
     const button = createExtendedFab('add','Apply leave','',true);
     button.addEventListener('click', function () {
+        console.log(subs)
         if (subs.length == 1) {
             history.pushState(['addView'], null, null);
             addView(subs[0])
             return
         }
 
-        const uniqueSubs = {}
-        subs.forEach(function (sub) {
-            if (!uniqueSubs[sub.template]) {
-                uniqueSubs[sub.template] = [sub]
-            } else {
-                uniqueSubs[sub.template].push(sub)
-            }
-        })
-
-        const dialog = new Dialog('', templateSelectionList(uniqueSubs), 'choose-office-subscription').create('simple');
-        const ul = new mdc.list.MDCList(document.getElementById('dialog-office'))
-        bottomDialog(dialog, ul)
-
-        ul.listen('MDCList:action', function (subscriptionEvent) {
-            const selectedSubscriptions = uniqueSubs[Object.keys(uniqueSubs)[subscriptionEvent.detail.index]];
-            dialog.close()
-            if (selectedSubscriptions.length == 1) {
-                history.pushState(['addView'], null, null);
-                addView(selectedSubscriptions[0])
-                return
-            }
-            const officeDialog = new Dialog('Choose office', officeSelectionList(selectedSubscriptions), 'choose-office-subscription').create('simple');
+        
+            const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
             const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
             bottomDialog(officeDialog, officeList)
             officeList.listen('MDCList:action', function (officeEvent) {
-                const selectedSubscription = selectedSubscriptions[officeEvent.detail.index];
+                const selectedSubscription = subs[officeEvent.detail.index];
                 officeDialog.close();
                 history.pushState(['addView'], null, null);
                 addView(selectedSubscription)
             })
         })
-    })
     return button;
-
 }
+
 
 
 
