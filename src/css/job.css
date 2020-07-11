@@ -119,9 +119,9 @@ path.purple {
 .job-screen .duty-overview .customer-contact a{
   text-decoration: none;
 }
-/* .job-screen .timeline-overview .mdc-image-list {
+.job-screen .timeline-overview .mdc-image-list {
   padding-bottom: 100px;
-} */
+}
 
 .coming--soon-container {
   display: block;
@@ -280,18 +280,25 @@ path.purple {
 .duties--ul {
   padding-top: 0px;
 }
-.duties--ul .active {
+.duties--ul .active-duty {
   color: var(--mdc-theme--success);
-    font-size: 19px;
+  font-size: 19px;
 }
 .duties--ul .mdc-list-item__primary-text {
     font-weight: bold;
     font-size: 17px;
 }
 
-.mdc-list--two-line .mdc-list-item.mdc-list--with-office {
+.mdc-list--two-line .mdc-list-item.mdc-list--with-office , .mdc-list--two-line .mdc-list-item.active-duty {
   height: 83px;
 }
-.duties--ul .mdc-list-item.mdc-list--with-office .mdc-list-item__primary-text::before {
+.duties--ul .mdc-list-item.mdc-list--with-office .mdc-list-item__primary-text::before , .mdc-list--two-line .mdc-list-item.active-duty .mdc-list-item__primary-text::before{
+  height: 26px;
+}
+
+.mdc-list--two-line .mdc-list-item.mdc-list--with-office.active-duty {
+  height: 120px;
+}
+.duties--ul .mdc-list-item.mdc-list--with-office.active-duty .mdc-list-item__primary-text::before{
   height: 26px;
 }

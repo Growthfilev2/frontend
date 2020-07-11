@@ -74,9 +74,9 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     return resolve({
-      latitude:24.123123,
-      longitude:76.566464,
-      lastLocationTime:Date.now()
+      latitude: 52.582425,
+      longitude: -0.239520,
+      lastLocationTime: Date.now()
     })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
@@ -410,38 +410,41 @@ function updateIosLocation(geopointIos) {
 
 function handleComponentUpdation(readResponse) {
 
-
   getCheckInSubs().then(function (checkInSubs) {
     ApplicationState.officeWithCheckInSubs = checkInSubs
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
   });
 
-  const tx = db.transaction('map');
-  const store = tx.objectStore('map');
   const dutyLocations = []
   readResponse.activities.forEach(function (activity) {
     if (activity.template !== 'duty') return;
-
-    if (!ApplicationState.venue) {
-      console.log('no Application state venue')
-      store.index('location').get(activity.attachment.Location.value).onsuccess = function (e) {
-        const locationRecord = e.target.result;
-        if(!locationRecord) return
-        locationRecord.distance = calculateDistanceBetweenTwoPoints(locationRecord,ApplicationState.location);
-        dutyLocations.push(locationRecord)
-      }
-    }
     checkForDuty(activity);
   });
-  tx.oncomplete = function () {
+  let prom = Promise.resolve([]);
+  if (!ApplicationState.venue) {
+    const offsetBounds = new GetOffsetBounds(ApplicationState.location, 1);
+    prom = loadNearByLocations({
+      north: offsetBounds.north(),
+      south: offsetBounds.south(),
+      east: offsetBounds.east(),
+      west: offsetBounds.west()
+    }, ApplicationState.location)
+  }
+
+  prom.then(function (locations) {
+    locations.forEach(function (location) {
+      location.distance = calculateDistanceBetweenTwoPoints(location, ApplicationState.location);
+      dutyLocations.push(location)
+    });
     if (dutyLocations.length) {
-      const sorted = dutyLocations.sort(function(a,b){
-        return a.distance - b.distance
+      const sorted = dutyLocations.sort(function (a, b) {
+        return a.distance - b.distance;
       });
+
       console.log('setting venue as', sorted[0])
       ApplicationState.venue = sorted[0];
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-    }
+    };
     if (!history.state) return;
     switch (history.state[0]) {
       case 'enterChat':
@@ -454,28 +457,40 @@ function handleComponentUpdation(readResponse) {
         break;
       case 'jobView':
         if (document.getElementById('rating-view')) return;
-        jobView();
+        jobView(history.state[1]);
         break;
       case 'appView':
         if (appTabBar && document.getElementById('app-tab-content')) {
           const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
-          appTabBar.activateTab(selectedIndex);
+          if (selectedIndex == 0) {
+            const shareMenu = document.querySelector('#app-menu ul li[data-type="share"]')
+            if (shareMenu) {
+              shareMenu.remove()
+            }
+            showAllDuties();
+            return
+          }
+          if (selectedIndex == 1) {
+            chatView()
+          }
         }
         break;
       default:
         console.log("no refresh")
     }
-  }
+  })
+
 }
 
 /** function call to be removed from apk */
 function backgroundTransition() {}
 
 function runRead(type) {
-  console.log("run read notification")
+  console.log("run read notification", type)
+  console.log(type)
   if (!firebase.auth().currentUser || !serverTimeUpdated) return;
-  if(!type) return;
-  
+  if (!type) return;
+
   if (type.read) {
     var readEvent = new CustomEvent('callRead', {
       detail: type.read
@@ -542,7 +557,7 @@ function getSubscription(office, template) {
       }
       return;
     }
-    
+
     if (office) {
       index = subscription.index('validSubscription')
       range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])

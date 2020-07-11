@@ -607,11 +607,11 @@ function regulator() {
     })
 
     // if (!native.isFCMTokenChanged()) {
-      prom = Promise.resolve();
+      // prom = Promise.resolve();
     // } else {
-      // prom = requestCreator('fcmToken', {
-      //   token: native.getFCMToken()
-      // })
+      prom = requestCreator('fcmToken', {
+        token: native.getFCMToken()
+      })
     // }
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
@@ -1308,8 +1308,7 @@ function checkIDBCount(storeNames) {
 function openReportView() {
   document.getElementById('step-ui').innerHTML = ''
   history.pushState(['appView'],null,null);
-  history.pushState(['jobView'], null, null);
-  jobView();
+  appView();
 }
 
 function fillVenueInSub(sub, venue) {

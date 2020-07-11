@@ -221,6 +221,8 @@ function setHeader(sectionStart, sectionEnd) {
         if(tabBarEl) {
             tabBarEl.remove();
         }
+        el.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
+
     }
     return new mdc.topAppBar.MDCTopAppBar(el);
 }
@@ -409,13 +411,14 @@ function swipe(el, callback) {
     sliderElement = el;
     sliderCallback = callback;
     el.addEventListener('touchstart', handleTouchStart, false);
-    el.addEventListener('touchmove', handleTouchMove, false);
+    // el.addEventListener('touchmove', handleTouchMove, false);
+    el.addEventListener('touchend',handleTouchEnd,false);
 }
 
 function removeSwipe() {
     if (!sliderElement) return;
     sliderElement.removeEventListener('touchstart', handleTouchStart, false);
-    sliderElement.removeEventListener('touchmove', handleTouchMove, false);
+    sliderElement.removeEventListener('touchend', handleTouchEnd, false);
     sliderElement = null;
     sliderCallback = null;
 }
@@ -434,8 +437,8 @@ function handleTouchMove(evt) {
     const yEnd = evt.touches[0].clientY;
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
-    console.log(yStart)
-    console.log(yEnd)
+    console.log('move',xAxisDiff)
+    console.log('move',yAxisDiff)
     let direction = '';
     
 
@@ -450,7 +453,7 @@ function handleTouchMove(evt) {
             //right
         }
     } else {
-        console.log(yAxisDiff)
+      
         if (yAxisDiff > 0) {
 
            direction = 'up'
@@ -462,6 +465,48 @@ function handleTouchMove(evt) {
     xStart = null;
     yStart = null;
     sliderCallback(direction);
+}
+
+function handleTouchEnd(evt){
+    console.log(evt.changedTouches)
+    const xEnd = evt.changedTouches[0].clientX;
+    const yEnd = evt.changedTouches[0].clientY;
+    const xAxisDiff = xEnd - xStart;
+    const yAxisDiff = yEnd - yStart;
+    console.log('end',xAxisDiff)
+    console.log('end',yAxisDiff)
+
+
+    let direction = '';
+    
+    if(xAxisDiff == 0 && yAxisDiff == 0) return;
+    
+    if (Math.abs(xAxisDiff) > Math.abs(yAxisDiff)) {
+        if (xAxisDiff > 0) {
+
+           direction = 'left'
+            // left
+        } else {
+
+           direction = 'right'
+            //right
+        }
+    } else {
+      
+        if (yAxisDiff > 0) {
+
+           direction = 'up'
+        } else {
+
+           direction = 'down'
+        }
+    }
+    console.log(direction)
+    xStart = null;
+    yStart = null;
+    sliderCallback(direction);
+
+    
 }
 
 

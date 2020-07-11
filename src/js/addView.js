@@ -1,6 +1,7 @@
 const allowedOrigins = {
     'https://growthfile.com': true,
     'https://growthfile-207204.firebaseapp.com': true,
+    'https://growthfilev2-0.firebaseapp.com':true
 }
 
 function addView(sub, body) {
@@ -72,7 +73,8 @@ function sendFormToParent(formData) {
                     store.put(record)
                 }
                 tx.oncomplete = function () {
-                    appView()
+                    // appView()
+                    history.back();
                 }
                 return;
             };
@@ -95,7 +97,8 @@ function sendFormToParent(formData) {
                     }).catch(console.error)
                 })
             }
-            return appView();
+            // return appView();
+            return  history.back();
         }).catch(function (err) {
             snacks(err.message);
             passFormData({

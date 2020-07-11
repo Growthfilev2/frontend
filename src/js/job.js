@@ -1,33 +1,20 @@
 let worker;
 
 
-function jobView() {
+function jobView(currentDuty) {
     progressBar.close();
-    let duty;
-    dom_root.classList.remove('mdc-top-app-bar--fixed-adjust')
+    let duty = currentDuty;
+    dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = '';
-    document.getElementById('app-header').classList.add('hidden')
     const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Active Duty</span>`, ``);
     header.root_.classList.remove("hidden");
+    getCustomerPhoneNumber(duty.attachment.Location.value)
+        .then(function (customerPhonenumber) {
+            console.log(duty);
+            duty.customerPhonenumber = customerPhonenumber;
+            dom_root.appendChild(constructJobView(duty));
 
-    getCurrentJob().then(function (currentDuty) {
-        duty = currentDuty;
-        duty.isActive = true
-        return getCustomerPhoneNumber(currentDuty.attachment.Location.value)
-    }).then(function (customerPhonenumber) {
-        console.log(duty);
-        duty.customerPhonenumber = customerPhonenumber;
-        dom_root.appendChild(constructJobView(duty));
-    
-        if (duty.activityId) {
-            updateTimer(duty.activityId)
-            return
-        }
-        if (worker) {
-            worker.terminate();
-            worker = null;
-        }
-    });
+        });
 };
 
 
@@ -68,8 +55,8 @@ function getCurrentJob() {
             "calls": [],
             creator: {
                 phoneNumber: '',
-                displayName:'',
-                photoURL:''
+                displayName: '',
+                photoURL: ''
             },
             office: ApplicationState.selectedOffice,
             template: 'duty',
@@ -86,10 +73,10 @@ function getCurrentJob() {
             venue: [],
             canEdit: false,
             supervisior: null,
-            isActive:false,
+            isActive: false,
             timestamp: Date.now(),
         };
-        const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(),moment().endOf('day').valueOf())
+        const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
         store.index('timestamp').openCursor(bound).onsuccess = function (e) {
             const cursor = e.target.result;
             if (!cursor) return;
@@ -101,24 +88,24 @@ function getCurrentJob() {
                 cursor.continue();
                 return;
             };
-            if(!isToday(cursor.value.schedule[0].startTime)) {
+            if (!isToday(cursor.value.schedule[0].startTime)) {
                 cursor.continue();
                 return;
             }
-            if(!ApplicationState.venue) {
+            if (!ApplicationState.venue) {
                 cursor.continue();
                 return
             }
-            if(cursor.value.attachment.Location.value !== ApplicationState.venue.location)  {
+            if (cursor.value.attachment.Location.value !== ApplicationState.venue.location) {
                 cursor.continue();
                 return
             };
             console.log('matched location with duty location')
-            console.log(record);
             record = cursor.value;
             cursor.continue();
         }
         tx.oncomplete = function () {
+            console.log(record);
             resolve(record)
         }
     })
@@ -131,7 +118,7 @@ function handleFinishedDuty(duty) {
 }
 
 function createAppHeader() {
-    
+
     const header = setHeader(`
     <span class="mdc-top-app-bar__title">OnDuty</span>
     `, `<div class="mdc-menu-surface--anchor">
@@ -146,49 +133,54 @@ function createAppHeader() {
     </div>`);
     header.root_.classList.remove('hidden');
     // setTimeout(function(){
-        const menu = new mdc.menu.MDCMenu(header.root_.querySelector('.mdc-menu-surface'));
-        document.getElementById('settings-icon').addEventListener('click', function () {
-            menu.open = true;
-            menu.listen('MDCMenu:selected', function (e) {
-                console.log(e)
-                if(e.detail.item.dataset.type == 'settings') {
-                    history.pushState(['profileScreen'], null, null);
-                    profileScreen();
+    const menu = new mdc.menu.MDCMenu(header.root_.querySelector('.mdc-menu-surface'));
+    document.getElementById('settings-icon').addEventListener('click', function () {
+        menu.open = true;
+        menu.listen('MDCMenu:selected', function (e) {
+            console.log(e)
+            if (e.detail.item.dataset.type == 'settings') {
+                history.pushState(['profileScreen'], null, null);
+                profileScreen();
+                return
+            };
+            if (e.detail.item.dataset.type == 'share') {
+                const offices = JSON.parse(e.detail.item.dataset.offices);
+                if (offices.length == 1) {
+
+                    giveSubscriptionInit(offices[0]);
                     return
                 };
-                if(e.detail.item.dataset.type == 'share') {
-                    const offices = JSON.parse(e.detail.item.dataset.offices);
-                    if(offices.length == 1) {
-                       
-                        giveSubscriptionInit(offices[0]);
-                        return
-                    };
-    
-                    const officeDialog = new Dialog('Choose office', officeSelectionList(offices), 'choose-office-subscription').create('simple');
-                    const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-                    bottomDialog(officeDialog, offieList);
-                    offieList.listen('MDCList:action', function (officeEvent) {
-                        officeDialog.close();
-                      
-                        giveSubscriptionInit(offices[officeEvent.detail.index]);
-                    })
-                }
-            })
-        });
+
+                const officeDialog = new Dialog('Choose office', officeSelectionList(offices), 'choose-office-subscription').create('simple');
+                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+                bottomDialog(officeDialog, offieList);
+                offieList.listen('MDCList:action', function (officeEvent) {
+                    officeDialog.close();
+
+                    giveSubscriptionInit(offices[officeEvent.detail.index]);
+                })
+            }
+        })
+    });
     // },5000)
     return header;
 }
 
 function updateTimer(activityId) {
-    if (!worker) {
-        worker = new Worker('js/timer-worker.js');
-    }
+    if(worker) return;
+    worker = new Worker('js/timer-worker.js');
+
+    
     worker.onmessage = function (e) {
         const time = e.data;
-        const el = document.querySelector('#time-clock');
-        
+        let el;
+        if (history.state[0] === 'jobView') {
+            el = document.getElementById('time-clock');
+        }
+        if (history.state[0] === 'appView') {
+            el = document.getElementById(`active-duty--list-timer`);
+        }
         if (!el) return;
-        // if(el.dataset.id !== activityId) return;
         el.innerHTML = time;
     }
     worker.postMessage({
@@ -432,7 +424,7 @@ function dutyScreen(duty) {
                 <div class='mdc-typography--headline6 bold' style='color:#7C909E;'>Duty started ${duty.creator.phoneNumber ? '' :`at ${formatCreatedTime(duty.schedule[0].startTime)}`}</div>
                 <div id='time-clock' class='mdc-typography--headline3 bold mb-10' data-id="${duty.activityId}"></div>
                 <div class='finish-button--container mt-20'>
-                        ${createExtendedFab('check','finish job','finish').outerHTML}
+                        ${createExtendedFab('grade','Give rating','finish').outerHTML}
                 </div>` :''}
 
                 ${duty.creator.phoneNumber || !duty.isActive ?`<div class='schedule mt-10 text-left'>
@@ -502,11 +494,22 @@ const createImageLi = (url, supportingText) => {
 }
 
 function constructJobView(duty) {
-  
+    if (duty.canEdit && duty.isActive) {
+        const editBtn = createElement('button', {
+            className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
+            textContent: 'edit',
+            id: 'edit-duty'
+        })
+        editBtn.addEventListener('click', function () {
+            history.pushState(['updateDuty'], null, null);
+            updateDuty(duty);
+        })
+        document.getElementById('section-end').insertBefore(editBtn, document.getElementById('section-end').firstChild)
+    }
     const el = createElement('div', {
         className: 'mdc-layout-grid job-screen'
     })
-    
+
     el.appendChild(dutyScreen(duty));
     const timeline = createElement('div', {
         className: 'mdc-card timeline-overview mt-10'
@@ -515,9 +518,10 @@ function constructJobView(duty) {
         className: 'mdc-image-list standard-image-list mdc-image-list--with-text-protection'
     })
     if (duty.hasOwnProperty('checkins')) {
+        console.log('has photo')
         duty.checkins.forEach(function (activity) {
             if (activity.attachment.Photo.value) {
-
+                console.log('has photo')
                 const imageLi = createImageLi(activity.attachment.Photo.value, formatCreatedTime(activity.timestamp))
                 imageLi.addEventListener('click', function () {
                     const cont = createElement('div', {
@@ -558,15 +562,14 @@ function constructJobView(duty) {
 
     if (imageList.childElementCount) {
         timeline.appendChild(imageList);
-    }
-    else {
-        timeline.appendChild(createElement('div',{
-            className:'mdc-typography--subtitle2 text-center',
-            textContent:'No photos uploaded'
+    } else {
+        timeline.appendChild(createElement('div', {
+            className: 'mdc-typography--subtitle2 text-center',
+            textContent: 'No photos uploaded'
         }))
     }
-
-    if(duty.isActive) {
+    el.appendChild(timeline)
+    if (duty.isActive) {
         const finish = el.querySelector('#finish');
         finish.classList.add('mdc-button--raised');
         finish.addEventListener('click', function () {
@@ -579,7 +582,6 @@ function constructJobView(duty) {
             openCamera()
         });
         el.appendChild(photoBtn);
-
     }
     if (duty.canEdit && duty.isActive) {
         const editBtn = document.getElementById('edit-btn');
@@ -588,7 +590,7 @@ function constructJobView(duty) {
             updateDuty(duty);
         })
     }
-    el.appendChild(timeline)
+
     return el;
 }
 
@@ -913,7 +915,7 @@ function convertNumberToINR(amount) {
 
 
 function updateDuty(duty) {
-    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Edit duty</span>`,``)
+    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Edit duty</span>`, ``)
     const container = createElement('div', {
         className: 'update-duty--container'
     })
@@ -1127,7 +1129,6 @@ function createProductScreen(products, savedProduct = {
 
 function appView() {
     const header = createAppHeader();
-   
 
     dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = `
@@ -1139,9 +1140,11 @@ function appView() {
         if (document.getElementById('search-btn')) {
             document.getElementById('search-btn').remove();
         }
+        document.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
+
         if (evt.detail.index == 0) {
-            const shareMenu =  document.querySelector('#app-menu ul li[data-type="share"]')
-            if(shareMenu) {
+            const shareMenu = document.querySelector('#app-menu ul li[data-type="share"]')
+            if (shareMenu) {
                 shareMenu.remove()
             }
             showAllDuties();
@@ -1154,29 +1157,28 @@ function appView() {
     });
     appTabBar.activateTab(0);
     const parent = document.getElementById('app-tab-content');
-    swipe(parent,function(direction){
+    swipe(parent, function (direction) {
         let focusedTabIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
-        if(direction === 'up')  {
+        if (direction === 'up') {
             header.root_.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
             return
         }
-        if(direction === 'down') {
+        if (direction === 'down') {
             header.root_.querySelector('.mdc-top-app-bar__row').classList.add('hidden')
             return;
         }
-        if(direction === 'right') {
+        if (direction === 'right') {
             focusedTabIndex++
-        }
-        else {
+        } else {
             focusedTabIndex--
         }
-        
-        if(!appTabBar.tabList_[focusedTabIndex]) {
+
+        if (!appTabBar.tabList_[focusedTabIndex]) {
             focusedTabIndex = 0;
             return
         };
         appTabBar.activateTab(focusedTabIndex)
-    
+
     })
 }
 
@@ -1220,66 +1222,76 @@ function showAllDuties() {
             return b.timestamp - a.timestamp;
         })
         const hasMultipleOffice = Object.keys(ApplicationState.officeWithCheckInSubs).length > 1;
-        sortedDates.forEach(function (activity) {
+        getCurrentJob().then(function (activeDuty) {
+            const activeDutyId = activeDuty.activityId
+            sortedDates.forEach(function (activity) {
 
-            const li = dutyDateList(activity, hasMultipleOffice);
-            li.addEventListener('click', function () {
-                removeSwipe();
-                if (activity.timestamp === ApplicationState.lastCheckInCreated) {
-                    history.pushState(['jobView'],null,null)
-                    jobView();
-                    return
+                const li = dutyDateList(activity, activeDutyId, hasMultipleOffice);
+                if (activeDutyId && activeDutyId === activity.activityId) {
+                    console.log('going to start timer')
+                    updateTimer(activeDutyId)
                 }
-                getCustomerPhoneNumber(activity.attachment.Location.value).then(function (customerPhonenumber) {
-                    history.pushState(['jobView'],null,null)
-                    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Duty</span>`, ``);
-                    activity.customerPhonenumber = customerPhonenumber;
-                    dom_root.innerHTML = '';
-                    if (worker) {
-                        worker.terminate();
-                        worker = null;
-                    }
-                    activity.isActive = false;
-                    dom_root.appendChild(constructJobView(activity));
-                })
-            })
-            dutiesUl.appendChild(li);
-            dutiesUl.appendChild(createElement('li', {
-                className: 'mdc-list-divider'
-            }))
-        })
-        dutiesCont.appendChild(dutiesUl);
-        new mdc.list.MDCList(dutiesUl);
-        getReportSubscriptions('attendance').then(function (subs) {
-            if (!subs.length) return;   
+                li.addEventListener('click', function () {
+                    removeSwipe();
+                    if (activeDutyId === activity.activityId) {
+                        activeDuty.isActive = true;
 
+                        history.pushState(['jobView',activeDuty], null, null)
+                        jobView(activeDuty);
+                        return;
+                    }
+                    history.pushState(['jobView',activity], null, null)
+                    jobView(activity);
+
+                })
+                dutiesUl.appendChild(li);
+                dutiesUl.appendChild(createElement('li', {
+                    className: 'mdc-list-divider'
+                }))
+            })
+            dutiesCont.appendChild(dutiesUl);
+            new mdc.list.MDCList(dutiesUl);
+        })
+        getReportSubscriptions('attendance').then(function (subs) {
+            if (!subs.length) return;
             dutiesCont.appendChild(createTemplateButton(subs))
         })
         const el = document.getElementById('app-tab-content');
+        // const scrollYDepth =  el.scrollTop;
         el.innerHTML = ``;
         el.appendChild(dutiesCont);
+        // if(scrollYDepth) {
+        //     el.scrollTo(0,scrollYDepth);
+        // }
     }
 }
 
 
 
-function dutyDateList(duty, multipleOffice) {
+function dutyDateList(duty, activeDutyId, multipleOffice) {
     const li = createElement('li', {
         className: 'mdc-list-item'
     })
-
     if (multipleOffice) {
         li.classList.add('mdc-list--with-office')
     }
+    if (activeDutyId === duty.activityId) {
+        li.classList.add('active-duty');
+        
+    };
+
     li.innerHTML = `<span class="mdc-list-item__text">
       
         <span class="mdc-list-item__primary-text">
-            ${duty.timestamp === ApplicationState.lastCheckInCreated ? `<span class='active'>●</span>`:''}
+           
             ${duty.attachment.Location.value}
         </span>
         <span class="mdc-list-item__secondary-text bold">
             ${formatCreatedTime(duty.schedule[0].startTime)} - ${formatCreatedTime(duty.schedule[0].endTime)}
         </span>
+        ${activeDutyId === duty.activityId ? `<span class="mdc-list-item__secondary-text" id='active-duty--list-timer'>
+
+        </span>` :''}
         ${multipleOffice ?  `<span class="mdc-list-item__secondary-text">
             ${duty.office}
         </span>` :''}
@@ -1332,7 +1344,7 @@ function getDutyStatus(duty) {
 
 function createTemplateButton(subs) {
 
-    const button = createExtendedFab('add','Apply leave','',true);
+    const button = createExtendedFab('work_off', 'Apply leave', '', true);
     button.addEventListener('click', function () {
         console.log(subs)
         if (subs.length == 1) {
@@ -1341,17 +1353,17 @@ function createTemplateButton(subs) {
             return
         }
 
-        
-            const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
-            const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(officeDialog, officeList)
-            officeList.listen('MDCList:action', function (officeEvent) {
-                const selectedSubscription = subs[officeEvent.detail.index];
-                officeDialog.close();
-                history.pushState(['addView'], null, null);
-                addView(selectedSubscription)
-            })
+
+        const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
+        const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+        bottomDialog(officeDialog, officeList)
+        officeList.listen('MDCList:action', function (officeEvent) {
+            const selectedSubscription = subs[officeEvent.detail.index];
+            officeDialog.close();
+            history.pushState(['addView'], null, null);
+            addView(selectedSubscription)
         })
+    })
     return button;
 }
 
@@ -1396,12 +1408,12 @@ function getReportSubscriptions(name) {
 }
 
 
-function showTabs(tabs,id) {
-    const div = createElement('div',{
-        className:'mdc-tab-bar',
-        id:id
+function showTabs(tabs, id) {
+    const div = createElement('div', {
+        className: 'mdc-tab-bar',
+        id: id
     })
-    div.setAttribute('role','tablist');
+    div.setAttribute('role', 'tablist');
 
     div.innerHTML = `<div class="mdc-tab-scroller">
     <div class="mdc-tab-scroller__scroll-area">
@@ -1422,5 +1434,5 @@ function showTabs(tabs,id) {
       </div>
     </div>
   </div>`
-  return div;
+    return div;
 }

@@ -6,21 +6,24 @@
 
 html {
   box-sizing: border-box;
-  height: 100%;
+  /* height: 100%; */
   margin: 0;
   padding: 0;
+  height: 100%;
+  overflow-y: hidden;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+
 }
 
-html,
-body,
+
 #app-current-panel {
   height: 100%;
+  overflow-y: auto;
 }
 
 #map {
@@ -29,8 +32,9 @@ body,
 }
 
 .mdc-fab , .mdc-button--raised {
-  background-color: #011A2D !important;
+  background-color: #103153 !important;
   color: var(--mdc-theme-on-primary) !important;
+  z-index: 1;
 }
 
 :root {
@@ -49,7 +53,8 @@ body,
 body {
   margin: 0;
   background-color: white;
-
+  height: 100%;
+  overflow-y: hidden;
 }
 
 .mdc-top-app-bar {
@@ -1427,6 +1432,6 @@ ul.tl li .item-detail {
 }
  #app-tab-content {
   padding-top: 56px;
+  height: 100%;
   overflow-y: auto;
-  height: inherit;
 }

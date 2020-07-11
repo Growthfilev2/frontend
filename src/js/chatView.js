@@ -82,12 +82,12 @@ function chatView() {
 
 function chooseContact(contactString) {
 
+
     const contactDetails = parseContact(contactString);
     contactDetails.mobile = contactDetails.phoneNumber;
     delete contactDetails.phoneNumber;
     history.pushState(['enterChat', contactDetails], null, null);
     enterChat(contactDetails);
-    removeSwipe()
 }
 
 function chatDom() {
@@ -456,6 +456,7 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
+    removeSwipe()
     const sectionContent = document.getElementById('app-tab-content')
     if (!sectionContent) return;
 
