@@ -202,6 +202,26 @@ function setHeader(sectionStart, sectionEnd) {
     const el = document.getElementById('app-header');
     el.querySelector('#section-start').innerHTML = sectionStart;
     el.querySelector('#section-end').innerHTML = sectionEnd;
+    const tabBarEl = document.getElementById('navigation-tabs')
+    if(history.state && history.state[0] === 'appView' && !tabBarEl) {
+        const tabs = [{
+            id: 'home-icon',
+            icon: 'home',
+            name: 'Home'
+        }, {
+            id: 'contacts-icon',
+            icon: 'contacts',
+            name: 'Contacts'
+        }];
+        const tabBar = showTabs(tabs,'navigation-tabs');
+        el.insertBefore(tabBar,el.querySelector('#main-progress-bar'));
+        appTabBar = new mdc.tabBar.MDCTabBar(tabBar);
+    }
+    else {
+        if(tabBarEl) {
+            tabBarEl.remove();
+        }
+    }
     return new mdc.topAppBar.MDCTopAppBar(el);
 }
 
@@ -412,9 +432,10 @@ function handleTouchMove(evt) {
 
     const xEnd = evt.touches[0].clientX;
     const yEnd = evt.touches[0].clientY;
-
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
+    console.log(yStart)
+    console.log(yEnd)
     let direction = '';
     
 
@@ -429,12 +450,13 @@ function handleTouchMove(evt) {
             //right
         }
     } else {
+        console.log(yAxisDiff)
         if (yAxisDiff > 0) {
 
-           direction = 'down'
+           direction = 'up'
         } else {
 
-           direction = 'up'
+           direction = 'down'
         }
     }
     xStart = null;

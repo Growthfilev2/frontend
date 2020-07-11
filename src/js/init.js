@@ -738,10 +738,8 @@ function handleCheckin(geopoint, noUser) {
   });
 }
 
-
 function noOfficeFoundScreen() {
   const content = `
- 
       <div class='message-screen mdc-layout-grid'>
       <div class='icon-container'>
         <div class='mdc-theme--primary icons'>
@@ -751,9 +749,8 @@ function noOfficeFoundScreen() {
       <div class='text-container'>
         <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>
         <p class='mdc-typography--body1'>
-          If you are a business owner and want to register your company with us, click below to get started.
+          Please contact your administrator
         </p>
-        <a class='mdc-button mdc-button--raised create-office--link' target='_blank' href='https://www.growthfile.com/signup'>Create office</a>
       </div>
     </div>
   `

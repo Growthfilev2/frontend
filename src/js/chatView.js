@@ -87,6 +87,7 @@ function chooseContact(contactString) {
     delete contactDetails.phoneNumber;
     history.pushState(['enterChat', contactDetails], null, null);
     enterChat(contactDetails);
+    removeSwipe()
 }
 
 function chatDom() {
@@ -339,6 +340,7 @@ function initializeChatList(chatsUl) {
 
     chatsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentChatsArray[evt.detail.index];
+        // if(!history.state) 
         if (history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
         } else {

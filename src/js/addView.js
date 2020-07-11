@@ -4,12 +4,11 @@ const allowedOrigins = {
 }
 
 function addView(sub, body) {
-
+    removeSwipe()
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title"> Create ${sub.template}</span>
     `
     const header = setHeader(backIcon, '');
-    header.root_.classList.remove('hidden')
+    header.root_.classList.remove('hidden');
     dom_root.classList.remove("mdc-layout-grid", 'pl-0', 'pr-0');
     dom_root.innerHTML = `
         <iframe class='' id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html'></iframe>`;

@@ -7,8 +7,8 @@ function jobView() {
     dom_root.classList.remove('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = '';
     document.getElementById('app-header').classList.add('hidden')
-    // const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Duty</span>`, ``);
-    // header.root_.classList.remove("hidden");
+    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Active Duty</span>`, ``);
+    header.root_.classList.remove("hidden");
 
     getCurrentJob().then(function (currentDuty) {
         duty = currentDuty;
@@ -145,35 +145,37 @@ function createAppHeader() {
         </div>
     </div>`);
     header.root_.classList.remove('hidden');
-    const menu = new mdc.menu.MDCMenu(header.root_.querySelector('.mdc-menu-surface'));
-    document.getElementById('settings-icon').addEventListener('click', function () {
-        menu.open = true;
-        menu.listen('MDCMenu:selected', function (e) {
-            console.log(e)
-            if(e.detail.item.dataset.type == 'settings') {
-                history.pushState(['profileScreen'], null, null);
-                profileScreen();
-                return
-            };
-            if(e.detail.item.dataset.type == 'share') {
-                const offices = JSON.parse(e.detail.item.dataset.offices);
-                if(offices.length == 1) {
-                   
-                    giveSubscriptionInit(offices[0]);
+    // setTimeout(function(){
+        const menu = new mdc.menu.MDCMenu(header.root_.querySelector('.mdc-menu-surface'));
+        document.getElementById('settings-icon').addEventListener('click', function () {
+            menu.open = true;
+            menu.listen('MDCMenu:selected', function (e) {
+                console.log(e)
+                if(e.detail.item.dataset.type == 'settings') {
+                    history.pushState(['profileScreen'], null, null);
+                    profileScreen();
                     return
                 };
-
-                const officeDialog = new Dialog('Choose office', officeSelectionList(offices), 'choose-office-subscription').create('simple');
-                const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-                bottomDialog(officeDialog, offieList);
-                offieList.listen('MDCList:action', function (officeEvent) {
-                    officeDialog.close();
-                  
-                    giveSubscriptionInit(offices[officeEvent.detail.index]);
-                })
-            }
-        })
-    });
+                if(e.detail.item.dataset.type == 'share') {
+                    const offices = JSON.parse(e.detail.item.dataset.offices);
+                    if(offices.length == 1) {
+                       
+                        giveSubscriptionInit(offices[0]);
+                        return
+                    };
+    
+                    const officeDialog = new Dialog('Choose office', officeSelectionList(offices), 'choose-office-subscription').create('simple');
+                    const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+                    bottomDialog(officeDialog, offieList);
+                    offieList.listen('MDCList:action', function (officeEvent) {
+                        officeDialog.close();
+                      
+                        giveSubscriptionInit(offices[officeEvent.detail.index]);
+                    })
+                }
+            })
+        });
+    // },5000)
     return header;
 }
 
@@ -403,10 +405,7 @@ function dutyScreen(duty) {
         className: 'duty-container'
     })
     container.innerHTML = `
-    <div class='duty-header'>
-    <button class='material-icons  mdc-icon-button' id='duty-back'>arrow_back</button>
-    ${duty.canEdit && duty.isActive ? `<button class='material-icons mdc-icon-button mdc-button--raised' id='edit-duty'>edit</button>` :''}
-    </div>
+  
     <div class='mdc-card duty-overview'>
        <div class='duty-details pt-10'>
            <div class='customer'>
@@ -1128,22 +1127,14 @@ function createProductScreen(products, savedProduct = {
 
 function appView() {
     const header = createAppHeader();
-    const tabs = [{
-        id: 'home-icon',
-        icon: 'home',
-        name: 'Home'
-    }, {
-        id: 'contacts-icon',
-        icon: 'contacts',
-        name: 'Contacts'
-    }]
+   
+
     dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = `
-      <div class='tabs-section app-tabs'>
-          ${showTabs(tabs)}
-          <div id='app-tab-content'></div>
-      </div>`
-    appTabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+        
+        <div class='tabs-section'>
+            <div id='app-tab-content'></div>
+        </div>`
     appTabBar.listen('MDCTabBar:activated', function (evt) {
         if (document.getElementById('search-btn')) {
             document.getElementById('search-btn').remove();
@@ -1162,32 +1153,34 @@ function appView() {
         }
     });
     appTabBar.activateTab(0);
- 
+    const parent = document.getElementById('app-tab-content');
+    swipe(parent,function(direction){
+        let focusedTabIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
+        if(direction === 'up')  {
+            header.root_.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
+            return
+        }
+        if(direction === 'down') {
+            header.root_.querySelector('.mdc-top-app-bar__row').classList.add('hidden')
+            return;
+        }
+        if(direction === 'right') {
+            focusedTabIndex++
+        }
+        else {
+            focusedTabIndex--
+        }
+        
+        if(!appTabBar.tabList_[focusedTabIndex]) {
+            focusedTabIndex = 0;
+            return
+        };
+        appTabBar.activateTab(focusedTabIndex)
+    
+    })
 }
 
-let lastScrollTop = 0
-window.addEventListener('scroll',function(e){
-    const parent = document.getElementById('app-tab-content');
-    const header = document.getElementById('app-header');
-    if(!parent) return;
-    console.log(e)
-    let st = window.pageYOffset || document.documentElement.scrollTop;
-    if(st > lastScrollTop) {
-        //downward
-        header.classList.add('hidden');
-        if(appTabBar) {
-            appTabBar.root_.style.top='0px'
-        }
-    }
-    else {
-        header.classList.remove('hidden')
-        if(appTabBar) {
-            appTabBar.root_.style.top='60px'
-        }
-        //upward
-    }
-    lastScrollTop = st <= 0 ? 0 : st;
-},false)
+
 
 
 
@@ -1231,6 +1224,7 @@ function showAllDuties() {
 
             const li = dutyDateList(activity, hasMultipleOffice);
             li.addEventListener('click', function () {
+                removeSwipe();
                 if (activity.timestamp === ApplicationState.lastCheckInCreated) {
                     history.pushState(['jobView'],null,null)
                     jobView();
@@ -1402,27 +1396,31 @@ function getReportSubscriptions(name) {
 }
 
 
-function showTabs(tabs) {
+function showTabs(tabs,id) {
+    const div = createElement('div',{
+        className:'mdc-tab-bar',
+        id:id
+    })
+    div.setAttribute('role','tablist');
 
-    return `<div class="mdc-tab-bar" role="tablist">
-      <div class="mdc-tab-scroller">
-        <div class="mdc-tab-scroller__scroll-area">
-          <div class="mdc-tab-scroller__scroll-content">
-        
-            ${tabs.map(function(tab){
-                return `
-                <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${tab.id || ''}>
-                <span class="mdc-tab__content">
-                  <span class="mdc-tab__text-label">${tab.name}</span>
-                  <span class="mdc-tab-indicator">
-                    <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
-                  </span>
-                </span>
-                <span class="mdc-tab__ripple"></span>
-              </button>`
-            }).join("")}
-          </div>
-        </div>
+    div.innerHTML = `<div class="mdc-tab-scroller">
+    <div class="mdc-tab-scroller__scroll-area">
+      <div class="mdc-tab-scroller__scroll-content">
+    
+        ${tabs.map(function(tab){
+            return `
+            <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${tab.id || ''}>
+            <span class="mdc-tab__content">
+              <span class="mdc-tab__text-label">${tab.name}</span>
+              <span class="mdc-tab-indicator">
+                <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+              </span>
+            </span>
+            <span class="mdc-tab__ripple"></span>
+          </button>`
+        }).join("")}
       </div>
-    </div>`
+    </div>
+  </div>`
+  return div;
 }

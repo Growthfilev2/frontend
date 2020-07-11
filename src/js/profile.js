@@ -1,4 +1,6 @@
 function profileScreen() {
+  removeSwipe()
+
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon  material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Settings</span>`
   const header = setHeader(backIcon, '');

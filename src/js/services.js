@@ -474,7 +474,8 @@ function backgroundTransition() {}
 function runRead(type) {
   console.log("run read notification")
   if (!firebase.auth().currentUser || !serverTimeUpdated) return;
-
+  if(!type) return;
+  
   if (type.read) {
     var readEvent = new CustomEvent('callRead', {
       detail: type.read
