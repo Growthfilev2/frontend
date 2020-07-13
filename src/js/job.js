@@ -173,13 +173,7 @@ function updateTimer(activityId) {
 
     worker.onmessage = function (e) {
         const time = e.data;
-        let el;
-        if (history.state[0] === 'jobView') {
-            el = document.getElementById('time-clock');
-        }
-        if (history.state[0] === 'appView') {
-            el = document.getElementById(`active-duty--list-timer`);
-        }
+        let el = document.getElementById(`active-duty--list-timer`) || document.getElementById('time-clock');
         if (!el) return;
         el.innerHTML = time;
     }
@@ -580,7 +574,7 @@ function constructJobView(duty) {
         });
         el.appendChild(photoBtn);
     }
-  
+
 
     return el;
 }
@@ -1128,23 +1122,8 @@ function appView() {
             <div id='app-tab-content'></div>
         </div>`
     appTabBar.listen('MDCTabBar:activated', function (evt) {
-        if (document.getElementById('search-btn')) {
-            document.getElementById('search-btn').remove();
-        }
-        document.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
 
-        if (evt.detail.index == 0) {
-            const shareMenu = document.querySelector('#app-menu ul li[data-type="share"]')
-            if (shareMenu) {
-                shareMenu.remove()
-            }
-            showAllDuties();
-            return
-        }
-        if (evt.detail.index == 1) {
-            chatView()
-            return
-        }
+        switchTabs(evt.detail.index)
     });
     appTabBar.activateTab(0);
     const parent = document.getElementById('app-tab-content');
@@ -1173,6 +1152,26 @@ function appView() {
     })
 }
 
+
+function switchTabs(index) {
+    if (document.getElementById('search-btn')) {
+        document.getElementById('search-btn').remove();
+    }
+    document.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
+
+    if (index == 0) {
+        const shareMenu = document.querySelector('#app-menu ul li[data-type="share"]')
+        if (shareMenu) {
+            shareMenu.remove()
+        }
+        showAllDuties();
+        return
+    }
+    if (index == 1) {
+        chatView()
+        return
+    }
+}
 
 
 
@@ -1251,7 +1250,7 @@ function showAllDuties() {
                     }))
                 }
             })
-            if(hasCurrentDuty) {
+            if (hasCurrentDuty) {
                 listGroup.appendChild(createElement('h3', {
                     className: 'mdc-list-group__subheader active--subheader',
                     textContent: 'Ongoing'

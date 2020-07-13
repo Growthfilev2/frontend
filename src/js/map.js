@@ -6,7 +6,6 @@ var ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   iframeVersion: 13,
 }
 
-
 function logReportEvent(name) {
   const deviceInfo = native.getInfo();
   if (native.getName() === 'Android' && deviceInfo.appVersion >= 14) {

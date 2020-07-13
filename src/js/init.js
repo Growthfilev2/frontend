@@ -247,21 +247,20 @@ window.onpopstate = function (event) {
     'userSignedOut': true,
     'profileCheck': true,
     'login': true,
-    'addView': true,
     'share': true,
+    'addView': true,
   };
 
   if (!event.state) return;
-  if (nonRefreshViews[event.state[0]]) return
-  if(event.state[0] === 'showRating') {
-    
-    return;
+  if (nonRefreshViews[event.state[0]])  {
+    history.replaceState(['appView'],null,null)
+    return
   }
+  if(event.state[0] === 'showRating') return;
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
     history.go(-1);
     return;
   };
-
   if (window[event.state[0]]) {
     window[event.state[0]](event.state[1]);
   }

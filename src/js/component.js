@@ -11,12 +11,12 @@ function createElement(tagName, attrs) {
 
 
 
-function createFab(icon, id = '',absolute = true) {
+function createFab(icon, id = '', absolute = true) {
     const button = createElement('button', {
         className: 'mdc-fab  mdc-button--raised',
         id: id
     });
-    if(absolute) {
+    if (absolute) {
         button.classList.add('app-fab--absolute')
     }
     const span = createElement('span', {
@@ -31,7 +31,7 @@ function createFab(icon, id = '',absolute = true) {
     return button;
 }
 
-function actionButton(name, id = '',link) {
+function actionButton(name, id = '', link) {
     const actionContainer = createElement('div', {
         className: 'action-button-container'
     })
@@ -39,31 +39,30 @@ function actionButton(name, id = '',link) {
         className: 'submit-button-cont'
     })
     let button;
-    if(link) {
-        button = createElement("a",{
-            href:link,
-            target:'_blank',
-            textContent:name,
-            className:'mdc-button mdc-button--raised submit-btn',
-            id:id
+    if (link) {
+        button = createElement("a", {
+            href: link,
+            target: '_blank',
+            textContent: name,
+            className: 'mdc-button mdc-button--raised submit-btn',
+            id: id
         })
+    } else {
+        button = createButton(name, id);
     }
-    else {
-        button =  createButton(name, id);
-    }
-    button.classList.add('submit-btn','mdc-button--raised')
+    button.classList.add('submit-btn', 'mdc-button--raised')
     new mdc.ripple.MDCRipple(button);
     submitContainer.appendChild(button);
     actionContainer.appendChild(submitContainer);
     return actionContainer;
 }
 
-function createExtendedFab(icon, name, id, absolute,link) {
+function createExtendedFab(icon, name, id, absolute, link) {
     const button = createElement(link ? 'a' : 'button', {
         className: 'mdc-fab mdc-fab--extended mdc-button--raised mdc-fab-custom',
         id: id,
     })
-    if(link) {
+    if (link) {
         button.href = link;
     }
     if (absolute) {
@@ -203,27 +202,30 @@ function setHeader(sectionStart, sectionEnd) {
     el.querySelector('#section-start').innerHTML = sectionStart;
     el.querySelector('#section-end').innerHTML = sectionEnd;
     const tabBarEl = document.getElementById('navigation-tabs')
-    if(history.state && history.state[0] === 'appView' && !tabBarEl) {
-        const tabs = [{
-            id: 'home-icon',
-            icon: 'home',
-            name: 'Home'
-        }, {
-            id: 'contacts-icon',
-            icon: 'contacts',
-            name: 'Contacts'
-        }];
-        const tabBar = showTabs(tabs,'navigation-tabs');
-        el.insertBefore(tabBar,el.querySelector('#main-progress-bar'));
-        appTabBar = new mdc.tabBar.MDCTabBar(tabBar);
-    }
-    else {
-        if(tabBarEl) {
-            tabBarEl.remove();
+    if (history.state && history.state[0] === 'appView') {
+        if (!tabBarEl) {
+            const tabs = [{
+                id: 'home-icon',
+                icon: 'home',
+                name: 'Home'
+            }, {
+                id: 'contacts-icon',
+                icon: 'contacts',
+                name: 'Contacts'
+            }];
+            const tabBar = showTabs(tabs, 'navigation-tabs');
+            el.insertBefore(tabBar, el.querySelector('#main-progress-bar'));
+            appTabBar = new mdc.tabBar.MDCTabBar(tabBar);
         }
-        el.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
-
+        const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
+        switchTabs(selectedIndex)
+        return new mdc.topAppBar.MDCTopAppBar(el);
     }
+
+    if (tabBarEl) {
+        tabBarEl.remove();
+    }
+    el.querySelector('.mdc-top-app-bar__row').classList.remove('hidden')
     return new mdc.topAppBar.MDCTopAppBar(el);
 }
 
@@ -281,14 +283,14 @@ function textFieldTelephone(attr) {
 }
 
 function textField(attr) {
-    const div = createElement('div',{
-        className:'mdc-text-field mdc-text-field--outlined full-width',
-        id:attr.id
+    const div = createElement('div', {
+        className: 'mdc-text-field mdc-text-field--outlined full-width',
+        id: attr.id
     })
-    if(attr.trailingIcon) {
+    if (attr.trailingIcon) {
         div.classList.add('mdc-text-field--with-trailing-icon')
     }
-    if(attr.leadingIcon) {
+    if (attr.leadingIcon) {
         div.classList.add('mdc-text-field--with-leading-icon')
     }
     div.innerHTML = `
@@ -304,7 +306,7 @@ function textField(attr) {
       <div class="mdc-notched-outline__trailing"></div>
     </div>
   `
-  return div;
+    return div;
 }
 
 function textFieldWithHelper(attr) {
@@ -317,8 +319,8 @@ function textFieldWithHelper(attr) {
         });
     }
     cont.appendChild(textField(attr))
-    const helper = createElement('div',{
-        className:'mdc-text-field-helper-line',
+    const helper = createElement('div', {
+        className: 'mdc-text-field-helper-line',
     })
     helper.innerHTML = `  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>`
     cont.appendChild(helper)
@@ -412,7 +414,7 @@ function swipe(el, callback) {
     sliderCallback = callback;
     el.addEventListener('touchstart', handleTouchStart, false);
     // el.addEventListener('touchmove', handleTouchMove, false);
-    el.addEventListener('touchend',handleTouchEnd,false);
+    el.addEventListener('touchend', handleTouchEnd, false);
 }
 
 function removeSwipe() {
@@ -437,28 +439,28 @@ function handleTouchMove(evt) {
     const yEnd = evt.touches[0].clientY;
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
- 
+
     let direction = '';
-    
+
 
     if (Math.abs(xAxisDiff) > Math.abs(yAxisDiff)) {
         if (xAxisDiff > 0) {
 
-           direction = 'left'
+            direction = 'left'
             // left
         } else {
 
-           direction = 'right'
+            direction = 'right'
             //right
         }
     } else {
-      
+
         if (yAxisDiff > 0) {
 
-           direction = 'up'
+            direction = 'up'
         } else {
 
-           direction = 'down'
+            direction = 'down'
         }
     }
     xStart = null;
@@ -466,42 +468,42 @@ function handleTouchMove(evt) {
     sliderCallback(direction);
 }
 
-function handleTouchEnd(evt){
+function handleTouchEnd(evt) {
     const xEnd = evt.changedTouches[0].clientX;
     const yEnd = evt.changedTouches[0].clientY;
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
-    
+
 
     let direction = '';
-    
-    if(xAxisDiff == 0 && yAxisDiff == 0) return;
-    
+
+    if (xAxisDiff == 0 && yAxisDiff == 0) return;
+
     if (Math.abs(xAxisDiff) > Math.abs(yAxisDiff)) {
         if (xAxisDiff > 0) {
 
-           direction = 'left'
+            direction = 'left'
             // left
         } else {
 
-           direction = 'right'
+            direction = 'right'
             //right
         }
     } else {
-      
+
         if (yAxisDiff > 0) {
 
-           direction = 'up'
+            direction = 'up'
         } else {
 
-           direction = 'down'
+            direction = 'down'
         }
     }
     xStart = null;
     yStart = null;
     sliderCallback(direction);
 
-    
+
 }
 
 
@@ -570,14 +572,14 @@ const shareWidget = (link, office) => {
         className: 'link-manager'
     })
     linkManager.appendChild(textField({
-        value:link,
-        trailingIcon:'share',
-        readonly:true,
+        value: link,
+        trailingIcon: 'share',
+        readonly: true,
     }));
     const field = new mdc.textField.MDCTextField(linkManager.querySelector('.mdc-text-field'))
-    field.trailingIcon_.root_.addEventListener('click',function(){
+    field.trailingIcon_.root_.addEventListener('click', function () {
         field.focus()
-        callShareInterface(link,shareText);
+        callShareInterface(link, shareText);
     })
 
     const tempInput = createElement('input', {
@@ -586,9 +588,9 @@ const shareWidget = (link, office) => {
     document.body.appendChild(tempInput)
     // copyRegionToClipboard(tempInput)
     tempInput.remove();
-    
+
     el.appendChild(linkManager)
-    
+
     return el;
 }
 
@@ -604,10 +606,10 @@ const encodeString = (string) => {
     return encodeURIComponent(string)
 }
 
-const callShareInterface = (link,shareText) => {
+const callShareInterface = (link, shareText) => {
     const shareObject = {
         link: link,
-        shareText: shareText+link,
+        shareText: shareText + link,
         type: 'text/plain',
         email: {
             cc: '',
@@ -615,7 +617,7 @@ const callShareInterface = (link,shareText) => {
             body: ''
         }
     }
-    if(native.getName() === 'Android') {
+    if (native.getName() === 'Android') {
         AndroidInterface.share(JSON.stringify(shareObject))
         return
     }
@@ -627,16 +629,16 @@ const copyRegionToClipboard = (el) => {
     el.select();
     el.setSelectionRange(0, 9999);
     document.execCommand("copy")
-    snacks('Link copied','OKay',null,8000)
+    snacks('Link copied', 'OKay', null, 8000)
 }
 
 
 const linearProgress = (id) => {
-    const div = createElement('div',{
-        className:'mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed',
-        id:id
+    const div = createElement('div', {
+        className: 'mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed',
+        id: id
     })
-    div.setAttribute('role','progressbar');
+    div.setAttribute('role', 'progressbar');
     div.innerHTML = ` <div class="mdc-linear-progress__buffering-dots"></div>
     <div class="mdc-linear-progress__buffer"></div>
     <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
@@ -651,8 +653,8 @@ const linearProgress = (id) => {
 
 const mdcSelect = (values) => {
 
-    const div = createElement('div',{
-        className:'mdc-select mdc-select--no-label'
+    const div = createElement('div', {
+        className: 'mdc-select mdc-select--no-label'
     })
     div.innerHTML = `<div class="mdc-select__anchor demo-width-class">
         <i class="mdc-select__dropdown-icon"></i>

@@ -468,17 +468,7 @@ function handleComponentUpdation(readResponse) {
       case 'appView':
         if (appTabBar && document.getElementById('app-tab-content')) {
           const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
-          if (selectedIndex == 0) {
-            const shareMenu = document.querySelector('#app-menu ul li[data-type="share"]')
-            if (shareMenu) {
-              shareMenu.remove()
-            }
-            showAllDuties();
-            return
-          }
-          if (selectedIndex == 1) {
-            chatView()
-          }
+          switchTabs(selectedIndex);
         }
         break;
       default:
