@@ -6,7 +6,7 @@ function jobView(currentDuty) {
     let duty = currentDuty;
     dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = '';
-    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Active Duty</span>`, ``);
+    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">${currentDuty.activityName}</span>`, ``);
     header.root_.classList.remove("hidden");
     getCustomerPhoneNumber(duty.attachment.Location.value)
         .then(function (customerPhonenumber) {
@@ -167,10 +167,10 @@ function createAppHeader() {
 }
 
 function updateTimer(activityId) {
-    if(worker) return;
+    if (worker) return;
     worker = new Worker('js/timer-worker.js');
 
-    
+
     worker.onmessage = function (e) {
         const time = e.data;
         let el;
@@ -425,15 +425,12 @@ function dutyScreen(duty) {
                 <div id='time-clock' class='mdc-typography--headline3 bold mb-10' data-id="${duty.activityId}"></div>
                 <div class='finish-button--container mt-20'>
                         ${createExtendedFab('grade','Give rating','finish').outerHTML}
-                </div>` :''}
-
-                ${duty.creator.phoneNumber || !duty.isActive ?`<div class='schedule mt-10 text-left'>
-                    <span class='inline-flex'>
-                        <i class='material-icons  mdc-theme--secondary'>access_time</i>
-                        <span class='mdc-typography--headline6 ml-10'>${showDutySchedule(duty)}</span>
-                    </span>
-                </div>` :''}
+                </div>` :''} 
            </div>
+           <span class='inline-flex'>
+            <i class='material-icons  mdc-theme--secondary'>access_time</i>
+            <span class='mdc-typography--body1 ml-10'>${formatCreatedTime(duty.schedule[0].startTime)} - ${formatCreatedTime(duty.schedule[0].endTime)}</span>
+        </span>
            ${duty.attachment['Duty Type'].value ? `<div class='duty-type'>
                 <span class='inline-flex mb-10'>
                     <i class='material-icons mdc-theme--secondary'>assignment</i>
@@ -1196,6 +1193,13 @@ function showAllDuties() {
     const dutiesCont = createElement('div', {
         className: 'all-duties'
     })
+    const listGroup = createElement('div', {
+        className: 'mdc-list-group'
+    })
+    const activeUl = createElement('ul', {
+        className: 'mdc-list mdc-list--two-line mdc-list--avatar-list active-ul mdc-elevation--z6'
+    });
+
     const dutiesUl = createElement('ul', {
         className: 'mdc-list mdc-list--two-line mdc-list--avatar-list duties--ul'
     })
@@ -1217,39 +1221,57 @@ function showAllDuties() {
         cursor.continue()
     }
     tx.oncomplete = function () {
-
+        let hasCurrentDuty = false;
+        let hasPreviousDuties = false;
         const sortedDates = activities.sort(function (a, b) {
             return b.timestamp - a.timestamp;
         })
         const hasMultipleOffice = Object.keys(ApplicationState.officeWithCheckInSubs).length > 1;
         getCurrentJob().then(function (activeDuty) {
-            const activeDutyId = activeDuty.activityId
+            const activeDutyId = activeDuty.activityId;
+
             sortedDates.forEach(function (activity) {
 
                 const li = dutyDateList(activity, activeDutyId, hasMultipleOffice);
+
                 if (activeDutyId && activeDutyId === activity.activityId) {
+                    hasCurrentDuty = true
+                    activeDuty.isActive = true;
+                    li.addEventListener('click', function () {
+                        removeSwipe();
+                        history.pushState(['jobView', activeDuty], null, null)
+                        jobView(activeDuty);
+                    })
+                    activeUl.appendChild(li);
                     console.log('going to start timer')
                     updateTimer(activeDutyId)
+                } else {
+                    hasPreviousDuties = true;
+                    li.addEventListener('click', function () {
+                        history.pushState(['jobView', activity], null, null)
+                        jobView(activity);
+                    })
+                    dutiesUl.appendChild(li);
+                    dutiesUl.appendChild(createElement('li', {
+                        className: 'mdc-list-divider'
+                    }))
                 }
-                li.addEventListener('click', function () {
-                    removeSwipe();
-                    if (activeDutyId === activity.activityId) {
-                        activeDuty.isActive = true;
-
-                        history.pushState(['jobView',activeDuty], null, null)
-                        jobView(activeDuty);
-                        return;
-                    }
-                    history.pushState(['jobView',activity], null, null)
-                    jobView(activity);
-
-                })
-                dutiesUl.appendChild(li);
-                dutiesUl.appendChild(createElement('li', {
-                    className: 'mdc-list-divider'
-                }))
             })
-            dutiesCont.appendChild(dutiesUl);
+            if(hasCurrentDuty) {
+                listGroup.appendChild(createElement('h3', {
+                    className: 'mdc-list-group__subheader active--subheader',
+                    textContent: 'Ongoing'
+                }))
+            }
+            listGroup.appendChild(activeUl)
+            if (hasPreviousDuties) {
+                listGroup.appendChild(createElement('h3', {
+                    className: 'mdc-list-group__subheader previous--subheader mt-10',
+                    textContent: 'Previous'
+                }))
+            }
+            listGroup.appendChild(dutiesUl)
+            dutiesCont.appendChild(listGroup);
             new mdc.list.MDCList(dutiesUl);
         })
         getReportSubscriptions('attendance').then(function (subs) {
@@ -1277,22 +1299,22 @@ function dutyDateList(duty, activeDutyId, multipleOffice) {
     }
     if (activeDutyId === duty.activityId) {
         li.classList.add('active-duty');
-        
+
     };
 
-    li.innerHTML = `<span class="mdc-list-item__text">
+    li.innerHTML = `<span class="mdc-list-item__text full-width">
       
         <span class="mdc-list-item__primary-text">
            
             ${duty.attachment.Location.value}
         </span>
-        <span class="mdc-list-item__secondary-text bold">
-            ${formatCreatedTime(duty.schedule[0].startTime)} - ${formatCreatedTime(duty.schedule[0].endTime)}
-        </span>
-        ${activeDutyId === duty.activityId ? `<span class="mdc-list-item__secondary-text" id='active-duty--list-timer'>
+        ${activeDutyId === duty.activityId ? `<span class="mdc-list-item__secondary-text mdc-typography--headline5 full-width mt-10" id='active-duty--list-timer'>
 
         </span>` :''}
-        ${multipleOffice ?  `<span class="mdc-list-item__secondary-text">
+        <span class="mdc-list-item__secondary-text bold duty-list--time">
+            ${formatCreatedTime(duty.schedule[0].startTime)} - ${formatCreatedTime(duty.schedule[0].endTime)}
+        </span>
+        ${multipleOffice ?  `<span class="mdc-list-item__secondary-text duty-list--office">
             ${duty.office}
         </span>` :''}
         

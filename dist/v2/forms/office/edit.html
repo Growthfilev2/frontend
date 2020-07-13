@@ -153,12 +153,9 @@
             },true)
 
             formEl.addEventListener('submit', function (e) {
-                e.preventDefault()
-
-
+                e.preventDefault();
                 officeTemplate.registeredOfficeAddress = address.value;
                 officeTemplate.name = officeName.value;
-
                 const authProps = {
                     displayName: auth.displayName || username.value,
                     email: auth.email || email.value,

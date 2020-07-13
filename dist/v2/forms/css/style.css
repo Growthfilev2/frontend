@@ -234,17 +234,6 @@ body {
   width: auto;
 }
 
-.owner-checkbox-form {
-  float: right;
-}
-
-@media (max-width:660px) {
-  /* .forms {
-    width: 95vw;
-    height: fit-content;
-  } */
-}
-
 @media (max-width:480px) {
 
   .forms .form-list .form-component .mdc-text-field,

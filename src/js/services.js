@@ -73,11 +73,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude: 52.582425,
-      longitude: -0.239520,
-      lastLocationTime: Date.now()
-    })
+    // return resolve({
+    //   latitude: 28.707129,  
+    //   longitude: 77.200682,
+    //   lastLocationTime: Date.now()
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -492,10 +492,11 @@ function runRead(type) {
   if (!type) return;
 
   if (type.read) {
-    var readEvent = new CustomEvent('callRead', {
-      detail: type.read
-    })
-    window.dispatchEvent(readEvent);
+    requestCreator('Null').then(handleComponentUpdation).catch(console.error)
+    // var readEvent = new CustomEvent('callRead', {
+    //   detail: type.read
+    // })
+    // window.dispatchEvent(readEvent);
   }
   return
 }

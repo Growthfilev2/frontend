@@ -254,9 +254,7 @@ path.purple {
   color: var(--mdc-theme-warning);
 
 }
-.all-duties {
-  padding-bottom: 60px;
-}
+
 .rating-star {
  color: gold;
  font-size: 32px;
@@ -277,28 +275,57 @@ path.purple {
   padding-left: 0px;
   padding-right: 0px;
 }
+.all-duties {
+  padding-bottom: 60px;
+}
+.all-duties .mdc-list-group .mdc-list-group__subheader{
+  margin: 0px;
+  padding: 5px 5px 5px 16px;
+  line-height: 1rem;
+  color: white;
+  font-weight: bold;
+}
+.all-duties .active--subheader {
+  background-color: var(--mdc-theme--success);
+}
+.all-duties .previous--subheader {
+  background-color: var(--mdc-theme-background);
+
+}
 .duties--ul {
   padding-top: 0px;
 }
-.duties--ul .active-duty {
-  color: var(--mdc-theme--success);
-  font-size: 19px;
+.duties--ul .duty-list--time , .duties--ul .duty-list--office {
+  margin-top: 5px;
 }
 .duties--ul .mdc-list-item__primary-text {
     font-weight: bold;
     font-size: 17px;
 }
 
-.mdc-list--two-line .mdc-list-item.mdc-list--with-office , .mdc-list--two-line .mdc-list-item.active-duty {
+/* .mdc-list--two-line .mdc-list-item.mdc-list--with-office , .mdc-list--two-line .mdc-list-item.active-duty {
   height: 83px;
-}
-.duties--ul .mdc-list-item.mdc-list--with-office .mdc-list-item__primary-text::before , .mdc-list--two-line .mdc-list-item.active-duty .mdc-list-item__primary-text::before{
+} */
+/* .duties--ul .mdc-list-item.mdc-list--with-office .mdc-list-item__primary-text::before , .mdc-list--two-line .mdc-list-item.active-duty .mdc-list-item__primary-text::before{
   height: 26px;
-}
+} */
 
-.mdc-list--two-line .mdc-list-item.mdc-list--with-office.active-duty {
-  height: 120px;
+.active-ul .active-duty {
+  height: 100px;
+}
+.active-ul .active-duty #active-duty--list-timer {
+  line-height: 1.5rem;
+  margin-left:2px;
 }
 .duties--ul .mdc-list-item.mdc-list--with-office.active-duty .mdc-list-item__primary-text::before{
-  height: 26px;
+  height: 18px;
+}
+
+.duty-list--time {
+  width: fit-content;
+  float: left;
+}
+.duty-list--office {
+  width: fit-content;
+  float: right;
 }
