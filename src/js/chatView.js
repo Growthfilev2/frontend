@@ -25,56 +25,56 @@ function chatView() {
 
 
     sectionContent.innerHTML = chatDom();
-    getSubscription('','customer').then(function(subscriptions){
-        if(!subscriptions.length) return;
-        const btn = createExtendedFab('add','Add customer','',true);
-        btn.addEventListener('click',function(){
-            if(subscriptions.length == 1) {
-                getDropDownContent(subscriptions[0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                    history.pushState(['addView'], null, null);
-                    fillVenueInSub(subscriptions[0], {
-                        latitude: ApplicationState.location.latitude,
-                        longitude: ApplicationState.location.longitude
-                    });
-                    addView(subscriptions[0], customerTypes);
-                });
-                return
-            }
-            const officeDialog = new Dialog('Choose office', officeSelectionList(subscriptions), 'choose-office-subscription').create('simple');
-            const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            bottomDialog(officeDialog, offieList);
-            offieList.listen('MDCList:action', function (officeEvent) {
-                officeDialog.close();
-                getDropDownContent(subscriptions[officeEvent.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
-                    history.pushState(['addView'], null, null);
-                    fillVenueInSub(subscriptions[officeEvent.detail.index], {
-                        latitude: ApplicationState.location.latitude,
-                        longitude: ApplicationState.location.longitude
-                    });
-                    addView(subscriptions[officeEvent.detail.index], customerTypes);
-                });
-            })
-        })
-        sectionContent.appendChild(btn)
-    })
+    // getSubscription('','customer').then(function(subscriptions){
+    //     if(!subscriptions.length) return;
+    //     const btn = createExtendedFab('add','Add customer','',true);
+    //     btn.addEventListener('click',function(){
+    //         if(subscriptions.length == 1) {
+    //             getDropDownContent(subscriptions[0].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+    //                 history.pushState(['addView'], null, null);
+    //                 fillVenueInSub(subscriptions[0], {
+    //                     latitude: ApplicationState.location.latitude,
+    //                     longitude: ApplicationState.location.longitude
+    //                 });
+    //                 addView(subscriptions[0], customerTypes);
+    //             });
+    //             return
+    //         }
+    //         const officeDialog = new Dialog('Choose office', officeSelectionList(subscriptions), 'choose-office-subscription').create('simple');
+    //         const offieList = new mdc.list.MDCList(document.getElementById('dialog-office'))
+    //         bottomDialog(officeDialog, offieList);
+    //         offieList.listen('MDCList:action', function (officeEvent) {
+    //             officeDialog.close();
+    //             getDropDownContent(subscriptions[officeEvent.detail.index].office, 'customer-type', 'officeTemplate').then((customerTypes) => {
+    //                 history.pushState(['addView'], null, null);
+    //                 fillVenueInSub(subscriptions[officeEvent.detail.index], {
+    //                     latitude: ApplicationState.location.latitude,
+    //                     longitude: ApplicationState.location.longitude
+    //                 });
+    //                 addView(subscriptions[officeEvent.detail.index], customerTypes);
+    //             });
+    //         })
+    //     })
+    //     sectionContent.appendChild(btn)
+    // })
 
-    firebase.auth().currentUser.getIdTokenResult().then(function(idTokenResult){
-        if(!isAdmin(idTokenResult)) return;
-        const li =  createElement('li',{
-            className:'mdc-list-item'
-        })
-        li.setAttribute('role','menuitem');
-        li.dataset.type = 'share';
+    // firebase.auth().currentUser.getIdTokenResult().then(function(idTokenResult){
+    //     if(!isAdmin(idTokenResult)) return;
+    //     const li =  createElement('li',{
+    //         className:'mdc-list-item'
+    //     })
+    //     li.setAttribute('role','menuitem');
+    //     li.dataset.type = 'share';
 
-        li.dataset.offices = JSON.stringify([...new Set(idTokenResult.claims.admin)]);
-        const span = createElement('span',{
-            className:'mdc-list-item__text',
-            textContent:'Add users'
-        })
-        li.appendChild(span);
-        document.querySelector('#app-menu ul').insertBefore(li,document.querySelector('#app-menu ul').firstChild)
+    //     li.dataset.offices = JSON.stringify([...new Set(idTokenResult.claims.admin)]);
+    //     const span = createElement('span',{
+    //         className:'mdc-list-item__text',
+    //         textContent:'Add users'
+    //     })
+    //     li.appendChild(span);
+    //     document.querySelector('#app-menu ul').insertBefore(li,document.querySelector('#app-menu ul').firstChild)
         
-    })
+    // })
   
 
     readLatestChats(true);
@@ -438,12 +438,12 @@ function selectNew() {
 function formatCreatedTime(createdTime) {
     if (!createdTime) return ''
     return moment(createdTime).calendar(null, {
-        sameDay: 'hh:mm',
-        lastDay: '[Yesterday] hh:mm',
+        sameDay: 'hh:mm A',
+        lastDay: '[Yesterday] hh:mm A',
         nextDay: '[Tomorrow]',
         nextWeek: 'dddd',
-        lastWeek: 'DD/MM/YY hh:mm',
-        sameElse: 'DD/MM/YY hh:mm'
+        lastWeek: 'DD/MM/YY hh:mm A',
+        sameElse: 'DD/MM/YY hh:mm A'
     })
 }
 
@@ -611,7 +611,8 @@ function messageBoxDom(comment, position, time) {
 function createActivityHeading(activity) {
     return `${activity.activityName}
     <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
-    <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
+    ${activity.creator.displayName  || activity.creator.phoneNumber  ? ` <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>` :''}
+   `
 }
 
 function getStatusArray(activity) {
@@ -655,6 +656,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
         const activity = event.target.result;
         if (!activity) return;
         const heading = createActivityHeading(activity)
+        console.log(activity.creator.displayName)
         let items = [{
             name: 'View',
             icon: 'info'
@@ -1027,6 +1029,8 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
         return ''
     }
     if (activityRecord.attachment[attachmentName].type === 'product') {
+        if(!checkProductLength(activityRecord.attachment['Products'].value)) return '';
+        console.log(activityRecord.attachment[attachmentName])
         return `<div class='products-container'>
             <p class='mdc-typography--subtitle2 mb-0'>Products : </p>
             ${activityRecord.attachment[attachmentName].value.map(function(product){
@@ -1039,8 +1043,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
                 `
             }).join("")}
         </div>
-        `
-
+        `;
     }
     return `<h1 class="mdc-typography--subtitle1 mt-0">
         ${attachmentName} : ${activityRecord.attachment[attachmentName].value}

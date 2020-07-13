@@ -1274,10 +1274,10 @@ function showAllDuties() {
             dutiesCont.appendChild(listGroup);
             new mdc.list.MDCList(dutiesUl);
         })
-        getReportSubscriptions('attendance').then(function (subs) {
-            if (!subs.length) return;
-            dutiesCont.appendChild(createTemplateButton(subs))
-        })
+        // getReportSubscriptions('attendance').then(function (subs) {
+        //     if (!subs.length) return;
+        //     dutiesCont.appendChild(createTemplateButton(subs))
+        // })
         const el = document.getElementById('app-tab-content');
         // const scrollYDepth =  el.scrollTop;
         el.innerHTML = ``;
@@ -1311,13 +1311,13 @@ function dutyDateList(duty, activeDutyId, multipleOffice) {
         ${activeDutyId === duty.activityId ? `<span class="mdc-list-item__secondary-text mdc-typography--headline5 full-width mt-10" id='active-duty--list-timer'>
 
         </span>` :''}
+    
         <span class="mdc-list-item__secondary-text bold duty-list--time">
-            ${formatCreatedTime(duty.schedule[0].startTime)} - ${formatCreatedTime(duty.schedule[0].endTime)}
+            ${formatCreatedTime(duty.schedule[0].startTime)} to ${formatCreatedTime(duty.schedule[0].endTime)}
         </span>
         ${multipleOffice ?  `<span class="mdc-list-item__secondary-text duty-list--office">
-            ${duty.office}
-        </span>` :''}
-        
+        ${duty.office}
+    </span>` :''}
     </span>`
     new mdc.ripple.MDCRipple(li);
     return li
