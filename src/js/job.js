@@ -168,7 +168,7 @@ function createAppHeader() {
 
 function updateTimer(activityId) {
     if (worker) return;
-    worker = new Worker('js/timer-worker.js');
+    worker = new Worker('js/timer-worker.js?version=2');
 
 
     worker.onmessage = function (e) {
@@ -580,13 +580,7 @@ function constructJobView(duty) {
         });
         el.appendChild(photoBtn);
     }
-    if (duty.canEdit && duty.isActive) {
-        const editBtn = document.getElementById('edit-btn');
-        editBtn.addEventListener('click', function () {
-            history.pushState(['updateDuty'], null, null);
-            updateDuty(duty);
-        })
-    }
+  
 
     return el;
 }
@@ -1244,7 +1238,7 @@ function showAllDuties() {
                     })
                     activeUl.appendChild(li);
                     console.log('going to start timer')
-                    updateTimer(activeDutyId)
+                    updateTimer(activeDutyId);
                 } else {
                     hasPreviousDuties = true;
                     li.addEventListener('click', function () {

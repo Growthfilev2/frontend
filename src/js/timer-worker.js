@@ -22,17 +22,18 @@ self.onmessage = function (e) {
 
             store.get(dutyId).onsuccess = function (e) {
                 const record = e.target.result;
-                if (!record.timer) {
-                    return resolve(`00:00:00`)
-                };
+                // if (!record.timer) {
+                //     return resolve(`00:00:00`)
+                // };
                 const currentTimestamp = Date.now();
-                const storedTimestamp = record.timer.timestamp;
-                const timeDifference = getTimeDifference(currentTimestamp,storedTimestamp);
-                if(timeDifference.seconds == 0) {
-                    return resolve(record.timer.time);
-                }
-                const storedTimer = parseTimeString(record.timer.time);
-                return resolve(`${storedTimer.hours + timeDifference.hours}:${storedTimer.minutes + timeDifference.minutes}:${storedTimer.seconds+timeDifference.seconds}`);
+                // const storedTimestamp = record.timer.timestamp;
+                const timeDifference = getTimeDifference(currentTimestamp,record.schedule[0].startTime);
+                // if(timeDifference.seconds == 0) {
+                //     return resolve(record.timer.time);
+                // };
+
+                // const storedTimer = parseTimeString(record.timer.time);
+                return resolve(`${timeDifference.hours}:${timeDifference.minutes}:${timeDifference.seconds}`);
             }
         })
     }
@@ -46,8 +47,8 @@ self.onmessage = function (e) {
         }
     }
 
-    function getTimeDifference(currentTimestamp,storedTimestamp) {
-        let delta = Math.abs(currentTimestamp - storedTimestamp) / 1000;
+    function getTimeDifference(currentTimestamp,dutyStartTime) {
+        let delta = Math.abs(currentTimestamp - dutyStartTime) / 1000;
         var days = Math.floor(delta / 86400);
         delta -= days * 86400;
 

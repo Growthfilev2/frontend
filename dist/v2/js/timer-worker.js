@@ -22,17 +22,18 @@ function getStoredTimer(dutyId) {
 
         store.get(dutyId).onsuccess = function (e) {
             var record = e.target.result;
-            if (!record.timer) {
-                return resolve('00:00:00');
-            };
+            // if (!record.timer) {
+            //     return resolve(`00:00:00`)
+            // };
             var currentTimestamp = Date.now();
-            var storedTimestamp = record.timer.timestamp;
-            var timeDifference = getTimeDifference(currentTimestamp, storedTimestamp);
-            if (timeDifference.seconds == 0) {
-                return resolve(record.timer.time);
-            }
-            var storedTimer = parseTimeString(record.timer.time);
-            return resolve(storedTimer.hours + timeDifference.hours + ':' + (storedTimer.minutes + timeDifference.minutes) + ':' + (storedTimer.seconds + timeDifference.seconds));
+            // const storedTimestamp = record.timer.timestamp;
+            var timeDifference = getTimeDifference(currentTimestamp, record.schedule[0].startTime);
+            // if(timeDifference.seconds == 0) {
+            //     return resolve(record.timer.time);
+            // };
+
+            // const storedTimer = parseTimeString(record.timer.time);
+            return resolve(timeDifference.hours + ':' + timeDifference.minutes + ':' + timeDifference.seconds);
         };
     });
 }
@@ -46,8 +47,8 @@ function parseTimeString(timeString) {
     };
 }
 
-function getTimeDifference(currentTimestamp, storedTimestamp) {
-    var delta = Math.abs(currentTimestamp - storedTimestamp) / 1000;
+function getTimeDifference(currentTimestamp, dutyStartTime) {
+    var delta = Math.abs(currentTimestamp - dutyStartTime) / 1000;
     var days = Math.floor(delta / 86400);
     delta -= days * 86400;
 
