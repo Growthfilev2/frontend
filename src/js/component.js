@@ -437,8 +437,7 @@ function handleTouchMove(evt) {
     const yEnd = evt.touches[0].clientY;
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
-    console.log('move',xAxisDiff)
-    console.log('move',yAxisDiff)
+ 
     let direction = '';
     
 
@@ -468,14 +467,11 @@ function handleTouchMove(evt) {
 }
 
 function handleTouchEnd(evt){
-    console.log(evt.changedTouches)
     const xEnd = evt.changedTouches[0].clientX;
     const yEnd = evt.changedTouches[0].clientY;
     const xAxisDiff = xEnd - xStart;
     const yAxisDiff = yEnd - yStart;
-    console.log('end',xAxisDiff)
-    console.log('end',yAxisDiff)
-
+    
 
     let direction = '';
     
@@ -501,7 +497,6 @@ function handleTouchEnd(evt){
            direction = 'down'
         }
     }
-    console.log(direction)
     xStart = null;
     yStart = null;
     sliderCallback(direction);
@@ -552,7 +547,6 @@ function textFieldTelephoneWithHelper(attr) {
       <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg"></div>
     </div>
 `
-    console.log(cont)
     return cont
 }
 
@@ -581,7 +575,6 @@ const shareWidget = (link, office) => {
         readonly:true,
     }));
     const field = new mdc.textField.MDCTextField(linkManager.querySelector('.mdc-text-field'))
-    console.log(field)
     field.trailingIcon_.root_.addEventListener('click',function(){
         field.focus()
         callShareInterface(link,shareText);

@@ -1,7 +1,6 @@
 const allowedOrigins = {
     'https://growthfile.com': true,
-    'https://growthfile-207204.firebaseapp.com': true,
-    'https://growthfilev2-0.firebaseapp.com':true
+    'https://growthfile-207204.firebaseapp.com': true
 }
 
 function addView(sub, body) {
@@ -39,7 +38,6 @@ function resizeFrame(frameDimensions) {
 
 window.addEventListener('message', function (event) {
     if (!allowedOrigins[event.origin]) return;
-    this.console.log(event.data);
     if (typeof event.data === 'object' && event.data != null) {
         if (event.data.hasOwnProperty('name')) {
             window[event.data.name](event.data.body);

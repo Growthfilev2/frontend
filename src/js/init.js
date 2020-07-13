@@ -1339,10 +1339,8 @@ function shouldCheckin(geopoint, checkInSubs) {
   const isOlder = isLastLocationOlderThanThreshold(oldState.lastCheckInCreated, 300)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
   if (isOlder || hasChangedLocation) {
-    console.log('Application state will be : new')
     return true
   }
-  console.log('Application state will be : old')
   ApplicationState = oldState;
   return false
 }

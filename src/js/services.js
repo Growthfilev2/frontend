@@ -254,7 +254,7 @@ function html5Geolocation() {
   })
 }
 
-const apiHandler = new Worker('js/apiHandler.js?version=160');
+const apiHandler = new Worker('js/apiHandler.js?version=190');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -453,7 +453,14 @@ function handleComponentUpdation(readResponse) {
         break;
       case 'jobView':
         if (document.getElementById('rating-view')) return;
-        jobView(history.state[1]);
+        getCurrentJob().then(function(currentJob){
+          if(!currentJob.activityId) {
+            jobView(history.state[1]);
+            return
+          }
+          currentJob.isActive = true;
+          jobView(currentJob);
+        })
         break;
       case 'appView':
         if (appTabBar && document.getElementById('app-tab-content')) {
@@ -482,8 +489,7 @@ function handleComponentUpdation(readResponse) {
 function backgroundTransition() {}
 
 function runRead(type) {
-  console.log("run read notification", type)
-  console.log(type)
+
   if (!firebase.auth().currentUser || !serverTimeUpdated) return;
   if (!type) return;
 
