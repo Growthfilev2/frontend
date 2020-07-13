@@ -17,17 +17,31 @@ function isWifiRequired() {
 
 }
 
+function readIterator(start, end) {
+  let next
+}
 
 
+
+function readWait() {
+  var promise = Promise.resolve();
+  for (let i = window.readStack.length - 1; i >= 0; i--) {
+    promise = promise.then(function () {
+      window.readStack.splice(i, 1)
+      return requestCreator('Null')
+    });
+  }
+  return promise;
+}
 var readDebounce = debounce(function () {
-  requestCreator('Null').then(handleComponentUpdation).catch(console.error)
-}, 1000, false)
+  readWait().then(handleComponentUpdation).catch(console.error)
+}, 1000, false);
+
 window.addEventListener('callRead', readDebounce);
 
 
 
 function handleError(error) {
-  console.log(error)
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return
   error.device = JSON.parse(localStorage.getItem('deviceInfo'));
@@ -73,8 +87,6 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-
-
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -110,15 +122,12 @@ function manageLocation(maxRetry) {
       if (location.accuracy >= 35000) {
         if (maxRetry > 0) {
           setTimeout(function () {
-            console.log('retry because of high accuracy')
             manageLocation(maxRetry - 1).then(resolve).catch(reject)
           }, 1000)
         } else {
-          console.log('retry end of high accuracy')
           return handleLocationOld(3, location).then(resolve).catch(reject)
         }
       } else {
-        console.log('accuracy is less than 35000')
         return handleLocationOld(3, location).then(resolve).catch(reject)
       }
     }).catch(reject);
@@ -134,7 +143,6 @@ function handleLocationOld(maxRetry, location) {
     if (maxRetry > 0) {
       setTimeout(function () {
         getLocation().then(function (newLocation) {
-          console.log('retry because new location is same to old location')
           handleLocationOld(maxRetry - 1, newLocation).then(resolve).catch(reject)
         }).catch(reject)
       }, 1000)
@@ -255,7 +263,8 @@ function html5Geolocation() {
   })
 };
 
-const apiHandler = new Worker('js/apiHandler.js?version=191');
+const apiHandler = new Worker('js/apiHandler.js?version=190');
+
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
     'geocode': true,
@@ -294,7 +303,6 @@ function requestCreator(requestType, requestBody, geopoint) {
       ApplicationState.lastCheckInCreated = time
     };
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
-    console.log('sending', requestGenerator);
     return executeRequest(requestGenerator);
   });
 }
@@ -310,7 +318,6 @@ function executeRequest(requestGenerator) {
     apiHandler.onmessage = function (event) {
       progressBar.close();
 
-      console.log(event);
       if (!event.data.success) {
         const reject = workerRejects[event.data.id];
         if (reject) {
@@ -437,7 +444,6 @@ function handleComponentUpdation(readResponse) {
         return a.distance - b.distance;
       });
 
-      console.log('setting venue as', sorted[0])
       ApplicationState.venue = sorted[0];
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     };
@@ -453,8 +459,8 @@ function handleComponentUpdation(readResponse) {
         break;
       case 'jobView':
         if (document.getElementById('rating-view')) return;
-        getCurrentJob().then(function(currentJob){
-          if(!currentJob.activityId) {
+        getCurrentJob().then(function (currentJob) {
+          if (!currentJob.activityId) {
             jobView(history.state[1]);
             return
           }
@@ -488,20 +494,23 @@ function handleComponentUpdation(readResponse) {
 /** function call to be removed from apk */
 function backgroundTransition() {}
 
+window.readStack = []
+
 function runRead(type) {
 
   if (!firebase.auth().currentUser || !serverTimeUpdated) return;
   if (!type) return;
-
   if (type.read) {
-    requestCreator('Null').then(handleComponentUpdation).catch(console.error)
-    // var readEvent = new CustomEvent('callRead', {
-    //   detail: type.read
-    // })
-    // window.dispatchEvent(readEvent);
+    window.readStack.push(type.read);
+    var readEvent = new CustomEvent('callRead', {
+      detail: window.readStack
+    });
+    window.dispatchEvent(readEvent);
   }
   return
 }
+
+
 
 
 function debounce(func, wait, immeditate) {
@@ -516,7 +525,7 @@ function debounce(func, wait, immeditate) {
     var callNow = immeditate && !timeout;
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
-    if (callNow) func.apply(context, args);
+    // if (callNow) func.apply(context, args);
   }
 }
 
@@ -581,7 +590,6 @@ function emailReg(email) {
 
 
 function handleNav(evt) {
-  console.log(evt)
   if (!history.state) return;
   return history.back();
 }
