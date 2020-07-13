@@ -17,11 +17,6 @@ function isWifiRequired() {
 
 }
 
-function readIterator(start, end) {
-  let next
-}
-
-
 
 function readWait() {
   var promise = Promise.resolve();
@@ -87,6 +82,8 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
+
+
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -263,7 +260,7 @@ function html5Geolocation() {
   })
 };
 
-const apiHandler = new Worker('js/apiHandler.js?version=190');
+const apiHandler = new Worker('js/apiHandler.js?version=195');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
