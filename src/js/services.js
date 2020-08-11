@@ -260,7 +260,7 @@ function html5Geolocation() {
   })
 };
 
-const apiHandler = new Worker('js/apiHandler.js?version=195');
+const apiHandler = new Worker('js/apiHandler.js?version=196');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {

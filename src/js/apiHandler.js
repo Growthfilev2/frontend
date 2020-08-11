@@ -927,7 +927,7 @@ function successResponse(read, param, db, resolve, reject) {
   }
 
   read.templates.forEach(function (subscription) {
-    if (subscription.status === 'CANCELLED') return;
+
     if (!subscription.activityId) {
       instant(JSON.stringify({
         message: 'activityId missing from template object',
