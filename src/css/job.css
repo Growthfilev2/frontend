@@ -295,13 +295,16 @@ path.purple {
 .duties--ul {
   padding-top: 0px;
 }
-.duties--ul .duty-list--time , .duties--ul .duty-list--office {
-  margin-top: 5px;
-}
 .duties--ul .mdc-list-item__primary-text {
     font-weight: bold;
     font-size: 17px;
 }
+.duties--ul .navigate-next {
+  font-size: 32px;
+  color: var(--mdc-theme-primary);
+}
+
+
 
 /* .mdc-list--two-line .mdc-list-item.mdc-list--with-office , .mdc-list--two-line .mdc-list-item.active-duty {
   height: 83px;
@@ -317,15 +320,13 @@ path.purple {
   line-height: 1.5rem;
   margin-left:2px;
 }
+.mdc-list-item.mdc-list--with-office {
+  height: 84px;
+}
+.mdc-list--with-office .mdc-list-item__primary-text::before {
+  height: 27px;
+}
 .duties--ul .mdc-list-item.mdc-list--with-office.active-duty .mdc-list-item__primary-text::before{
   height: 18px;
 }
 
-.duty-list--time {
-  width: fit-content;
-  float: left;
-}
-.duty-list--office {
-  width: fit-content;
-  float: right;
-}

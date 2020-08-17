@@ -1308,10 +1308,13 @@ function dutyDateList(duty, activeDutyId, multipleOffice) {
         <span class="mdc-list-item__secondary-text bold duty-list--time">
             ${formatCreatedTime(duty.schedule[0].startTime)} to ${formatCreatedTime(duty.schedule[0].endTime)}
         </span>
-        ${multipleOffice ?  `<span class="mdc-list-item__secondary-text duty-list--office">
+        ${multipleOffice ?  `<span class="mdc-list-item__secondary-text duty-list--office full-width">
         ${duty.office}
     </span>` :''}
-    </span>`
+   
+    </span>
+    <span class='mdc-list-item__meta material-icons navigate-next'>navigate_next</span>
+    `
     new mdc.ripple.MDCRipple(li);
     return li
 }

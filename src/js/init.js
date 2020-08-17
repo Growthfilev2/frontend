@@ -606,11 +606,11 @@ function regulator() {
     })
 
     // if (!native.isFCMTokenChanged()) {
-      // prom = Promise.resolve();
+      prom = Promise.resolve();
     // } else {
-      prom = requestCreator('fcmToken', {
-        token: native.getFCMToken()
-      })
+      // prom = requestCreator('fcmToken', {
+      //   token: native.getFCMToken()
+      // })
     // }
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
@@ -647,12 +647,12 @@ function regulator() {
       .then(function (geopoint) {
         
         handleCheckin(geopoint);
-        if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
-        return requestCreator('device', deviceInfo);
+        // if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
+        // return requestCreator('device', deviceInfo);
       })
-      .then(function () {
-        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
-      })
+      // .then(function () {
+      //   localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+      // })
       .catch(reject)
   })
 }
