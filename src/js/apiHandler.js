@@ -35,7 +35,7 @@ const requestFunctionCaller = {
   pan: pan,
   aadhar: aadhar,
   profile: profile,
-  shareLink:shareLink
+  shareLink: shareLink
 }
 
 function sendSuccessRequestToMainThread(response, id) {
@@ -166,7 +166,7 @@ function http(request, authorization = true) {
     //     message: 'Request time out. Try again later',
     //   });
     // }
-    
+
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
@@ -384,13 +384,13 @@ function profile(body, meta) {
   return http(req)
 }
 
-function shareLink(body,meta){
+function shareLink(body, meta) {
   const req = {
-    method:'POST',
-    url:`${meta.apiUrl}services/shareLink`,
-    body:JSON.stringify(body),
-    token:meta.user.token,
-    timeout:null
+    method: 'POST',
+    url: `${meta.apiUrl}services/shareLink`,
+    body: JSON.stringify(body),
+    token: meta.user.token,
+    timeout: null
   }
   return http(req)
 }
@@ -472,7 +472,7 @@ function create(requestBody, meta) {
 
 }
 
-function acquisition(body,meta) {
+function acquisition(body, meta) {
   const req = {
     method: 'PUT',
     url: `${meta.apiUrl}profile/acquisition`,
@@ -664,10 +664,10 @@ function updateCalendar(activity, tx) {
   calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
-      if(!Array.isArray(activity.schedule)) return;
+      if (!Array.isArray(activity.schedule)) return;
 
       activity.schedule.forEach(function (schedule) {
-        if(typeof schedule !== 'object') return;
+        if (typeof schedule !== 'object') return;
         const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,
@@ -787,7 +787,7 @@ function successResponse(read, param, db, resolve, reject) {
 
   let counter = {};
   let userTimestamp = {}
-
+  let addendumIds = {}
   read.addendum.forEach(function (addendum) {
 
     if (!addendum.hasOwnProperty('user')) return;
@@ -800,32 +800,13 @@ function successResponse(read, param, db, resolve, reject) {
       };
     };
 
-
-    if (addendum.isComment) {
-      if (addendum.hasOwnProperty('assignee')) {
-        if (addendum.assignee === param.user.phoneNumber) {
-          addendum.key = param.user.phoneNumber + addendum.user
-          userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum]
-          counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
-        } else {
-          addendum.key = param.user.phoneNumber + addendum.assignee
-          userTimestamp[addendum.assignee] ? userTimestamp[addendum.assignee].push(addendum) : userTimestamp[addendum.assignee] = [addendum];
-        }
-      } else {
-        addendum.key = param.user.phoneNumber + addendum.user;
-        userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
-        if (addendum.user !== param.user.phoneNumber) {
-          counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
-        }
-      }
-      addendumObjectStore.add(addendum)
-    } else {
-      addendum.key = param.user.phoneNumber + addendum.user;
-      userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
-      if (addendum.user !== param.user.phoneNumber) {
-        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
-      }
-    }
+    // addendum.key = param.user.phoneNumber + addendum.user;
+    // addendumIds[addendum.activityId] ? addendumIds[addendum.activityId].push(addendum) : addendumIds[addendum.activityId] = [addendum]
+    // userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
+    // if (addendum.user !== param.user.phoneNumber) {
+    //   counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
+    // }
+    addendumObjectStore.put(addendum)
   })
 
 
@@ -834,6 +815,8 @@ function successResponse(read, param, db, resolve, reject) {
   });
 
 
+  console.log(userTimestamp);
+  console.log(counter);
   updateAttendance(read.attendances, attendaceStore)
   updateReimbursements(read.reimbursements, reimbursementStore)
   updatePayments(read.payments, paymentStore);
@@ -842,10 +825,9 @@ function successResponse(read, param, db, resolve, reject) {
 
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
 
-    if(activity.template === 'duty') {
-      handleDutyActivity(activity,updateTx);
-    }
-    else {
+    if (activity.template === 'duty') {
+      handleDutyActivity(activity, updateTx);
+    } else {
       activityObjectStore.put(activity);
     }
     updateCalendar(activity, updateTx);
@@ -853,64 +835,72 @@ function successResponse(read, param, db, resolve, reject) {
 
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
-
         let selfRecord = event.target.result;
+        // if(!userTimestamp[user.phoneNumber]) {
+        //   console.log(user)
+        // }
+
+        // userTimestamp[user.phoneNumber].forEach(function(addendum){
+        //   updateUserStore(userStore,user.phoneNumber,addendum,user)
+        // })
         if (!selfRecord) {
           selfRecord = {
             count: 0
           }
         };
-        selfRecord.mobile = user.phoneNumber;
-        selfRecord.displayName = user.displayName;
-        if (!selfRecord.photoURL) {
-          selfRecord.photoURL = user.photoURL;
-        }
-        selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
-        if (!selfRecord.timestamp) {
-          selfRecord.timestamp = ''
-        }
 
-        userStore.put(selfRecord)
+        // selfRecord.mobile = user.phoneNumber;
+        // selfRecord.displayName = user.displayName;
+        // if (!selfRecord.photoURL) {
+        //   selfRecord.photoURL = user.photoURL;
+        // }
+        // selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
+        // if (!selfRecord.timestamp) {
+        //   selfRecord.timestamp = ''
+        // }
+
+
+
+        // userStore.put(selfRecord)
       }
     })
   })
 
-  console.log(userTimestamp);
-  Object.keys(userTimestamp).forEach(function (number) {
+  // console.log(userTimestamp);
+  // Object.keys(userTimestamp).forEach(function (number) {
 
-    const currentAddendums = userTimestamp[number]
-    currentAddendums.forEach(function (addendum) {
-      if (addendum.isComment && addendum.assignee) return updateUserStore(userStore, number, addendum, counter);
-      const activityId = addendum.activityId
-      activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
-        const record = activityEvent.target.result;
-        if (!record) {
-          console.log('no activity id found for addendum')
-          return;
-        }
+  //   const currentAddendums = userTimestamp[number]
+  //   currentAddendums.forEach(function (addendum) {
+  //     const activityId = addendum.activityId
+  //     activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
+  //       const record = activityEvent.target.result;
+  //       if (!record) {
+  //         console.log('no activity id found for addendum')
+  //         return;
+  //       }
 
-        record.assignees.forEach(function (user) {
-          addendum.key = param.user.phoneNumber + user.phoneNumber;
-          addendumObjectStore.put(addendum);
-          if(record.template === 'duty') {
-            console.log('duty addendum added');
-          }
-          if (number === param.user.phoneNumber) {
-            updateUserStore(userStore, user.phoneNumber, addendum, counter)
-          }
-          if (number === user.phoneNumber) {
-            updateUserStore(userStore, number, addendum, counter)
-          }
-        })
-      }
-    })
-  })
+  //       record.assignees.forEach(function (user) {
+  //         addendum.key = param.user.phoneNumber + user.phoneNumber;
+  //         addendumObjectStore.put(addendum);
+  //         if (record.template === 'duty') {
+  //           console.log('duty addendum added');
+  //         }
+  //         if (number === param.user.phoneNumber) {
+  //           updateUserStore(userStore, user.phoneNumber, addendum, counter)
+  //         }
+  //         if (number === user.phoneNumber) {
+  //           updateUserStore(userStore, number, addendum, counter)
+  //         }
+  //       })
+  //     }
+  //   })
+  // })
 
-  function handleDutyActivity(activity,updateTx){
+  function handleDutyActivity(activity, updateTx) {
     const store = updateTx.objectStore('activity');
-    store.get(activity.activityId).onsuccess = function(e) {
+    store.get(activity.activityId).onsuccess = function (e) {
       const record = e.target.result;
-      if(!record) {
+      if (!record) {
         store.put(activity);
         return
       }
@@ -935,7 +925,7 @@ function successResponse(read, param, db, resolve, reject) {
       }), param)
       return;
     }
-   
+
     putSubscription(subscription, updateTx);
 
   })
@@ -952,19 +942,28 @@ function successResponse(read, param, db, resolve, reject) {
   }
 }
 
-function updateUserStore(userStore, phoneNumber, currentAddendum, counter) {
+function updateUserStore(userStore, phoneNumber, currentAddendum,user) {
   userStore.get(phoneNumber).onsuccess = function (event) {
-    let userRecord = event.target.result
-    if (!userRecord) {
-      userRecord = {
-        count: 0,
-        displayName: '',
-        photoURL: '',
-        mobile: phoneNumber
-      }
+    let userRecord = event.target.result || {
+      count: 0,
+      displayName: '',
+      photoURL: '',
+      mobile: phoneNumber,
+      comment:'',
+      timestamp:'',
+      NAME_SEARCH:user.displayName.toLowerCase()
     }
-    userRecord.comment = currentAddendum.comment
-    userRecord.timestamp = currentAddendum.timestamp
+    
+    userRecord.comment = currentAddendum.comment;
+    userRecord.timestamp = currentAddendum.timestamp;
+    userRecord.mobile = user.phoneNumber;
+    userRecord.displayName = user.displayName;
+
+    if (!userRecord.photoURL) {
+      userRecord.photoURL = user.photoURL;
+    }
+
+    userRecord.NAME_SEARCH = user.displayName.toLowerCase();
     if (currentAddendum.isComment) {
       if (!counter[phoneNumber]) return userStore.put(userRecord);
     }

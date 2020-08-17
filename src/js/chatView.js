@@ -307,7 +307,7 @@ function readLatestChats(initList) {
             return;
         };
 
-        currentChats += userLi(cursor.value)
+        currentChats += userLi(cursor.value,true)
         currentChatsArray.push(cursor.value)
 
         cursor.continue();
@@ -362,8 +362,8 @@ function initializeContactList(contactsUl) {
     })
 }
 
-function userLi(value) {
-    return `<li class="mdc-list-item">
+function userLi(value,showCount) {
+    return `<li class="mdc-list-item ${value.count && showCount ? 'unread-chat':''}">
    <div style="position:relative">
    <img class="mdc-list-item__graphic"  aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'}  onerror="imgErr(this)" data-number=${value.mobile}>
    <i class="material-icons user-selection-icon">check_circle</i>
@@ -379,7 +379,8 @@ function userLi(value) {
     </span>
     <span class="mdc-list-item__meta" aria-hidden="true">
     <span class='chat-time mdc-typography--subtitle2'>
-        ${value.timestamp ? formatCreatedTime(value.timestamp) : ''}</span>
+        ${value.timestamp ? formatChatTime(value.timestamp) : ''}</span>
+        ${value.count && showCount ? ` <div class='unread-count'>${value.count}</div>` :''}
     </span>
     </li>`
 }
@@ -444,6 +445,18 @@ function formatCreatedTime(createdTime) {
         nextWeek: 'dddd',
         lastWeek: 'DD/MM/YY hh:mm A',
         sameElse: 'DD/MM/YY hh:mm A'
+    })
+}
+
+function formatChatTime(createdTime) {
+    if (!createdTime) return ''
+    return moment(createdTime).calendar(null, {
+        sameDay: 'hh:mm A',
+        lastDay: '[Yesterday]',
+        nextDay: '[Tomorrow]',
+        nextWeek: 'dddd',
+        lastWeek: 'DD/MM/YY',
+        sameElse: 'DD/MM/YY'
     })
 }
 
