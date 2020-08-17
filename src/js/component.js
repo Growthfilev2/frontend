@@ -211,7 +211,7 @@ function setHeader(sectionStart, sectionEnd) {
             }, {
                 id: 'contacts-icon',
                 icon: 'contacts',
-                name: 'Contacts'
+                name: 'Inbox'
             }];
             const tabBar = showTabs(tabs, 'navigation-tabs');
             el.insertBefore(tabBar, el.querySelector('#main-progress-bar'));
