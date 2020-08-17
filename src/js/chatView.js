@@ -485,17 +485,7 @@ function enterChat(userRecord) {
                 <div id='content'>
                 </div>
             
-                <form class="conversation-compose">
-                  <div class="input-space-left"></div>
-                                    
-                  <input class="input-msg"  name="input" placeholder="Type a message" autocomplete="off"  id='comment-input'>
-                  <div class="input-space-right"></div>
-                  <button class="send" id='comment-send'>
-                      <div class="circle">
-                        <i class="material-icons">send</i>
-                      </div>
-                    </button>
-                </form>
+            
               </div>
             </div>
           </div>
@@ -1240,37 +1230,6 @@ function getUserChats(userRecord) {
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
         setBottomScroll();
-
-        const form = document.querySelector('.conversation-compose');
-        if (!form) return;
-        form.querySelector('input').addEventListener('focus', function (evt) {
-            setTimeout(function () {
-                setBottomScroll();
-            }, 500)
-        })
-
-        form.addEventListener('submit', function (e) {
-
-            e.preventDefault();
-
-            var input = e.target.input;
-            const val = input.value;
-            if (!val) return;
-            document.getElementById('comment-send').disabled = true
-            appLocation(3).then(function (geopoint) {
-                requestCreator('dm', {
-                    comment: val,
-                    assignee: userRecord.mobile
-                }, geopoint).then(function () {
-                    parent.appendChild(messageBoxDom(val, 'me', Date.now()))
-                    setBottomScroll();
-                    input.value = ''
-                    document.getElementById('comment-send').disabled = false
-                }).catch(function (error) {
-                    document.getElementById('comment-send').disabled = false
-                })
-            }).catch(handleLocationError)
-        });
     }
 }
 
