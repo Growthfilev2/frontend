@@ -83,8 +83,8 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     return resolve({
-      latitude:53.335831,
-      longitude:-2.855123,
+      latitude:28.704064,
+      longitude: 77.102469,
       lastLocationTime:Date.now()
     })
 
@@ -454,10 +454,7 @@ function handleComponentUpdation(readResponse) {
         if (!readResponse.addendum.length) return;
         dynamicAppendChats(readResponse.addendum)
         break;
-      case 'chatView':
-        if (!readResponse.addendum.length) return;
-        readLatestChats(false);
-        break;
+
       case 'jobView':
         if (document.getElementById('rating-view')) return;
         getCurrentJob().then(function (currentJob) {

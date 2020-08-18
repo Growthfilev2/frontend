@@ -822,13 +822,11 @@ function successResponse(read, param, db, resolve, reject) {
     addendumObjectStore.index('activityId').getAll(activity.activityId).onsuccess = function (e) {
       const addendums = e.target.result || [];
       console.log('addendums', addendums);
-      const sorted = addendums.sort(function (a, b) {
+      const  lastAddendum = addendums.sort(function (a, b) {
         return b.timestamp - a.timestamp;
-      });
-
-      const  lastAddendum = sorted[0];
+      })[0];
       console.log('last addendum',lastAddendum)
-      updateUserStore(lastAddendum, activity.assignees,param,userStore);
+      updateUserStore(lastAddendum, activity.assignees,param,userStore)
     }
   })
 
@@ -839,6 +837,8 @@ function successResponse(read, param, db, resolve, reject) {
         return setAddendumForUser(userStore,assignee,lastAddendum,param)
       })
     })
+    return promise;
+
   }
 
 
@@ -851,20 +851,26 @@ function successResponse(read, param, db, resolve, reject) {
         user.mobile = assignee.phoneNumber;
         user.photoURL = assignee.photoURL;
         user.NAME_SEARCH = assignee.displayName.toLowerCase();
-        user.count = user.count || 0;
-        user.timestamp = user.timestamp || '';
-        user.comment = user.comment || '';
-        
-        
+
         if (lastAddendum) {
-          user.count += 1;
+          if(user.mobile !== param.user.phoneNumber) {
+            console.log('increment count');
+            if(user.count) {
+              user.count += 1;
+            }
+            else {
+              user.count = 1;
+            }
+          }
           user.timestamp = lastAddendum.timestamp;
           user.comment = lastAddendum.comment;
           lastAddendum.key = param.user.phoneNumber + assignee.phoneNumber;
+
           addendumObjectStore.put(lastAddendum);
         }
+       
         userStore.put(user).onsuccess = function(){
-          resolve(user)
+          resolve(true)
         }
       }
     })
@@ -906,7 +912,7 @@ function successResponse(read, param, db, resolve, reject) {
 
 
 
-  updateRoot(read, updateTx, param.user.uid, counter);
+  updateRoot(read, updateTx, param.user.uid);
   updateTx.oncomplete = function () {
     console.log("all completed");
     return resolve(read)
@@ -950,20 +956,12 @@ function updateUserStore(userStore, phoneNumber, currentAddendum, user) {
   }
 }
 
-function updateRoot(read, tx, uid, counter) {
-  let totalCount = 0;
-  Object.keys(counter).forEach(function (number) {
-    totalCount += counter[number]
-  })
+function updateRoot(read, tx, uid) {
+
   const store = tx.objectStore('root')
   store.get(uid).onsuccess = function (event) {
     const record = event.target.result;
     record.fromTime = read.upto;
-    if (record.totalCount) {
-      record.totalCount += totalCount;
-    } else {
-      record.totalCount = totalCount;
-    }
     console.log('start adding upto')
     store.put(record);
   }

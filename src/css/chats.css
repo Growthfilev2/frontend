@@ -25,6 +25,22 @@ font-weight: 500;
   font-size: 16px;
   font-weight: 500;
 }
+.tab-notification {
+  background-color: var(--mdc-theme-on-secondary);
+  color: var(--mdc-theme-primary);
+  text-align: center;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  position: relative;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 1;
+}
+.tab-notification > div {
+  margin-top: -3px;
+}
 
 .page {
   width: 100%;
