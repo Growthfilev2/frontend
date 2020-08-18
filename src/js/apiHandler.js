@@ -2,19 +2,7 @@ let deviceInfo;
 let currentDevice;
 let meta;
 
-function getTime() {
-  return Date.now()
-}
-
-function getWebWorkerVersion() {
-  const param = new URLSearchParams(self.location.search);
-  return Number(param.get('version'))
-}
-
-
-
 const requestFunctionCaller = {
-  dm: dm,
   statusChange: statusChange,
   share: share,
   update: update,
@@ -25,9 +13,6 @@ const requestFunctionCaller = {
   changePhoneNumber: changePhoneNumber,
   newBankAccount: newBankAccount,
   removeBankAccount: removeBankAccount,
-  subscription: createSubscription,
-  searchOffice: searchOffice,
-  checkIns: checkIns,
   idProof: idProof,
   device: device,
   acquisition: acquisition,
@@ -38,7 +23,12 @@ const requestFunctionCaller = {
   shareLink: shareLink
 }
 
-function sendSuccessRequestToMainThread(response, id) {
+/**
+ * send message back to main thread
+ * @param {object} response 
+ * @param {string} id 
+ */
+const sendSuccessRequestToMainThread = (response, id) => {
   self.postMessage({
     response: response,
     success: true,
@@ -46,7 +36,13 @@ function sendSuccessRequestToMainThread(response, id) {
   })
 }
 
-function sendErrorRequestToMainThread(error) {
+/**
+ * sends error body to main thread to show api rejection messages
+ * or to handle in view. if it's not an api rejection but js execution error in this file itself
+ * then log the error and pass to main thread.
+ * @param {object} error 
+ */
+const sendErrorRequestToMainThread = (error) => {
 
   const errorObject = {
     message: error.message,
@@ -54,11 +50,9 @@ function sendErrorRequestToMainThread(error) {
     apiRejection: false,
     success: false,
     id: error.id,
-    requestType: error.requestType
+    requestType: error.requestType,
+    stack: error.stack || '',
   }
-  if (error.stack) {
-    errorObject.stack = error.stack
-  };
 
   if (error.code) {
     errorObject.apiRejection = true
@@ -148,7 +142,6 @@ function handleNow(eventData, db) {
 }
 
 // Performs XMLHTTPRequest for the API's.
-
 function http(request, authorization = true) {
   return new Promise(function (resolve, reject) {
     const xhr = new XMLHttpRequest()
@@ -800,12 +793,6 @@ function successResponse(read, param, db, resolve, reject) {
       };
     };
 
-    // addendum.key = param.user.phoneNumber + addendum.user;
-    // addendumIds[addendum.activityId] ? addendumIds[addendum.activityId].push(addendum) : addendumIds[addendum.activityId] = [addendum]
-    // userTimestamp[addendum.user] ? userTimestamp[addendum.user].push(addendum) : userTimestamp[addendum.user] = [addendum];
-    // if (addendum.user !== param.user.phoneNumber) {
-    //   counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
-    // }
     addendumObjectStore.put(addendum)
   })
 
@@ -832,70 +819,57 @@ function successResponse(read, param, db, resolve, reject) {
     }
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
+    addendumObjectStore.index('activityId').getAll(activity.activityId).onsuccess = function (e) {
+      const addendums = e.target.result || [];
+      console.log('addendums', addendums);
+      const sorted = addendums.sort(function (a, b) {
+        return b.timestamp - a.timestamp;
+      });
 
-    activity.assignees.forEach(function (user) {
-      userStore.get(user.phoneNumber).onsuccess = function (event) {
-        let selfRecord = event.target.result;
-        // if(!userTimestamp[user.phoneNumber]) {
-        //   console.log(user)
-        // }
-
-        // userTimestamp[user.phoneNumber].forEach(function(addendum){
-        //   updateUserStore(userStore,user.phoneNumber,addendum,user)
-        // })
-        if (!selfRecord) {
-          selfRecord = {
-            count: 0
-          }
-        };
-
-        // selfRecord.mobile = user.phoneNumber;
-        // selfRecord.displayName = user.displayName;
-        // if (!selfRecord.photoURL) {
-        //   selfRecord.photoURL = user.photoURL;
-        // }
-        // selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
-        // if (!selfRecord.timestamp) {
-        //   selfRecord.timestamp = ''
-        // }
-
-
-
-        // userStore.put(selfRecord)
-      }
-    })
+      const  lastAddendum = sorted[0];
+      console.log('last addendum',lastAddendum)
+      updateUserStore(lastAddendum, activity.assignees,param,userStore);
+    }
   })
 
-  // console.log(userTimestamp);
-  // Object.keys(userTimestamp).forEach(function (number) {
+  function updateUserStore(lastAddendum,assignees,param,userStore) {
+    let promise = Promise.resolve();
+    assignees.forEach(function (assignee) {
+      promise = promise.then(function(){
+        return setAddendumForUser(userStore,assignee,lastAddendum,param)
+      })
+    })
+  }
 
-  //   const currentAddendums = userTimestamp[number]
-  //   currentAddendums.forEach(function (addendum) {
-  //     const activityId = addendum.activityId
-  //     activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
-  //       const record = activityEvent.target.result;
-  //       if (!record) {
-  //         console.log('no activity id found for addendum')
-  //         return;
-  //       }
 
-  //       record.assignees.forEach(function (user) {
-  //         addendum.key = param.user.phoneNumber + user.phoneNumber;
-  //         addendumObjectStore.put(addendum);
-  //         if (record.template === 'duty') {
-  //           console.log('duty addendum added');
-  //         }
-  //         if (number === param.user.phoneNumber) {
-  //           updateUserStore(userStore, user.phoneNumber, addendum, counter)
-  //         }
-  //         if (number === user.phoneNumber) {
-  //           updateUserStore(userStore, number, addendum, counter)
-  //         }
-  //       })
-  //     }
-  //   })
-  // })
+  function setAddendumForUser(userStore,assignee,lastAddendum,param) {
+    return new Promise(function(resolve,reject){
 
+      userStore.get(assignee.phoneNumber).onsuccess = function (e) {
+        const user = e.target.result || {};
+        user.displayName = assignee.displayName;
+        user.mobile = assignee.phoneNumber;
+        user.photoURL = assignee.photoURL;
+        user.NAME_SEARCH = assignee.displayName.toLowerCase();
+        user.count = user.count || 0;
+        user.timestamp = user.timestamp || '';
+        user.comment = user.comment || '';
+        
+        
+        if (lastAddendum) {
+          user.count += 1;
+          user.timestamp = lastAddendum.timestamp;
+          user.comment = lastAddendum.comment;
+          lastAddendum.key = param.user.phoneNumber + assignee.phoneNumber;
+          addendumObjectStore.put(lastAddendum);
+        }
+        userStore.put(user).onsuccess = function(){
+          resolve(user)
+        }
+      }
+    })
+  }
+    
   function handleDutyActivity(activity, updateTx) {
     const store = updateTx.objectStore('activity');
     store.get(activity.activityId).onsuccess = function (e) {
@@ -942,18 +916,18 @@ function successResponse(read, param, db, resolve, reject) {
   }
 }
 
-function updateUserStore(userStore, phoneNumber, currentAddendum,user) {
+function updateUserStore(userStore, phoneNumber, currentAddendum, user) {
   userStore.get(phoneNumber).onsuccess = function (event) {
     let userRecord = event.target.result || {
       count: 0,
       displayName: '',
       photoURL: '',
       mobile: phoneNumber,
-      comment:'',
-      timestamp:'',
-      NAME_SEARCH:user.displayName.toLowerCase()
+      comment: '',
+      timestamp: '',
+      NAME_SEARCH: user.displayName.toLowerCase()
     }
-    
+
     userRecord.comment = currentAddendum.comment;
     userRecord.timestamp = currentAddendum.timestamp;
     userRecord.mobile = user.phoneNumber;

@@ -451,7 +451,7 @@ function formatCreatedTime(createdTime) {
 function formatChatTime(createdTime) {
     if (!createdTime) return ''
     return moment(createdTime).calendar(null, {
-        sameDay: 'hh:mm A',
+        sameDay: 'hh:mm',
         lastDay: '[Yesterday]',
         nextDay: '[Tomorrow]',
         nextWeek: 'dddd',
