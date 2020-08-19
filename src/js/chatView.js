@@ -2,9 +2,6 @@ var contactsUl;
 var chatsUl;
 let currentChatsArray = [];
 let currentContactsArray = [];
-let menu;
-let timer = null;
-const duration = 800;
 
 function chatView() {
     const sectionContent = document.getElementById('app-tab-content');
@@ -299,8 +296,6 @@ function readLatestChats(initList) {
     index.openCursor(range, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        console.log(cursor.value)
-
 
         if (cursor.value.mobile === myNumber) {
             cursor.continue();
@@ -488,7 +483,7 @@ function enterChat(userRecord) {
 
     const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
-    console.log(header)
+   
 
 
     sectionContent.innerHTML = `
@@ -519,19 +514,6 @@ function enterChat(userRecord) {
 
 }
 
-function actionBoxDom(value, position) {
-    const div = createElement('div', {
-        className: `message ${position} menu-action`
-    })
-    div.addEventListener('touchstart', function (event) {
-        touchStart(event, value.addendumId, value.activityId, value.location._latitude, value.location._longitude);
-    })
-    div.addEventListener('touchend', touchEnd)
-    div.addEventListener('touchcancel', touchCancel);
-    div.addEventListener('touchmove', touchMove);
-    div.innerHTML = actionBoxContent(value)
-    return div
-}
 
 function actionBoxContent(value) {
 
@@ -539,57 +521,34 @@ function actionBoxContent(value) {
     <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> </div>
     ${value.comment}
 <span class="metadata">
+<i class='material-icons'>info</i>
+<span>click to see more</span>
     <span class="time">
-    ${moment(value.timestamp).format('hh:mm')}
+        ${moment(value.timestamp).format('hh:mm')}
     </span>
-    <span class='tick'>
-        <i class='material-icons'>info</i>
-    </span>
+  
 </span>`
 }
 
 function actionBox(value, position) {
-    return `
-    <div class="message ${position} menu-action" ontouchstart="touchStart(event,'${value.addendumId}','${value.activityId}','${value.location._latitude}','${value.location._longitude}')" ontouchEnd="touchEnd(event)" ontouchmove="touchMove(event)" ontouchcancel="touchCancel(event)">  
-    ${actionBoxContent(value)}
-    </div>
-  `
+    const div = createElement('div',{
+        className:`message ${position} menu-action`
+    });
+    div.addEventListener('click',function(){
+        openActivity(value);
+    })
+    div.innerHTML = `${actionBoxContent(value)}`
+    return div;
 }
 
-function handleLongPress(addendumId, activityId, _latitude, _longitude) {
-    clearTimeout(timer);
-    const geopoint = {
-        _latitude: _latitude,
-        _longitude: _longitude
+function openActivity(value) {
+    db.transaction('activity').objectStore('activity').get(value.activityId).onsuccess = function (event) {
+        const activity = event.target.result;
+        if (!activity) return;
+        const heading = createActivityHeading(activity,value.location)
+        showViewDialog(heading, activity, 'view-form');
     }
-    if (menu) {
-        menu.open = false;
-        menu = null;
-    }
-    createActivityActionMenu(addendumId, activityId, geopoint)
-
 };
-
-function touchStart(event, addendumId, activityId, _latitude, _longitude) {
-
-    timer = setTimeout(function () {
-        handleLongPress(addendumId, activityId, _latitude, _longitude)
-    }, duration)
-}
-
-function touchEnd(event) {
-    clearTimeout(timer)
-}
-
-function touchMove(event) {
-    clearTimeout(timer)
-
-}
-
-function touchCancel(event) {
-    clearTimeout(timer)
-
-}
 
 
 
@@ -603,31 +562,29 @@ function messageBoxContent(comment, time) {
 }
 
 function messageBox(comment, position, time) {
-
-    return ` <div class="message ${position}">
-    ${messageBoxContent(comment,time)}
-    `
-}
-
-function messageBoxDom(comment, position, time) {
-
-    const div = createElement('div', {
-        className: `message ${position}`
+    const div = createElement('div',{
+        className:`message ${position}`
     })
-    div.innerHTML = messageBoxContent(comment, time)
-
+    div.innerHTML = ` ${messageBoxContent(comment,time)}`
     return div;
 }
 
-function createActivityHeading(activity) {
+
+
+function createActivityHeading(activity,geopoint) {
+    let mapTag = `<a target="_blank" href='comgooglemaps://?center=${geopoint._latitude},${geopoint._longitude}'>view in map</span>`
+    if (native.getName() === 'Android') {
+        mapTag = `<a href='geo:${geopoint._latitude},${geopoint._longitude}?q=${geopoint._latitude},${geopoint._longitude}'>view in map</a>`
+    }
     return `${activity.activityName}
     <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
+    <i class='material-icons dialog-close--heading' id='close-activity-dialog'>close</i>
     ${activity.creator.displayName  || activity.creator.phoneNumber  ? ` <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>` :''}
-   `
+    <div class='mdc-typography--subtitle2'>${mapTag}</div>
+    `
 }
 
 function getStatusArray(activity) {
-    console.log(activity)
     const items = [];
     const confirm = {
         name: 'Confirm',
@@ -639,7 +596,7 @@ function getStatusArray(activity) {
         name: 'Undo',
         icon: 'undo',
         status: 'PENDING',
-        color: 'black'
+        color: '#103153'
     }
     const cancel = {
         name: 'Delete',
@@ -649,89 +606,49 @@ function getStatusArray(activity) {
     }
 
     if (activity.status === 'CANCELLED') {
-        items.push(confirm, undo)
+        items.push(undo,confirm)
     }
     if (activity.status === 'PENDING') {
-        items.push(confirm, cancel)
+        items.push(cancel,confirm)
 
     }
     if (activity.status === 'CONFIRMED') {
-        items.push(undo, cancel);
+        items.push(cancel, undo);
     };
     return items;
 }
 
-function createActivityActionMenu(addendumId, activityId, geopoint) {
 
-    db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
-        const activity = event.target.result;
-        if (!activity) return;
-        const heading = createActivityHeading(activity)
-        console.log(activity.creator.displayName)
-        let items = [{
-            name: 'View',
-            icon: 'info'
-        }];
-        if (activity.canEdit) {
-            items.push({
-                name: 'Share',
-                icon: 'share'
-            })
-            items = items.concat(getStatusArray(activity))
-            console.log(items)
-        };
-
-        const joinedId = addendumId + activityId
-        document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
-        document.getElementById(joinedId).appendChild(menuItemMap({
-            name: 'Map',
-            icon: 'map'
-        }, geopoint));
-
-        menu = new mdc.menu.MDCMenu(document.getElementById(joinedId))
-        menu.open = true
-        menu.root_.classList.add('align-right-menu');
-
-
-        menu.listen('MDCMenu:selected', function (evt) {
-            switch (items[evt.detail.index].name) {
-                case 'View':
-                    showViewDialog(heading, activity, 'view-form')
-                    break;
-                case 'Share':
-                    share(activity, dom_root)
-                    break;
-                case 'Undo':
-                    activity.status = 'PENDING';
-                    setActivityStatus(activity)
-                    break;
-                case 'Confirm':
-                    activity.status = 'CONFIRMED';
-                    setActivityStatus(activity)
-                    break;
-                case 'Delete':
-                    activity.status = 'CANCELLED';
-                    setActivityStatus(activity)
-                    break;
-                default:
-                    break;
-            }
-        })
-    }
-
-}
 
 
 function showViewDialog(heading, activity, id) {
 
     const dialog = new Dialog(heading, activityDomCustomer(activity), id).create()
-
+    
     dialog.open();
 
-    dialog.autoStackButtons = false;
+    const footer = dialog.container_.querySelector('.mdc-dialog__actions');
+    if(activity.canEdit) {
+        footer.innerHTML = '';
+        getStatusArray(activity).forEach(function(item,index){
+            const button = createButton(item.name,'',item.icon);
+            if(index == 0) {
+                button.style.marginRight = 'auto';
+            }
+            button.style.color = item.color;
+            button.addEventListener('click',function(){
+                    activity.status = item.status
+                    setActivityStatus(activity)
+            })
+            footer.appendChild(button);
+        });
+    }
+    else {
+        footer.remove()
+    }
 
-    dialog.buttons_[1].classList.add("hidden");
-    new mdc.ripple.MDCRipple(dialog.buttons_[0])
+
+    dialog.autoStackButtons = false;
     dialog.listen("MDCDialog:opened", function (evt) {
         const scheduleEl = document.getElementById('schedule-container');
         if (scheduleEl) {
@@ -739,6 +656,14 @@ function showViewDialog(heading, activity, id) {
             scheduleList.layout()
         }
     })
+    document.getElementById('close-activity-dialog').addEventListener('click',function(){
+        dialog.close();
+    })
+    if(document.getElementById('share-btn')) {
+        document.getElementById('share-btn').addEventListener('click',function(){
+            share(activity, dom_root)
+        })
+    }
     return dialog;
 }
 
@@ -807,7 +732,7 @@ function share(activity, parent) {
     const ul = new mdc.list.MDCList(ulSelector)
     const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
     history.pushState(['share', activity], null, null)
-    console.log(chipInit)
+
     loadUsers(true, alreadySelected).then(function (userResult) {
 
         if (!userResult.data.length) return;
@@ -817,7 +742,7 @@ function share(activity, parent) {
                 snacks('At least 1 contact must be selected')
                 return;
             }
-            console.log(newSelected);
+
             activity.share = userArray;
             addAssignee(activity);
 
@@ -826,7 +751,7 @@ function share(activity, parent) {
 
         chipInit.listen('MDCChip:removal', function (event) {
 
-            console.log(chipInit.chips)
+        
             const liElement = ul.listElements[Number(event.detail.chipId)]
             delete newSelected[userResult.data[Number(event.detail.chipId)].mobile]
             chipSetEl.removeChild(event.detail.root);
@@ -1041,7 +966,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
     }
     if (activityRecord.attachment[attachmentName].type === 'product') {
         if(!checkProductLength(activityRecord.attachment['Products'].value)) return '';
-        console.log(activityRecord.attachment[attachmentName])
+      
         return `<div class='products-container'>
             <p class='mdc-typography--subtitle2 mb-0'>Products : </p>
             ${activityRecord.attachment[attachmentName].value.map(function(product){
@@ -1115,8 +1040,11 @@ function viewAssignee(activityRecord) {
                     <div class='mdc-chip__text'>${user.displayName || user.phoneNumber}</div>
                 </div>`
     }).join("")}
+    ${activityRecord.canEdit ? `<div class="mdc-chip add-people" id='share-btn'>
+    <i class='mdc-chip__icon mdc-chip__icon--leading material-icons'>group_add</i>
+    <div class='mdc-chip__text'>Add people</div>
+</div>` :''} 
     </div>`
-
 }
 
 
@@ -1175,7 +1103,7 @@ function dynamicAppendChats() {
     .transaction('addendum')
     .objectStore('addendum')
     .index('timestamp')
-    .openCursor(IDBKeyRange.lowerBound(Number(parent.dataset.timestamp),true),"prev")
+    .openCursor(IDBKeyRange.lowerBound(Number(parent.dataset.timestamp),true))
     .onsuccess = function(e){
         const cursor = e.target.result;
         if(!cursor) return;
@@ -1184,17 +1112,17 @@ function dynamicAppendChats() {
             cursor.continue();
             return;
         }
-        console.log(cursor.value)
+       
         let position = 'them';
         if (cursor.value.user === myNumber) {
             position = 'me'
         }
 
         if (cursor.value.isComment) {
-            parent.appendChild(messageBoxDom(cursor.value.comment, position, cursor.value.timestamp))
+            parent.appendChild(messageBox(cursor.value.comment, position, cursor.value.timestamp))
         }
         else {
-            parent.appendChild(actionBoxDom(cursor.value, position))
+            parent.appendChild(actionBox(cursor.value, position))
         }
         cursor.continue();
     }
@@ -1225,9 +1153,12 @@ function getHumanDateString(date) {
 }
 
 function dateBox(dateString) {
-    return `<div class='date-box'>
-<div class="date" data-chat-date='${dateString}'>${dateString}</div>
-</div>`
+    const box = createElement('div',{
+        className:'date-box'
+    })
+    box.innerHTML =`<div class="date" data-chat-date='${dateString}'>${dateString}</div>
+    `
+   return box
 
 
 }
@@ -1242,7 +1173,7 @@ function getUserChats(userRecord) {
 
     const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
-    let timeLine = ''
+    let timeLine = document.createDocumentFragment();
     let position = '';
     let currentDateName = ''
     let lastTimestamp = '';
@@ -1259,19 +1190,20 @@ function getUserChats(userRecord) {
         };
         const dateName = getHumanDateString(moment(cursor.value.timestamp))
         if (dateName !== currentDateName) {
-            timeLine += dateBox(dateName)
+            timeLine.appendChild(dateBox(dateName))
         }
         currentDateName = dateName;
         if (cursor.value.isComment) {
-            timeLine += messageBox(cursor.value.comment, position, cursor.value.timestamp)
+            timeLine.appendChild(messageBox(cursor.value.comment, position, cursor.value.timestamp))
         } else {
-            timeLine += actionBox(cursor.value, position);
+            timeLine.appendChild(actionBox(cursor.value, position));
         }
         lastTimestamp = cursor.value.timestamp
         cursor.continue();
     }
     tx.oncomplete = function () {
-        parent.innerHTML = timeLine;
+        parent.innerHTML = '';
+        parent.appendChild(timeLine);
         setBottomScroll();
         parent.dataset.timestamp = lastTimestamp
     }

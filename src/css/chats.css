@@ -1,16 +1,19 @@
-
-.unread-chat .mdc-list-item__text , .unread-chat .mdc-list-item__secondary-text{
-color: black !important;
-font-weight: 500;
+.unread-chat .mdc-list-item__text,
+.unread-chat .mdc-list-item__secondary-text {
+  color: black !important;
+  font-weight: 500;
 }
+
 .unread-chat .mdc-list-item__primary-text {
   font-weight: bold !important;
 }
+
 .unread-chat .chat-time {
   font-weight: 500;
   color: black;
 }
-.unread-chat .unread-count{
+
+.unread-chat .unread-count {
   text-align: center;
   background-color: var(--mdc-theme-secondary);
   border-radius: 50%;
@@ -25,6 +28,7 @@ font-weight: 500;
   font-size: 16px;
   font-weight: 500;
 }
+
 .tab-notification {
   background-color: var(--mdc-theme-on-secondary);
   color: var(--mdc-theme-primary);
@@ -38,8 +42,23 @@ font-weight: 500;
   font-weight: 500;
   opacity: 1;
 }
-.tab-notification > div {
+
+.tab-notification>div {
   margin-top: -3px;
+}
+
+.dialog-close--heading {
+  float: right;
+  color: white;
+  font-size: 39px;
+  width: 40px;
+  height: 40px;
+  background-color: var(--mdc-theme-primary);
+  border-radius: 50%;
+  text-align: center;
+  position: absolute;
+  right: -7px;
+  top: -16px;
 }
 
 .page {
@@ -198,10 +217,10 @@ font-weight: 500;
 }
 
 .conversation .conversation-container {
-  height: calc(100% - 68px);
+  height:100%;
   box-shadow: inset 0 10px 10px -10px #000000;
   overflow-x: hidden;
-  padding: 0 16px;
+  padding: 0px 16px 16px 16px;
   margin-bottom: 5px;
   padding-bottom: 10px;
 }
@@ -239,38 +258,23 @@ font-weight: 500;
 }
 
 .metadata {
-  display: inline-block;
-  float: right;
-  padding: 0 0 0 7px;
-  position: relative;
-  bottom: -4px;
+  display: inline-flex;
+  align-items: center;
+ 
+  width: 100%;
+  margin-top: 10px;
+ 
+}
+.metadata i {
+  font-size: 20px;
+  margin-right: 10px;
+
 }
 
 .metadata .time {
-  color: rgba(0, 0, 0, .45);
-  font-size: 13px;
-  display: inline-block;
+  margin-left: auto;
+  font-size: 14px;
 }
-
-.message.me .metadata .time {
-  color: white;
-}
-
-.metadata .tick {
-  display: inline-block;
-  margin-left: 2px;
-  position: relative;
-  top: 4px;
-  height: 16px;
-  width: 16px;
-
-}
-
-.metadata .tick i {
-  font-size: 15px;
-}
-
-
 
 
 .message:first-child {
@@ -284,14 +288,6 @@ font-weight: 500;
   float: left;
 }
 
-.message.them .metadata {
-  padding: 0 0 0 16px;
-
-}
-
-.message.them .metadata .tick {
-  color: black;
-}
 
 .message.them:after {
   border-width: 0px 10px 10px 0;
@@ -301,15 +297,12 @@ font-weight: 500;
 }
 
 .message.me {
-  background: var(--mdc-theme-background);
+  background: #30669e;
   border-radius: 5px 0px 5px 5px;
   float: right;
-  color: white;
+  color: var(--mdc-theme-on-secondary);
 }
 
-.message.me .metadata .tick {
-  color: white;
-}
 
 .message.me:after {
   border-width: 0px 0 10px 10px;
@@ -536,7 +529,7 @@ font-weight: 500;
 
 #view-form .mdc-card .view-card .mdc-list {
   padding: 0px;
-  
+
 }
 
 #view-form .mdc-card .view-card .mdc-list li {
@@ -550,6 +543,7 @@ font-weight: 500;
     margin-right: 20px;
   }
 }
+
 @media (max-width:370px) {
   #view-form #schedule-container .mdc-list-item__secondary-text {
     font-size: 13px;
@@ -570,16 +564,24 @@ font-weight: 500;
 }
 
 #attachment-container h1 {
-word-wrap: break-word;
+  word-wrap: break-word;
 }
 
 #assignee-container #share {
 
   overflow-y: auto;
 }
+
+#share .add-people {
+  background-color: white;
+  border: 2px solid var(--mdc-theme-primary);
+  color: var(--mdc-theme-primary);
+}
+
 #assignee-container .tasks-heading {
   width: 100%;
 }
+
 #assignee-container .tasks-heading .mdc-chip__text {
   overflow: hidden;
   text-overflow: ellipsis;
