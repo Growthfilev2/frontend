@@ -472,7 +472,15 @@ function enterChat(userRecord) {
     removeSwipe()
     const sectionContent = document.getElementById('app-tab-content')
     if (!sectionContent) return;
-
+    const tx =  db.transaction('users','readwrite');
+    const store =  tx.objectStore('users')
+    store.get(userRecord.mobile).onsuccess = function(e){
+        const record = e.target.result;
+        if(!record) return;
+        delete record.count;
+        store.put(record)
+    }
+ 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
@@ -1159,27 +1167,49 @@ function createStatusChange(status) {
 
 }
 
-function dynamicAppendChats(addendums) {
+function dynamicAppendChats() {
     const parent = document.getElementById('content');
     const myNumber = firebase.auth().currentUser.phoneNumber;
-
-    addendums.forEach(function (addendum) {
-        if (!parent) return;
-
+    
+    db
+    .transaction('addendum')
+    .objectStore('addendum')
+    .index('timestamp')
+    .openCursor(IDBKeyRange.lowerBound(Number(parent.dataset.timestamp),true),"prev")
+    .onsuccess = function(e){
+        const cursor = e.target.result;
+        if(!cursor) return;
+        if(!parent) return;
+        if(cursor.value.key !== myNumber+history.state[1].mobile) {
+            cursor.continue();
+            return;
+        }
+        console.log(cursor.value)
         let position = 'them';
-        if (addendum.user === myNumber) {
+        if (cursor.value.user === myNumber) {
             position = 'me'
         }
-        if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
-            if (addendum.isComment) {
-                if (addendum.user === myNumber) return;
-                parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp))
-                return;
-            }
-            parent.appendChild(actionBoxDom(addendum, position))
+
+        if (cursor.value.isComment) {
+            parent.appendChild(messageBoxDom(cursor.value.comment, position, cursor.value.timestamp))
         }
-    })
-    setBottomScroll()
+        else {
+            parent.appendChild(actionBoxDom(cursor.value, position))
+        }
+        cursor.continue();
+    }
+
+    const tx =  db.transaction('users','readwrite');
+    const store =  tx.objectStore('users')
+    store.get(history.state[1].mobile).onsuccess = function(e){
+        const record = e.target.result;
+        if(!record) return;
+        delete record.count;
+        store.put(record)
+    }
+    tx.oncomplete = function(){
+        setBottomScroll();
+    }
 }
 
 function getHumanDateString(date) {
@@ -1215,6 +1245,7 @@ function getUserChats(userRecord) {
     let timeLine = ''
     let position = '';
     let currentDateName = ''
+    let lastTimestamp = '';
     index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -1234,15 +1265,15 @@ function getUserChats(userRecord) {
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, cursor.value.timestamp)
         } else {
-            if (cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
-                timeLine += actionBox(cursor.value, position);
-            }
+            timeLine += actionBox(cursor.value, position);
         }
+        lastTimestamp = cursor.value.timestamp
         cursor.continue();
     }
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
         setBottomScroll();
+        parent.dataset.timestamp = lastTimestamp
     }
 }
 

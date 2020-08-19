@@ -83,8 +83,8 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     return resolve({
-      latitude:28.704064,
-      longitude: 77.102469,
+      latitude:35.701955,
+      longitude: 139.77129,
       lastLocationTime:Date.now()
     })
 
@@ -452,7 +452,7 @@ function handleComponentUpdation(readResponse) {
     switch (history.state[0]) {
       case 'enterChat':
         if (!readResponse.addendum.length) return;
-        dynamicAppendChats(readResponse.addendum)
+        dynamicAppendChats();
         break;
 
       case 'jobView':
@@ -470,6 +470,7 @@ function handleComponentUpdation(readResponse) {
         if (appTabBar && document.getElementById('app-tab-content')) {
           const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
           switchTabs(selectedIndex);
+          updateTotalCount()
         }
         break;
       default:

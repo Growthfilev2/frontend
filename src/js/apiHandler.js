@@ -826,6 +826,7 @@ function successResponse(read, param, db, resolve, reject) {
         return b.timestamp - a.timestamp;
       })[0];
       console.log('last addendum',lastAddendum)
+
       updateUserStore(lastAddendum, activity.assignees,param,userStore)
     }
   })
@@ -833,6 +834,7 @@ function successResponse(read, param, db, resolve, reject) {
   function updateUserStore(lastAddendum,assignees,param,userStore) {
     let promise = Promise.resolve();
     assignees.forEach(function (assignee) {
+      
       promise = promise.then(function(){
         return setAddendumForUser(userStore,assignee,lastAddendum,param)
       })
@@ -865,9 +867,10 @@ function successResponse(read, param, db, resolve, reject) {
           user.timestamp = lastAddendum.timestamp;
           user.comment = lastAddendum.comment;
           lastAddendum.key = param.user.phoneNumber + assignee.phoneNumber;
-
           addendumObjectStore.put(lastAddendum);
         }
+
+
        
         userStore.put(user).onsuccess = function(){
           resolve(true)
