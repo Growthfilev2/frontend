@@ -55,11 +55,7 @@ function sendFormToParent(formData) {
 
         requestCreator('create', formData, geopoint).then(function () {
             console.log(formData);
-            if (formData.template === 'call') {
-                markDutyFinished(formData)
-                return
-            };
-
+     
             successDialog(`You Created a ${formData.template}`);
             if (formData.report === 'attendance' && formData.id) {
                 const tx = db.transaction('attendance', 'readwrite');
@@ -122,13 +118,6 @@ function sendFormToParent(formData) {
         })
 
     }).catch(handleLocationError)
-}
-
-
-function markDutyFinished() {
-
-    successDialog(`Job completed`);
-    history.back();
 }
 
 function parseContact(contactString) {

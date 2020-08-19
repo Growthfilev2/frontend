@@ -900,7 +900,7 @@ function activityDomCustomer(activityRecord) {
         <div id='assignee-container'>
             ${activityRecord.assignees.length ?`<div class="assignees tasks-heading center">
             <i class="material-icons">share</i>
-            ${viewAssignee(activityRecord)}
+            ${viewAssignee(activityRecord,true)}
         </div>` :'' }
           
     </div>
@@ -1031,7 +1031,7 @@ function viewSchedule(activityRecord) {
     }).join("")}`
 }
 
-function viewAssignee(activityRecord) {
+function viewAssignee(activityRecord,canAdd) {
     return `
     <div class="mdc-chip-set" id='share'>
      ${activityRecord.assignees.map(function(user,idx){
@@ -1040,7 +1040,8 @@ function viewAssignee(activityRecord) {
                     <div class='mdc-chip__text'>${user.displayName || user.phoneNumber}</div>
                 </div>`
     }).join("")}
-    ${activityRecord.canEdit ? `<div class="mdc-chip add-people" id='share-btn'>
+
+    ${activityRecord.canEdit & canAdd ? `<div class="mdc-chip add-people" id='share-btn'>
     <i class='mdc-chip__icon mdc-chip__icon--leading material-icons'>group_add</i>
     <div class='mdc-chip__text'>Add people</div>
 </div>` :''} 

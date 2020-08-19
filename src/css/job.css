@@ -299,19 +299,10 @@ path.purple {
     font-weight: bold;
     font-size: 17px;
 }
-.duties--ul .navigate-next {
+.all-duties .navigate-next {
   font-size: 32px;
   color: var(--mdc-theme-primary);
 }
-
-
-
-/* .mdc-list--two-line .mdc-list-item.mdc-list--with-office , .mdc-list--two-line .mdc-list-item.active-duty {
-  height: 83px;
-} */
-/* .duties--ul .mdc-list-item.mdc-list--with-office .mdc-list-item__primary-text::before , .mdc-list--two-line .mdc-list-item.active-duty .mdc-list-item__primary-text::before{
-  height: 26px;
-} */
 
 .active-ul .active-duty {
   height: 100px;

@@ -1,5 +1,3 @@
-let worker;
-
 
 function jobView(currentDuty) {
     progressBar.close();
@@ -13,10 +11,8 @@ function jobView(currentDuty) {
             console.log(duty);
             duty.customerPhonenumber = customerPhonenumber;
             dom_root.appendChild(constructJobView(duty));
-
-        });
+    });
 };
-
 
 
 
@@ -100,6 +96,10 @@ function getCurrentJob() {
                 cursor.continue();
                 return
             };
+            if(cursor.value.isActive == false) {
+                cursor.continue();
+                return;
+            }
             console.log('matched location with duty location')
             record = cursor.value;
             cursor.continue();
@@ -166,24 +166,7 @@ function createAppHeader() {
     return header;
 }
 
-function updateTimer(activityId) {
-    if (worker) return;
-    worker = new Worker('js/timer-worker.js?version=2');
 
-
-    worker.onmessage = function (e) {
-        const time = e.data;
-        let el = document.getElementById(`active-duty--list-timer`) || document.getElementById('time-clock');
-        if (!el) return;
-        el.innerHTML = time;
-    }
-    worker.postMessage({
-        name: 'startTimer',
-        uid: firebase.auth().currentUser.uid,
-        dutyId: activityId,
-
-    });
-}
 
 
 function getCustomerPhoneNumber(location) {
@@ -418,7 +401,7 @@ function dutyScreen(duty) {
                 <div class='mdc-typography--headline6 bold' style='color:#7C909E;'>Duty started ${duty.creator.phoneNumber ? '' :`at ${formatCreatedTime(duty.schedule[0].startTime)}`}</div>
                 <div id='time-clock' class='mdc-typography--headline3 bold mb-10' data-id="${duty.activityId}"></div>
                 <div class='finish-button--container mt-20'>
-                        ${createExtendedFab('grade','Give rating','finish').outerHTML}
+                        ${createExtendedFab('close','Finish duty','finish').outerHTML}
                 </div>` :''} 
            </div>
            <span class='inline-flex'>
@@ -485,18 +468,7 @@ const createImageLi = (url, supportingText) => {
 }
 
 function constructJobView(duty) {
-    if (duty.canEdit && duty.isActive) {
-        const editBtn = createElement('button', {
-            className: 'material-icons mdc-top-app-bar__action-item mdc-icon-button',
-            textContent: 'edit',
-            id: 'edit-duty'
-        })
-        editBtn.addEventListener('click', function () {
-            history.pushState(['updateDuty'], null, null);
-            updateDuty(duty);
-        })
-        document.getElementById('section-end').insertBefore(editBtn, document.getElementById('section-end').firstChild)
-    }
+
     const el = createElement('div', {
         className: 'mdc-layout-grid job-screen'
     })
@@ -564,7 +536,7 @@ function constructJobView(duty) {
         const finish = el.querySelector('#finish');
         finish.classList.add('mdc-button--raised');
         finish.addEventListener('click', function () {
-            getRatingSubsription(duty)
+            markDutyFinished(duty)
         });
         const photoBtn = createExtendedFab('add_a_photo', 'Upload photo', '', true);
         photoBtn.style.zIndex = '99'
@@ -579,42 +551,15 @@ function constructJobView(duty) {
     return el;
 }
 
-function getRatingSubsription(duty) {
-    getSubscription(duty.office, 'call').then(function (subs) {
-        console.log(subs)
-        if (!subs.length) {
-            markDutyFinished({
-                dutyId: duty.activityId,
-                office: duty.office
-            });
-            return
-        }
-        const tx = db.transaction('map');
-        const store = tx.objectStore('map');
-        let customer;
-        store.index('location').get(duty.attachment.Location.value).onsuccess = function (evt) {
-            customer = evt.target.result;
-        }
-        tx.oncomplete = function () {
-            if (!customer) {
-                customer = {
-                    location: '',
-                    address: '',
-                    latitude: '',
-                    longitude: ''
-                }
-            }
-            if (subs.length == 1) return showRating(subs[0], customer, duty.activityId);
-            // const officeDialog = new Dialog('Choose office', officeSelectionList(subs), 'choose-office-subscription').create('simple');
-            // const officeList = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            // bottomDialog(officeDialog, officeList)
-            // officeList.listen('MDCList:action', function (officeEvent) {
-            //     officeDialog.close();
-            //     const selectedSubscription = subs[officeEvent.detail.index];
-            //     showRating(selectedSubscription, customer, duty.activityId);
-            // })
-        }
-    })
+function markDutyFinished(duty) {
+    const tx = db.transaction('activity','readwrite')
+    const store = tx.objectStore('activity');
+    duty.isActive = false;
+    store.put(duty);
+    tx.oncomplete = function(){
+        successDialog(`Duty completed`);
+        history.back();
+    }    
 }
 
 function checkProductLength(products) {
@@ -622,16 +567,6 @@ function checkProductLength(products) {
         return product.name
     }).length
 }
-
-// function getTimelineFillValue(firstActivityTimestamp, lastActivityTimestamp) {
-//     if (lastActivityTimestamp) {
-//         const diff = moment(lastActivityTimestamp).diff(moment(firstActivityTimestamp))
-//         const duration = moment.duration(diff).asHours();
-//         const timePercentage = (duration / 12) * 100;
-//         return (360 * timePercentage) / 100
-//     }
-//     return 1;
-// }
 
 function getTimelineAddendum(geopoint) {
     return new Promise(function (resolve, reject) {
@@ -671,7 +606,6 @@ function getTimelineAddendum(geopoint) {
         }
     })
 }
-
 
 function getTimelineActivityData(addendums, office) {
     return new Promise(function (resolve, reject) {
@@ -735,9 +669,6 @@ function createTimeLapse(timeLineUl) {
 
 }
 
-
-
-
 function createTimelineLi(activity) {
     const eventName = mapTemplateNameToTimelineEvent(activity)
     const li = createElement("li", {
@@ -800,7 +731,6 @@ function checkForDuty(duty) {
 
     // }
 }
-
 
 function getAllCustomer(office) {
     return new Promise(function (resolve, reject) {
@@ -897,106 +827,6 @@ function convertNumberToINR(amount) {
 }
 
 
-
-
-function updateDuty(duty) {
-    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">Edit duty</span>`, ``)
-    const container = createElement('div', {
-        className: 'update-duty--container'
-    })
-    const progressBarCard = linearProgress();
-    container.appendChild(progressBarCard.root_)
-    const customerCard = createElement('div', {
-        className: 'mdc-card customer-card'
-    })
-    customerCard.appendChild(createElement('h1', {
-        className: 'mdc-typography--headline5 mdc-theme--primary',
-        textContent: 'Customer'
-    }))
-    const customerName = new mdc.textField.MDCTextField(textField({
-        label: 'Name',
-        value: duty.attachment.Location.value
-    }))
-
-    customerCard.appendChild(customerName.root_);
-    customerName.focus();
-    const productsCard = createElement('div', {
-        className: 'mdc-card product-card  mt-10'
-    })
-    productsCard.appendChild(createElement('h1', {
-        className: 'mdc-typography--headline5 mdc-theme--primary',
-        textContent: 'Products'
-    }))
-
-    const ul = createElement('ul', {
-        className: 'mdc-list',
-        id: 'product-list'
-    })
-    getChildrenActivity(duty.office, 'product').then(function (products) {
-        if (checkProductLength(duty.attachment.Products.value)) {
-            duty.attachment.Products.value.forEach(function (product) {
-                createProductLi(products, product)
-            })
-        }
-        productsCard.appendChild(ul)
-        if (!products.length) return
-        const addMore = createFab('add', '', false);
-        addMore.classList.add('add-more--products')
-        addMore.addEventListener('click', function () {
-            openProductScreen(products);
-        })
-        const addMoreWrapper = createElement('div', {
-            className: 'add-more--wrapper',
-        })
-        addMoreWrapper.appendChild(addMore)
-        productsCard.appendChild(addMoreWrapper)
-    })
-
-    const cancel = createButton('cancel');
-    cancel.classList.add('mdc-button--outlined')
-    const save = createButton('save');
-    save.classList.add('mdc-button--raised');
-    cancel.addEventListener('click', function () {
-        history.back();
-    })
-    save.addEventListener('click', function () {
-        console.log('saved click');
-        progressBarCard.open()
-        duty.attachment.Location.value = customerName.value;
-        const choosenProducts = [];
-        [...ul.querySelectorAll('li')].forEach(function (li) {
-            choosenProducts.push({
-                name: li.dataset.name,
-                rate: Number(li.dataset.rate) || '',
-                quanity: Number(li.dataset.quanity) || '',
-                date: li.dataset.date
-            })
-        });
-        duty.attachment.Products.value = choosenProducts;
-        appLocation(3).then(function (geopoint) {
-            return requestCreator('update', duty, geopoint)
-        }).then(function () {
-            progressBarCard.close()
-            history.back();
-        }).catch(handleLocationError)
-    })
-
-    const fixed = createElement('div', {
-        className: 'full-width bottom-buttons'
-    })
-    const actionButtons = createElement('div', {
-        className: 'action-buttons'
-    })
-    fixed.appendChild(actionButtons);
-    actionButtons.appendChild(cancel)
-    actionButtons.appendChild(save);
-
-    container.appendChild(customerCard)
-    container.appendChild(productsCard);
-    container.appendChild(fixed);
-    dom_root.innerHTML = '';
-    dom_root.appendChild(container)
-}
 
 function createProductLi(products, product) {
     const li = createElement('li', {
@@ -1237,7 +1067,6 @@ function showAllDuties() {
                     })
                     activeUl.appendChild(li);
                     console.log('going to start timer')
-                    updateTimer(activeDutyId);
                 } else {
                     hasPreviousDuties = true;
                     li.addEventListener('click', function () {
@@ -1301,9 +1130,6 @@ function dutyDateList(duty, activeDutyId, multipleOffice) {
            
             ${duty.attachment.Location.value}
         </span>
-        ${activeDutyId === duty.activityId ? `<span class="mdc-list-item__secondary-text mdc-typography--headline5 full-width mt-10" id='active-duty--list-timer'>
-
-        </span>` :''}
     
         <span class="mdc-list-item__secondary-text bold duty-list--time">
             ${formatCreatedTime(duty.schedule[0].startTime)} to ${formatCreatedTime(duty.schedule[0].endTime)}
