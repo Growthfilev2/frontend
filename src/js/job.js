@@ -1272,12 +1272,12 @@ function showAllDuties() {
         //     dutiesCont.appendChild(createTemplateButton(subs))
         // })
         const el = document.getElementById('app-tab-content');
-        // const scrollYDepth =  el.scrollTop;
-        el.innerHTML = ``;
-        el.appendChild(dutiesCont);
-        // if(scrollYDepth) {
-        //     el.scrollTo(0,scrollYDepth);
-        // }
+        if(el) {
+            el.innerHTML = ``;
+            el.appendChild(dutiesCont);
+
+        }
+        
     }
 }
 

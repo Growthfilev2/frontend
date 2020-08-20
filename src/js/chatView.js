@@ -213,10 +213,11 @@ function getSearchBound(evt) {
     let bound = null
     let direction = 'next'
     if (!evt.target.value) {
-        if (history.state[0] === 'searchChats') {
+        if (history.state && history.state[0] === 'searchChats') {
             indexName = 'timestamp'
             direction = 'prev'
         }
+
     } else {
         if (isNumber(value)) {
             indexName = 'mobile'
@@ -341,7 +342,8 @@ function initializeChatList(chatsUl) {
     chatsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentChatsArray[evt.detail.index];
         // if(!history.state) 
-        if (history.state[0] === 'searchChats') {
+        
+        if (history.state && history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
         } else {
             history.pushState(['enterChat', userRecord], null, null)
@@ -353,7 +355,7 @@ function initializeChatList(chatsUl) {
 function initializeContactList(contactsUl) {
     contactsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentContactsArray[evt.detail.index]
-        if (history.state[0] === 'searchChats') {
+        if (history.state && history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
         } else {
             history.pushState(['enterChat', userRecord], null, null)

@@ -645,7 +645,6 @@ function regulator() {
         return appLocation(3)
       })
       .then(function (geopoint) {
-        
         handleCheckin(geopoint);
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
