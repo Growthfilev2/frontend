@@ -83,7 +83,6 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
 
-
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -260,7 +259,7 @@ function html5Geolocation() {
   })
 };
 
-const apiHandler = new Worker('js/apiHandler.js?version=196');
+const apiHandler = new Worker('js/apiHandler.js?version=198');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -448,12 +447,9 @@ function handleComponentUpdation(readResponse) {
     switch (history.state[0]) {
       case 'enterChat':
         if (!readResponse.addendum.length) return;
-        dynamicAppendChats(readResponse.addendum)
+        dynamicAppendChats();
         break;
-      case 'chatView':
-        if (!readResponse.addendum.length) return;
-        readLatestChats(false);
-        break;
+
       case 'jobView':
         if (document.getElementById('rating-view')) return;
         getCurrentJob().then(function (currentJob) {
@@ -469,6 +465,7 @@ function handleComponentUpdation(readResponse) {
         if (appTabBar && document.getElementById('app-tab-content')) {
           const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
           switchTabs(selectedIndex);
+          updateTotalCount()
         }
         break;
       default:

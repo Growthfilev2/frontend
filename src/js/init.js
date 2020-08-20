@@ -4,7 +4,7 @@ let progressBar;
 var db;
 let snackBar;
 let appTabBar;
-let DB_VERSION = 32;
+let DB_VERSION = 33;
 var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
@@ -558,7 +558,15 @@ function startApp() {
           addendumStore.createIndex('timestamp','timestamp');
         }
         break;
-
+      case 32:
+        const userStore = req.transaction.objectStore('users');
+        userStore.openCursor().onsuccess = function(e){
+          const cursor = e.target.result;
+          if(!cursor) return;
+          delete cursor.value.count;
+          userStore.put(cursor.value)
+          cursor.continue();
+        }  
       default:
         console.log('version upgrade');
         break;
