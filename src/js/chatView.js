@@ -628,24 +628,24 @@ function showViewDialog(heading, activity, id) {
     dialog.open();
 
     const footer = dialog.container_.querySelector('.mdc-dialog__actions');
-    if(activity.canEdit) {
-        footer.innerHTML = '';
-        getStatusArray(activity).forEach(function(item,index){
-            const button = createButton(item.name,'',item.icon);
-            if(index == 0) {
-                button.style.marginRight = 'auto';
-            }
-            button.style.color = item.color;
-            button.addEventListener('click',function(){
-                    activity.status = item.status
-                    setActivityStatus(activity)
-            })
-            footer.appendChild(button);
-        });
-    }
-    else {
-        footer.remove()
-    }
+    footer.remove()
+    // if(activity.canEdit) {
+    //     footer.innerHTML = '';
+    //     getStatusArray(activity).forEach(function(item,index){
+    //         const button = createButton(item.name,'',item.icon);
+    //         if(index == 0) {
+    //             button.style.marginRight = 'auto';
+    //         }
+    //         button.style.color = item.color;
+    //         button.addEventListener('click',function(){
+    //                 activity.status = item.status
+    //                 setActivityStatus(activity)
+    //         })
+    //         footer.appendChild(button);
+    //     });
+    // }
+    // else {
+    // }
 
 
     dialog.autoStackButtons = false;
@@ -1041,12 +1041,12 @@ function viewAssignee(activityRecord,canAdd) {
                 </div>`
     }).join("")}
 
-    ${activityRecord.canEdit & canAdd ? `<div class="mdc-chip add-people" id='share-btn'>
-    <i class='mdc-chip__icon mdc-chip__icon--leading material-icons'>group_add</i>
-    <div class='mdc-chip__text'>Add people</div>
-</div>` :''} 
     </div>`
 }
+// ${activityRecord.canEdit & canAdd ? `<div class="mdc-chip add-people" id='share-btn'>
+// <i class='mdc-chip__icon mdc-chip__icon--leading material-icons'>group_add</i>
+// <div class='mdc-chip__text'>Add people</div>
+// </div>` :''} 
 
 
 
@@ -1113,7 +1113,11 @@ function dynamicAppendChats() {
             cursor.continue();
             return;
         }
-       
+        if(document.getElementById(cursor.value.addendumId)) {
+            cursor.continue();
+            return;
+        }
+        
         let position = 'them';
         if (cursor.value.user === myNumber) {
             position = 'me'
@@ -1181,7 +1185,7 @@ function getUserChats(userRecord) {
     index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-
+        
         if (cursor.value.user === myNumber) {
             position = 'me';
             image = myImage

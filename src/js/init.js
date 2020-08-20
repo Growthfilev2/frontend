@@ -4,7 +4,7 @@ let progressBar;
 var db;
 let snackBar;
 let appTabBar;
-let DB_VERSION = 34;
+let DB_VERSION = 33;
 var EMAIL_REAUTH;
 var firebaseUI;
 var sliderIndex = 1;
@@ -558,14 +558,14 @@ function startApp() {
           addendumStore.createIndex('timestamp','timestamp');
         }
         break;
-      case 33:
+      case 32:
         const userStore = req.transaction.objectStore('users');
         userStore.openCursor().onsuccess = function(e){
           const cursor = e.target.result;
           if(!cursor) return;
           delete cursor.value.count;
           userStore.put(cursor.value)
-          cursor.continue()
+          cursor.continue();
         }  
       default:
         console.log('version upgrade');
@@ -614,11 +614,11 @@ function regulator() {
     })
 
     // if (!native.isFCMTokenChanged()) {
-      prom = Promise.resolve();
+      // prom = Promise.resolve();
     // } else {
-      // prom = requestCreator('fcmToken', {
-      //   token: native.getFCMToken()
-      // })
+      prom = requestCreator('fcmToken', {
+        token: native.getFCMToken()
+      })
     // }
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
@@ -655,12 +655,12 @@ function regulator() {
       .then(function (geopoint) {
         
         handleCheckin(geopoint);
-        // if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
-        // return requestCreator('device', deviceInfo);
+        if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
+        return requestCreator('device', deviceInfo);
       })
-      // .then(function () {
-      //   localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
-      // })
+      .then(function () {
+        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+      })
       .catch(reject)
   })
 }

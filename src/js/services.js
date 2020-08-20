@@ -82,11 +82,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude:35.701955,
-      longitude: 139.77129,
-      lastLocationTime:Date.now()
-    })
+    // return resolve({
+    //   latitude:28.723195,
+    //   longitude:77.044610,
+    //   lastLocationTime:Date.now()
+    // })
 
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
@@ -264,7 +264,7 @@ function html5Geolocation() {
   })
 };
 
-const apiHandler = new Worker('js/apiHandler.js?version=196');
+const apiHandler = new Worker('js/apiHandler.js?version=197');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {

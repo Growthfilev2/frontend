@@ -826,7 +826,6 @@ function successResponse(read, param, db, resolve, reject) {
         return b.timestamp - a.timestamp;
       })[0];
       console.log('last addendum',lastAddendum)
-
       updateUserStore(lastAddendum, activity.assignees,param,userStore)
     }
   })

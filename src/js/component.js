@@ -241,6 +241,10 @@ function updateTotalCount(){
         if(total <= 0) return;
         const parent = document.querySelector('#inbox-icon .mdc-tab__content');
         if(!parent) return;
+        if(parent.querySelector('.tab-notification')) {
+            parent.querySelector('.tab-notification').remove();
+        }
+        
         const tabIcon = createElement('span',{
             className:'mdc-tab__icon tab-notification',
         });
