@@ -2,9 +2,6 @@ var contactsUl;
 var chatsUl;
 let currentChatsArray = [];
 let currentContactsArray = [];
-let menu;
-let timer = null;
-const duration = 800;
 
 function chatView() {
     const sectionContent = document.getElementById('app-tab-content');
@@ -213,10 +210,11 @@ function getSearchBound(evt) {
     let bound = null
     let direction = 'next'
     if (!evt.target.value) {
-        if (history.state[0] === 'searchChats') {
+        if (history.state && history.state[0] === 'searchChats') {
             indexName = 'timestamp'
             direction = 'prev'
         }
+
     } else {
         if (isNumber(value)) {
             indexName = 'mobile'
@@ -299,15 +297,13 @@ function readLatestChats(initList) {
     index.openCursor(range, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        console.log(cursor.value)
-
 
         if (cursor.value.mobile === myNumber) {
             cursor.continue();
             return;
         };
 
-        currentChats += userLi(cursor.value)
+        currentChats += userLi(cursor.value,true)
         currentChatsArray.push(cursor.value)
 
         cursor.continue();
@@ -341,7 +337,8 @@ function initializeChatList(chatsUl) {
     chatsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentChatsArray[evt.detail.index];
         // if(!history.state) 
-        if (history.state[0] === 'searchChats') {
+        
+        if (history.state && history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
         } else {
             history.pushState(['enterChat', userRecord], null, null)
@@ -353,7 +350,7 @@ function initializeChatList(chatsUl) {
 function initializeContactList(contactsUl) {
     contactsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentContactsArray[evt.detail.index]
-        if (history.state[0] === 'searchChats') {
+        if (history.state && history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
         } else {
             history.pushState(['enterChat', userRecord], null, null)
@@ -362,8 +359,8 @@ function initializeContactList(contactsUl) {
     })
 }
 
-function userLi(value) {
-    return `<li class="mdc-list-item">
+function userLi(value,showCount) {
+    return `<li class="mdc-list-item ${value.count && showCount ? 'unread-chat':''}">
    <div style="position:relative">
    <img class="mdc-list-item__graphic"  aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'}  onerror="imgErr(this)" data-number=${value.mobile}>
    <i class="material-icons user-selection-icon">check_circle</i>
@@ -379,7 +376,8 @@ function userLi(value) {
     </span>
     <span class="mdc-list-item__meta" aria-hidden="true">
     <span class='chat-time mdc-typography--subtitle2'>
-        ${value.timestamp ? formatCreatedTime(value.timestamp) : ''}</span>
+        ${value.timestamp ? formatChatTime(value.timestamp) : ''}</span>
+        ${value.count && showCount ? ` <div class='unread-count'>${value.count}</div>` :''}
     </span>
     </li>`
 }
@@ -447,6 +445,18 @@ function formatCreatedTime(createdTime) {
     })
 }
 
+function formatChatTime(createdTime) {
+    if (!createdTime) return ''
+    return moment(createdTime).calendar(null, {
+        sameDay: 'hh:mm',
+        lastDay: '[Yesterday]',
+        nextDay: '[Tomorrow]',
+        nextWeek: 'dddd',
+        lastWeek: 'DD/MM/YY',
+        sameElse: 'DD/MM/YY'
+    })
+}
+
 function isToday(comparisonTimestamp) {
     const today = new Date();
     if (today.setHours(0, 0, 0, 0) == new Date(comparisonTimestamp).setHours(0, 0, 0, 0)) {
@@ -459,7 +469,15 @@ function enterChat(userRecord) {
     removeSwipe()
     const sectionContent = document.getElementById('app-tab-content')
     if (!sectionContent) return;
-
+    const tx =  db.transaction('users','readwrite');
+    const store =  tx.objectStore('users')
+    store.get(userRecord.mobile).onsuccess = function(e){
+        const record = e.target.result;
+        if(!record) return;
+        delete record.count;
+        store.put(record)
+    }
+ 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
@@ -467,7 +485,7 @@ function enterChat(userRecord) {
 
     const header = setHeader(backIcon, '');
     header.root_.classList.remove('hidden')
-    console.log(header)
+   
 
 
     sectionContent.innerHTML = `
@@ -485,17 +503,7 @@ function enterChat(userRecord) {
                 <div id='content'>
                 </div>
             
-                <form class="conversation-compose">
-                  <div class="input-space-left"></div>
-                                    
-                  <input class="input-msg"  name="input" placeholder="Type a message" autocomplete="off"  id='comment-input'>
-                  <div class="input-space-right"></div>
-                  <button class="send" id='comment-send'>
-                      <div class="circle">
-                        <i class="material-icons">send</i>
-                      </div>
-                    </button>
-                </form>
+            
               </div>
             </div>
           </div>
@@ -508,19 +516,6 @@ function enterChat(userRecord) {
 
 }
 
-function actionBoxDom(value, position) {
-    const div = createElement('div', {
-        className: `message ${position} menu-action`
-    })
-    div.addEventListener('touchstart', function (event) {
-        touchStart(event, value.addendumId, value.activityId, value.location._latitude, value.location._longitude);
-    })
-    div.addEventListener('touchend', touchEnd)
-    div.addEventListener('touchcancel', touchCancel);
-    div.addEventListener('touchmove', touchMove);
-    div.innerHTML = actionBoxContent(value)
-    return div
-}
 
 function actionBoxContent(value) {
 
@@ -528,57 +523,34 @@ function actionBoxContent(value) {
     <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> </div>
     ${value.comment}
 <span class="metadata">
+<i class='material-icons'>info</i>
+<span>click to see more</span>
     <span class="time">
-    ${moment(value.timestamp).format('hh:mm')}
+        ${moment(value.timestamp).format('hh:mm')}
     </span>
-    <span class='tick'>
-        <i class='material-icons'>info</i>
-    </span>
+  
 </span>`
 }
 
 function actionBox(value, position) {
-    return `
-    <div class="message ${position} menu-action" ontouchstart="touchStart(event,'${value.addendumId}','${value.activityId}','${value.location._latitude}','${value.location._longitude}')" ontouchEnd="touchEnd(event)" ontouchmove="touchMove(event)" ontouchcancel="touchCancel(event)">  
-    ${actionBoxContent(value)}
-    </div>
-  `
+    const div = createElement('div',{
+        className:`message ${position} menu-action`
+    });
+    div.addEventListener('click',function(){
+        openActivity(value);
+    })
+    div.innerHTML = `${actionBoxContent(value)}`
+    return div;
 }
 
-function handleLongPress(addendumId, activityId, _latitude, _longitude) {
-    clearTimeout(timer);
-    const geopoint = {
-        _latitude: _latitude,
-        _longitude: _longitude
+function openActivity(value) {
+    db.transaction('activity').objectStore('activity').get(value.activityId).onsuccess = function (event) {
+        const activity = event.target.result;
+        if (!activity) return;
+        const heading = createActivityHeading(activity,value.location)
+        showViewDialog(heading, activity, 'view-form');
     }
-    if (menu) {
-        menu.open = false;
-        menu = null;
-    }
-    createActivityActionMenu(addendumId, activityId, geopoint)
-
 };
-
-function touchStart(event, addendumId, activityId, _latitude, _longitude) {
-
-    timer = setTimeout(function () {
-        handleLongPress(addendumId, activityId, _latitude, _longitude)
-    }, duration)
-}
-
-function touchEnd(event) {
-    clearTimeout(timer)
-}
-
-function touchMove(event) {
-    clearTimeout(timer)
-
-}
-
-function touchCancel(event) {
-    clearTimeout(timer)
-
-}
 
 
 
@@ -592,31 +564,29 @@ function messageBoxContent(comment, time) {
 }
 
 function messageBox(comment, position, time) {
-
-    return ` <div class="message ${position}">
-    ${messageBoxContent(comment,time)}
-    `
-}
-
-function messageBoxDom(comment, position, time) {
-
-    const div = createElement('div', {
-        className: `message ${position}`
+    const div = createElement('div',{
+        className:`message ${position}`
     })
-    div.innerHTML = messageBoxContent(comment, time)
-
+    div.innerHTML = ` ${messageBoxContent(comment,time)}`
     return div;
 }
 
-function createActivityHeading(activity) {
+
+
+function createActivityHeading(activity,geopoint) {
+    let mapTag = `<a target="_blank" href='comgooglemaps://?center=${geopoint._latitude},${geopoint._longitude}'>view in map</span>`
+    if (native.getName() === 'Android') {
+        mapTag = `<a href='geo:${geopoint._latitude},${geopoint._longitude}?q=${geopoint._latitude},${geopoint._longitude}'>view in map</a>`
+    }
     return `${activity.activityName}
     <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
+    <i class='material-icons dialog-close--heading' id='close-activity-dialog'>close</i>
     ${activity.creator.displayName  || activity.creator.phoneNumber  ? ` <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>` :''}
-   `
+    <div class='mdc-typography--subtitle2'>${mapTag}</div>
+    `
 }
 
 function getStatusArray(activity) {
-    console.log(activity)
     const items = [];
     const confirm = {
         name: 'Confirm',
@@ -628,7 +598,7 @@ function getStatusArray(activity) {
         name: 'Undo',
         icon: 'undo',
         status: 'PENDING',
-        color: 'black'
+        color: '#103153'
     }
     const cancel = {
         name: 'Delete',
@@ -638,89 +608,49 @@ function getStatusArray(activity) {
     }
 
     if (activity.status === 'CANCELLED') {
-        items.push(confirm, undo)
+        items.push(undo,confirm)
     }
     if (activity.status === 'PENDING') {
-        items.push(confirm, cancel)
+        items.push(cancel,confirm)
 
     }
     if (activity.status === 'CONFIRMED') {
-        items.push(undo, cancel);
+        items.push(cancel, undo);
     };
     return items;
 }
 
-function createActivityActionMenu(addendumId, activityId, geopoint) {
 
-    db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
-        const activity = event.target.result;
-        if (!activity) return;
-        const heading = createActivityHeading(activity)
-        console.log(activity.creator.displayName)
-        let items = [{
-            name: 'View',
-            icon: 'info'
-        }];
-        if (activity.canEdit) {
-            items.push({
-                name: 'Share',
-                icon: 'share'
-            })
-            items = items.concat(getStatusArray(activity))
-            console.log(items)
-        };
-
-        const joinedId = addendumId + activityId
-        document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
-        document.getElementById(joinedId).appendChild(menuItemMap({
-            name: 'Map',
-            icon: 'map'
-        }, geopoint));
-
-        menu = new mdc.menu.MDCMenu(document.getElementById(joinedId))
-        menu.open = true
-        menu.root_.classList.add('align-right-menu');
-
-
-        menu.listen('MDCMenu:selected', function (evt) {
-            switch (items[evt.detail.index].name) {
-                case 'View':
-                    showViewDialog(heading, activity, 'view-form')
-                    break;
-                case 'Share':
-                    share(activity, dom_root)
-                    break;
-                case 'Undo':
-                    activity.status = 'PENDING';
-                    setActivityStatus(activity)
-                    break;
-                case 'Confirm':
-                    activity.status = 'CONFIRMED';
-                    setActivityStatus(activity)
-                    break;
-                case 'Delete':
-                    activity.status = 'CANCELLED';
-                    setActivityStatus(activity)
-                    break;
-                default:
-                    break;
-            }
-        })
-    }
-
-}
 
 
 function showViewDialog(heading, activity, id) {
 
     const dialog = new Dialog(heading, activityDomCustomer(activity), id).create()
-
+    
     dialog.open();
 
-    dialog.autoStackButtons = false;
+    const footer = dialog.container_.querySelector('.mdc-dialog__actions');
+    footer.remove()
+    // if(activity.canEdit) {
+    //     footer.innerHTML = '';
+    //     getStatusArray(activity).forEach(function(item,index){
+    //         const button = createButton(item.name,'',item.icon);
+    //         if(index == 0) {
+    //             button.style.marginRight = 'auto';
+    //         }
+    //         button.style.color = item.color;
+    //         button.addEventListener('click',function(){
+    //                 activity.status = item.status
+    //                 setActivityStatus(activity)
+    //         })
+    //         footer.appendChild(button);
+    //     });
+    // }
+    // else {
+    // }
 
-    dialog.buttons_[1].classList.add("hidden");
-    new mdc.ripple.MDCRipple(dialog.buttons_[0])
+
+    dialog.autoStackButtons = false;
     dialog.listen("MDCDialog:opened", function (evt) {
         const scheduleEl = document.getElementById('schedule-container');
         if (scheduleEl) {
@@ -728,6 +658,14 @@ function showViewDialog(heading, activity, id) {
             scheduleList.layout()
         }
     })
+    document.getElementById('close-activity-dialog').addEventListener('click',function(){
+        dialog.close();
+    })
+    if(document.getElementById('share-btn')) {
+        document.getElementById('share-btn').addEventListener('click',function(){
+            share(activity, dom_root)
+        })
+    }
     return dialog;
 }
 
@@ -796,7 +734,7 @@ function share(activity, parent) {
     const ul = new mdc.list.MDCList(ulSelector)
     const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
     history.pushState(['share', activity], null, null)
-    console.log(chipInit)
+
     loadUsers(true, alreadySelected).then(function (userResult) {
 
         if (!userResult.data.length) return;
@@ -806,7 +744,7 @@ function share(activity, parent) {
                 snacks('At least 1 contact must be selected')
                 return;
             }
-            console.log(newSelected);
+
             activity.share = userArray;
             addAssignee(activity);
 
@@ -815,7 +753,7 @@ function share(activity, parent) {
 
         chipInit.listen('MDCChip:removal', function (event) {
 
-            console.log(chipInit.chips)
+        
             const liElement = ul.listElements[Number(event.detail.chipId)]
             delete newSelected[userResult.data[Number(event.detail.chipId)].mobile]
             chipSetEl.removeChild(event.detail.root);
@@ -964,7 +902,7 @@ function activityDomCustomer(activityRecord) {
         <div id='assignee-container'>
             ${activityRecord.assignees.length ?`<div class="assignees tasks-heading center">
             <i class="material-icons">share</i>
-            ${viewAssignee(activityRecord)}
+            ${viewAssignee(activityRecord,true)}
         </div>` :'' }
           
     </div>
@@ -1030,7 +968,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
     }
     if (activityRecord.attachment[attachmentName].type === 'product') {
         if(!checkProductLength(activityRecord.attachment['Products'].value)) return '';
-        console.log(activityRecord.attachment[attachmentName])
+      
         return `<div class='products-container'>
             <p class='mdc-typography--subtitle2 mb-0'>Products : </p>
             ${activityRecord.attachment[attachmentName].value.map(function(product){
@@ -1095,7 +1033,7 @@ function viewSchedule(activityRecord) {
     }).join("")}`
 }
 
-function viewAssignee(activityRecord) {
+function viewAssignee(activityRecord,canAdd) {
     return `
     <div class="mdc-chip-set" id='share'>
      ${activityRecord.assignees.map(function(user,idx){
@@ -1104,9 +1042,13 @@ function viewAssignee(activityRecord) {
                     <div class='mdc-chip__text'>${user.displayName || user.phoneNumber}</div>
                 </div>`
     }).join("")}
-    </div>`
 
+    </div>`
 }
+// ${activityRecord.canEdit & canAdd ? `<div class="mdc-chip add-people" id='share-btn'>
+// <i class='mdc-chip__icon mdc-chip__icon--leading material-icons'>group_add</i>
+// <div class='mdc-chip__text'>Add people</div>
+// </div>` :''} 
 
 
 
@@ -1156,27 +1098,53 @@ function createStatusChange(status) {
 
 }
 
-function dynamicAppendChats(addendums) {
+function dynamicAppendChats() {
     const parent = document.getElementById('content');
     const myNumber = firebase.auth().currentUser.phoneNumber;
-
-    addendums.forEach(function (addendum) {
-        if (!parent) return;
-
+    
+    db
+    .transaction('addendum')
+    .objectStore('addendum')
+    .index('timestamp')
+    .openCursor(IDBKeyRange.lowerBound(Number(parent.dataset.timestamp),true))
+    .onsuccess = function(e){
+        const cursor = e.target.result;
+        if(!cursor) return;
+        if(!parent) return;
+        if(cursor.value.key !== myNumber+history.state[1].mobile) {
+            cursor.continue();
+            return;
+        }
+        if(document.getElementById(cursor.value.addendumId)) {
+            cursor.continue();
+            return;
+        }
+        
         let position = 'them';
-        if (addendum.user === myNumber) {
+        if (cursor.value.user === myNumber) {
             position = 'me'
         }
-        if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
-            if (addendum.isComment) {
-                if (addendum.user === myNumber) return;
-                parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp))
-                return;
-            }
-            parent.appendChild(actionBoxDom(addendum, position))
+
+        if (cursor.value.isComment) {
+            parent.appendChild(messageBox(cursor.value.comment, position, cursor.value.timestamp))
         }
-    })
-    setBottomScroll()
+        else {
+            parent.appendChild(actionBox(cursor.value, position))
+        }
+        cursor.continue();
+    }
+
+    const tx =  db.transaction('users','readwrite');
+    const store =  tx.objectStore('users')
+    store.get(history.state[1].mobile).onsuccess = function(e){
+        const record = e.target.result;
+        if(!record) return;
+        delete record.count;
+        store.put(record)
+    }
+    tx.oncomplete = function(){
+        setBottomScroll();
+    }
 }
 
 function getHumanDateString(date) {
@@ -1192,9 +1160,12 @@ function getHumanDateString(date) {
 }
 
 function dateBox(dateString) {
-    return `<div class='date-box'>
-<div class="date" data-chat-date='${dateString}'>${dateString}</div>
-</div>`
+    const box = createElement('div',{
+        className:'date-box'
+    })
+    box.innerHTML =`<div class="date" data-chat-date='${dateString}'>${dateString}</div>
+    `
+   return box
 
 
 }
@@ -1209,13 +1180,14 @@ function getUserChats(userRecord) {
 
     const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
-    let timeLine = ''
+    let timeLine = document.createDocumentFragment();
     let position = '';
     let currentDateName = ''
+    let lastTimestamp = '';
     index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-
+        
         if (cursor.value.user === myNumber) {
             position = 'me';
             image = myImage
@@ -1225,52 +1197,22 @@ function getUserChats(userRecord) {
         };
         const dateName = getHumanDateString(moment(cursor.value.timestamp))
         if (dateName !== currentDateName) {
-            timeLine += dateBox(dateName)
+            timeLine.appendChild(dateBox(dateName))
         }
         currentDateName = dateName;
         if (cursor.value.isComment) {
-            timeLine += messageBox(cursor.value.comment, position, cursor.value.timestamp)
+            timeLine.appendChild(messageBox(cursor.value.comment, position, cursor.value.timestamp))
         } else {
-            if (cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
-                timeLine += actionBox(cursor.value, position);
-            }
+            timeLine.appendChild(actionBox(cursor.value, position));
         }
+        lastTimestamp = cursor.value.timestamp
         cursor.continue();
     }
     tx.oncomplete = function () {
-        parent.innerHTML = timeLine;
+        parent.innerHTML = '';
+        parent.appendChild(timeLine);
         setBottomScroll();
-
-        const form = document.querySelector('.conversation-compose');
-        if (!form) return;
-        form.querySelector('input').addEventListener('focus', function (evt) {
-            setTimeout(function () {
-                setBottomScroll();
-            }, 500)
-        })
-
-        form.addEventListener('submit', function (e) {
-
-            e.preventDefault();
-
-            var input = e.target.input;
-            const val = input.value;
-            if (!val) return;
-            document.getElementById('comment-send').disabled = true
-            appLocation(3).then(function (geopoint) {
-                requestCreator('dm', {
-                    comment: val,
-                    assignee: userRecord.mobile
-                }, geopoint).then(function () {
-                    parent.appendChild(messageBoxDom(val, 'me', Date.now()))
-                    setBottomScroll();
-                    input.value = ''
-                    document.getElementById('comment-send').disabled = false
-                }).catch(function (error) {
-                    document.getElementById('comment-send').disabled = false
-                })
-            }).catch(handleLocationError)
-        });
+        parent.dataset.timestamp = lastTimestamp
     }
 }
 

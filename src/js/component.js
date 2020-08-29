@@ -209,13 +209,15 @@ function setHeader(sectionStart, sectionEnd) {
                 icon: 'home',
                 name: 'Home'
             }, {
-                id: 'contacts-icon',
-                icon: 'contacts',
-                name: 'Contacts'
+                id: 'inbox-icon',
+                icon: 'inbox',
+                name: 'Inbox'
             }];
+            
             const tabBar = showTabs(tabs, 'navigation-tabs');
             el.insertBefore(tabBar, el.querySelector('#main-progress-bar'));
             appTabBar = new mdc.tabBar.MDCTabBar(tabBar);
+            updateTotalCount();
         }
         const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
         switchTabs(selectedIndex)
@@ -229,7 +231,30 @@ function setHeader(sectionStart, sectionEnd) {
     return new mdc.topAppBar.MDCTopAppBar(el);
 }
 
-
+function updateTotalCount(){
+    db.transaction('users').objectStore('users').index('count').getAll().onsuccess = function(e){
+        const users = e.target.result;
+        let total = 0
+        users.forEach(function(user){
+            total += user.count;
+        })
+        if(total <= 0) return;
+        const parent = document.querySelector('#inbox-icon .mdc-tab__content');
+        if(!parent) return;
+        if(parent.querySelector('.tab-notification')) {
+            parent.querySelector('.tab-notification').remove();
+        }
+        
+        const tabIcon = createElement('span',{
+            className:'mdc-tab__icon tab-notification',
+        });
+        const div = createElement('div',{
+            textContent:total
+        })
+        tabIcon.appendChild(div);
+        parent.insertBefore(tabIcon,parent.firstElementChild);
+    }
+}
 
 
 
