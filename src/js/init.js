@@ -605,13 +605,15 @@ function regulator() {
       text: 'Loading ... '
     })
 
-    // if (!native.isFCMTokenChanged()) {
-      // prom = Promise.resolve();
-    // } else {
+    if(appKey.getMode() === 'dev' && window.location.host === 'localhost') {
+        prom = Promise.resolve();
+    }
+    else {
       prom = requestCreator('fcmToken', {
         token: native.getFCMToken()
       })
-    // }
+    };
+
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
      
@@ -647,6 +649,8 @@ function regulator() {
       .then(function (geopoint) {
         
         handleCheckin(geopoint);
+        if(window.location.host === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
+        
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
       })
