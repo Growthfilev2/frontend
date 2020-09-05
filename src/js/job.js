@@ -11,8 +11,9 @@ function jobView(currentDuty) {
             console.log(duty);
             duty.customerPhonenumber = customerPhonenumber;
             dom_root.appendChild(constructJobView(duty));
-    });
+        });
 };
+
 
 
 
@@ -96,7 +97,7 @@ function getCurrentJob() {
                 cursor.continue();
                 return
             };
-            if(cursor.value.isActive == false) {
+            if (cursor.value.isActive == false) {
                 cursor.continue();
                 return;
             }
@@ -281,7 +282,7 @@ function showUpcomingDuty(duty) {
         </span>
         <span class='inline-flex mb-10 mt-20'>
             <i class='material-icons mdc-theme--primary'>hourglass_top</i>
-            <span class='ml-10'>${getTimeToReach(duty.distance,20)}</span>
+            <span class='ml-10'>${getTimeToReach(duty.distance, 20)}</span>
         </span>
         <hr>
         <div class='customer mt-10'>
@@ -289,10 +290,10 @@ function showUpcomingDuty(duty) {
                 <i class='material-icons'>location_on</i>
                 <span class='ml-10'>${duty.attachment.Location.value} </span>
             </div>
-            ${duty.attachment['Duty Type'].value ?`<div class='inline-flex mt-10 mb-10 full-width mdc-theme--primary'>
+            ${duty.attachment['Duty Type'].value ? `<div class='inline-flex mt-10 mb-10 full-width mdc-theme--primary'>
                 <i class='material-icons'>assignment</i>
                 <span class='ml-10'>${duty.attachment['Duty Type'].value} </span>
-            </div>` :''}
+            </div>` : ''}
         </div>
         <hr>
         <div class='supervisior'>
@@ -307,7 +308,7 @@ function showUpcomingDuty(duty) {
                     </span>
                     <a class='mdc-list-item__meta material-icons' href='tel:${duty.supervisiorContact.mobile}'>phone</a>
             </li>
-        </ul>` :''}
+        </ul>` : ''}
            
             <span class='inline-flex mt-10 mb-10 full-width'>
                 <i class='material-icons mdc-theme--primary'>access_time</i>
@@ -320,15 +321,15 @@ function showUpcomingDuty(duty) {
                 <span class='ml-10'>Staffs</span>
             </span>
             <div class='mdc-chip-set'>
-                ${duty.assignees.map(function(contact,index){
-                    const image = createElement('img', {
-                        className: 'mdc-chip__icon mdc-chip__icon--leading',
-                        src: contact.photoURL || './img/empty-user.jpg'
-                    })
-                    return createDynamicChips(contact.displayName || contact.mobile, index, image).outerHTML;
-                }).join("")}
+                ${duty.assignees.map(function (contact, index) {
+        const image = createElement('img', {
+            className: 'mdc-chip__icon mdc-chip__icon--leading',
+            src: contact.photoURL || './img/empty-user.jpg'
+        })
+        return createDynamicChips(contact.displayName || contact.mobile, index, image).outerHTML;
+    }).join("")}
                 </div>
-            </div>` :''}
+            </div>` : ''}
         
         ${checkProductLength(duty.attachment.Products.value) ? `<hr><div class='products'>
             <span class='inline-flex mt-10 mb-10 full-width'>
@@ -336,20 +337,20 @@ function showUpcomingDuty(duty) {
                 <span class='ml-10'>Products</span>
             </span>
             <ul class='mdc-list mdc-list--two-line'>
-            ${duty.attachment.Products.value.map(function(product){
-                return `<li class='mdc-list-item'>
+            ${duty.attachment.Products.value.map(function (product) {
+        return `<li class='mdc-list-item'>
                     <span class='mdc-list-item__text'>
                         <span class='mdc-list-item__primary-text'>${product.name}</span>
                         <span class='mdc-list-item__secondary-text'>Quantity : ${product.quanity}</span>
                     </span>
                     <span class='mdc-list-item__meta'>${convertNumberToINR(Number(product.rate))}</span>
                 </li>`
-            })}
+    })}
             </ul>
-        </div>` :''}
+        </div>` : ''}
     </div>
     <div class='navigate text-center mt-10'>
-        ${createExtendedFab('navigation','Navigate','navigate','',`https://www.google.com/maps/dir/?api=1&origin=${ApplicationState.location.latitude}%2C${ApplicationState.location.longitude}&destination=${duty.coords.latitude}%2C${duty.coords.longitude}`).outerHTML}
+        ${createExtendedFab('navigation', 'Navigate', 'navigate', '', `https://www.google.com/maps/dir/?api=1&origin=${ApplicationState.location.latitude}%2C${ApplicationState.location.longitude}&destination=${duty.coords.latitude}%2C${duty.coords.longitude}`).outerHTML}
     </div>
     `
 
@@ -386,23 +387,23 @@ function dutyScreen(duty) {
                       ${duty.attachment.Location.value || '-'}
                     </div>
                 </div>
-                ${duty.customerPhonenumber ?`
+                ${duty.customerPhonenumber ? `
                     <span class='inline-flex mb-10 customer-contact'>
                     <i class='material-icons mdc-theme--secondary'>phone</i>
                     <span class='mdc-typography--headline6 ml-10'>
                         <a href='tel:${duty.customerPhonenumber}'>${duty.customerPhonenumber}</a>
                     </span>
-                </span>` :''}            
+                </span>` : ''}            
            </div>
            <div class='full-width mb-10 mt-10 counter-container text-center'>
                 
         
                 ${duty.isActive ? `
-                <div class='mdc-typography--headline6 bold' style='color:#7C909E;'>Duty started ${duty.creator.phoneNumber ? '' :`at ${formatCreatedTime(duty.schedule[0].startTime)}`}</div>
+                <div class='mdc-typography--headline6 bold' style='color:#7C909E;'>Duty started ${duty.creator.phoneNumber ? '' : `at ${formatCreatedTime(duty.schedule[0].startTime)}`}</div>
                 <div id='time-clock' class='mdc-typography--headline3 bold mb-10' data-id="${duty.activityId}"></div>
                 <div class='finish-button--container mt-20'>
-                        ${createExtendedFab('close','Finish duty','finish').outerHTML}
-                </div>` :''} 
+                        ${createExtendedFab('close', 'Finish duty', 'finish').outerHTML}
+                </div>` : ''} 
            </div>
            <span class='inline-flex'>
             <i class='material-icons  mdc-theme--secondary'>access_time</i>
@@ -413,7 +414,7 @@ function dutyScreen(duty) {
                     <i class='material-icons mdc-theme--secondary'>assignment</i>
                     <span class='mdc-typography--headline6 ml-10'>${duty.attachment['Duty Type'].value || '-'} </span>
                 </span>
-            </div>` :''}
+            </div>` : ''}
            <div class='staff mt-10'>
                 <span class='inline-flex'>
                     <i class='material-icons mdc-theme--secondary'>group_add</i>
@@ -431,17 +432,17 @@ function dutyScreen(duty) {
                    <span class='mdc-typography--headline6 ml-10'>Products</span>
                </span>
                <ul class='mdc-list mdc-list--two-line'>
-                    ${duty.attachment.Products.value.map(function(product){
-                       return `<li class='mdc-list-item'>
+                    ${duty.attachment.Products.value.map(function (product) {
+        return `<li class='mdc-list-item'>
                            <span class='mdc-list-item__text'>
                                <span class='mdc-list-item__primary-text'>${product.name}</span>
                                <span class='mdc-list-item__secondary-text'>Quantity : ${product.quanity}</span>
                            </span>
                            <span class='mdc-list-item__meta'>${convertNumberToINR(Number(product.rate))}</span>
                        </li>`
-                   })}
+    })}
                </ul>`
-               :''}
+            : ''}
            </div>
        </div>
    </div>`
@@ -552,14 +553,14 @@ function constructJobView(duty) {
 }
 
 function markDutyFinished(duty) {
-    const tx = db.transaction('activity','readwrite')
+    const tx = db.transaction('activity', 'readwrite')
     const store = tx.objectStore('activity');
     duty.isActive = false;
     store.put(duty);
-    tx.oncomplete = function(){
+    tx.oncomplete = function () {
         successDialog(`Duty completed`);
         history.back();
-    }    
+    }
 }
 
 function checkProductLength(products) {
@@ -583,9 +584,9 @@ function getTimelineAddendum(geopoint) {
                 return
             }
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints({
-                    latitude: cursor.value.location._latitude,
-                    longitude: cursor.value.location._longitude
-                }, geopoint))) {
+                latitude: cursor.value.location._latitude,
+                longitude: cursor.value.location._longitude
+            }, geopoint))) {
 
                 cursor.continue();
                 return
@@ -1042,7 +1043,8 @@ function showAllDuties() {
         }
         activities.push(cursor.value)
         cursor.continue()
-    }
+    } 
+    
     tx.oncomplete = function () {
         let hasCurrentDuty = false;
         let hasPreviousDuties = false;
@@ -1056,10 +1058,27 @@ function showAllDuties() {
             sortedDates.forEach(function (activity) {
 
                 const li = dutyDateList(activity, activeDutyId, hasMultipleOffice);
-
+                
+               
+               
                 if (activeDutyId && activeDutyId === activity.activityId) {
+                    
                     hasCurrentDuty = true
                     activeDuty.isActive = true;
+                    function autoshow(i) {
+                        if(i==1){
+                        
+                        removeSwipe();
+                        history.pushState(['jobView', activeDuty], null, null)
+                        jobView(activeDuty)
+                        i=2;
+                    }
+                    
+                    }
+                    autoshow(1); 
+                
+                   
+
                     li.addEventListener('click', function () {
                         removeSwipe();
                         history.pushState(['jobView', activeDuty], null, null)
@@ -1068,6 +1087,7 @@ function showAllDuties() {
                     activeUl.appendChild(li);
                     console.log('going to start timer')
                 } else {
+                    
                     hasPreviousDuties = true;
                     li.addEventListener('click', function () {
                         history.pushState(['jobView', activity], null, null)
@@ -1080,6 +1100,8 @@ function showAllDuties() {
                 }
             })
             if (hasCurrentDuty) {
+
+                
                 listGroup.appendChild(createElement('h3', {
                     className: 'mdc-list-group__subheader active--subheader',
                     textContent: 'Ongoing'
@@ -1101,12 +1123,12 @@ function showAllDuties() {
         //     dutiesCont.appendChild(createTemplateButton(subs))
         // })
         const el = document.getElementById('app-tab-content');
-        if(el) {
+        if (el) {
             el.innerHTML = ``;
             el.appendChild(dutiesCont);
 
         }
-        
+
     }
 }
 
@@ -1134,9 +1156,9 @@ function dutyDateList(duty, activeDutyId, multipleOffice) {
         <span class="mdc-list-item__secondary-text bold duty-list--time">
             ${formatCreatedTime(duty.schedule[0].startTime)} to ${formatCreatedTime(duty.schedule[0].endTime)}
         </span>
-        ${multipleOffice ?  `<span class="mdc-list-item__secondary-text duty-list--office full-width">
+        ${multipleOffice ? `<span class="mdc-list-item__secondary-text duty-list--office full-width">
         ${duty.office}
-    </span>` :''}
+    </span>` : ''}
    
     </span>
     <span class='mdc-list-item__meta material-icons navigate-next'>navigate_next</span>
@@ -1153,9 +1175,9 @@ function createProductSelect(products) {
     })
     select.innerHTML = `<i class="mdc-select__dropdown-icon"></i>
                         <select class="mdc-select__native-control">
-                            ${products.map(function(product){
-                                return `<option value="${product.attachment.Name.value}">${product.attachment.Name.value}</option>`
-                            }).join("")}
+                            ${products.map(function (product) {
+        return `<option value="${product.attachment.Name.value}">${product.attachment.Name.value}</option>`
+    }).join("")}
                         </select>
                         <label class="mdc-floating-label">Choose product</label>
                         <div class="mdc-line-ripple"></div>`;
@@ -1263,8 +1285,8 @@ function showTabs(tabs, id) {
     <div class="mdc-tab-scroller__scroll-area">
       <div class="mdc-tab-scroller__scroll-content">
     
-        ${tabs.map(function(tab){
-            return `
+        ${tabs.map(function (tab) {
+        return `
             <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1" id=${tab.id || ''}>
             <span class="mdc-tab__content">
               <span class="mdc-tab__text-label">${tab.name}</span>
@@ -1274,7 +1296,7 @@ function showTabs(tabs, id) {
             </span>
             <span class="mdc-tab__ripple"></span>
           </button>`
-        }).join("")}
+    }).join("")}
       </div>
     </div>
   </div>`
