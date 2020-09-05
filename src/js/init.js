@@ -1186,7 +1186,7 @@ function createMapObjectStore(db) {
   })
   map.createIndex('location', 'location')
   map.createIndex('latitude', 'latitude')
-  map.createIndex('longitude', 'longitude')
+  map.createIndex('lapp-current-panelitude', 'longitude')
   map.createIndex('byOffice', ['office', 'location'])
   map.createIndex('bounds', ['latitude', 'longitude'])
   map.createIndex('office', 'office');
@@ -1318,7 +1318,11 @@ function checkIDBCount(storeNames) {
 function openReportView() {
   document.getElementById('step-ui').innerHTML = ''
   history.pushState(['appView'],null,null);
-  appView();
+  getCurrentJob().then(function(activity){
+       activity.isActive = true;
+       history.pushState(['jobView',activity], null, null)
+       jobView(activity);
+   })
 }
 
 function fillVenueInSub(sub, venue) {

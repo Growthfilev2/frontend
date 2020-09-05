@@ -1065,20 +1065,7 @@ function showAllDuties() {
                     
                     hasCurrentDuty = true
                     activeDuty.isActive = true;
-                    function autoshow(i) {
-                        if(i==1){
-                        
-                        removeSwipe();
-                        history.pushState(['jobView', activeDuty], null, null)
-                        jobView(activeDuty)
-                        i=2;
-                    }
-                    
-                    }
-                    autoshow(1); 
-                
-                   
-
+               
                     li.addEventListener('click', function () {
                         removeSwipe();
                         history.pushState(['jobView', activeDuty], null, null)
