@@ -1186,7 +1186,7 @@ function createMapObjectStore(db) {
   })
   map.createIndex('location', 'location')
   map.createIndex('latitude', 'latitude')
-  map.createIndex('lapp-current-panelitude', 'longitude')
+  map.createIndex('longitude', 'longitude')
   map.createIndex('byOffice', ['office', 'location'])
   map.createIndex('bounds', ['latitude', 'longitude'])
   map.createIndex('office', 'office');
