@@ -4,7 +4,7 @@ function jobView(currentDuty) {
     let duty = currentDuty;
     dom_root.classList.add('mdc-top-app-bar--fixed-adjust')
     dom_root.innerHTML = '';
-    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title">${currentDuty.activityName}</span>`, ``);
+    const header = setHeader(`<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a><span class="mdc-top-app-bar__title" >${currentDuty.activityName}</span>`, ``);
     header.root_.classList.remove("hidden");
     getCustomerPhoneNumber(duty.attachment.Location.value)
         .then(function (customerPhonenumber) {
@@ -25,7 +25,9 @@ function getCurrentJob() {
         const auth = firebase.auth().currentUser;
 
         let record = {
+            activityName: 'DUTY',
             attachment: {
+             
                 'Duty Type': {
                     value: '',
                     type: 'duty'
@@ -48,6 +50,7 @@ function getCurrentJob() {
                     }]
                 }
             },
+            
             "checkins": [],
             "calls": [],
             creator: {
@@ -72,6 +75,7 @@ function getCurrentJob() {
             supervisior: null,
             isActive: false,
             timestamp: Date.now(),
+            
         };
         const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
         store.index('timestamp').openCursor(bound).onsuccess = function (e) {
@@ -614,7 +618,8 @@ function getTimelineActivityData(addendums, office) {
         const store = tx.objectStore('activity');
         const filteredResult = {
             currentDuty: '',
-            timelineData: []
+            timelineData: [],
+            
         };
         addendums.forEach(function (addendum) {
             if (!addendum.activityId) return;
