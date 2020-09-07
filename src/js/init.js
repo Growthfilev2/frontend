@@ -1318,7 +1318,11 @@ function checkIDBCount(storeNames) {
 function openReportView() {
   document.getElementById('step-ui').innerHTML = ''
   history.pushState(['appView'],null,null);
-  appView();
+  getCurrentJob().then(function(activity){
+       activity.isActive = true;
+       history.pushState(['jobView',activity], null, null)
+       jobView(activity);
+   })
 }
 
 function fillVenueInSub(sub, venue) {
