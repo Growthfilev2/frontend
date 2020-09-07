@@ -821,11 +821,9 @@ function successResponse(read, param, db, resolve, reject) {
     putAttachment(activity, updateTx, param);
     addendumObjectStore.index('activityId').getAll(activity.activityId).onsuccess = function (e) {
       const addendums = e.target.result || [];
-      console.log('addendums', addendums);
       const  lastAddendum = addendums.sort(function (a, b) {
         return b.timestamp - a.timestamp;
       })[0];
-      console.log('last addendum',lastAddendum)
       updateUserStore(lastAddendum, activity.assignees,param,userStore)
     }
   })
