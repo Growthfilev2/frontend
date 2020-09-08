@@ -6,11 +6,20 @@
   "scripts": {
     "deploy:prod": "firebase use --add growthfile-207204 && firebase deploy --only hosting",
     "clean": "rm -r dist/v2/js/*.js && rm -r dist/v2/css/bundle.css",
+
+    "cleanjs": "remove-node-modules dist/v2/js/*.js",
+    "cleancss": "remove-node-modules dist/v2/css/bundle.css",
+
     "babel": "babel src/js --out-file dist/v2/js/compiled.js --ignore 'src/js/apiHandler.js'",
     "worker": "babel src/js/apiHandler.js --out-file dist/v2/js/apiHandler.js",
     "uglify": "uglifyjs dist/v2/js/compiled.js -o dist/v2/js/bundle.min.js -c -m && uglifyjs dist/v2/js/apiHandler.js -o dist/v2/js/apiHandler.js -c -m && rm dist/v2/js/compiled.js",
+
+    "uglify-w": "uglifyjs dist/v2/js/compiled.js -o dist/v2/js/bundle.min.js -c -m && uglifyjs dist/v2/js/apiHandler.js -o dist/v2/js/apiHandler.js -c -m && remove-node-modules dist/v2/js/compiled.js",
+
     "build-css": "uglifycss src/css/*.css > dist/v2/css/bundle.css",
-    "compile": "npm run babel && npm run worker  && npm run uglify && npm run build-css"
+    "compile": "npm run clean && npm run babel && npm run worker  && npm run uglify && npm run build-css",
+
+    "compile-w": "npm run cleanjs && npm run cleancss && npm run babel && npm run worker  && npm run uglify-w && npm run build-css"
   },
   "repository": {
     "type": "git",
@@ -34,6 +43,7 @@
   },
   "dependencies": {
     "babel-plugin-transform-remove-strict-mode": "0.0.2",
+    "remove-node-modules": "^1.7.6",
     "uglify-js": "^3.4.9"
   }
 }
