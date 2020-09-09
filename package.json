@@ -1,0 +1,39 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "## File structure ``` |   index.html |   .gitignore |   package.json |   README.md | +---css |   |   conversation.css | +---js |   |   apiHandler.js |   |   conversation.js |   |   init.js |   |   panel.js |   |   services.js | ```",
+  "main": "index.js",
+  "scripts": {
+    "deploy:prod": "firebase use --add growthfile-207204 && firebase deploy --only hosting",
+    "clean": "rm -r dist/v2/js/*.js && rm -r dist/v2/css/bundle.css",
+    "babel": "babel src/js --out-file dist/v2/js/compiled.js --ignore 'src/js/apiHandler.js'",
+    "worker": "babel src/js/apiHandler.js --out-file dist/v2/js/apiHandler.js",
+    "uglify": "uglifyjs dist/v2/js/compiled.js -o dist/v2/js/bundle.min.js -c -m && uglifyjs dist/v2/js/apiHandler.js -o dist/v2/js/apiHandler.js -c -m && rm dist/v2/js/compiled.js",
+    "build-css": "uglifycss src/css/*.css > dist/v2/css/bundle.css",
+    "compile": "npm run clean && npm run babel && npm run worker  && npm run uglify && npm run build-css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrowthfileV2/frontend.git"
+  },
+  "keywords": [],
+  "author": "shikhar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GrowthfileV2/frontend/issues"
+  },
+  "homepage": "https://github.com/GrowthfileV2/frontend#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
+    "babel-minify": "^0.5.0",
+    "babel-preset-env": "^1.7.0",
+    "grunt-cache-bust": "^1.7.0",
+    "uglifycss": "0.0.29"
+  },
+  "dependencies": {
+    "babel-plugin-transform-remove-strict-mode": "0.0.2",
+    "uglify-js": "^3.4.9"
+  }
+}
