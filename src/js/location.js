@@ -30,7 +30,7 @@ function isLocationOld(newLocation, oldLocation) {
 }
 
 function isLocationMoreThanThreshold(distance) {
-    var THRESHOLD = 1; //km
+    var THRESHOLD = 0.7; //km
     return distance >= THRESHOLD
 }
 

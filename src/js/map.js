@@ -570,7 +570,7 @@ function loadNearByLocations(o, location) {
         cursor.continue();
         return;
       };
-      if (calculateDistanceBetweenTwoPoints(location, cursor.value) > 1) {
+      if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(location, cursor.value))) {
         cursor.continue();
         return;
       }
