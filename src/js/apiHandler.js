@@ -83,20 +83,20 @@ self.onmessage = function (event) {
     if (event.data.type === 'now') return handleNow(event.data, db)
     if (event.data.type === 'instant') return instant(event.data.body, event.data.meta)
 
-    if (event.data.type === 'Null') {
-      updateIDB({
-        payload: event.data,
-        db: db
-      }).then(function (response) {
-        sendSuccessRequestToMainThread(response, workerId)
-      }).catch(function (error) {
-        error.id = workerId,
-          error.requestType = event.data.type
-        sendErrorRequestToMainThread(error)
-      })
-      return;
-    }
-
+    // if (event.data.type === 'Null') {
+    //   updateIDB({
+    //     payload: event.data,
+    //     db: db
+    //   }).then(function (response) {
+    //     sendSuccessRequestToMainThread(response, workerId)
+    //   }).catch(function (error) {
+    //     error.id = workerId,
+    //       error.requestType = event.data.type
+    //     sendErrorRequestToMainThread(error)
+    //   })
+    //   return;
+    // }
+    
     requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (response) {
       sendSuccessRequestToMainThread(response, workerId)
     }).catch(function (error) {

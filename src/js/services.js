@@ -82,7 +82,12 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    
+
+    return resolve({
+      latitude:28.7891238,
+      longitude:77.128309129323,
+      lastLocationTime:Date.now()
+    })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -301,6 +306,41 @@ function requestCreator(requestType, requestBody, geopoint) {
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
     return executeRequest(requestGenerator);
   });
+}
+
+function serviceWorkerRequestCreator(requestType,requestBody,geopoint) {
+  return new Promise(resolve=>{
+    firebase.auth().currentUser.getIdToken().then(function (token) {
+ 
+      var auth = firebase.auth().currentUser;
+      var requestGenerator = {
+        type: 'read',
+        body: requestBody,
+        meta: {
+          user: {
+            token: token,
+            uid: auth.uid,
+            displayName: auth.displayName,
+            photoURL: auth.photoURL,
+            phoneNumber: auth.phoneNumber,
+          },
+          mapKey: appKey.getMapKey(),
+          apiUrl: appKey.getBaseUrl(),
+          authorization: extralRequest[requestType] ? false : true
+        },
+      };
+      return resolve(requestGenerator);
+      // return getRootRecord().then(function (rootRecord) {
+      //   let time;
+      //   if (requestGenerator.body['timestamp']) {
+      //     time = requestGenerator.body['timestamp']
+      //   } else {
+      //     time = fetchCurrentTime(rootRecord.serverTime);
+      //   }
+      //   requestGenerator.body['timestamp'] = time
+      // });
+    })
+  })
 }
 
 function executeRequest(requestGenerator) {

@@ -21,6 +21,9 @@ var updatedWifiAddresses = {
 }
 
 var isNewUser = false;
+
+
+
 function setFirebaseAnalyticsUserId(id) {
   if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
     window.AndroidInterface.setFirebaseAnalyticsUserId(id)
@@ -144,8 +147,8 @@ function updatedWifiScans(wifiString) {
 window.addEventListener('error', function (event) {
   this.console.error(event.message);
   if (event.message.toLowerCase().indexOf('script error') > -1) return;
-  if(event.message === "You can't have a focus-trap without at least one focusable element") return;
- 
+  if (event.message === "You can't have a focus-trap without at least one focusable element") return;
+
   handleError({
     message: 'global error :' + event.message,
     body: {
@@ -214,7 +217,7 @@ let native = function () {
     getInfo: function () {
       if (!this.getName()) return false;
       const storedInfo = JSON.parse(localStorage.getItem('deviceInfo'));
-      if(storedInfo) return storedInfo;
+      if (storedInfo) return storedInfo;
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation()
         deviceInfo.idbVersion = DB_VERSION
@@ -252,11 +255,11 @@ window.onpopstate = function (event) {
   };
 
   if (!event.state) return;
-  if (nonRefreshViews[event.state[0]])  {
-    history.replaceState(['appView'],null,null)
+  if (nonRefreshViews[event.state[0]]) {
+    history.replaceState(['appView'], null, null)
     return
   }
-  if(event.state[0] === 'showRating') return;
+  if (event.state[0] === 'showRating') return;
   if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
     history.go(-1);
     return;
@@ -273,7 +276,24 @@ function preloadImages(urls) {
   })
 }
 
-window.addEventListener('load', function () {
+
+window.addEventListener('load', () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', {
+        scope: './'
+      })
+      .then(reg => {
+        console.log('Registration succeeded. Scope is ' + reg.scope);
+        loadApp()
+      }).catch((error) => {
+        // registration failed
+        console.log('Registration failed with ' + error);
+      });
+  }
+})
+
+
+const loadApp = () => {
 
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
@@ -320,7 +340,7 @@ window.addEventListener('load', function () {
     localStorage.removeItem('storedLinks');
     checkNetworkValidation();
   });
-})
+};
 
 
 
@@ -420,7 +440,7 @@ function userSignedOut() {
     firebaseUI.delete();
   }
 
-  
+
   dom_root.innerHTML = `
     <div class='slider' id='app-slider' style="background-image:url('./img/welcome.jpg')">
  
@@ -504,7 +524,7 @@ function loadSlider() {
       src = './img/payments.jpeg'
       break;
   }
-  if(document.getElementById('app-slider')) {
+  if (document.getElementById('app-slider')) {
     document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
   }
 }
@@ -527,7 +547,7 @@ function loadingScreen(data) {
 }
 
 function removeLoadingScreen() {
-  if(document.getElementById('loading-screen')) {
+  if (document.getElementById('loading-screen')) {
     document.getElementById('loading-screen').remove()
   }
 }
@@ -554,19 +574,19 @@ function startApp() {
         break;
       case 31:
         const addendumStore = req.transaction.objectStore('addendum');
-        if(!addendumStore.indexNames.contains('timestamp')) {
-          addendumStore.createIndex('timestamp','timestamp');
+        if (!addendumStore.indexNames.contains('timestamp')) {
+          addendumStore.createIndex('timestamp', 'timestamp');
         }
         break;
       case 32:
         const userStore = req.transaction.objectStore('users');
-        userStore.openCursor().onsuccess = function(e){
+        userStore.openCursor().onsuccess = function (e) {
           const cursor = e.target.result;
-          if(!cursor) return;
+          if (!cursor) return;
           delete cursor.value.count;
           userStore.put(cursor.value)
           cursor.continue();
-        }  
+        }
       default:
         console.log('version upgrade');
         break;
@@ -578,10 +598,10 @@ function startApp() {
     db = req.result;
     console.log("run app")
     regulator()
-    .then(console.log).catch(function (error) {
-      if (error.type === 'geolocation') return handleLocationError(error)
-      contactSupport()
-    })
+      .then(console.log).catch(function (error) {
+        if (error.type === 'geolocation') return handleLocationError(error)
+        contactSupport()
+      })
   };
 
   req.onerror = function () {
@@ -613,10 +633,9 @@ function regulator() {
       text: 'Loading ... '
     })
 
-    if(appKey.getMode() === 'dev' && window.location.host === 'localhost') {
-        prom = Promise.resolve();
-    }
-    else {
+    if (appKey.getMode() === 'dev' && window.location.host === 'localhost:5005') {
+      prom = Promise.resolve();
+    } else {
       prom = requestCreator('fcmToken', {
         token: native.getFCMToken()
       })
@@ -624,13 +643,14 @@ function regulator() {
 
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
-     
+
         if (queryLink.get('action') === 'get-subscription') {
           loadingScreen({
             src: './img/wait.jpg',
             text: 'Adding you in ' + queryLink.get('office')
           })
-        }
+        };
+
         return requestCreator('acquisition', {
           source: queryLink.get('utm_source'),
           medium: queryLink.get('utm_medium'),
@@ -656,8 +676,8 @@ function regulator() {
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        if(window.location.host === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
-        
+        if (window.location.host === 'localhost:5005' && appKey.getMode() === 'dev') return Promise.resolve();
+
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
       })
@@ -728,21 +748,20 @@ function handleCheckin(geopoint, noUser) {
 
     const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
-      getRootRecord().then(function(record){
-        if(record.fromTime == 0) {
+      getRootRecord().then(function (record) {
+        if (record.fromTime == 0) {
           loadingScreen({
             src: './img/update.jpg',
             text: 'Fetching your data'
           })
-          requestCreator('Null').then(function () {
-            handleCheckin(geopoint, true)
-          })
+
+          navigator.serviceWorker.controller.postMessage({type:'read'}, [messageChannel.port2])
           return
         }
         if (isAdmin(result[0]) || result[1]) return initProfileView();
         return noOfficeFoundScreen();
       })
-   
+
     })
 
   });
@@ -836,7 +855,7 @@ function checkForPhoto() {
       </div>
   
       `
-      dom_root.innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
+  dom_root.innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
   document.getElementById('choose').addEventListener('change', function (evt) {
     getImageBase64(evt).then(function (dataURL) {
       document.getElementById('image-update').src = dataURL;
@@ -1120,7 +1139,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key');
-  addendum.createIndex('timestamp','timestamp');
+  addendum.createIndex('timestamp', 'timestamp');
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
 
 
@@ -1317,14 +1336,14 @@ function checkIDBCount(storeNames) {
 
 function openReportView() {
   document.getElementById('step-ui').innerHTML = ''
-  history.pushState(['appView'],null,null);
-  getCurrentJob().then(function(activity){
-      if(activity.activityId) {
-          activity.isActive = true;
-      }
-       history.pushState(['jobView',activity], null, null)
-       jobView(activity);
-   })
+  history.pushState(['appView'], null, null);
+  getCurrentJob().then(function (activity) {
+    if (activity.activityId) {
+      activity.isActive = true;
+    }
+    history.pushState(['jobView', activity], null, null)
+    jobView(activity);
+  })
 }
 
 function fillVenueInSub(sub, venue) {
@@ -1367,9 +1386,9 @@ function isNewJob(geopoint) {
   if (!oldState.lastCheckInCreated) return true;
   const today = isToday(oldState.lastCheckInCreated)
   const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
-  
-  if(today) {
-    if(hasChangedLocation) return true
+
+  if (today) {
+    if (hasChangedLocation) return true
     return false;
   }
   return true
@@ -1378,8 +1397,5 @@ function isNewJob(geopoint) {
 
 
 function isToday(timestamp) {
-  return moment(timestamp).isSame(moment().clone().startOf('day'),'d')
+  return moment(timestamp).isSame(moment().clone().startOf('day'), 'd')
 }
-
-
-
