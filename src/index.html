@@ -6,57 +6,24 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
-    integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
-    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.3.0/firebase-ui-auth.css" />
-    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
 
-  <link href="external/css/material.min.css" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css">
 
-  <link href="css/start.css" rel="stylesheet" type="text/css">
-  <link href="css/map.css" rel="stylesheet" type="text/css">
-  <link href="css/claims.css" rel="stylesheet" type="text/css">
-  <link href="css/attendence.css" rel="stylesheet" type="text/css">
-  <link href="css/reportView.css" rel="stylesheet" type="text/css">
-  <link href="css/job.css" rel="stylesheet" type="text/css">
-  <link href="css/circle.css" rel="stylesheet" type="text/css">
-  <link href="css/snap.css" rel="stylesheet" type="text/css">
-  <link href="css/profile.css" rel="stylesheet" type="text/css">
-  <link href="css/chats.css" rel="stylesheet" type="text/css">
-  <link href="css/home.css" rel="stylesheet" type="text/css">
+  <!-- <link href="css/map.css" rel="stylesheet" type="text/css"> -->
+  <!-- <link href="css/home.css" rel="stylesheet" type="text/css"> -->
   <link href="css/app.css" rel="stylesheet" type="text/css">
+  <link href="css/init.css" rel="stylesheet" type="text/css">
+
+  <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+  <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+  <script defer src="js/config.js"></script>
 
 </head>
 
 <body class="mdc-typography">
 
-
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
-    <div class='mdc-top-app-bar__row'>
-      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
-        <a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-        <span class="mdc-top-app-bar__title"></span>
-      </section>
-      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
-      </section>
-    </div>
-    <div role="progressbar" id='main-progress-bar'
-      class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
-      <div class="mdc-linear-progress__buffering-dots"></div>
-      <div class="mdc-linear-progress__buffer"></div>
-      <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-        <span class="mdc-linear-progress__bar-inner"></span>
-      </div>
-      <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-        <span class="mdc-linear-progress__bar-inner"></span>
-      </div>
-    </div>
-
-  </header>
-
-  </div>
-
-  <div class="success--container hidden center-abs" id="success-animation">
+  <!-- <div class="success--container hidden center-abs" id="success-animation">
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
       <circle class="path circle" fill="none" stroke="#27628E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
         cy="65.1" r="62.1" />
@@ -65,14 +32,92 @@
     </svg>
     <p class="success-text mdc-theme--primary"></p>
 
+  </div> -->
+
+  <div id="app-current-panel">
+    <div class="transitions">
+      <div id="loading" class="app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Loading.svg">
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">Loading</div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text">Please wait while we connect you to onDuty</div>
+      </div>
+      <div id="adding-to-office" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Loading.svg">
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6"></div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text">Please wait while we add you to your company</div>
+      </div>
+      <div id="connecting" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Connecting to Servcer.svg">
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">Connecting to server</div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text">Please wait while we connect to server</div>
+
+      </div>
+      <div id="verifying" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Location.svg">
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">Verifying location</div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text">Please wait while we fetch your location</div>
+      </div>
+      <div id="loading-data" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Connecting to Servcer.svg">
+        </div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">Fetching data</div>
+        <div class="loading-text">Please wait while we fetch your data</div>
+      </div>
+
+      <div id="checkin" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Location.svg">
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6"></div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="hidden login-box">
-    <div id='login-container'></div>
-    <span class="text-center mdc-typography--subtitle1 legal-links"><a href="https://growthfile.com/legal#privacy-policy" target="_blank">Privacy policy</a><span> &amp; </span><a href="https://growthfile.com/legal#terms-of-use-user" target="_blank">Terms of use</a></span>
-  </div>
-  <div id='step-ui'></div>
-  <div id="app-current-panel"></div>
   <div id="snackbar-container">
     <div class="mdc-snackbar">
       <div class="mdc-snackbar__surface">
@@ -85,35 +130,15 @@
     </div>
   </div>
   <div id='dialog-container'>
-
   </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
-  <script src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
-  <script src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
-  <script src='https://www.gstatic.com/firebasejs/7.6.2/firebase-messaging.js'></script>
-
-  <script src="https://www.gstatic.com/firebasejs/ui/4.3.0/firebase-ui-auth.js"></script>
-  <script src='external/js/material.min.js'></script>
-  <script src="js/config.js"></script>
+  <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+  <script src="js/core.js"></script>
   <script src="js/component.js"></script>
   <script src="js/location.js"></script>
   <script src="js/services.js"></script>
-  <script src="js/start.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/addView.js"></script>
-  <script src="js/profile.js"></script>
-  <script src="js/chatView.js"></script>
-  <script src="js/job.js"></script>
+  <script src="js/checkin.js"></script>
   <script src="js/init.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
-  integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
-  integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
 
-  <!-- <script type="text/javascript"
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&libraries=places&callback=initializeApp">
-  </script> -->
 </body>
 
 </html>

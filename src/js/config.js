@@ -40,3 +40,6 @@ AppKeys.prototype.getBaseUrl = function () {
 AppKeys.prototype.dynamicLinkUriPrefix  = function () {
     return this.mode === 'production' ? 'https://growthfile.page.link' : 'https://growthfileanalytics.page.link'
 }
+const appKey = new AppKeys();
+firebase.initializeApp(appKey.getKeys())
+

@@ -1,15 +1,10 @@
 const dom_root = document.getElementById('app-current-panel');
-const appKey = new AppKeys();
+// const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
 let appTabBar;
 let DB_VERSION = 33;
-var EMAIL_REAUTH;
-var firebaseUI;
-var sliderIndex = 1;
-var sliderTimeout = 10000;
-var sliderInterval;
 var potentialAlternatePhoneNumbers;
 var firebaseDeepLink;
 var facebookDeepLink;
@@ -24,9 +19,33 @@ var isNewUser = false;
 
 
 navigator.serviceWorker.onmessage = (event) => {
-  console.log('message from worker',event.data);
+  console.log('message from worker', event.data);
   // openReportView();
 };
+
+
+window.addEventListener('load', () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', {
+        scope: './'
+      })
+      .then(reg => {
+        console.log('Registration succeeded. Scope is ' + reg.scope);
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            console.log(user)
+            loadApp()
+            return
+          }
+          redirect('/login.html');
+        })
+      }).catch((error) => {
+        // registration failed
+        console.log('Registration failed with ' + error);
+      });
+  }
+})
+
 
 function setFirebaseAnalyticsUserId(id) {
   if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
@@ -281,28 +300,10 @@ function preloadImages(urls) {
 }
 
 
-window.addEventListener('load', () => {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js', {
-        scope: './'
-      })
-      .then(reg => {
-        console.log('Registration succeeded. Scope is ' + reg.scope);
-        loadApp()
-      }).catch((error) => {
-        // registration failed
-        console.log('Registration failed with ' + error);
-      });
-  }
-})
-
 
 const loadApp = () => {
 
-  firebase.initializeApp(appKey.getKeys())
-  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   if (!window.Worker && !window.indexedDB) {
     const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile  is incompatible with this device').create();
@@ -310,40 +311,9 @@ const loadApp = () => {
     return;
   }
 
-  preloadImages(['./img/fetching-location.jpg', './img/wait.jpg', './img/server.jpg', './img/update.jpg', './img/fetching.jpg'])
-  firebase.auth().onAuthStateChanged(function (auth) {
-    if (!auth) {
-      logReportEvent("IN Slider");
-
-      history.pushState(['userSignedOut'], null, null);
-      userSignedOut()
-      return;
-    }
-
-
-    clearInterval(sliderInterval);
-    const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
-    header.listen('MDCTopAppBar:nav', handleNav);
-    header.root_.classList.add("hidden");
-
-    if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
-
-    dom_root.classList.remove('hidden');
-    if (EMAIL_REAUTH) {
-      history.pushState(['jobs'], null, null);
-      history.pushState(['profileView'], null, null);
-      history.pushState(['emailUpdation'], null, null);
-      emailUpdation(false, function () {
-        EMAIL_REAUTH = false
-        history.back()
-      })
-      return;
-    }
-
-    localStorage.setItem('error', JSON.stringify({}));
-    localStorage.removeItem('storedLinks');
-    checkNetworkValidation();
-  });
+  localStorage.setItem('error', JSON.stringify({}));
+  localStorage.removeItem('storedLinks');
+  checkNetworkValidation();
 };
 
 
@@ -534,20 +504,15 @@ function loadSlider() {
 }
 
 
-function loadingScreen(data) {
-  dom_root.innerHTML = `
-  <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
-    <div class='text-container' style="${data.src === './img/fetching-location.jpg' ? 'margin-top:110px':''}"> 
-      <div class='text mdc-typography--headline6'>${data.text || ''}</div>
-      <div class="loader">
-        <svg class="circular" viewBox="25 25 50 50">
-          <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
-        </svg>
-      </div>
-      </div>  
-  </div>
-  `
-
+const loadScreen = (id) => {
+  document.querySelectorAll('.transitions .app-init-screens').forEach(el=>{
+    if(el.id === id) {
+      el.classList.remove('hidden')
+    }
+    else {
+      el.classList.add('hidden')
+    }
+  })
 }
 
 function removeLoadingScreen() {
@@ -604,6 +569,7 @@ function startApp() {
     regulator()
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
+        console.log(error)
         contactSupport()
       })
   };
@@ -632,10 +598,7 @@ function regulator() {
 
   return new Promise(function (resolve, reject) {
     var prom;
-    loadingScreen({
-      src: './img/wait.jpg',
-      text: 'Loading ... '
-    })
+    loadScreen('loading');
 
     if (appKey.getMode() === 'dev' && window.location.host === 'localhost:5000') {
       prom = Promise.resolve();
@@ -649,10 +612,8 @@ function regulator() {
         if (!queryLink) return Promise.resolve();
 
         if (queryLink.get('action') === 'get-subscription') {
-          loadingScreen({
-            src: './img/wait.jpg',
-            text: 'Adding you in ' + queryLink.get('office')
-          })
+          loadScreen('adding-to-office');
+          document.querySelector('#adding-to-office .loading-text--headline').textContent = 'Adding you to '+ queryLink.get('office');
         };
 
         return requestCreator('acquisition', {
@@ -663,19 +624,12 @@ function regulator() {
         })
       })
       .then(function () {
-        loadingScreen({
-          src: './img/server.jpg',
-          text: 'Connecting to server'
-        })
-
+        loadScreen('connecting');
         return requestCreator('now');
       })
       .then(function () {
-        serverTimeUpdated = true
-        loadingScreen({
-          src: './img/fetching-location.jpg',
-          text: 'Verifying location'
-        })
+       serverTimeUpdated = true
+       loadScreen('verifying');
         return appLocation(3)
       })
       .then(function (geopoint) {
@@ -754,15 +708,14 @@ function handleCheckin(geopoint, noUser) {
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
       getRootRecord().then(function (record) {
         if (record.fromTime == 0) {
-          loadingScreen({
-            src: './img/update.jpg',
-            text: 'Fetching your data'
-          })
+          loadScreen('loading-data')
           // serviceWorkerRequestCreator(null).then((res)=>{
-            navigator.serviceWorker.controller.postMessage({type:'read'})
+          navigator.serviceWorker.controller.postMessage({
+            type: 'read'
+          })
           // })
           navigator.serviceWorker.onmessage = (event) => {
-            console.log('message from worker',event.data);
+            console.log('message from worker', event.data);
             // openReportView();
           };
           return
@@ -799,11 +752,8 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  if (auth.displayName && auth.photoURL && auth.email) return openReportView()
-  removeLoadingScreen()
-  document.getElementById('app-header').classList.remove('hidden')
-  history.pushState(['profileCheck'], null, null)
-  profileCheck();
+  if (auth.displayName) return redirect('/home');
+  redirect('/profile');
 }
 
 
@@ -1273,17 +1223,7 @@ function createRootObjectStore(db, uid, fromTime) {
   })
 }
 
-function redirect() {
-  firebase.auth().signOut().then(function () {
-    window.location = 'https://www.growthfile.com';
-  }).catch(function (error) {
-    console.log(error)
-    window.location = 'https://www.growthfile.com';
-    handleError({
-      message: `${error} from redirect`
-    })
-  });
-}
+
 
 
 
@@ -1345,7 +1285,7 @@ function checkIDBCount(storeNames) {
 
 function openReportView() {
 
-  window.location = window.location.origin+'/home.html'
+  window.location = window.location.origin + '/home.html'
   return
   document.getElementById('step-ui').innerHTML = ''
   history.pushState(['appView'], null, null);

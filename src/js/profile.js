@@ -106,25 +106,7 @@ function helpView() {
   dom_root.appendChild(ul);
 }
 
-function createList(attr) {
-  const li = createElement('li', {
-    className: 'mdc-list-item'
-  });
-  li.innerHTML = `
-    ${attr.icon ? `<i class="mdc-list-item__graphic material-icons mdc-theme--secondary" aria-hidden="true">${attr.icon}</i>` :''}
-    ${attr.primaryText && attr.secondaryText ? ` <span class="mdc-list-item__text">
-      <span class="mdc-list-item__primary-text">
-        ${attr.primaryText}
-      </span>
-       <span class="mdc-list-item__secondary-text">
-        ${attr.secondaryText}
-      </span>` : attr.primaryText}
-      ${attr.meta ? `<span class='mdc-list-item__meta material-icons'>${attr.meta}</span>` :''}
-    </span>
-  `
-  new mdc.ripple.MDCRipple(li)
-  return li;
-}
+
 
 function createListDivider(){
   return createElement('li',{

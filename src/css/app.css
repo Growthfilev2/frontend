@@ -38,8 +38,8 @@ html {
 }
 
 :root {
-  --mdc-theme-primary: #011A2D;
-  --mdc-theme-secondary: #103153;
+  --mdc-theme-primary: #184466;
+  --mdc-theme-secondary: #ffffff;
   --mdc-theme-background: #7C909E;
   --mdc-theme-on-primary: #ffffff;
   --mdc-theme-on-secondary: #ffffff;
@@ -64,6 +64,7 @@ body {
   /* Status bar height on iOS 11+ */
   padding-top: env(safe-area-inset-top);
 }
+
 @media (max-width:599px) {
   .mdc-top-app-bar--fixed-adjust {
     padding-top:calc(56px + 20px);
@@ -486,19 +487,6 @@ body {
   }
 } */
 
-.loader {
-  position: relative;
-  margin: 0 auto;
-  width: 65px;
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
-.loader:before {
-  content: '';
-  display: block;
-  padding-top: 100%;
-}
 
 .circular {
   animation: rotate 2s linear infinite;
@@ -680,7 +668,7 @@ body {
 
 :not(.mdc-list--non-interactive)>:not(.mdc-list-item--disabled).mdc-list-item::before,
 :not(.mdc-list--non-interactive)>:not(.mdc-list-item--disabled).mdc-list-item::after {
-  background-color: #cccccc
+  /* background-color: #cccccc */
 }
 
 .mdc-checkbox__background {

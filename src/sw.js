@@ -1,9 +1,8 @@
 importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js');
 
-
-
 var userAuth;
+
 firebase.initializeApp({
     apiKey: "AIzaSyB2SuCoyi9ngRIy6xZRYuzxoQJDtOheiUM",
     authDomain: "growthfilev2-0.firebaseapp.com",
@@ -22,79 +21,77 @@ firebase.auth().onAuthStateChanged(user => {
     }
 })
 
-var CACHE_NAME = 'my-site-cache-v1';
-var urlsToCache = [
-  '/',
-  '/home.html',
-  '/profile.html'
-];
+// var CACHE_NAME = 'my-site-cache-v1';
+// var urlsToCache = [
+//   '/',
+// ];
 
 console.log("there is a change")
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
     // Perform some task
     console.log('Service worker installed', event)
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-          .then(function(cache) {
-            console.log('Opened cache');
-            return cache.addAll(urlsToCache);
-          })
-      );
-    // event.waitUntil(self.skipWaiting());
+    // event.waitUntil(
+    //     caches.open(CACHE_NAME)
+    //       .then(function(cache) {
+    //         console.log('Opened cache');
+    //         return cache.addAll(urlsToCache);
+    //       })
+    //   );
+    event.waitUntil(self.skipWaiting());
 
 });
 
 self.addEventListener('activate', function (event) {
     // Perform some task
     console.log('Service worker activated', event)
-    var cacheAllowlist = ['my-site-cache-v1'];
-    event.waitUntil(
-      caches.keys().then(function(cacheNames) {
-        return Promise.all(
-          cacheNames.map(function(cacheName) {
-            if (cacheAllowlist.indexOf(cacheName) === -1) {
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-    );
+    // var cacheAllowlist = ['my-site-cache-v1'];
+    // event.waitUntil(
+    //   caches.keys().then(function(cacheNames) {
+    //     return Promise.all(
+    //       cacheNames.map(function(cacheName) {
+    //         if (cacheAllowlist.indexOf(cacheName) === -1) {
+    //           return caches.delete(cacheName);
+    //         }
+    //       })
+    //     );
+    //   })
+    // );
 });
 
-self.addEventListener('fetch', function(event) {
-    event.respondWith(
-      caches.match(event.request)
-        .then(function(response) {
-          // Cache hit - return response
-          if (response) {
-            return response;
-          }
+// self.addEventListener('fetch', function(event) {
+//     event.respondWith(
+//       caches.match(event.request)
+//         .then(function(response) {
+//           // Cache hit - return response
+//           if (response) {
+//             return response;
+//           }
   
-          return fetch(event.request).then(
-            function(response) {
-              // Check if we received a valid response
-              if(!response || response.status !== 200 || response.type !== 'basic') {
-                return response;
-              }
+//           return fetch(event.request).then(
+//             function(response) {
+//               // Check if we received a valid response
+//               if(!response || response.status !== 200 || response.type !== 'basic') {
+//                 return response;
+//               }
   
-              // IMPORTANT: Clone the response. A response is a stream
-              // and because we want the browser to consume the response
-              // as well as the cache consuming the response, we need
-              // to clone it so we have two streams.
-              var responseToCache = response.clone();
+//               // IMPORTANT: Clone the response. A response is a stream
+//               // and because we want the browser to consume the response
+//               // as well as the cache consuming the response, we need
+//               // to clone it so we have two streams.
+//               var responseToCache = response.clone();
   
-              caches.open(CACHE_NAME)
-                .then(function(cache) {
-                  cache.put(event.request, responseToCache);
-                });
+//               caches.open(CACHE_NAME)
+//                 .then(function(cache) {
+//                   cache.put(event.request, responseToCache);
+//                 });
   
-              return response;
-            }
-          );
-        })
-      );
-  });
+//               return response;
+//             }
+//           );
+//         })
+//       );
+//   });
 
 
 self.addEventListener('message', (event) => {

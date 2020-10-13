@@ -336,13 +336,13 @@ function serviceWorkerRequestCreator() {
 function executeRequest(requestGenerator) {
   const auth = firebase.auth().currentUser;
   if (requestGenerator.type !== 'instant') {
-    progressBar.open();
+    // progressBar.open();
   }
 
   return auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token;
     apiHandler.onmessage = function (event) {
-      progressBar.close();
+      // progressBar.close();
 
       if (!event.data.success) {
         const reject = workerRejects[event.data.id];
@@ -372,7 +372,7 @@ function executeRequest(requestGenerator) {
 
     apiHandler.onerror = function (event) {
 
-      progressBar.open();
+      // progressBar.open();
       handleError({
         message: event.message,
         body: JSON.stringify({
