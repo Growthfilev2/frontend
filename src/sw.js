@@ -1,29 +1,159 @@
+importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js');
+
+
+
+var userAuth;
+firebase.initializeApp({
+    apiKey: "AIzaSyB2SuCoyi9ngRIy6xZRYuzxoQJDtOheiUM",
+    authDomain: "growthfilev2-0.firebaseapp.com",
+    databaseURL: "https://growthfilev2-0.firebaseio.com",
+    projectId: "growthfilev2-0",
+    storageBucket: "growthfilev2-0.appspot.com",
+    messagingSenderId: "1011478688238",
+    appId: "1:1011478688238:web:707166c5b9729182d81eff",
+    measurementId: "G-R2K1J16PTW"
+});
+
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        console.log(user)
+        userAuth = user;
+    }
+})
+
+var CACHE_NAME = 'my-site-cache-v1';
+var urlsToCache = [
+  '/',
+  '/home.html',
+  '/profile.html'
+];
+
+console.log("there is a change")
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
     // Perform some task
     console.log('Service worker installed', event)
-    event.waitUntil(self.skipWaiting());
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+          .then(function(cache) {
+            console.log('Opened cache');
+            return cache.addAll(urlsToCache);
+          })
+      );
+    // event.waitUntil(self.skipWaiting());
+
 });
 
 self.addEventListener('activate', function (event) {
     // Perform some task
     console.log('Service worker activated', event)
-    event.waitUntil(self.clients.claim())
-
+    var cacheAllowlist = ['my-site-cache-v1'];
+    event.waitUntil(
+      caches.keys().then(function(cacheNames) {
+        return Promise.all(
+          cacheNames.map(function(cacheName) {
+            if (cacheAllowlist.indexOf(cacheName) === -1) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    );
 });
 
+self.addEventListener('fetch', function(event) {
+    event.respondWith(
+      caches.match(event.request)
+        .then(function(response) {
+          // Cache hit - return response
+          if (response) {
+            return response;
+          }
+  
+          return fetch(event.request).then(
+            function(response) {
+              // Check if we received a valid response
+              if(!response || response.status !== 200 || response.type !== 'basic') {
+                return response;
+              }
+  
+              // IMPORTANT: Clone the response. A response is a stream
+              // and because we want the browser to consume the response
+              // as well as the cache consuming the response, we need
+              // to clone it so we have two streams.
+              var responseToCache = response.clone();
+  
+              caches.open(CACHE_NAME)
+                .then(function(cache) {
+                  cache.put(event.request, responseToCache);
+                });
+  
+              return response;
+            }
+          );
+        })
+      );
+  });
+
+
 self.addEventListener('message', (event) => {
+
     if (event.data && event.data.type === 'read') {
+
         // do something
         console.log('SW REC message', event.data)
+     
 
-        handleRead(requestGenerator).then(res => {
-            event.ports[0].postMessage(event.data);
-        }).catch(console.error)
-
+        userAuth.getIdToken().then(token => {
+            console.log(token)
+            const b = {
+                meta: {
+                    user: {
+                        token: token,
+                        uid: userAuth.uid,
+                        displayName: userAuth.displayName,
+                        photoURL: userAuth.photoURL,
+                        phoneNumber: userAuth.phoneNumber,
+                    },
+                    apiUrl: 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+                },
+            };
+            handleRead(b).then(res => {
+                self.clients.matchAll({
+                    includeUncontrolled: true,
+                    type: 'window',
+                }).then((clients) => {
+                    if (clients && clients.length) {
+                        // Send a response - the clients
+                        // array is ordered by last focused
+                        clients[0].postMessage(res);
+                    }
+                });
+            }).catch(console.error)
+        })
     }
 })
-
+// self.addEventListener('fetch', event => {
+//     event.waitUntil(async function() {
+//       // Exit early if we don't have access to the client.
+//       // Eg, if it's cross-origin.
+//       if (!event.clientId) return;
+  
+//       // Get the client.
+//       const client = await clients.get(event.clientId);
+//       // Exit early if we don't get the client.
+//       // Eg, if it closed.
+//       if (!client) return;
+  
+//       // Send a message to the client.
+//       client.postMessage({
+//         msg: "Hey I just got a fetch from you!",
+//         url: event.request.url
+//       });
+     
+//     }());
+//   });
 
 
 /** IDB HANDLER */
@@ -121,14 +251,7 @@ function removeActivity(offices, tx) {
 
 }
 
-function removeByIndex(index, range) {
-    index.openCursor(range).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        cursor.delete();
-        cursor.continue();
-    }
-}
+
 
 
 
@@ -508,7 +631,7 @@ function http(request) {
     return new Promise(function (resolve, reject) {
         return fetch(request.url, {
             method: request.method,
-            body: request.data,
+            body: null,
             headers: {
                 'Content-type': 'application/json',
                 'Authorization': `Bearer ${request.token}`
@@ -535,3 +658,54 @@ function http(request) {
         })
     })
 }
+
+function removeFromOffice(offices, meta, db) {
+    return new Promise(function (resolve, reject) {
+      const deleteTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity'], 'readwrite');
+      deleteTx.oncomplete = function () {
+        const rootTx = db.transaction(['root'], 'readwrite')
+        const rootStore = rootTx.objectStore('root')
+        rootStore.get(meta.user.uid).onsuccess = function (event) {
+          const record = event.target.result;
+          if (!record) return;
+          record.officesRemoved = offices
+          rootStore.put(record)
+        }
+        rootTx.oncomplete = function () {
+          console.log("run read after removal")
+          resolve({
+            response: 'Office Removed',
+            success: true
+          })
+  
+        }
+        rootTx.onerror = function (error) {
+  
+          reject({
+            response: error,
+            success: false
+          })
+        }
+  
+      };
+  
+      deleteTx.onerror = function () {
+        console.log(tx.error)
+      }
+  
+      removeActivity(offices, deleteTx)
+  
+  
+    })
+  }
+  
+
+  
+  function removeByIndex(index, range) {
+    index.openCursor(range).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      cursor.delete();
+      cursor.continue();
+    }
+  }

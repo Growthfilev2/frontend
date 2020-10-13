@@ -23,6 +23,10 @@ var updatedWifiAddresses = {
 var isNewUser = false;
 
 
+navigator.serviceWorker.onmessage = (event) => {
+  console.log('message from worker',event.data);
+  // openReportView();
+};
 
 function setFirebaseAnalyticsUserId(id) {
   if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
@@ -633,7 +637,7 @@ function regulator() {
       text: 'Loading ... '
     })
 
-    if (appKey.getMode() === 'dev' && window.location.host === 'localhost:5005') {
+    if (appKey.getMode() === 'dev' && window.location.host === 'localhost:5000') {
       prom = Promise.resolve();
     } else {
       prom = requestCreator('fcmToken', {
@@ -676,7 +680,7 @@ function regulator() {
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        if (window.location.host === 'localhost:5005' && appKey.getMode() === 'dev') return Promise.resolve();
+        if (window.location.host === 'localhost:5000' && appKey.getMode() === 'dev') return Promise.resolve();
 
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
@@ -754,8 +758,13 @@ function handleCheckin(geopoint, noUser) {
             src: './img/update.jpg',
             text: 'Fetching your data'
           })
-
-          navigator.serviceWorker.controller.postMessage({type:'read'}, [messageChannel.port2])
+          // serviceWorkerRequestCreator(null).then((res)=>{
+            navigator.serviceWorker.controller.postMessage({type:'read'})
+          // })
+          navigator.serviceWorker.onmessage = (event) => {
+            console.log('message from worker',event.data);
+            // openReportView();
+          };
           return
         }
         if (isAdmin(result[0]) || result[1]) return initProfileView();
@@ -1335,6 +1344,9 @@ function checkIDBCount(storeNames) {
 
 
 function openReportView() {
+
+  window.location = window.location.origin+'/home.html'
+  return
   document.getElementById('step-ui').innerHTML = ''
   history.pushState(['appView'], null, null);
   getCurrentJob().then(function (activity) {

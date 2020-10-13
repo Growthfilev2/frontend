@@ -308,14 +308,13 @@ function requestCreator(requestType, requestBody, geopoint) {
   });
 }
 
-function serviceWorkerRequestCreator(requestType,requestBody,geopoint) {
-  return new Promise(resolve=>{
-    firebase.auth().currentUser.getIdToken().then(function (token) {
+function serviceWorkerRequestCreator() {
+  // return new Promise(resolve=>{
+    // firebase.auth().currentUser.getIdToken().then(function (token) {
  
       var auth = firebase.auth().currentUser;
       var requestGenerator = {
         type: 'read',
-        body: requestBody,
         meta: {
           user: {
             token: token,
@@ -324,23 +323,14 @@ function serviceWorkerRequestCreator(requestType,requestBody,geopoint) {
             photoURL: auth.photoURL,
             phoneNumber: auth.phoneNumber,
           },
-          mapKey: appKey.getMapKey(),
           apiUrl: appKey.getBaseUrl(),
-          authorization: extralRequest[requestType] ? false : true
         },
       };
-      return resolve(requestGenerator);
-      // return getRootRecord().then(function (rootRecord) {
-      //   let time;
-      //   if (requestGenerator.body['timestamp']) {
-      //     time = requestGenerator.body['timestamp']
-      //   } else {
-      //     time = fetchCurrentTime(rootRecord.serverTime);
-      //   }
-      //   requestGenerator.body['timestamp'] = time
-      // });
-    })
-  })
+      return requestGenerator;
+      // return resolve(requestGenerator);
+     
+    // })
+  // })
 }
 
 function executeRequest(requestGenerator) {
