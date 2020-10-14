@@ -67,10 +67,38 @@ function collect_otp() {
 //This Verifies The otp
 function submitPhoneNumberAuthCode() {
     var code = document.getElementById("code").value;
-    confirmationResult.confirm(code).then(function (result) {
-           redirect('/')
+    confirmationResult.confirm(code).then(function (authResult) {
+
+        // after login send custom events to fb analytics and firebase analytics
+        if (!authResult.additionalUserInfo.isNewUser) {
+            logReportEvent("login");
+            logFirebaseAnlyticsEvent("login", {
+              method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
+            })
+            return redirect(`/index.html${window.location.search ? `${window.location.search}` :''}`)
+          };
+          firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
+            if (isAdmin(tokenResult)) {
+              logReportEvent("Sign Up Admin");
+              setFirebaseAnalyticsUserProperty("isAdmin", "true");
+            } else {
+              logReportEvent("Sign Up");
+            };
+            const signUpParams = {
+              method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
+            }
+            const queryLink = new URLSearchParams(window.location.search);
+            if (queryLink) {
+              signUpParams.source = queryLink.get("utm_source");
+              signUpParams.medium = queryLink.get("utm_medium");
+              signUpParams.campaign = queryLink.get("utm_campaign")
+            }
+            logFirebaseAnlyticsEvent("sign_up", signUpParams);
+            redirect(`/index.html${window.location.search ? `${window.location.search}` :''}`)
+          })
         })
         .catch(function (error) {
+            console.error(error)
             alert(error);
         });
 }

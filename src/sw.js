@@ -15,6 +15,7 @@ firebase.initializeApp({
     measurementId: "G-R2K1J16PTW"
 });
 
+
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
         console.log(user)

@@ -4,25 +4,14 @@ let progressBar;
 var db;
 let snackBar;
 let appTabBar;
-let DB_VERSION = 33;
 var potentialAlternatePhoneNumbers;
-var firebaseDeepLink;
-var facebookDeepLink;
+
+var deepLink;
+
 var firebaseAnalytics;
 var serverTimeUpdated = false;
-var updatedWifiAddresses = {
-  addresses: {},
-  timestamp: null
-}
 
 var isNewUser = false;
-
-
-navigator.serviceWorker.onmessage = (event) => {
-  console.log('message from worker', event.data);
-  // openReportView();
-};
-
 
 window.addEventListener('load', () => {
   if ('serviceWorker' in navigator) {
@@ -33,11 +22,14 @@ window.addEventListener('load', () => {
         console.log('Registration succeeded. Scope is ' + reg.scope);
         firebase.auth().onAuthStateChanged(user => {
           if (user) {
-            console.log(user)
+      
+            if(window.location.search && new URLSearchParams(window.location.search).has('action')) {
+              deepLink = new URLSearchParams(window.location.search);
+            }
             loadApp()
             return
           }
-          redirect('/login.html');
+          redirect(`/login.html${deepLink ? `?${deepLink.toString()}`:''}`);
         })
       }).catch((error) => {
         // registration failed
@@ -47,87 +39,14 @@ window.addEventListener('load', () => {
 })
 
 
-function setFirebaseAnalyticsUserId(id) {
-  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
-    window.AndroidInterface.setFirebaseAnalyticsUserId(id)
-    return
-  }
-  if (window.messageHandlers && window.messageHandlers.firebaseAnalytics) {
-    window.messageHandlers.firebaseAnalytics.postMessage({
-      command: 'setFirebaseAnalyticsUserId',
-      id: id
-    })
-    return
-  }
-  console.log('No native apis found');
-}
-
-function logFirebaseAnlyticsEvent(name, params) {
-  if (!name) {
-    return;
-  }
-
-  if (window.AndroidInterface && window.AndroidInterface.logFirebaseAnlyticsEvent) {
-    // Call Android interface
-    window.AndroidInterface.logFirebaseAnlyticsEvent(name, JSON.stringify(params));
-  } else if (window.webkit &&
-    window.webkit.messageHandlers &&
-    window.webkit.messageHandlers.firebaseAnalytics) {
-    // Call iOS interface
-    var message = {
-      name: name,
-      parameters: params,
-      command: 'logFirebaseAnlyticsEvent'
-    };
-    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
-  } else {
-    // No Android or iOS interface found
-    console.log("No native APIs found.");
-  }
-}
-
-function setFirebaseAnalyticsUserProperty(name, value) {
-  if (!name || !value) {
-    return;
-  }
-
-  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserProperty) {
-    // Call Android interface
-    window.AndroidInterface.setFirebaseAnalyticsUserProperty(name, value);
-  } else if (window.webkit &&
-    window.webkit.messageHandlers &&
-    window.webkit.messageHandlers.firebaseAnalytics) {
-    // Call iOS interface
-    var message = {
-      command: 'setFirebaseAnalyticsUserProperty',
-      name: name,
-      value: value
-    };
-    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
-  } else {
-    // No Android or iOS interface found
-    console.log("No native APIs found.");
-  }
-}
-
-function parseFacebookDeeplink(link) {
-
-  console.log("fb link ", link)
-  const url = new URL(link);
-  const query = new URLSearchParams(url.search);
-  facebookDeepLink = query;
-  if (!firebase.auth().currentUser) return;
-}
-
 /**
  * long dynamic link intercepted by device containing query parameters
  * @param {string} link 
  */
 
-function parseDynamicLink(link) {
+function getDynamicLink(link) {
   const url = new URL(link);
-  firebaseDeepLink = new URLSearchParams(url.search);
-  if (!firebase.auth().currentUser) return;
+  deepLink = new URLSearchParams(url.search);
 }
 
 /**
@@ -142,49 +61,9 @@ function linkSharedComponent(componentValue) {
     content_type: 'text'
   });
 }
-/**
- * 
- * @param {String} wifiString 
- */
-function updatedWifiScans(wifiString) {
-  console.log("updated wifi", wifiString)
-  const result = {}
-  const splitBySeperator = wifiString.split(",")
-  splitBySeperator.forEach(function (value) {
-    const url = new URLSearchParams(value);
-    if (url.has('ssid')) {
-      url.delete('ssid')
-    }
-    if (!url.has('macAddress')) return;
-    result[url.get("macAddress")] = true
-  })
-  updatedWifiAddresses.addresses = result;
-  updatedWifiAddresses.timestamp = Date.now()
 
-};
 
-/**
- * Global error logger
- */
 
-window.addEventListener('error', function (event) {
-  this.console.error(event.message);
-  if (event.message.toLowerCase().indexOf('script error') > -1) return;
-  if (event.message === "You can't have a focus-trap without at least one focusable element") return;
-
-  handleError({
-    message: 'global error :' + event.message,
-    body: {
-      lineno: event.lineno,
-      filename: event.filename,
-      colno: event.colno,
-      error: JSON.stringify({
-        stack: event.error.stack,
-        message: event.error.message
-      })
-    }
-  })
-})
 
 /**
  * 
@@ -197,100 +76,7 @@ function imgErr(source) {
   return true;
 }
 
-let native = function () {
-  var deviceInfo = '';
-  var tokenChanged = '';
-  return {
-    setFCMToken: function (token) {
-      console.log('rec ', token)
-      const storedToken = localStorage.getItem('token');
-      console.log('stored token', storedToken)
-      if (storedToken !== token) {
-        tokenChanged = true
-      }
 
-      localStorage.setItem('token', token)
-    },
-    getFCMToken: function () {
-      return localStorage.getItem('token')
-    },
-    isFCMTokenChanged: function () {
-      return tokenChanged;
-    },
-    setName: function (device) {
-      localStorage.setItem('deviceType', device);
-    },
-    getName: function () {
-      return localStorage.getItem('deviceType');
-    },
-
-    setIosInfo: function (iosDeviceInfo) {
-      const queryString = new URLSearchParams(iosDeviceInfo);
-      var obj = {}
-      queryString.forEach(function (val, key) {
-        if (key === 'appVersion') {
-          obj[key] = Number(val)
-        } else {
-          obj[key] = val
-        }
-      })
-      deviceInfo = obj
-      deviceInfo.idbVersion = DB_VERSION
-    },
-    getInfo: function () {
-      if (!this.getName()) return false;
-      const storedInfo = JSON.parse(localStorage.getItem('deviceInfo'));
-      if (storedInfo) return storedInfo;
-      if (this.getName() === 'Android') {
-        deviceInfo = getAndroidDeviceInformation()
-        deviceInfo.idbVersion = DB_VERSION
-        return deviceInfo
-      }
-      return deviceInfo;
-    }
-  }
-}();
-
-
-/**
- * Call different JNI Android Methods to access device information
- */
-function getAndroidDeviceInformation() {
-  return {
-    'id': AndroidInterface.getId(),
-    'deviceBrand': AndroidInterface.getDeviceBrand(),
-    'deviceModel': AndroidInterface.getDeviceModel(),
-    'osVersion': AndroidInterface.getOsVersion(),
-    'baseOs': AndroidInterface.getBaseOs(),
-    'radioVersion': AndroidInterface.getRadioVersion(),
-    'appVersion': Number(AndroidInterface.getAppVersion()),
-  }
-}
-
-window.onpopstate = function (event) {
-  const nonRefreshViews = {
-    'mapView': true,
-    'userSignedOut': true,
-    'profileCheck': true,
-    'login': true,
-    'share': true,
-    'addView': true,
-  };
-
-  if (!event.state) return;
-  if (nonRefreshViews[event.state[0]]) {
-    history.replaceState(['appView'], null, null)
-    return
-  }
-  if (event.state[0] === 'showRating') return;
-  if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
-    history.go(-1);
-    return;
-  };
-  if (window[event.state[0]]) {
-    window[event.state[0]](event.state[1]);
-  }
-}
 
 function preloadImages(urls) {
   urls.forEach(function (url) {
@@ -332,184 +118,11 @@ function checkNetworkValidation() {
 
 
 
-function firebaseUiConfig() {
-
-  return {
-    callbacks: {
-      signInSuccessWithAuthResult: function (authResult) {
-        document.querySelector('.login-box').classList.add('hidden')
-        setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
-
-        isNewUser = authResult.additionalUserInfo.isNewUser;
-        if (!authResult.additionalUserInfo.isNewUser) {
-          logReportEvent("login");
-          logFirebaseAnlyticsEvent("login", {
-            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
-          })
-          return false
-        };
-
-        firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
-
-          if (isAdmin(tokenResult)) {
-            logReportEvent("Sign Up Admin");
-            setFirebaseAnalyticsUserProperty("isAdmin", "true");
-          } else {
-            logReportEvent("Sign Up");
-          };
-          const signUpParams = {
-            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
-          }
-          var queryLink = firebaseDeepLink || facebookDeepLink;
-          if (queryLink) {
-            signUpParams.source = queryLink.get("utm_source");
-            signUpParams.medium = queryLink.get("utm_medium");
-            signUpParams.campaign = queryLink.get("utm_campaign")
-          }
-
-          logFirebaseAnlyticsEvent("sign_up", signUpParams);
-        })
-        return false;
-      },
-      signInFailure: function (error) {
-        return handleUIError(error)
-      },
-      uiShown: function () {
-        logFirebaseAnlyticsEvent('auth_page_open', {})
-        document.querySelector('.login-box').classList.remove('hidden')
-      }
-    },
-    signInFlow: 'popup',
-    signInOptions: [{
-      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-      recaptchaParameters: {
-        type: 'image', // 'audio'
-        size: 'invisible', // 'invisible' or 'compact'
-        badge: 'bottomright' //' bottomright' or 'inline' applies to invisible.
-      },
-      defaultCountry: 'IN',
-
-    }]
-  };
-}
-
-function initializeFirebaseUI() {
-  document.getElementById("app-header").classList.remove("hidden");
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Login</span>
-  `;
-  header = setHeader(backIcon, '');
-  firebaseUI = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
-  firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
-
-}
-
-
-function userSignedOut() {
-  progressBar.close();
-  document.getElementById("dialog-container").innerHTML = '';
-  document.getElementById('step-ui').innerHTML = '';
-  document.getElementById("app-header").classList.add("hidden");
-  if (firebaseUI) {
-    firebaseUI.delete();
-  }
-
-
-  dom_root.innerHTML = `
-    <div class='slider' id='app-slider' style="background-image:url('./img/welcome.jpg')">
- 
-    <div class="action-button-container">
-          <div class="submit-button-cont">
-              <div class='dot-container'>
-                <span class='dot active'></span>
-                <span class='dot'></span>
-                <span class='dot'></span>
-              </div>
-              <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
-                  id='login-btn'>
-                  <div class="mdc-button__ripple"></div>
-                  
-                  <span class="mdc-button__label">Agree & Continue</span>
-              </button>
-          </div>
-        </div>
-    </div>
-  `;
-
-
-  const sliderEl = document.getElementById('app-slider');
-  const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
-  btn.root_.addEventListener('click', function () {
-    removeSwipe()
-    dom_root.innerHTML = '';
-    history.pushState(['login'], null, null);
-    initializeFirebaseUI();
-  })
-
-  sliderInterval = setInterval(function () {
-    if (!sliderEl) return
-    sliderSwipe('right')
-  }, sliderTimeout);
-  swipe(sliderEl, sliderSwipe);
-}
-
-
-
-function sliderSwipe(direction) {
-  if (direction === 'left') {
-    if (sliderIndex <= 1) {
-      sliderIndex = 3;
-    } else {
-      sliderIndex--
-
-    }
-  }
-
-  if (direction === 'right') {
-    if (sliderIndex >= 3) {
-      sliderIndex = 1;
-    } else {
-      sliderIndex++
-    }
-  }
-
-  loadSlider();
-  [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
-    dotEl.classList.remove('active');
-    if (index == sliderIndex - 1) {
-      dotEl.classList.add('active')
-    }
-  })
-}
-
-function loadSlider() {
-
-  let src = '';
-
-  switch (sliderIndex) {
-    case 1:
-      src = './img/welcome.jpg'
-      break;
-    case 2:
-      src = './img/proof.jpeg'
-
-      break;
-    case 3:
-      src = './img/payments.jpeg'
-      break;
-  }
-  if (document.getElementById('app-slider')) {
-    document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
-  }
-}
-
-
 const loadScreen = (id) => {
-  document.querySelectorAll('.transitions .app-init-screens').forEach(el=>{
-    if(el.id === id) {
+  document.querySelectorAll('.transitions .app-init-screens').forEach(el => {
+    if (el.id === id) {
       el.classList.remove('hidden')
-    }
-    else {
+    } else {
       el.classList.add('hidden')
     }
   })
@@ -519,11 +132,7 @@ const removeScreen = () => {
   document.querySelector('.transitions').remove();
 }
 
-function removeLoadingScreen() {
-  if (document.getElementById('loading-screen')) {
-    document.getElementById('loading-screen').remove()
-  }
-}
+
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
@@ -590,8 +199,7 @@ function startApp() {
 
 function getDeepLink() {
   // return new URLSearchParams('?office=Puja Capital&utm_campaign=share_link&action=get-subscription');
-  if (firebaseDeepLink) return firebaseDeepLink
-  if (facebookDeepLink) return facebookDeepLink;
+  if (deepLink) return deepLink
   if (isNewUser) return new URLSearchParams('?utm_source=organic')
   return null;
 }
@@ -617,7 +225,7 @@ function regulator() {
 
         if (queryLink.get('action') === 'get-subscription') {
           loadScreen('adding-to-office');
-          document.querySelector('#adding-to-office .loading-text--headline').textContent = 'Adding you to '+ queryLink.get('office');
+          document.querySelector('#adding-to-office .loading-text--headline').textContent = 'Adding you to ' + queryLink.get('office');
         };
 
         return requestCreator('acquisition', {
@@ -632,8 +240,8 @@ function regulator() {
         return requestCreator('now');
       })
       .then(function () {
-       serverTimeUpdated = true
-       loadScreen('verifying');
+        serverTimeUpdated = true
+        loadScreen('verifying');
         return appLocation(3)
       })
       .then(function (geopoint) {
@@ -663,12 +271,6 @@ function contactSupport() {
 
 }
 
-function showErrorMessage() {
-  const el = document.querySelector('#loading-screen .text-container')
-  if (!el) return;
-  el.innerHTML = `<p class='mdc-typography--headline6 mb-10 mt-0'>Error occured</p>
-  <div class='mdc-typography--subtitle2 mdc-theme--primary'>Please try again later</div>`
-}
 
 
 
@@ -760,107 +362,6 @@ function initProfileView() {
   redirect('/profile');
 }
 
-
-
-function miniProfileCard(content, headerTitle, action) {
-
-  return `<div class='mdc-card profile-update-init'>
-  
-  <div class='content-area'>
-  <div id='primary-content'>
-  
-  ${content}
-  </div>
-  </div>
-  ${action}
-</div>`
-
-
-}
-
-
-function increaseStep(stepNumber) {
-
-  const prevNumber = stepNumber - 1;
-  if (prevNumber == 0) {
-    document.getElementById(`step${stepNumber}`).classList.add('is-active');
-    return;
-  }
-  document.getElementById(`step${prevNumber}`).classList.remove('is-active');
-  document.getElementById(`step${prevNumber}`).classList.add('is-complete');
-  document.getElementById(`step${stepNumber}`).classList.add('is-active');
-
-}
-
-function checkForPhoto() {
-  const auth = firebase.auth().currentUser;
-  if (auth.photoURL) {
-    increaseStep(3)
-    checkForEmail();
-    return;
-  }
-
-
-  setHeader(`<span class="mdc-top-app-bar__title">Add Photo</span>`, '');
-
-  logReportEvent("Profile Completion Photo")
-  logFirebaseAnlyticsEvent("profile_completion_photo")
-
-  increaseStep(2)
-  const content = `
-
-      <div class='photo-container'>
-      <img src="./img/empty-user.jpg" id="image-update">
-      <button class="mdc-fab mdc-theme--primary-bg" aria-label="Favorite">
-        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">camera</span>
-        <input type='file' accept='image/jpeg;capture=camera' id='choose'>
-      </button>
-      </div>
-  
-      `
-  dom_root.innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
-  document.getElementById('choose').addEventListener('change', function (evt) {
-    getImageBase64(evt).then(function (dataURL) {
-      document.getElementById('image-update').src = dataURL;
-      return requestCreator('backblaze', {
-        'imageBase64': dataURL
-      })
-    }).then(function () {
-      increaseStep(3)
-      checkForEmail()
-    }).catch(function (error) {
-      increaseStep(3)
-      checkForEmail()
-      snacks(error.message)
-    })
-  })
-
-}
-
-function checkForEmail() {
-
-  const auth = firebase.auth().currentUser;
-  if (auth.email && auth.emailVerified) {
-    openReportView();
-    return
-  }
-  getRootRecord().then(function (record) {
-    if (record.skipEmail) {
-      openReportView();
-      return
-    }
-
-    logReportEvent("Profile Completion Email")
-    logFirebaseAnlyticsEvent("profile_completion_email")
-    increaseStep(3)
-    emailUpdation(true, function () {
-      openReportView();
-    });
-  })
-
-}
-
-
 function checkEmptyIdProofs(record) {
   if (!record.idProof) return true;
   const keys = Object.keys(record.idProof);
@@ -903,85 +404,8 @@ function getProfileInformation() {
   })
 }
 
-// function checkForId() {
-//   getProfileInformation().then(function(record){
-//     if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
-//       increaseStep(5);
-//       checkForBankAccount();
-//     }
-//     logReportEvent("Profile Completion Id")
-//     logFirebaseAnlyticsEvent("profile_completion_id")
-//     increaseStep(4);
-//     idProofView(checkForBankAccount);
-
-//   }).catch()
-
-// }
 
 
-// function checkForBankAccount() {
-
-//   getRootRecord().then(function (record) {
-//     if (record.skipBankAccountAdd || record.linkedAccounts.length) {
-//       openReportView();
-//       return;
-//     }
-//     logReportEvent("Profile Completion bank account")
-//     logFirebaseAnlyticsEvent("profile_completion_bank_account")
-//     increaseStep(5)
-//     addNewBankAccount(function () {
-//       loadingScreen();
-//       openReportView()
-//     });
-//   })
-// }
-
-
-function resizeAndCompressImage(image, compressionFactor) {
-  var canvas = document.createElement('canvas');
-  const canvasDimension = new CanvasDimension(image.width, image.height);
-  canvasDimension.setMaxHeight(screen.height)
-  canvasDimension.setMaxWidth(screen.width);
-  const newDimension = canvasDimension.getNewDimension()
-  canvas.width = newDimension.width
-  canvas.height = newDimension.height;
-  var ctx = canvas.getContext("2d");
-  ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
-  const newDataUrl = canvas.toDataURL('image/jpeg', compressionFactor);
-  return newDataUrl;
-
-}
-
-function CanvasDimension(width, height) {
-  this.MAX_HEIGHT = ''
-  this.MAX_WIDTH = ''
-  this.width = width;
-  this.height = height;
-}
-CanvasDimension.prototype.setMaxWidth = function (MAX_WIDTH) {
-  this.MAX_WIDTH = MAX_WIDTH
-}
-CanvasDimension.prototype.setMaxHeight = function (MAX_HEIGHT) {
-  this.MAX_HEIGHT = MAX_HEIGHT
-}
-CanvasDimension.prototype.getNewDimension = function () {
-  if (this.width > this.height) {
-    if (this.width > this.MAX_WIDTH) {
-      this.height *= this.MAX_WIDTH / this.width;
-      this.width = this.MAX_WIDTH;
-    }
-  } else {
-    if (this.height > this.MAX_HEIGHT) {
-      this.width *= this.MAX_HEIGHT / this.height;
-      this.height = this.MAX_HEIGHT
-    }
-  }
-
-  return {
-    width: this.width,
-    height: this.height
-  }
-}
 
 
 
@@ -995,43 +419,6 @@ function showReLoginDialog(heading, contentText) {
 
 }
 
-function getProfileCompletionTabs() {
-  const dom = `<div class="step-container">
-  <div class="progress">
-    <div class="progress-track"></div>
-    <div id="step1" class="progress-step">
-      <i class='material-icons'>person</i>
-    </div>
-    <div id="step2" class="progress-step">
-      <i class='material-icons'>camera</i>
-    </div>
-    <div id="step3" class="progress-step">
-      <i class='material-icons'>email</i>
-    </div>
-
-  </div>
-
-</div>`
-  return dom
-}
-
-function profileCheck() {
-  const auth = firebase.auth().currentUser;
-  document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
-  if (!auth.displayName) {
-    logReportEvent("Profile Completion Name")
-    logFirebaseAnlyticsEvent("profile_completion_name")
-    document.getElementById("app-header").classList.remove('hidden');
-    increaseStep(1)
-    updateName(function () {
-      checkForPhoto();
-    });
-    return
-  };
-
-  increaseStep(2)
-  checkForPhoto();
-}
 
 function areObjectStoreValid(names) {
   const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum', ]
@@ -1287,21 +674,6 @@ function checkIDBCount(storeNames) {
 }
 
 
-function openReportView() {
-
-  window.location = window.location.origin + '/home.html'
-  return
-  document.getElementById('step-ui').innerHTML = ''
-  history.pushState(['appView'], null, null);
-  getCurrentJob().then(function (activity) {
-    if (activity.activityId) {
-      activity.isActive = true;
-    }
-    history.pushState(['jobView', activity], null, null)
-    jobView(activity);
-  })
-}
-
 function fillVenueInSub(sub, venue) {
   const vd = sub.venue[0];
   sub.venue = [{
@@ -1336,30 +708,9 @@ function shouldCheckin(geopoint, checkInSubs) {
   return false
 }
 
-function isNewJob(geopoint) {
-  const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
-  if (!oldState) return true
-  if (!oldState.lastCheckInCreated) return true;
-  const today = isToday(oldState.lastCheckInCreated)
-  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
 
-  if (today) {
-    if (hasChangedLocation) return true
-    return false;
-  }
-  return true
-
-}
-
-
-function isToday(timestamp) {
-  return moment(timestamp).isSame(moment().clone().startOf('day'), 'd')
-}
 
 function failureScreen(error, callback) {
-
-
-  document.getElementById('app-header').classList.add('hidden')
 
   dom_root.innerHTML = `
     <div class="center-abs location-not-found">
@@ -1382,16 +733,6 @@ function failureScreen(error, callback) {
 
 function handleLocationError(error) {
   let alertDialog;
-  // if (progressBar) {
-  //   progressBar.close()
-  // }
-
-  // passFormData({
-  //   name: 'toggleSubmit',
-  //   template: '',
-  //   body: '',
-  //   deviceType: native.getName()
-  // })
   switch (error.message) {
     case 'THRESHOLD EXCEED':
       handleCheckin(error.body.geopoint)
@@ -1462,7 +803,7 @@ function createUnkownCheckIn(geopoint) {
   offices.forEach(function (office) {
     const li = createList({
       primaryText: office,
-      meta:'navigate_next'
+      meta: 'navigate_next'
     });
     officeCard.ul.appendChild(li);
   })
@@ -1497,7 +838,7 @@ function generateRequestForUnknownCheckin(office, geopoint, retries = {
       ApplicationState.selectedOffice = office;
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
       initProfileView();
-    
+
     }).catch(function (error) {
       console.log(error)
       // progressBar.close()
@@ -1544,7 +885,6 @@ function handleInvalidCheckinLocation(retry, callback) {
         icon: 'location_off',
         title: 'Failed To Detect Location'
       }, reloadPage);
-
     })
     return;
   }
@@ -1566,7 +906,7 @@ function handleInvalidCheckinLocation(retry, callback) {
 }
 
 
-const bottomCard = (heading,listTwoLine) => {
+const bottomCard = (heading, listTwoLine) => {
   const card = createElement('div', {
     className: 'mdc-card mdc-elevation--z16 mdc-card--outlined bottom-card'
   })
@@ -1591,14 +931,14 @@ const bottomCard = (heading,listTwoLine) => {
 function loadLocationsCard(venues, geopoint) {
 
   ApplicationState.knownLocation = true;
-  const locationCard = bottomCard('Choose duty location',true);
+  const locationCard = bottomCard('Choose duty location', true);
 
   venues.map(function (venue) {
     locationCard.ul.appendChild(createList({
-      icon:'location_on',
-      primaryText:venue.location,
-      secondaryText:venue.office,
-      meta:'navigate_next'
+      icon: 'location_on',
+      primaryText: venue.location,
+      secondaryText: venue.office,
+      meta: 'navigate_next'
     }))
   })
 
@@ -1661,31 +1001,6 @@ function createKnownCheckIn(selectedVenue, geopoint, retries = {
   })
 }
 
-
-
-
-
-function toggleCardHeight(toggle, cardSelector) {
-  const el = document.getElementById('map-view');
-  const card = document.getElementById(cardSelector);
-  if (toggle) {
-    el.classList.add('hidden')
-    card.classList.remove('hidden');
-    card.style.height = '100%';
-    document.getElementById('app-header').classList.add('hidden')
-
-  } else {
-    el.classList.remove('hidden');
-    document.getElementById('selection-box').classList.remove('hidden');
-    card.classList.add('hidden');
-    document.getElementById('app-header').classList.remove('hidden')
-
-  }
-}
-
-
-
-
 function snapView(selector) {
   document.querySelector(selector).innerHTML = `
   <div class='snap-container'>
@@ -1717,8 +1032,6 @@ function openCamera() {
 function setFilePathFailed(error) {
   snacks(error);
 }
-
-
 
 
 function setFilePath(base64, retries = {

@@ -8,6 +8,190 @@ var ApplicationState = JSON.parse(localStorage.getItem('ApplicationState')) || {
   iframeVersion: 13,
 }
 
+var updatedWifiAddresses = {
+  addresses: {},
+  timestamp: null
+}
+let DB_VERSION = 33;
+
+/**
+ * Global error logger
+ */
+
+window.addEventListener('error', function (event) {
+  this.console.error(event.error);
+  if (event.message.toLowerCase().indexOf('script error') > -1) return;
+  if (event.message === "You can't have a focus-trap without at least one focusable element") return;
+
+  handleError({
+    message: 'global error :' + event.message,
+    body: {
+      lineno: event.lineno,
+      filename: event.filename,
+      colno: event.colno,
+      error: JSON.stringify({
+        stack: event.error.stack,
+        message: event.error.message
+      })
+    }
+  })
+})
+
+/**
+ * 
+ * @param {String} wifiString 
+ */
+function updatedWifiScans(wifiString) {
+  console.log("updated wifi", wifiString)
+  const result = {}
+  const splitBySeperator = wifiString.split(",")
+  splitBySeperator.forEach(function (value) {
+    const url = new URLSearchParams(value);
+    if (url.has('ssid')) {
+      url.delete('ssid')
+    }
+    if (!url.has('macAddress')) return;
+    result[url.get("macAddress")] = true
+  })
+  updatedWifiAddresses.addresses = result;
+  updatedWifiAddresses.timestamp = Date.now()
+
+};
+
+function setFirebaseAnalyticsUserId(id) {
+  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
+    window.AndroidInterface.setFirebaseAnalyticsUserId(id)
+    return
+  }
+  if (window.messageHandlers && window.messageHandlers.firebaseAnalytics) {
+    window.messageHandlers.firebaseAnalytics.postMessage({
+      command: 'setFirebaseAnalyticsUserId',
+      id: id
+    })
+    return
+  }
+  console.log('No native apis found');
+}
+
+function logFirebaseAnlyticsEvent(name, params) {
+  if (!name) {
+    return;
+  }
+
+  if (window.AndroidInterface && window.AndroidInterface.logFirebaseAnlyticsEvent) {
+    // Call Android interface
+    window.AndroidInterface.logFirebaseAnlyticsEvent(name, JSON.stringify(params));
+  } else if (window.webkit &&
+    window.webkit.messageHandlers &&
+    window.webkit.messageHandlers.firebaseAnalytics) {
+    // Call iOS interface
+    var message = {
+      name: name,
+      parameters: params,
+      command: 'logFirebaseAnlyticsEvent'
+    };
+    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
+  } else {
+    // No Android or iOS interface found
+    console.log("No native APIs found.");
+  }
+}
+
+function setFirebaseAnalyticsUserProperty(name, value) {
+  if (!name || !value) {
+    return;
+  }
+
+  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserProperty) {
+    // Call Android interface
+    window.AndroidInterface.setFirebaseAnalyticsUserProperty(name, value);
+  } else if (window.webkit &&
+    window.webkit.messageHandlers &&
+    window.webkit.messageHandlers.firebaseAnalytics) {
+    // Call iOS interface
+    var message = {
+      command: 'setFirebaseAnalyticsUserProperty',
+      name: name,
+      value: value
+    };
+    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
+  } else {
+    // No Android or iOS interface found
+    console.log("No native APIs found.");
+  }
+}
+
+
+let native = function () {
+  var deviceInfo = '';
+  var tokenChanged = '';
+  return {
+    setFCMToken: function (token) {
+      console.log('rec ', token)
+      const storedToken = localStorage.getItem('token');
+      console.log('stored token', storedToken)
+      if (storedToken !== token) {
+        tokenChanged = true
+      }
+
+      localStorage.setItem('token', token)
+    },
+    getFCMToken: function () {
+      return localStorage.getItem('token')
+    },
+    isFCMTokenChanged: function () {
+      return tokenChanged;
+    },
+    setName: function (device) {
+      localStorage.setItem('deviceType', device);
+    },
+    getName: function () {
+      return localStorage.getItem('deviceType');
+    },
+
+    setIosInfo: function (iosDeviceInfo) {
+      const queryString = new URLSearchParams(iosDeviceInfo);
+      var obj = {}
+      queryString.forEach(function (val, key) {
+        if (key === 'appVersion') {
+          obj[key] = Number(val)
+        } else {
+          obj[key] = val
+        }
+      })
+      deviceInfo = obj
+      deviceInfo.idbVersion = DB_VERSION
+    },
+    getInfo: function () {
+      if (!this.getName()) return false;
+      const storedInfo = JSON.parse(localStorage.getItem('deviceInfo'));
+      if (storedInfo) return storedInfo;
+      if (this.getName() === 'Android') {
+        deviceInfo = getAndroidDeviceInformation()
+        deviceInfo.idbVersion = DB_VERSION
+        return deviceInfo
+      }
+      return deviceInfo;
+    }
+  }
+}();
+
+
+/**
+ * Call different JNI Android Methods to access device information
+ */
+function getAndroidDeviceInformation() {
+  return {
+    'id': AndroidInterface.getId(),
+    'deviceBrand': AndroidInterface.getDeviceBrand(),
+    'deviceModel': AndroidInterface.getDeviceModel(),
+    'osVersion': AndroidInterface.getOsVersion(),
+    'baseOs': AndroidInterface.getBaseOs(),
+    'radioVersion': AndroidInterface.getRadioVersion(),
+    'appVersion': Number(AndroidInterface.getAppVersion()),
+  }
+}
+
 function createElement(tagName, attrs) {
   const el = document.createElement(tagName)
   if (attrs) {
@@ -319,7 +503,10 @@ window.addEventListener('callRead', readDebounce);
 
 
 function handleError(error) {
-  const errorInStorage = JSON.parse(localStorage.getItem('error'));
+  let errorInStorage = JSON.parse(localStorage.getItem('error'));
+  if(!errorInStorage) {
+    errorInStorage = {}
+  }
   if (errorInStorage.hasOwnProperty(error.message)) return
   error.device = JSON.parse(localStorage.getItem('deviceInfo'));
   errorInStorage[error.message] = error
@@ -743,34 +930,6 @@ function handleComponentUpdation(readResponse) {
       ApplicationState.venue = sorted[0];
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     };
-    // if (!history.state) return;
-    // switch (history.state[0]) {
-    //   case 'enterChat':
-    //     if (!readResponse.addendum.length) return;
-    //     dynamicAppendChats();
-    //     break;
-
-    //   case 'jobView':
-    //     if (document.getElementById('rating-view')) return;
-    //     getCurrentJob().then(function (currentJob) {
-    //       if (!currentJob.activityId) {
-    //         jobView(history.state[1]);
-    //         return
-    //       }
-    //       currentJob.isActive = true;
-    //       jobView(currentJob);
-    //     })
-    //     break;
-    //   case 'appView':
-    //     if (appTabBar && document.getElementById('app-tab-content')) {
-    //       const selectedIndex = appTabBar.foundation_.adapter_.getFocusedTabIndex();
-    //       switchTabs(selectedIndex);
-    //       updateTotalCount()
-    //     }
-    //     break;
-    //   default:
-    //     console.log("no refresh")
-    // }
   })
 
 }
@@ -782,7 +941,7 @@ window.readStack = []
 
 function runRead(type) {
 
-  if (!firebase.auth().currentUser || !serverTimeUpdated) return;
+  if (!firebase.auth().currentUser) return;
   if (!type) return;
   if (type.read) {
     window.readStack.push(type.read);
@@ -919,6 +1078,51 @@ function getImageBase64(evt, compressionFactor = 0.5) {
   })
 }
 
+function resizeAndCompressImage(image, compressionFactor) {
+  var canvas = document.createElement('canvas');
+  const canvasDimension = new CanvasDimension(image.width, image.height);
+  canvasDimension.setMaxHeight(screen.height)
+  canvasDimension.setMaxWidth(screen.width);
+  const newDimension = canvasDimension.getNewDimension()
+  canvas.width = newDimension.width
+  canvas.height = newDimension.height;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
+  const newDataUrl = canvas.toDataURL('image/jpeg', compressionFactor);
+  return newDataUrl;
+
+}
+
+function CanvasDimension(width, height) {
+  this.MAX_HEIGHT = ''
+  this.MAX_WIDTH = ''
+  this.width = width;
+  this.height = height;
+}
+CanvasDimension.prototype.setMaxWidth = function (MAX_WIDTH) {
+  this.MAX_WIDTH = MAX_WIDTH
+}
+CanvasDimension.prototype.setMaxHeight = function (MAX_HEIGHT) {
+  this.MAX_HEIGHT = MAX_HEIGHT
+}
+CanvasDimension.prototype.getNewDimension = function () {
+  if (this.width > this.height) {
+    if (this.width > this.MAX_WIDTH) {
+      this.height *= this.MAX_WIDTH / this.width;
+      this.width = this.MAX_WIDTH;
+    }
+  } else {
+    if (this.height > this.MAX_HEIGHT) {
+      this.width *= this.MAX_HEIGHT / this.height;
+      this.height = this.MAX_HEIGHT
+    }
+  }
+
+  return {
+    width: this.width,
+    height: this.height
+  }
+}
 
 function emailUpdate(email, callback) {
   firebase.auth().currentUser.updateEmail(email).then(function () {
