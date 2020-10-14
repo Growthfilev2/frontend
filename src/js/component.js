@@ -1,12 +1,4 @@
-function createElement(tagName, attrs) {
-    const el = document.createElement(tagName)
-    if (attrs) {
-        Object.keys(attrs).forEach(function (attr) {
-            el[attr] = attrs[attr]
-        })
-    }
-    return el;
-}
+
 
 
 
@@ -527,8 +519,6 @@ function handleTouchEnd(evt) {
     xStart = null;
     yStart = null;
     sliderCallback(direction);
-
-
 }
 
 

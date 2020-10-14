@@ -2,6 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js');
 
 var userAuth;
+var meta;
 
 firebase.initializeApp({
     apiKey: "AIzaSyB2SuCoyi9ngRIy6xZRYuzxoQJDtOheiUM",
@@ -21,23 +22,12 @@ firebase.auth().onAuthStateChanged(user => {
     }
 })
 
-// var CACHE_NAME = 'my-site-cache-v1';
-// var urlsToCache = [
-//   '/',
-// ];
-
 console.log("there is a change")
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
     // Perform some task
     console.log('Service worker installed', event)
-    // event.waitUntil(
-    //     caches.open(CACHE_NAME)
-    //       .then(function(cache) {
-    //         console.log('Opened cache');
-    //         return cache.addAll(urlsToCache);
-    //       })
-    //   );
+
     event.waitUntil(self.skipWaiting());
 
 });
@@ -45,54 +35,8 @@ self.addEventListener('install', function (event) {
 self.addEventListener('activate', function (event) {
     // Perform some task
     console.log('Service worker activated', event)
-    // var cacheAllowlist = ['my-site-cache-v1'];
-    // event.waitUntil(
-    //   caches.keys().then(function(cacheNames) {
-    //     return Promise.all(
-    //       cacheNames.map(function(cacheName) {
-    //         if (cacheAllowlist.indexOf(cacheName) === -1) {
-    //           return caches.delete(cacheName);
-    //         }
-    //       })
-    //     );
-    //   })
-    // );
+
 });
-
-// self.addEventListener('fetch', function(event) {
-//     event.respondWith(
-//       caches.match(event.request)
-//         .then(function(response) {
-//           // Cache hit - return response
-//           if (response) {
-//             return response;
-//           }
-  
-//           return fetch(event.request).then(
-//             function(response) {
-//               // Check if we received a valid response
-//               if(!response || response.status !== 200 || response.type !== 'basic') {
-//                 return response;
-//               }
-  
-//               // IMPORTANT: Clone the response. A response is a stream
-//               // and because we want the browser to consume the response
-//               // as well as the cache consuming the response, we need
-//               // to clone it so we have two streams.
-//               var responseToCache = response.clone();
-  
-//               caches.open(CACHE_NAME)
-//                 .then(function(cache) {
-//                   cache.put(event.request, responseToCache);
-//                 });
-  
-//               return response;
-//             }
-//           );
-//         })
-//       );
-//   });
-
 
 self.addEventListener('message', (event) => {
 
@@ -100,7 +44,7 @@ self.addEventListener('message', (event) => {
 
         // do something
         console.log('SW REC message', event.data)
-     
+
 
         userAuth.getIdToken().then(token => {
             console.log(token)
@@ -131,54 +75,9 @@ self.addEventListener('message', (event) => {
         })
     }
 })
-// self.addEventListener('fetch', event => {
-//     event.waitUntil(async function() {
-//       // Exit early if we don't have access to the client.
-//       // Eg, if it's cross-origin.
-//       if (!event.clientId) return;
-  
-//       // Get the client.
-//       const client = await clients.get(event.clientId);
-//       // Exit early if we don't get the client.
-//       // Eg, if it closed.
-//       if (!client) return;
-  
-//       // Send a message to the client.
-//       client.postMessage({
-//         msg: "Hey I just got a fetch from you!",
-//         url: event.request.url
-//       });
-     
-//     }());
-//   });
 
 
-/** IDB HANDLER */
 
-// let deviceInfo;
-// let currentDevice;
-let meta;
-
-// const requestFunctionCaller = {
-//   statusChange: statusChange,
-//   share: share,
-//   update: update,
-//   create: create,
-//   backblaze: backblaze,
-//   updateAuth: updateAuth,
-//   comment: comment,
-//   changePhoneNumber: changePhoneNumber,
-//   newBankAccount: newBankAccount,
-//   removeBankAccount: removeBankAccount,
-//   idProof: idProof,
-//   device: device,
-//   acquisition: acquisition,
-//   fcmToken: fcmToken,
-//   pan: pan,
-//   aadhar: aadhar,
-//   profile: profile,
-//   shareLink: shareLink
-// }
 
 /**
  * send message back to main thread
@@ -658,51 +557,45 @@ function http(request) {
 
 function removeFromOffice(offices, meta, db) {
     return new Promise(function (resolve, reject) {
-      const deleteTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity'], 'readwrite');
-      deleteTx.oncomplete = function () {
-        const rootTx = db.transaction(['root'], 'readwrite')
-        const rootStore = rootTx.objectStore('root')
-        rootStore.get(meta.user.uid).onsuccess = function (event) {
-          const record = event.target.result;
-          if (!record) return;
-          record.officesRemoved = offices
-          rootStore.put(record)
-        }
-        rootTx.oncomplete = function () {
-          console.log("run read after removal")
-          resolve({
-            response: 'Office Removed',
-            success: true
-          })
-  
-        }
-        rootTx.onerror = function (error) {
-  
-          reject({
-            response: error,
-            success: false
-          })
-        }
-  
-      };
-  
-      deleteTx.onerror = function () {
-        console.log(tx.error)
-      }
-  
-      removeActivity(offices, deleteTx)
-  
-  
-    })
-  }
-  
+        const deleteTx = db.transaction(['map', 'calendar', 'children', 'subscriptions', 'activity'], 'readwrite');
+        deleteTx.oncomplete = function () {
+            const rootTx = db.transaction(['root'], 'readwrite')
+            const rootStore = rootTx.objectStore('root')
+            rootStore.get(meta.user.uid).onsuccess = function (event) {
+                const record = event.target.result;
+                if (!record) return;
+                record.officesRemoved = offices
+                rootStore.put(record)
+            }
+            rootTx.oncomplete = function () {
+                console.log("run read after removal")
+                resolve({
+                    response: 'Office Removed',
+                    success: true
+                })
 
-  
-  function removeByIndex(index, range) {
+            }
+            rootTx.onerror = function (error) {
+
+                reject({
+                    response: error,
+                    success: false
+                })
+            }
+
+        };
+
+        deleteTx.onerror = function () {
+            console.log(tx.error)
+        }
+        removeActivity(offices, deleteTx)
+    })
+}
+function removeByIndex(index, range) {
     index.openCursor(range).onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      cursor.delete();
-      cursor.continue();
+        const cursor = event.target.result;
+        if (!cursor) return;
+        cursor.delete();
+        cursor.continue();
     }
-  }
+}

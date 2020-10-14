@@ -83,7 +83,6 @@ self.onmessage = function (event) {
     if (event.data.type === 'instant') return instant(event.data.body, event.data.meta)
 
     requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (response) {
-      debugger;
       sendSuccessRequestToMainThread(response, workerId)
     }).catch(function (error) {
       error.id = workerId;
