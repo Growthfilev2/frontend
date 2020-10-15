@@ -22,8 +22,8 @@ window.addEventListener('load', () => {
         console.log('Registration succeeded. Scope is ' + reg.scope);
         firebase.auth().onAuthStateChanged(user => {
           if (user) {
-
-            if (window.location.search && new URLSearchParams(window.location.search).has('action')) {
+      
+            if(window.location.search && new URLSearchParams(window.location.search).has('action')) {
               deepLink = new URLSearchParams(window.location.search);
             }
             loadApp()
@@ -358,9 +358,10 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  if (auth.displayName) return redirect('/home');
-  redirect('/profile');
+  if (auth.displayName) return redirect('/profile.html');
+  redirect('/home.html');
 }
+
 
 function checkEmptyIdProofs(record) {
   if (!record.idProof) return true;

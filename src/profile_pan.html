@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+
+    <link rel="stylesheet" href="css/profile_pan.css">
+    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src="js/profile_pan.js"></script>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+        rel="stylesheet" />
+        <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+        <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+        <script defer src="js/config.js"></script>
+
+</head>
+
+<body>
+
+    <div id="edit_profile">
+
+        <div class="header">
+            <a href="profile.html"> <i id="backarrow" class="fas fa-arrow-left "></i> </a>
+
+            <p class="section_header">PAN Card Details</p>
+        </div>
+
+        <div class="fields">
+
+
+            <label class="pure-material-textfield-outlined">
+                <input type="text" id="pan_card" placeholder=" " value="">
+                <span>PAN Number*</span>
+                <p id="alert_message">* Please enter a valid PAN number</p>
+            </label>
+
+            <p class="info_text">Upload Picture*</p>
+
+            <div class="background_front">
+                <div class="pancard">
+
+                    <input type="file" accept="image/*" name="image" id="file_front" onchange="load_front(event)"
+                        style="display: none;">
+
+                    <label for="file_front"> <img id="output_pan" />
+                        <br>
+                      
+                        <span class="pan_front_text"><span class="material-icons">
+                            add_a_photo 
+                            </span> &nbsp PAN Front </span>
+
+                </div>
+
+                
+
+            </div>
+
+            
+
+            <button id="process_button" type="submit" onclick="pan_validation()">SAVE</button>
+
+        </div>
+
+    </div>
+
+  
+  <script defer src="js/core.js"></script>
+
+</body>
+
+
+</html>
