@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+
+    <link rel="stylesheet" href="css/profile_bank.css">
+    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+
+
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+
+
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src="js/profile_bank.js"></script>
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+        rel="stylesheet" />
+
+        <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+        <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+        <script defer src="js/config.js"></script>
+</head>
+
+<body>
+
+    <div id="edit_profile">
+
+        <div class="header">
+           <a href="profile.html"> <i id="backarrow" class="fas fa-arrow-left "></i> </a>
+
+            <p class="section_header">Bank Details</p>
+        </div>
+
+        <div class="fields">
+
+            
+            
+            <label class="pure-material-textfield-outlined">
+                <input type="text" id="account_number" placeholder=" ">
+                <span>Bank Account Number*</span>
+            </label>
+
+            <label class="pure-material-textfield-outlined">
+                <input type="text" id="account_number_verify" placeholder=" ">
+                <span>Confirm Bank Account Number*</span>
+            </label>
+
+            <label class="pure-material-textfield-outlined">
+                <input type="text" id="ifsc_code" placeholder=" " value="">
+                <span>IFSC Code*</span>
+                <p id="alert_message">* Please enter a valid IFSC number</p>
+            </label>
+
+            <label class="pure-material-textfield-outlined">
+                <input type="text" id="account_holder_name" placeholder=" ">
+                <span>Account Holder*</span>
+            </label>
+
+
+
+
+            
+
+            <button id="process_button" type="submit" onclick="bank_validation()">SAVE</button>
+
+        </div>
+
+    </div>
+
+  <script defer src="js/core.js"></script>
+
+</body>
+
+
+</html>

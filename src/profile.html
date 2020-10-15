@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+
+    <link rel="stylesheet" href="css/profile.css">
+    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src="js/profile.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+  <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+  <script defer src="js/config.js"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+        rel="stylesheet" />
+
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+        <div class="header">
+            <i id="backarrow" class="fas fa-arrow-left "></i>
+
+            <p class="section_header">Profile</p>
+        </div>
+
+        <div class="profile_card">
+
+            <div class="details">
+
+                <div class="pfp">
+                    <input type="file" accept="image/*" name="image" id="file" onchange="loadFile(event)"
+                        style="display: none;">
+
+                    <label id="picsum" for="file"> <img id="output" /></label>
+
+                </div>
+
+              <div class="user_info" onClick="window.location='profile_user.html'";>
+                 <p class="name" id="name" >USER NAME</p>
+                    <p class="mobile" id="mobile" >+91 (User Mobile Numer)</p>
+                    <p class="email" id="email" >User Email</p>
+                </div>  
+
+                <i onClick="window.location='profile_user.html'" class="fas fa-chevron-right profile_arrow"></i>
+
+          
+
+            </div>
+
+            <div class="progress_bar_info">
+
+                <p class="info_text">Profile Completion</p>
+                <p id="profile_percentage">60%</p>
+
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar"></div>
+            </div>
+
+            <div class="buttons">
+                <button onClick="window.location='profile_bank.html'" class="bank_button">Add Bank Account</button>
+                <button onClick="window.location='profile_aadhaar.html'" class="aadhaar_button">Add Aadhaar Card</button>
+                <button onClick="window.location='profile_pan.html'" class="pan_button">Add PAN Card</button>
+            </div>
+        </div>
+
+
+        <div class="profile_main">
+
+            <div class="info_div" onClick="window.location='profile_mobile.html'">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        call
+                        </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Mobile Number</p>
+                    <p class="info_value" id="mobile_number">+91 (User Mobile Number)</p>
+                </div>
+
+            </div>
+
+            <div class="info_div" onClick="window.location='profile_bank.html'">
+
+                <div class="icon">
+                    <span class="material-icons-outlined">
+                        account_balance
+                        </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Bank Account</p>
+                    <p class="info_value">Add Bank Details</p>
+                </div>
+
+            </div>
+
+            <div class="info_div" onClick="window.location='profile_aadhaar.html'">
+
+                <div class="icon">
+                    <span class="material-icons-outlined">
+                        recent_actors
+                        </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Aadhaar Card</p>
+                    <p class="info_value">Add Aadhaar Details</p>
+                </div>
+
+            </div>
+
+            <div class="info_div" onClick="window.location='profile_pan.html'" >
+
+                <div class="icon">
+                    <span class="material-icons-outlined">
+                        recent_actors
+                        </span>
+                
+                </div>
+
+                <div>
+                    <p class="info_header">PAN Card</p>
+                    <p class="info_value">Add PAN Details</p>
+                </div>
+
+            </div>
+
+            <div class="info_div" onClick="window.location='profile_employee.html'">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        apartment
+                        </span>
+                </div>
+
+                <div >
+                    <p class="info_header">Employee At</p>
+                    <i id="office_arrow" class="fas fa-chevron-right "></i>
+                    <p class="info_value">Office Detail(Dynamic)</p>
+
+                </div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+        <div class="information">
+            <p class="help_text">INFORMATION</p>
+
+
+            <div class="info_div">
+
+                <div class="icons">
+                    <span  class="material-icons-outlined icon_img">
+                        question_answer
+                        </span>
+                    <p class="faq_text"> <a href="https://growthfile.com/faq"> FAQs</a></p>
+                </div>
+            </div>
+
+            <div class="info_div">
+
+                <div class="icons">
+                     <span class="material-icons-outlined icon_img_policy">
+                        policy
+                        </span>
+                    <p class="policy_text"> <a href="https://growthfile.com/legal#privacy-policy"> Privacy Policy</a></p>
+                </div>
+            </div>
+
+            <div class="info_div">
+
+                
+                     <div class="icons">
+                     <span class="material-icons-outlined icon_img_agent">
+                        support_agent
+                        </span>
+                        <p class="policy_text"> <a href="https://api.whatsapp.com/send?phone=919718710267&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button" target="_blank">Contact Us</a></p>
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <div class="settings">
+            <p class="help_text">SETTINGS</p>
+
+            <div class="info_div">
+
+                <div class="icon">
+                    <span class="material-icons-outlined">
+                        brightness_medium
+                        </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Personalization</p>
+                    <div class="toggle">
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <p class="info_value">Dark Theme</p>
+                </div>
+
+            </div>
+
+            <div class="info_div">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        login
+                        </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Log out</p>
+
+                    <p class="info_value">Log out from OnDuty</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+  
+  <script defer src="js/core.js"></script>
+  
+
+  
+</body>
+
+
+</html>
