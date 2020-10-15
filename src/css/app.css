@@ -22,7 +22,7 @@ html {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow-y: hidden;
+  overflow-y: scroll;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -55,6 +55,37 @@ body {
   background-color: white;
   height: 100%;
   overflow-y: hidden;
+}
+
+.header{
+  position: fixed;
+  width: 100%;
+  height: 58px;
+background-color: white;
+  z-index: 2;
+
+  border-bottom:solid 1px rgba(0, 0, 0,0.1);
+
+}
+
+#backarrow {
+  position: absolute;
+  top: 18px;
+  left: 15px;
+  color: rgba(51, 51, 51, 1);
+}
+
+.section_header {
+  position: absolute;
+  top: 19px;
+  left: 55px;
+  font-family: Roboto;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 19px;
+  letter-spacing: 0em;
+  color: rgba(51, 51, 51, 1);
 }
 
 .mdc-top-app-bar {
