@@ -41,6 +41,8 @@ html, body {
   
   #login_section{
     text-align: center;
+   
+    
   }
   
   #phoneNumber{
@@ -55,7 +57,29 @@ html, body {
     width: 100%;
   }
   
+ 
+  .outer-div
+  {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+  }
+  .inner-div
+  {
+    margin: 0 auto;
+    width: 100px;
+    height: 13px;
+    font-family: roboto;
+font-size: 12px;
+font-style: normal;
+font-weight: 500;
+line-height: 15px;
+letter-spacing: 0em;
+text-align: center;
+
   
+  }
+
   
   #sign-in-button{
     height: 56px;
@@ -110,11 +134,32 @@ html, body {
   font-weight: 500;
   line-height: 16px;
   letter-spacing: 0em;
+  
   text-align: center;
   
   color: #25456C;
   }
+
+  .resend{
+    margin-top: 10px;
+    margin-bottom: 100px;
+  }
   
+  .change_number{
+    color: #25456C;
+  }
+
+  a{
+    text-decoration: none;
+    color:  #25456C;
+  }
+
+  .material-icons{
+    position: relative;
+    top: 6px;
+    
+  }
+
   .copyright{
   
   font-family: Roboto;
