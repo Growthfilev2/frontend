@@ -1,5 +1,5 @@
 function AppKeys() {
-    this.mode = 'production'
+    this.mode = 'dev'
 }
 AppKeys.prototype.getMode = function () {
     return this.mode
@@ -40,3 +40,6 @@ AppKeys.prototype.getBaseUrl = function () {
 AppKeys.prototype.dynamicLinkUriPrefix  = function () {
     return this.mode === 'production' ? 'https://growthfile.page.link' : 'https://growthfileanalytics.page.link'
 }
+const appKey = new AppKeys();
+firebase.initializeApp(appKey.getKeys())
+

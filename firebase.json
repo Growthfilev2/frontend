@@ -1,11 +1,12 @@
 {
   "hosting": {
-    "public": "dist",
+    "public": "src",
     "ignore": [
       "firebase.json",
       "*/.",
       "/node_modules/"
     ],
+    "trailingSlash": false,
     "headers": [
       {
         "source":"/**",

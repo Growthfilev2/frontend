@@ -1,0 +1,80 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/png" href="img/favicon.ico" />
+  <link rel="stylesheet" href="./css/login.css" />
+  <link rel="stylesheet" href="external/css/intlTelInput.css">
+  <link rel="preload" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css"
+    as="style">
+
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap" rel="stylesheet">
+  <script defer src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+  <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+  <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+  <script defer src="js/config.js"></script>
+
+</head>
+
+
+<body>
+
+
+  <div class="wrapper">
+
+    <div class="header">
+      <p>Log in</p>
+    </div>
+
+
+
+
+    <div style="display:none;" id="recaptcha-container"></div>
+
+    <div id="login_section">
+      <input id="phoneNumber" type="tel" maxlength="10" minlength="10" placeholder="99999 88888">
+      <br>
+      <button class="action_button" onclick="submitPhoneNumberAuth()" type="submit" id="sign-in-button">REQUEST
+        OTP</button>
+
+      <div class="helper_text">
+        <p>*Please provide your phone no. to login</p>
+      </div>
+
+    </div>
+
+    <div id="otp_section">
+
+      <input oninput="inputInsideOtpInput(this)" class="otp_number" id="otp1" type="number" value="" maxlength="1">
+      <input oninput="inputInsideOtpInput(this)" class="otp_number" id="otp2" type="number" value="" maxlength="1">
+      <input oninput="inputInsideOtpInput(this)" class="otp_number" id="otp3" type="number" value="" maxlength="1">
+      <input oninput="inputInsideOtpInput(this)" class="otp_number" id="otp4" type="number" value="" maxlength="1">
+      <input oninput="inputInsideOtpInput(this)" class="otp_number" id="otp5" type="number" value="" maxlength="1">
+      <input oninput="inputInsideOtpInput(this)" class="otp_number" id="otp6" type="number" value="" maxlength="1">
+
+      <input id="code" type="number" maxlength="6" minlength="6" placeholder="123456">
+      <br>
+      <button class="action_button" onclick="collect_otp()" type="submit" id="sign-in-button">LOG
+        IN</button>
+      <br>
+
+      <a id="resend_otp" href="javascript:submitPhoneNumberAuth()">
+        <p class="resend"> Resend OTP</p>
+      </a>
+
+      <div class="change_number">
+        <a href="login.html">Change Phone Number</a>
+      </div>
+    </div>
+
+    <script src="external/js/intl-utils.js"></script>
+    <script src="external/js/intlTelInput.min.js"></script>
+    <script defer src="js/core.js"></script>
+    <script defer src="js/login.js"></script>
+</body>
+
+</html>

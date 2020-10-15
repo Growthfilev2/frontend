@@ -1,0 +1,327 @@
+html, body {
+    height: 100%;
+  }
+  
+  *{
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+  
+  body{
+    background-image: url(../img/login_background.svg);
+    position: fixed;
+              background-repeat: no-repeat;
+              background-position: center;
+              background-size: cover;
+              width: 100%;
+              height: 100%;
+              font-family: 'Roboto';
+              
+  }
+  
+  .wrapper{
+    position: absolute;
+    top: 30.6%;
+    height: 100%;
+    width: 100%;
+    
+  }
+  
+  .header{
+    font-family: Roboto;
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 26px;
+  letter-spacing: 0em;
+  text-align: center;
+  margin-bottom: 7.34%;
+  }
+  
+  #login_section{
+    text-align: center;
+  }
+  
+  #phoneNumber{
+    height: 56px;
+    background: none;
+    border: 1px solid #2C8FEB;
+    box-shadow: 0px 1px 1px 0px rgba(0, 0, 0,0.3);
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+    font-family: Roboto;
+    width: 100%;
+  }
+  
+  
+  
+  #sign-in-button{
+    height: 56px;
+    width: 284px;
+    background: #25456C;
+   margin-top: 15px;
+  font-style: normal;
+  border: 1px solid #25456C;
+  font-size: 18px;
+  color: white;
+  }
+  
+  .helper_text{
+  font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0em;
+  color: #767272;
+  margin-top: 12px;
+  }
+  
+  
+  
+  #code{
+    display: none;
+  }
+  
+  .otp_number{
+   
+  width: 46.86px;
+  height: 46.86px;
+  background: #FDFDFD;
+  border: 1px solid #25456C;
+  box-sizing: border-box;
+  border-radius: 2px;
+  text-align: center;
+    
+  
+  }
+  
+  #otp_section{
+    text-align: center;
+    display: none;
+  }
+  
+  #resend_otp{
+    font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0em;
+  text-align: center;
+  
+  color: #25456C;
+  }
+  
+  .copyright{
+  
+  font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0em;
+  text-align: center;
+  
+  }
+  
+  .copyright p{
+    position: static;
+    top: 96.6%;
+  }
+  
+  #loader{
+    position: absolute;
+    background-image: url(../img/loading.svg);
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 2;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+  
+  #verifying{
+    position: absolute;
+    background-image: url(../img/verifying_location.svg);
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 2;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+  
+  #connecting{
+    position: absolute;
+    background-image: url(../img/connecting_to_server.svg);
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 2;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+  
+  .dots{
+    text-align: center;
+    margin-top: 125%;
+    
+  }
+  
+  
+  @keyframes dot{
+      0%{
+        transform:scale(1);
+      opacity: 1;
+      }
+  
+      100%{
+        transform:scale(.3);
+      opacity: 0;
+      }
+  }
+  .dot {
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    border-radius: 20px;
+    background: #25456C;
+    animation-name: dot;
+    animation-duration: 1.2s;
+    animation-iteration-count: infinite;
+    animation-direction:normal;
+    transform:scale(.3);
+    opacity: 0;
+    margin: 20px;
+    
+    
+  }
+  
+  .dot1 {
+    animation-delay:0.6s;
+  }
+  
+  .dot2 {
+    animation-delay:0.75s;
+  }
+  
+  .dot3 {
+    animation-delay:0.9s;
+  }
+  
+  .dot4{
+    animation-delay:1.05s;
+  }
+  
+  /* html, body {
+    height: 100%;
+  }
+  
+        *{
+           margin: 0px;
+          padding: 0px;
+  text-align: center;
+        }
+  
+  
+        body{
+          background-image: url(../img/login_background.svg);
+          background-repeat: no-repeat;
+          background-position: center center;
+          background-size: cover;
+          
+        }
+  
+        h1{
+          color: black;
+          height: auto;
+          margin-bottom: 47px;
+        }
+  
+        .container{
+        position: fixed;
+        top: 30.6%;
+        width: 100%;
+        
+        
+        }
+       
+        #phoneNumber{
+          
+          text-align: left;
+          height: 56px;
+          background: none;
+          border: 1px solid #2C8FEB;
+          box-shadow: 0px 1px 1px 0px rgba(0, 0, 0,0.3);
+          font-size: 16px;
+          font-weight: bold;
+          color: black;
+          font-family: Roboto;
+          width: 100%;
+        }
+  
+      
+   
+        #sign-in-button{
+          height: 56px;
+          width: 284px;
+          background: #25456C;
+         margin-top: 15px;
+        font-style: normal;
+        border: 1px solid #2D4B71;
+        font-size: 18px;
+        color: white;
+        }
+  
+        #code{
+          height: 56px;
+          width: 71.3%;
+        }
+  
+        #step2{
+          display: none;
+        }
+        
+  #copyright{
+    position: absolute;
+    text-align: center;
+    bottom: 4.3%;
+    
+  font-size: 12px;
+  
+  font-weight: bold;
+  line-height: 15px;
+  letter-spacing: 1px;
+  left:39.1%;
+  
+  }
+  
+        
+  
+   .iti__flag-container{
+    border: 1px solid #2C8FEB;
+    background: #EEEEEE;
+    padding: 10px;
+  
+   }
+  
+   .iti__flag {background-image: url("external/img/flags.png");}
+  
+   @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+     .iti__flag {background-image: url("external/img/flags@2x.png");}
+   }
+  
+   #loader{
+    background-image: url(../img/A.svg);
+    position: fixed;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    */
+  /* } */

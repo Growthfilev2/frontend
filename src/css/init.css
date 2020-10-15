@@ -1,0 +1,87 @@
+.transitions .app-init-screens {
+  width: 100%;
+  text-align: center;
+  padding: 16px;
+}
+.app-init-screens .loader-image {
+  max-width: 330px;
+  display: block;
+    margin: 0 auto;
+}
+
+.app-init-screens .loading-text--headline {
+  font-weight: 500;
+  margin-top: 10%;
+}
+.app-init-screens .loading-text {
+  position: fixed;
+  bottom:1rem;
+  width: 100%;
+  text-align: center;
+}
+
+
+.dots {
+  display: inline-flex;
+  margin-top: 15%;
+}
+
+
+
+@keyframes dot {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(.3);
+    opacity: 0;
+  }
+}
+
+.dot {
+  display: inline-block;
+  height: 25px;
+  width: 25px;
+  border-radius: 30px;
+  background: #25456C;
+  animation-name: dot;
+  animation-duration: 1.2s;
+  animation-iteration-count: infinite;
+  animation-direction: normal;
+  transform: scale(.3);
+  opacity: 0;
+  margin: 20px;
+
+
+}
+
+.dot1 {
+  animation-delay: 0.6s;
+}
+
+.dot2 {
+  animation-delay: 0.75s;
+}
+
+.dot3 {
+  animation-delay: 0.9s;
+}
+
+.dot4 {
+  animation-delay: 1.05s;
+}
+
+.bottom-card{
+  position: fixed;
+  bottom: 0rem;
+  padding: 16px;
+  width: 100%;
+}
+
+.bottom-card ul {
+  overflow-y: auto;
+  max-height: 400px;
+
+}
