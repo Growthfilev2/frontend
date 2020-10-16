@@ -66,7 +66,7 @@ window.addEventListener("load", (ev) => {
     e.preventDefault();
     firebase.auth().signOut().then(()=>{
       
-      redirect('/logout.html')
+      initApp();
     })
   })
 });
