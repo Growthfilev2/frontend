@@ -6,6 +6,7 @@ window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
         size: "invisible",
         callback: function (response) {
             submitPhoneNumberAuth();
+            
         }
     }
 );
@@ -21,6 +22,7 @@ function submitPhoneNumberAuth() {
             window.confirmationResult = confirmationResult;
             document.getElementById('login_section').style.display = "none";
             document.getElementById('otp_section').style.display = "block";
+           // countdown();
         })
         .catch(function (error) {
             console.log(error);
@@ -110,3 +112,38 @@ window.intlTelInput(input, {
     separateDialCode: true,
     utilsScript: "external/js/utils.js"
 });
+
+
+
+
+
+// function countdown() {
+//     var timeLeft = 25;
+// var elem = document.getElementById('some_div');
+// var timerId = setInterval(countdown, 1000);
+//     document.getElementById("resend_otp").style.pointerEvents = "none";
+//     document.getElementById("resend_otp").style.cursor = "default";
+//     document.getElementById('some_div').style.display="block";
+//     document.getElementById("resend_otp").style.color = "#9A9DA0";
+    
+//     if (timeLeft == -1) {
+//         clearTimeout(timerId);
+      
+//         doSomething();
+//     } else {
+//         elem.innerHTML = "("+timeLeft+")" ;
+//         timeLeft--;
+//     }
+// }
+
+// function doSomething() {
+   
+   
+//     document.getElementById("resend_otp").style.pointerEvents = "auto";
+//     document.getElementById('some_div').style.display="none";
+//     document.getElementById("resend_otp").style.cursor = "pointer";
+//     document.getElementById("resend_otp").style.color = "#25456C";
+ 
+    
+// }
+

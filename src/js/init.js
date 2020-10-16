@@ -449,7 +449,8 @@ function getEmployeeDetails(range, indexName) {
       const result = event.target.result;
 
       console.log(result);
-
+     
+  
       return resolve(result)
     }
     getEmployee.onerror = function () {

@@ -38,7 +38,7 @@ window.addEventListener("load", (ev) => {
         .transaction("root")
         .objectStore("root")
         .get(user.uid).onsuccess = function (e) {
-        document.getElementById("output").src =
+        document.getElementById("output").src = 
           firebase.auth().currentUser.photoURL ||
           firstletter(firebase.auth().currentUser.displayName.charAt(0));
 
@@ -58,7 +58,17 @@ window.addEventListener("load", (ev) => {
         ).innerHTML = firebase.auth().currentUser.phoneNumber;
       };
     };
-  });
+  }
+  
+  );
+  const logout = document.getElementById("logout");
+  logout.addEventListener('click', (e) =>{
+    e.preventDefault();
+    firebase.auth().signOut().then(()=>{
+      
+      redirect('/logout.html')
+    })
+  })
 });
 
 function firstletter(A) {
@@ -67,3 +77,4 @@ function firstletter(A) {
   document.getElementById("no_output").style.display = "block"
   document.getElementById("no_output").innerHTML = pfp;
 }
+
