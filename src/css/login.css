@@ -46,10 +46,16 @@ html, body {
     
   }
   
+
+  #phoneNumber:focus{
+    outline-color: #25456C;
+  }
+
+
   #phoneNumber{
     height: 56px;
     background: none;
-    border: 1px solid #2C8FEB;
+    border: 1px solid #25456C;
     box-shadow: 0px 1px 1px 0px rgba(0, 0, 0,0.3);
     font-size: 16px;
     font-weight: bold;
@@ -81,6 +87,29 @@ text-align: center;
   
   }
 
+  #sign-in-button:active{
+    height: 56px;
+    width: 284px;
+    background: #ffffff;
+   margin-top: 15px;
+  font-style: normal;
+  border: 1px solid #25456C;
+  font-size: 18px;
+  color: #25456C;
+  
+  
+  }
+
+
+.otp_number:focus{
+  outline-color: #25456C;
+}
+  #sign-in-button:focus {
+    outline: -webkit-focus-ring-color auto 1px;
+    outline-color: #25456C;
+    outline-style: auto;
+    outline-width: 1px;
+}
   
   #sign-in-button{
     height: 56px;
@@ -92,6 +121,20 @@ text-align: center;
   font-size: 18px;
   color: white;
   }
+
+  #alert_message {
+    font-family: Roboto;
+    margin-left: 5px;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: 0.15px;
+    text-align: center;
+    color: rgba(222, 46, 46, 1);
+    display: none;
+  }
+  
   
   .helper_text{
   font-family: Roboto;
