@@ -8,28 +8,39 @@
 
     <link rel="stylesheet" href="css/profile_employee.css">
     <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
-
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <script src="js/profile.js"></script>
+    <link href="external/css/material.min.css" rel="stylesheet">
+    <script src="external/js/material.min.js"></script>
+    
+    
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
+    
     <link
-        href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
-        rel="stylesheet" />
+    href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+    rel="stylesheet" />
+ 
         <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
         <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
         <script defer src="js/config.js"></script>
-
+        <link href="css/app.css" rel="stylesheet" type="text/css">
 </head>
 
-<body>
+<body >
 
-    <div id="employee_details">
-        <div class="header">
-            <a href="profile.html"> <i id="backarrow" class="fas fa-arrow-left "></i> </a>
-
-            <p class="section_header">Employee Details</p>
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed" >
+        <div class="mdc-top-app-bar__row" >
+          <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start" >
+            <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"  aria-label="Open navigation menu"><a href="profile.html">arrow_back</a></button>
+            <span class="mdc-top-app-bar__title">Employee Details</span>
+          </section>
+          
         </div>
+      </header>
+      
+    <div id="employee_details">
+
+
+
+        
 
         
         <div class="details_div">
@@ -46,7 +57,7 @@
                 <div>
                     <p class="info_header">Company</p>
                     
-                    <p class="info_value">Office Detail(Dynamic)</p>
+                    <p class="info_value" id="office">Office Detail(Dynamic)</p>
 
                 </div>
 
@@ -58,13 +69,13 @@
 
                 <div class="icon">
                     <span class="material-icons">
-                        portrait
+                        assignment_ind
                         </span>
                 </div>
 
                 <div>
                     <p class="info_header">Designation</p>
-                    <p class="info_value">Sales Executive(Dynamic)</p>
+                    <p class="info_value" id="designation">Sales Executive(Dynamic)</p>
                 </div>
 
             </div>
@@ -72,12 +83,14 @@
             <div class="info_div">
 
                 <div class="icon">
-                    <i class="far fa-id-card"></i>
+                    <span class="material-icons">
+                        perm_contact_calendar
+                        </span>
                 </div>
 
                 <div>
                     <p class="info_header">Employee ID </p>
-                    <p class="info_value">(Dynamic)</p>
+                    <p class="info_value" id="employee_id">(Dynamic)</p>
                 </div>
 
             </div>
@@ -92,7 +105,7 @@
 
                 <div>
                     <p class="info_header">Supervisor</p>
-                    <p class="info_value">(Dynamic)</p>
+                    <p class="info_value" id="supervisor">(Dynamic)</p>
                 </div>
 
             </div>
@@ -108,7 +121,7 @@
                 <div>
                     <p class="info_header">Department</p>
                     
-                    <p class="info_value">(Dynamic)</p>
+                    <p class="info_value" id="department">(Dynamic)</p>
 
                 </div>
 
@@ -128,7 +141,7 @@
                 <div>
                     <p class="info_header">Region</p>
                   
-                    <p class="info_value">(Dynamic)</p>
+                    <p class="info_value" id="region">(Dynamic)</p>
 
                 </div>
 
@@ -143,6 +156,10 @@
     </div>
 
   <script defer src="js/core.js"></script>
+  <script src="js/profile_employee.js"></script>
+ 
+ 
+
 
 </body>
 

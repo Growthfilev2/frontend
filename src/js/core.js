@@ -37,6 +37,7 @@ window.addEventListener('error', function (event) {
   })
 })
 
+
 /**
  * 
  * @param {String} wifiString 
@@ -720,6 +721,17 @@ function html5Geolocation() {
     })
   })
 };
+
+
+// after logout
+function initApp() {
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) {
+      redirect('/login.html');
+    } 
+  });
+}
+// ends
 
 const apiHandler = new Worker('js/apiHandler.js?version=198');
 
