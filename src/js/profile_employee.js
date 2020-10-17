@@ -1,65 +1,52 @@
+var database;
 
-// let db;
+window.addEventListener("load", (ev) => {
+  firebase.auth().onAuthStateChanged((user) => {
+    const dbName = firebase.auth().currentUser.uid;
+    const request = window.indexedDB.open(dbName, DB_VERSION);
 
-// navigator.serviceWorker.onmessage = (event) => {
-//   console.log("message from worker", event.data);
-// };
+    request.onerror = function (event) {
+      console.log("Why didn't you allow my web app to use IndexedDB?!");
+    };
+    request.onsuccess = function (event) {
+      db = event.target.result;
+      read();
+    };
 
+    request.onupgradeneeded = function (event) {
+      db = event.target.result;
+    };
+  });
+});
 
-// window.addEventListener("load", (ev) => {
-//   firebase.auth().onAuthStateChanged((user) => {
-//     const req = window.indexedDB.open(user.uid);
-//     req.onsuccess = function (e) {
-//      readdata();
-//     };
-    
-//   });
-// });
+function read() {
+  var transaction = db.transaction("children");
+  var objectStore = transaction.objectStore("children");
 
+  var myIndex  = objectStore.index('employees'); 
 
-// function readdata(){
-//   var transaction = db.transaction(["children"], "readwrite");
+  var request = myIndex.get(firebase.auth().currentUser.phoneNumber);
+
   
-//   var objectStore = transaction.objectStore('children');
-
-//   var objectStoreRequest = objectStore.get("phoneNumber");
-
-  
-
-//   request.onerror = function(event) {
-//     console.log('Transaction failed');
-//   };
-
-//   objectStoreRequest.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     
-//     document.getElementById("designation").innerHTML= "hello";
+    /**
+       Variable names should be explainatory. don't assign random characters as variables names.
+       It makes code harder to read.
+    **/
 
-    
-//   };
-// }
+    if (request.result) {
+      document.getElementById("office").innerHTML = request.result.office;
+      document.getElementById("designation").innerHTML = request.result.attachment.Designation.value || "Incomplete information";
+      document.getElementById("employee_id").innerHTML = request.result.attachment['Employee Code'].value || "Incomplete information";
+      document.getElementById("supervisor").innerHTML = request.result.attachment['First Supervisor'].value || "Incomplete information";
+      document.getElementById("department").innerHTML = request.result.attachment.Department.value || "Incomplete information";
+      document.getElementById("region").innerHTML = request.result.attachment.Region.value || "Incomplete information";
 
-// // window.addEventListener("load", (ev) => {
-// //   const dbName = firebase.auth().currentUser.uid;
-// //   var request = window.indexedDB.open(dbName, 33);
+      
+    } else {
+      console.log("Read All Info");
+    }
+  };
+}
 
-// //   request.onsuccess = function(event) {
-// //     db = event.target.result;
-// //   };
-
-// //   var transaction = db.transaction('children');
-// //   var objectStore = transaction.objectStore('children');
-// //   var request = objectStore.get(phoneNumber);
-
-// //   request.onerror = function(event) {
-// //     console.log('Transaction failed');
-// //   };
-
-// //   request.onsuccess = function( event) {
-// //      if (request.result) {
-// //       document.getElementById("designation").innerHTML= request.result.designation.value;
-         
-// //      } else {
-// //        console.log('No data record');
-// //      }
-// //   };
-// // });

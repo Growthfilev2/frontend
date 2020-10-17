@@ -178,7 +178,9 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
+    
     console.log("run app")
+   
     regulator()
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
@@ -195,6 +197,7 @@ function startApp() {
   }
 
 }
+
 
 
 function getDeepLink() {

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
 
-    <link rel="stylesheet" href="css/profile_aadhaar.css">
+    
     <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
 
   
@@ -23,23 +23,27 @@
         <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
   <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
   <script defer src="js/config.js"></script>
-  <link href="css/app.css" rel="stylesheet" type="text/css">
+ 
+  <link rel="stylesheet"  type="text/css" href="css/profile_aadhaar.css">
 
+    <!-- NO app.css Included, all styles of profile_aadhaar.html are in profile_aadhaar.css -->
 </head>
 
 <body>
 
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed" >
+        <div class="mdc-top-app-bar__row" >
+          <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+            <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"  aria-label="Open navigation menu"><a href="profile.html">arrow_back</a></button>
+            <span class="mdc-top-app-bar__title">Aadhaar Card Details</span>
+          </section>
+          
+        </div>
+      </header>
+
     <div id="edit_profile">
 
-        <header class="mdc-top-app-bar mdc-top-app-bar--fixed" >
-            <div class="mdc-top-app-bar__row" style="background-color:rgb(255, 255, 255);">
-              <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start" style="color:rgb(0, 0, 0);">
-                <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" style="color:rgb(0, 0, 0);" aria-label="Open navigation menu"><a href="profile.html">arrow_back</a></button>
-                <span class="mdc-top-app-bar__title">Aadhaar Card Details</span>
-              </section>
-              
-            </div>
-          </header>
+        
 
         
 

@@ -37,6 +37,7 @@ window.addEventListener('error', function (event) {
   })
 })
 
+
 /**
  * 
  * @param {String} wifiString 

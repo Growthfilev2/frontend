@@ -59,6 +59,18 @@ a{
   color: black;
 }
 
+.mdc-top-app-bar__row{
+  background-color:rgb(255, 255, 255);
+}
+
+.mdc-top-app-bar__section--align-start{
+  color:rgb(0, 0, 0);
+}
+
+#backicon{
+  color:rgb(0, 0, 0);
+}
+
 .mdc-top-app-bar__title{
   font-family: Roboto;
   font-size: 16px;
