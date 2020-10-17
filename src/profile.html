@@ -9,12 +9,16 @@
     <link rel="stylesheet" href="css/profile.css">
     <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
 
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    
+    
     <script src="js/profile.js"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+   
     <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
   <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
   <script defer src="js/config.js"></script>
+  <link href="external/css/material.min.css" rel="stylesheet">
+  <script src="external/js/material.min.js"></script>
+  
 
     <link
         href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
@@ -23,14 +27,30 @@
 
 </head>
 
-<body>
+<body onload="initApp()">
 
-    <div id="wrapper">
-        <div class="header">
-            <i id="backarrow" class="fas fa-arrow-left "></i>
+
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed" >
+        <div class="mdc-top-app-bar__row" >
+          <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start" >
+            <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"  aria-label="Open navigation menu">arrow_back</button>
+            <span class="mdc-top-app-bar__title">Profile</span>
+          </section>
+          
+        </div>
+      </header>
+
+    <div id="wrapper" class="mdc-top-app-bar--fixed-adjust">
+
+      
+        <!-- <div class="header">
+          
+            <span id="backarrow" class="material-icons">
+                arrow_back
+                </span>
 
             <p class="section_header">Profile</p>
-        </div>
+        </div> -->
 
         <div class="profile_card">
 
@@ -41,6 +61,7 @@
                         style="display: none;">
 
                     <label id="picsum" for="file"> <img id="output" /></label>
+                    <label id="picsum" for="file"> <p id="no_output"></p></label>
 
                 </div>
 
@@ -50,8 +71,10 @@
                     <p class="email" id="email" >User Email</p>
                 </div>  
 
-                <i onClick="window.location='profile_user.html'" class="fas fa-chevron-right profile_arrow"></i>
-
+         
+                <span  onClick="window.location='profile_user.html'" class="material-icons profile_arrow">
+                    keyboard_arrow_right
+                    </span>
           
 
             </div>
@@ -148,7 +171,9 @@
 
                 <div >
                     <p class="info_header">Employee At</p>
-                    <i id="office_arrow" class="fas fa-chevron-right "></i>
+                    <span  id="office_arrow" class="material-icons">
+                        keyboard_arrow_right
+                        </span>
                     <p class="info_value">Office Detail(Dynamic)</p>
 
                 </div>
@@ -234,7 +259,7 @@
                         </span>
                 </div>
 
-                <div>
+                <div id="logout">
                     <p class="info_header">Log out</p>
 
                     <p class="info_value">Log out from OnDuty</p>
@@ -251,6 +276,6 @@
 
   
 </body>
-
+<link href="css/app.css" rel="stylesheet" type="text/css">
 
 </html>

@@ -6,33 +6,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
 
-    <link rel="stylesheet" href="css/profile_aadhaar.css">
+    
     <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
 
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  
     <script src="js/profile_aadhaar.js"></script>
+  
 
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+   
 
     <link
         href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
         rel="stylesheet"/>
-
+        <link href="external/css/material.min.css" rel="stylesheet">
+        <script src="external/js/material.min.js"></script>
         <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
   <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
   <script defer src="js/config.js"></script>
+ 
+  <link rel="stylesheet"  type="text/css" href="css/profile_aadhaar.css">
 
+    <!-- NO app.css Included, all styles of profile_aadhaar.html are in profile_aadhaar.css -->
 </head>
 
 <body>
 
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed" >
+        <div class="mdc-top-app-bar__row" >
+          <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+            <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"  aria-label="Open navigation menu"><a href="profile.html">arrow_back</a></button>
+            <span class="mdc-top-app-bar__title">Aadhaar Card Details</span>
+          </section>
+          
+        </div>
+      </header>
+
     <div id="edit_profile">
 
-        <div class="header">
-            <a href="profile.html"> <i id="backarrow" class="fas fa-arrow-left "></i> </a>
+        
 
-            <p class="section_header">Aadhaar Card Details</p>
-        </div>
+        
 
         <div class="fields">
 

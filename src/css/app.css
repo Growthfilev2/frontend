@@ -7,14 +7,14 @@
 :root {
   --mdc-theme-primary: #184466;
   --mdc-theme-secondary: #ffffff;
-  --mdc-theme-background: #7C909E;
+  --mdc-theme-background: #7c909e;
   --mdc-theme-on-primary: #ffffff;
   --mdc-theme-on-secondary: #ffffff;
-  --mdc-theme-text-primary-on-light: #FFFFFF;
+  --mdc-theme-text-primary-on-light: #ffffff;
   --mdc-theme-text-primary-on-dark: #cccccc;
-  --mdc-theme--error:red;
-  --mdc-theme--success:#20bd20;
-  --mdc-theme--warning:yellow;
+  --mdc-theme--error: red;
+  --mdc-theme--success: #20bd20;
+  --mdc-theme--warning: yellow;
 }
 html {
   box-sizing: border-box;
@@ -22,16 +22,14 @@ html {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow-y: hidden;
+  overflow-y: scroll;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-
 }
-
 
 #app-current-panel {
   height: 100%;
@@ -39,16 +37,15 @@ html {
 }
 
 #map {
-
-  display: none
+  display: none;
 }
 
-.mdc-fab , .mdc-button--raised {
+.mdc-fab,
+.mdc-button--raised {
   background-color: #103153 !important;
   color: var(--mdc-theme-on-primary) !important;
   z-index: 1;
 }
-
 
 body {
   margin: 0;
@@ -57,28 +54,85 @@ body {
   overflow-y: hidden;
 }
 
+a{
+  text-decoration: none;
+  color: black;
+}
+
+.mdc-top-app-bar__row{
+  background-color:rgb(255, 255, 255);
+}
+
+.mdc-top-app-bar__section--align-start{
+  color:rgb(0, 0, 0);
+}
+
+#backicon{
+  color:rgb(0, 0, 0);
+}
+
+.mdc-top-app-bar__title{
+  font-family: Roboto;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 19px;
+  letter-spacing: 0em;
+  color: rgba(51, 51, 51, 1);
+}
+
+/* .header {
+  position: fixed;
+  width: 100%;
+  height: 58px;
+  background-color: white;
+  z-index: 2;
+
+  border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+}
+
+#backarrow {
+  position: absolute;
+  top: 18px;
+  left: 15px;
+  color: rgba(51, 51, 51, 1);
+}
+
+.section_header {
+  position: absolute;
+  top: 19px;
+  left: 55px;
+  font-family: Roboto;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 19px;
+  letter-spacing: 0em;
+  color: rgba(51, 51, 51, 1);
+} */
+
 .mdc-top-app-bar {
-  padding-top:20px;
+  padding-top: 20px;
   /* Status bar height on iOS 11.0 */
   padding-top: constant(safe-area-inset-top);
   /* Status bar height on iOS 11+ */
   padding-top: env(safe-area-inset-top);
 }
 
-@media (max-width:599px) {
+@media (max-width: 599px) {
   .mdc-top-app-bar--fixed-adjust {
-    padding-top:calc(56px + 20px);
+    padding-top: calc(56px + 20px);
     /* Status bar height on iOS 11.0 */
     padding-top: calc(56px +constant(safe-area-inset-top));
     /* Status bar height on iOS 11+ */
-    padding-top:calc(56px + env(safe-area-inset-top))
+    padding-top: calc(56px + env(safe-area-inset-top));
   }
 }
 
 #app-current-panel {
   position: relative;
   max-width: 1120px;
-  margin:  0 auto;
+  margin: 0 auto;
 }
 
 .app-padding {
@@ -87,14 +141,12 @@ body {
   padding-bottom: 16px;
 }
 
-
-
 .app {
   padding: 0;
 }
 
 .cell-space {
-  grid-gap: 0
+  grid-gap: 0;
 }
 
 /** helpers **/
@@ -214,12 +266,12 @@ body {
 }
 
 .text-center {
-  text-align: center
+  text-align: center;
 }
 .text-right {
   text-align: right;
 }
-.text-left  {
+.text-left {
   text-align: left;
 }
 
@@ -231,7 +283,6 @@ body {
 .resize-veritcal {
   resize: vertical;
 }
-
 
 .center-abs {
   position: absolute;
@@ -256,30 +307,28 @@ body {
 }
 
 #success-animation svg .circle {
-  -webkit-animation: dash .9s ease-in-out;
-  animation: dash .9s ease-in-out;
+  -webkit-animation: dash 0.9s ease-in-out;
+  animation: dash 0.9s ease-in-out;
 }
 
 #success-animation svg .line {
-
   stroke-dashoffset: 1000;
-  -webkit-animation: dash .9s .35s ease-in-out forwards;
-  animation: dash .9s .35s ease-in-out forwards;
+  -webkit-animation: dash 0.9s 0.35s ease-in-out forwards;
+  animation: dash 0.9s 0.35s ease-in-out forwards;
 }
 
 #success-animation svg .check {
   stroke-dashoffset: -100;
-  -webkit-animation: dash-check .9s .35s ease-in-out forwards;
-  animation: dash-check .9s .35s ease-in-out forwards;
+  -webkit-animation: dash-check 0.9s 0.35s ease-in-out forwards;
+  animation: dash-check 0.9s 0.35s ease-in-out forwards;
 }
 
 #success-animation p {
   text-align: center;
   margin: 20px 0 60px;
   font-size: 1.25em;
-  font-weight: bold
+  font-weight: bold;
 }
-
 
 @-webkit-keyframes dash {
   0% {
