@@ -36,12 +36,12 @@ function read() {
     **/
 
     if (request.result) {
-      document.getElementById("office").innerHTML = request.result.office;
-      document.getElementById("designation").innerHTML = request.result.attachment.Designation.value || "Incomplete information";
-      document.getElementById("employee_id").innerHTML = request.result.attachment['Employee Code'].value || "Incomplete information";
-      document.getElementById("supervisor").innerHTML = request.result.attachment['First Supervisor'].value || "Incomplete information";
-      document.getElementById("department").innerHTML = request.result.attachment.Department.value || "Incomplete information";
-      document.getElementById("region").innerHTML = request.result.attachment.Region.value || "Incomplete information";
+      document.getElementById("office").innerHTML = request.result.office || "-";
+      document.getElementById("designation").innerHTML = request.result.attachment.Designation.value || "-";
+      document.getElementById("employee_id").innerHTML = request.result.attachment['Employee Code'].value || "-";
+      document.getElementById("supervisor").innerHTML = request.result.attachment['First Supervisor'].value || "-";
+      document.getElementById("department").innerHTML = request.result.attachment.Department.value || "-";
+      document.getElementById("region").innerHTML = request.result.attachment.Region.value || "-";
 
       
     } else {
