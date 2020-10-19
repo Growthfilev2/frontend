@@ -1,52 +1,20 @@
-var database;
-
 window.addEventListener("load", (ev) => {
   firebase.auth().onAuthStateChanged((user) => {
-    const dbName = firebase.auth().currentUser.uid;
-    const request = window.indexedDB.open(dbName, DB_VERSION);
-
-    request.onerror = function (event) {
-      console.log("Why didn't you allow my web app to use IndexedDB?!");
-    };
+    const request = window.indexedDB.open(user.uid);
     request.onsuccess = function (event) {
-      db = event.target.result;
-      read();
-    };
 
-    request.onupgradeneeded = function (event) {
-      db = event.target.result;
+      const db = event.target.result;
+      const id = new URLSearchParams(window.location.search).get('id');
+      db.transaction('activity').objectStore('activity').get(id).onsuccess = function (e) {
+        const record = e.target.result;
+        if (!record) return;
+        document.getElementById("office").innerHTML = record.office || "-";
+        document.getElementById("designation").innerHTML = record.attachment.Designation.value || "-";
+        document.getElementById("employee_id").innerHTML = record.attachment['Employee Code'].value || "-";
+        document.getElementById("supervisor").innerHTML = record.attachment['First Supervisor'].value || "-";
+        document.getElementById("department").innerHTML = record.attachment.Department.value || "-";
+        document.getElementById("region").innerHTML = record.attachment.Region.value || "-";
+      }
     };
   });
 });
-
-function read() {
-  var transaction = db.transaction("children");
-  var objectStore = transaction.objectStore("children");
-
-  var myIndex  = objectStore.index('employees'); 
-
-  var request = myIndex.get(firebase.auth().currentUser.phoneNumber);
-
-  
-  request.onsuccess = function (event) {
-    
-    /**
-       Variable names should be explainatory. don't assign random characters as variables names.
-       It makes code harder to read.
-    **/
-
-    if (request.result) {
-      document.getElementById("office").innerHTML = request.result.office || "-";
-      document.getElementById("designation").innerHTML = request.result.attachment.Designation.value || "-";
-      document.getElementById("employee_id").innerHTML = request.result.attachment['Employee Code'].value || "-";
-      document.getElementById("supervisor").innerHTML = request.result.attachment['First Supervisor'].value || "-";
-      document.getElementById("department").innerHTML = request.result.attachment.Department.value || "-";
-      document.getElementById("region").innerHTML = request.result.attachment.Region.value || "-";
-
-      
-    } else {
-      console.log("Read All Info");
-    }
-  };
-}
-

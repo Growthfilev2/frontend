@@ -1,29 +1,5 @@
-var loadFile = function (event) {
-  var image = document.getElementById("output");
-  image.src = URL.createObjectURL(event.target.files[0]);
-};
-
-function employeedetails() {
-  document.getElementById("employee_details").style.display = "block";
-
-  document.getElementById("wrapper").style.display = "none";
-}
-
-function showprofile() {
-  document.getElementById("wrapper").style.display = "block";
-
-  document.getElementById("employee_details").style.display = "none";
-
-  document.getElementById("edit_profile").style.display = "none";
-}
-
-function editdetails() {
-  document.getElementById("edit_profile").style.display = "block";
-
-  document.getElementById("wrapper").style.display = "none";
-}
-
 let db;
+const logout = document.getElementById("logout");
 
 navigator.serviceWorker.onmessage = (event) => {
   console.log("message from worker", event.data);
@@ -31,50 +7,125 @@ navigator.serviceWorker.onmessage = (event) => {
 
 window.addEventListener("load", (ev) => {
   firebase.auth().onAuthStateChanged((user) => {
-    const req = window.indexedDB.open(user.uid);
-    req.onsuccess = function (e) {
-      db = req.result;
-      db
-        .transaction("root")
-        .objectStore("root")
-        .get(user.uid).onsuccess = function (e) {
-        document.getElementById("output").src = 
-          firebase.auth().currentUser.photoURL ||
-          firstletter(firebase.auth().currentUser.displayName.charAt(0));
+    loadProfileData(user)
+  });
 
-        document.getElementById(
-          "name"
-        ).innerHTML = firebase.auth().currentUser.displayName;
-
-        document.getElementById(
-          "mobile"
-        ).innerHTML = firebase.auth().currentUser.phoneNumber;
-
-        document.getElementById("email").innerHTML =
-          firebase.auth().currentUser.email || "-";
-
-        document.getElementById(
-          "mobile_number"
-        ).innerHTML = firebase.auth().currentUser.phoneNumber;
-      };
-    };
-  }
-  
-  );
-  const logout = document.getElementById("logout");
-  logout.addEventListener('click', (e) =>{
+  logout.addEventListener('click', (e) => {
     e.preventDefault();
-    firebase.auth().signOut().then(()=>{
-      
+    firebase.auth().signOut().then(() => {
+
       initApp();
     })
   })
 });
 
-function firstletter(A) {
+
+const loadProfileData = (user) => {
+
+  const req = window.indexedDB.open(user.uid);
+  req.onsuccess = function (e) {
+    db = req.result;
+
+    getRootRecord().then(record => {
+      document.getElementById("output").src =
+        user.photoURL ||
+        firstletter(user.displayName.charAt(0));
+
+      document.getElementById(
+        "name"
+      ).innerHTML = user.displayName;
+
+      document.getElementById(
+        "mobile"
+      ).innerHTML = user.phoneNumber;
+
+      document.getElementById("email").innerHTML =
+        user.email || "-";
+
+      document.getElementById(
+        "mobile_number"
+      ).innerHTML = user.phoneNumber;
+      const profileVerificationPercentage = calculateProfileVerification(record);
+
+      if (profileVerificationPercentage == 100) return;
+
+      document.querySelector('.percentage').textContent = `${profileVerificationPercentage}%`;
+      document.querySelector('.profile-completion').classList.remove('hidden')
+      document.getElementById('progress-bar').style.width = `${profileVerificationPercentage}%`;
+
+      const profileBtnsCont = document.getElementById('profile-completion-buttons')
+      if (!record.linkedAccount) {
+        profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank'))
+      }
+      if (!record.pan) {
+        profileBtnsCont.appendChild(createProfileBtn('Add pan card', './profile_pan'))
+      }
+      if (!record.linkedAccount) {
+        profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhar'))
+      }
+    })
+
+    db.transaction('children').objectStore('children').index('employees').get(user.phoneNumber).onsuccess = function (e) {
+      const record = e.target.result;
+      document.getElementById('employee-at').textContent = record.attachment.Designation.value ? `${record.attachment.Designation.value}, ${record.office}` : record.office;
+      document.getElementById('employee-meta').href = `${document.getElementById('employee-meta').href}?id=${record.activityId}`;
+    }
+  };
+
+}
+
+
+
+
+const createProfileBtn = (name, href) => {
+  const a = createElement('a', {
+    href: href,
+    className: 'mdc-button mdc-button--raised',
+  })
+  const label = createElement('span', {
+    className: 'mdc-button--label',
+    textContent: name
+  })
+
+  // new mdc.ripple.MDCRipple(a);
+  a.appendChild(label)
+  return a;
+}
+
+const calculateProfileVerification = (rootRecord) => {
+  const fields = [rootRecord.linkedAccount, rootRecord.pan, rootRecord.aadhar];
+  return ((fields.filter(value => value).length / fields.length) * 100).toFixed(0)
+}
+
+
+var loadFile = function (event) {
+  var image = document.getElementById("output");
+  image.src = URL.createObjectURL(event.target.files[0]);
+};
+
+const employeedetails = () => {
+  document.getElementById("employee_details").style.display = "block";
+  document.getElementById("wrapper").style.display = "none";
+}
+
+const showprofile = () => {
+  document.getElementById("wrapper").style.display = "block";
+
+  document.getElementById("employee_details").style.display = "none";
+
+  document.getElementById("edit_profile").style.display = "none";
+}
+
+const editdetails = () => {
+  document.getElementById("edit_profile").style.display = "block";
+
+  document.getElementById("wrapper").style.display = "none";
+}
+
+
+const firstletter = (A) => {
   var pfp = A.toUpperCase();
   document.getElementById("output").style.display = "none";
   document.getElementById("no_output").style.display = "block"
   document.getElementById("no_output").innerHTML = pfp;
 }
-

@@ -14,6 +14,7 @@ var updatedWifiAddresses = {
 }
 let DB_VERSION = 33;
 
+
 /**
  * Global error logger
  */
@@ -1167,41 +1168,6 @@ function handleEmailError(error) {
     return;
   }
   snacks(error.message);
-}
-
-
-function getDropDownContent(office, template, indexName) {
-  return new Promise(function (resolve, reject) {
-    const data = []
-    const name_object = {}
-    const tx = parent.db.transaction(['children'])
-    let keyRange = ''
-    if (office) {
-      keyRange = IDBKeyRange.only([office, template])
-    } else {
-      keyRange = IDBKeyRange.only(template)
-    }
-    tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      const value = cursor.value.attachment.Name.value
-      if (name_object[value]) {
-        cursor.continue();
-        return;
-      }
-      name_object[value] = true;
-      data.push(value);
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-      return resolve(data)
-    }
-
-  })
 }
 
 const phoneFieldInit = (input, dropEl, hiddenInput) => {

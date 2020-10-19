@@ -1299,3 +1299,6 @@ function showTabs(tabs, id) {
 function isToday(timestamp) {
   return moment(timestamp).isSame(moment().clone().startOf('day'), 'd')
 }
+
+
+

@@ -1,43 +1,46 @@
-* {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
 
-.profile_card {
-  position: absolute;
-  width: 100%;
-  height: 191px;
-  top: 50px;
+.profile-section {
   border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  padding: 10px 0px;
+}
+.profile-section:nth-child(2) {
+  padding-top: 0px;
 }
 
 a {
   text-decoration: none;
   color: black;
 }
-.details {
+
+.profile_card {
+  margin-left: 14.25px;
+  margin-right: 10px;
+}
+.profile_card .details {
   display: flex;
+  align-items: center;
 }
 
-.pfp {
-  text-align: left;
-  margin-top: 21px;
-  margin-left: 11px;
-  width: 26.9%;
+.profile_card .image-cont {
+  width: 100px;
+}
+
+.profile_card .auth-cont {
+  flex-grow: 1;
 }
 
 #output {
-  background-color: rgba(37, 69, 108, 1);
+  background-color: var(--mdc-theme-primary);
   border-radius: 75px;
-  border: 2px solid rgba(37, 69, 108, 1);
+  border: 2px solid var(--mdc-theme-primary);
   width: 70px;
   height: 70px;
 }
 
 #no_output {
   display: none;
-  background-color: rgba(37, 69, 108, 1);
+  background-color: var(--mdc-theme-primary);
   border-radius: 75px;
   border: gray;
   width: 70px;
@@ -45,14 +48,13 @@ a {
   color: white;
   text-align: center;
   padding-top: 19px;
-  font-family: Roboto;
   font-size: 20px;
   font-style: normal;
   font-weight: 500;
-  
+
   letter-spacing: 0.04em;
-  
-  
+
+
 }
 
 .user_info {
@@ -62,7 +64,6 @@ a {
 }
 
 .name {
-  font-family: Roboto;
   font-size: 16px;
   font-style: normal;
   font-weight: 500;
@@ -74,7 +75,6 @@ a {
 
 .mobile,
 .email {
-  font-family: Roboto;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -84,18 +84,13 @@ a {
   color: rgba(61, 60, 60, 1);
 }
 
-.profile_arrow {
-  margin-top: 49px;
-  margin-right: 10px;
-}
-
 .progress_bar_info {
   display: flex;
+  align-items: center;
 }
 
 .info_text {
   margin-left: 11px;
-  font-family: Roboto;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -106,8 +101,11 @@ a {
   width: 88%;
 }
 
+.percentage {
+  margin-left: auto;
+}
+
 #profile_percentage {
-  font-family: Roboto;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
@@ -128,20 +126,17 @@ a {
 }
 
 .progress-bar {
-  animation: load 1s normal forwards;
-
+  transition: ease-in 0.5s;
   border-radius: 10px;
-  background: rgba(37, 69, 108, 1);
-
+  background: var(--mdc-theme-primary);
   height: 6px;
+  width: 0%;
+  margin-bottom:10px
 }
-@keyframes load {
-  0% {
-    width: 0;
-  }
-  100% {
-    width: 60%;
-  }
+
+#profile-completion-buttons a {
+  margin-bottom: 5px;
+  margin-right: 5px;
 }
 
 .buttons {
@@ -154,12 +149,11 @@ a {
 .aadhaar_button {
   width: 33.3%;
   height: 32px;
-  background: rgba(37, 69, 108, 1);
+  background: var(--mdc-theme-primary);
 
   color: rgba(255, 250, 250, 1);
   border-radius: 3px;
   border: 0px;
-  font-family: Roboto;
   font-size: 10px;
   font-style: normal;
   font-weight: 500;
@@ -170,12 +164,11 @@ a {
 .pan_button {
   width: 26.6%;
   height: 32px;
-  background: rgba(37, 69, 108, 1);
+  background: var(--mdc-theme-primary);
 
   color: rgba(255, 250, 250, 1);
   border-radius: 3px;
   border: 0px;
-  font-family: Roboto;
   font-size: 10px;
   font-style: normal;
   font-weight: 500;
@@ -183,49 +176,45 @@ a {
   letter-spacing: 0.11em;
 }
 
-.profile_main {
-  position: absolute;
-  top: 249px;
-  height: 297px;
-  border-bottom: solid 1px rgba(0, 0, 0, 0.1);
 
-  width: 100%;
-}
 
 .icon {
   color: rgba(24, 68, 102, 1);
-  margin-top: 31.25px;
+  /* margin-top: 31.25px; */
   margin-left: 14.25px;
   height: 13.5px;
   width: 13.5px;
 }
+
 .info_div {
   display: flex;
   width: 100%;
+  min-height: 40px;
+  align-items: center;
 }
 
 .info_header {
   margin-left: 19.25px;
   margin-top: 19px;
-  font-family: Roboto;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0.05em;
-  color: rgba(0, 0, 0, 1);
+  color:var(--mdc-theme-on-secondary);
+  margin-bottom: 0px;
 }
 
 .info_value {
   margin-left: 19.25px;
   margin-top: 6px;
-  font-family: Roboto;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0.05em;
   color: rgba(61, 60, 60, 1);
+  margin-bottom: 0px;
 }
 
 #office_arrow {
@@ -233,22 +222,14 @@ a {
   right: 10px;
 }
 
-.information {
-  position: absolute;
-  top: 546px;
-  height: 142px;
-  border-bottom: solid 1px rgba(0, 0, 0, 0.1);
-  width: 100%;
-}
 
 .help_text {
-  margin-top: 16px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   margin-left: 11px;
-  font-family: Roboto;
   font-size: 10px;
   font-style: normal;
   font-weight: 400;
-  line-height: 12px;
   letter-spacing: 0.11em;
   text-align: left;
 }
@@ -263,7 +244,7 @@ a {
   margin-top: 16.5px;
   width: 15px;
   height: 15px;
-  color: rgba(37, 69, 108, 1);
+  color: var(--mdc-theme-primary)
 }
 
 .icon_img_policy {
@@ -271,7 +252,7 @@ a {
   margin-top: 16.5px;
   width: 13.5px;
   height: 16.5px;
-  color: rgba(37, 69, 108, 1);
+  color: var(--mdc-theme-primary)
 }
 
 .icon_img_agent {
@@ -279,14 +260,13 @@ a {
   margin-top: 16.5px;
   width: 15px;
   height: 13.5px;
-  color: rgba(37, 69, 108, 1);
+  color: var(--mdc-theme-primary);
   filter: scale(100%);
 }
 
 .faq_text {
   margin-left: 18.5px;
   margin-top: 16px;
-  font-family: Roboto;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -297,7 +277,6 @@ a {
 .policy_text {
   margin-left: 18.5px;
   margin-top: 16.5px;
-  font-family: Roboto;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -305,18 +284,11 @@ a {
   letter-spacing: 0.05em;
 }
 
-.settings {
-  position: absolute;
-  top: 688px;
-  height: 153px;
-  border-bottom: solid 1px rgba(0, 0, 0, 0.1);
-  width: 100%;
-}
-
 .toggle {
   position: absolute;
   right: 10px;
 }
+
 .switch {
   position: relative;
   display: inline-block;
@@ -356,15 +328,15 @@ a {
   transition: 0.4s;
 }
 
-input:checked + .slider {
-  background-color: rgba(37, 69, 108, 1);
+input:checked+.slider {
+  background-color: var(--mdc-theme-primary)
 }
 
-input:focus + .slider {
-  box-shadow: 0 0 1px rgba(37, 69, 108, 1);
+input:focus+.slider {
+  box-shadow: 0 0 1px var(--mdc-theme-primary)
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   -webkit-transform: translateX(28px);
   -ms-transform: translateX(28px);
   transform: translateX(28px);

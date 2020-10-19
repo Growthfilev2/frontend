@@ -215,7 +215,7 @@ function regulator() {
     var prom;
     loadScreen('loading');
 
-    if (appKey.getMode() === 'dev' && window.location.host === 'localhost:5000') {
+    if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
       prom = Promise.resolve();
     } else {
       prom = requestCreator('fcmToken', {
@@ -249,7 +249,7 @@ function regulator() {
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        if (window.location.host === 'localhost:5000' && appKey.getMode() === 'dev') return Promise.resolve();
+        if (window.location.hostname === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
 
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
@@ -1225,3 +1225,4 @@ function loadNearByLocations(o, location) {
     }
   })
 }
+
