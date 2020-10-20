@@ -5,6 +5,10 @@ navigator.serviceWorker.onmessage = (event) => {
   console.log("message from worker", event.data);
 };
 
+document.querySelector('.profile-head').addEventListener('click',(ev)=>{
+  redirect('/profile_edit?askPhoto=1')
+})
+
 window.addEventListener("load", (ev) => {
   firebase.auth().onAuthStateChanged((user) => {
     loadProfileData(user)
@@ -97,30 +101,6 @@ const calculateProfileVerification = (rootRecord) => {
   return ((fields.filter(value => value).length / fields.length) * 100).toFixed(0)
 }
 
-
-var loadFile = function (event) {
-  var image = document.getElementById("output");
-  image.src = URL.createObjectURL(event.target.files[0]);
-};
-
-const employeedetails = () => {
-  document.getElementById("employee_details").style.display = "block";
-  document.getElementById("wrapper").style.display = "none";
-}
-
-const showprofile = () => {
-  document.getElementById("wrapper").style.display = "block";
-
-  document.getElementById("employee_details").style.display = "none";
-
-  document.getElementById("edit_profile").style.display = "none";
-}
-
-const editdetails = () => {
-  document.getElementById("edit_profile").style.display = "block";
-
-  document.getElementById("wrapper").style.display = "none";
-}
 
 
 const firstletter = (A) => {

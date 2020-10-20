@@ -8,15 +8,10 @@ window.addEventListener('load', (ev) => {
                 if (!hasBankAccount(record)) {
                     return
                 }
-
-                const li = createBankAccountLi(record.linkedAccount[0])
-                li.addEventListener('click', () => {
-                    loadAccountView(record.linkedAccount)
-                
-                })
-                document.getElementById('bank-list').appendChild(li);
-                document.getElementById('bank-list').appendChild(createElement('li',{
-                    className:'mdc-list-divider'
+                window.history.replaceState(record.linkedAccount[0], null, window.location.pathname)
+                document.getElementById('bank-list').appendChild(createBankAccountLi(record.linkedAccount[0]));
+                document.getElementById('bank-list').appendChild(createElement('li', {
+                    className: 'mdc-list-divider'
                 }))
             })
         }
@@ -24,33 +19,35 @@ window.addEventListener('load', (ev) => {
 })
 
 window.addEventListener('popstate', (ev) => {
-
-    document.getElementById('account-view').innerHTML = `<div  class="account-list">
-<ul class="mdc-list mdc-list--two-line" id="bank-list">
-
-</ul>
-<ul class="mdc-list" >
-    <a class="mdc-list-item mdc-theme--primary" href="./profile_bank_add.html">
-        <span class="mdc-list-item__graphic material-icons">
-            add_box
-        </span>
-        ADD BANK ACCOUNT
-    </a>
-</ul>
+    console.log(ev)
+    document.getElementById('bank-view').innerHTML = `<div  class="account-list">
+    <ul class="mdc-list mdc-list--two-line" id="bank-list">
+    </ul>
+    <ul class="mdc-list" >
+        <a class="mdc-list-item mdc-theme--primary" href="./profile_bank_add.html">
+            <span class="mdc-list-item__graphic material-icons">
+                add_box
+            </span>
+            ADD BANK ACCOUNT
+        </a>
+    </ul>
 </div>`
+    document.getElementById('bank-list').appendChild(createBankAccountLi(ev.state));
 })
 
 
 const loadAccountView = (account) => {
     window.history.pushState(null, null, '/bankView')
-    document.getElementById('account-view').innerHTML = `<ul class="mdc-list mdc-list--two-line" id="bank-list">
+    document.getElementById('bank-view').innerHTML = `<ul class="mdc-list mdc-list--two-line" id="bank-list">
     ${createBankAccountLi(account).outerHTML}
     <li class='mdc-list-divider'></li>
     </ul>
-    <div class='pt-20'>
+    <div class='p-16'>
         <div class='mdc-typography--headline6'>Account information</div>
-        <div>${account.name}</div>
-        <div>${account.phonenumber}</div>
+        <div class='ml-20 mdc-typography--headline6'>
+            <div>${account.name}</div>
+            <div>${account.phonenumber}</div>
+        </div>
     </div>
     `;
 }
@@ -81,5 +78,8 @@ const createBankAccountLi = (account) => {
             <span>Primary</span>
         </div>
     </span>`
+    li.addEventListener('click', () => {
+        loadAccountView(account)
+    })
     return li;
 }

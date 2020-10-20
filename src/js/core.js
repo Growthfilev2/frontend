@@ -883,17 +883,7 @@ function updateApp() {
   })
 }
 
-function revokeSession() {
-  firebase.auth().signOut().then(function () {
-    document.getElementById('app-header').classList.add('hidden');
-  }).catch(function (error) {
 
-    handleError({
-      message: 'Sign out error',
-      body: error
-    });
-  });
-}
 
 function officeRemovalSuccess(data) {
   const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
@@ -1042,10 +1032,6 @@ function getSubscription(office, template) {
   })
 }
 
-function emailReg(email) {
-  const emailRegString = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return emailRegString.test(String(email).toLowerCase())
-}
 
 
 function handleNav(evt) {
@@ -1140,38 +1126,7 @@ CanvasDimension.prototype.getNewDimension = function () {
   }
 }
 
-function emailUpdate(email, callback) {
-  firebase.auth().currentUser.updateEmail(email).then(function () {
-    emailVerification(callback);
-  }).catch(handleEmailError)
-}
 
-function emailVerification(callback) {
-
-  firebase.auth().currentUser.sendEmailVerification().then(function () {
-    snacks('Email verification has been sent.')
-    progressBar.close();
-    callback()
-  }).catch(handleEmailError)
-}
-
-
-function handleEmailError(error) {
-  if (history.state[0] === 'addView') return;
-  progressBar.close()
-  if (error.code === 'auth/requires-recent-login') {
-    const dialog = showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
-    dialog.listen('MDCDialog:closed', function (evt) {
-      if (evt.detail.action !== 'accept') return;
-      if (history.state[0] !== 'profileCheck') {
-        EMAIL_REAUTH = true;
-      }
-      revokeSession();
-    })
-    return;
-  }
-  snacks(error.message);
-}
 
 const phoneFieldInit = (input, dropEl, hiddenInput) => {
 

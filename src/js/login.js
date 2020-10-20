@@ -1,6 +1,6 @@
+var authentication;
 window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-  "sign-in-button",
-  {
+  "sign-in-button", {
     //use size normal to show the captcha :)
     size: "invisible",
     callback: function (response) {
@@ -8,6 +8,65 @@ window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
     },
   }
 );
+
+window.addEventListener('load', () => {
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (!user) return;
+    setTimeout(() => {
+      const queryParams = new URLSearchParams(window.location.search);
+      // after login send custom events to fb analytics and firebase analytics
+      if (authentication && !authentication.additionalUserInfo.isNewUser) {
+        logReportEvent("login");
+        logFirebaseAnlyticsEvent("login", {
+          method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+        });
+
+        if (queryParams && queryParams.has('re_auth')) {
+          return redirect(`/profile_edit?email=${queryParams.get('email')}`)
+        }
+
+        return redirect(
+          `/index.html${
+              window.location.search ? `${window.location.search}` : ""
+            }`
+        );
+      }
+
+      firebase
+        .auth()
+        .currentUser.getIdTokenResult()
+        .then(function (tokenResult) {
+
+          if (isAdmin(tokenResult)) {
+            logReportEvent("Sign Up Admin");
+            setFirebaseAnalyticsUserProperty("isAdmin", "true");
+          } else {
+            logReportEvent("Sign Up");
+          }
+          const signUpParams = {
+            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+          };
+
+          if (queryParams) {
+            signUpParams.source = queryParams.get("utm_source");
+            signUpParams.medium = queryParams.get("utm_medium");
+            signUpParams.campaign = queryParams.get("utm_campaign");
+          }
+          logFirebaseAnlyticsEvent("sign_up", signUpParams);
+          if (queryParams && queryParams.has('re_auth')) {
+            return redirect(`/profile_edit`)
+          }
+          redirect(
+            `/index.html${
+                window.location.search ? `${window.location.search}` : ""
+              }`
+          );
+        });
+    }, 1500)
+  });
+});
+
+
 function isPossiblyValidPhoneNumber(string) {
   return /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/.test(string);
 }
@@ -51,7 +110,7 @@ function inputInsideOtpInput(el) {
   }
   try {
     if (el.value == null || el.value == "") {
-    //   this.foucusOnInput(el.previousElementSibling);
+      //   this.foucusOnInput(el.previousElementSibling);
     } else {
       this.foucusOnInput(el.nextElementSibling);
     }
@@ -82,45 +141,45 @@ function collect_otp() {
   submitPhoneNumberAuthCode();
 }
 
-function goback2(event){
+function goback2(event) {
 
-    var key = event.keyCode || event.charCode;
-    if( key == 8){
-        document.getElementById("otp1").focus();
-    }
+  var key = event.keyCode || event.charCode;
+  if (key == 8) {
+    document.getElementById("otp1").focus();
+  }
 }
 
-function goback3(event){
+function goback3(event) {
 
-    var key = event.keyCode || event.charCode;
-    if( key == 8){
-        document.getElementById("otp2").focus();
-    }
+  var key = event.keyCode || event.charCode;
+  if (key == 8) {
+    document.getElementById("otp2").focus();
+  }
 }
 
-function goback4(event){
+function goback4(event) {
 
-    var key = event.keyCode || event.charCode;
-    if( key == 8){
-        document.getElementById("otp3").focus();
-    }
+  var key = event.keyCode || event.charCode;
+  if (key == 8) {
+    document.getElementById("otp3").focus();
+  }
 }
 
-function goback5(event){
+function goback5(event) {
 
-    var key = event.keyCode || event.charCode;
-    if( key == 8){
-        document.getElementById("otp4").focus();
-    }
+  var key = event.keyCode || event.charCode;
+  if (key == 8) {
+    document.getElementById("otp4").focus();
+  }
 }
 
-function goback6(event){
+function goback6(event) {
 
-    var key = event.keyCode || event.charCode;
-    if( key == 8){
-        document.getElementById("otp6").value="";
-        document.getElementById("otp5").focus();
-    }
+  var key = event.keyCode || event.charCode;
+  if (key == 8) {
+    document.getElementById("otp6").value = "";
+    document.getElementById("otp5").focus();
+  }
 }
 
 
@@ -131,44 +190,8 @@ function submitPhoneNumberAuthCode() {
   confirmationResult
     .confirm(code)
     .then(function (authResult) {
-      // after login send custom events to fb analytics and firebase analytics
-      if (!authResult.additionalUserInfo.isNewUser) {
-        logReportEvent("login");
-        logFirebaseAnlyticsEvent("login", {
-          method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-        });
-        return redirect(
-          `/index.html${
-            window.location.search ? `${window.location.search}` : ""
-          }`
-        );
-      }
-      firebase
-        .auth()
-        .currentUser.getIdTokenResult()
-        .then(function (tokenResult) {
-          if (isAdmin(tokenResult)) {
-            logReportEvent("Sign Up Admin");
-            setFirebaseAnalyticsUserProperty("isAdmin", "true");
-          } else {
-            logReportEvent("Sign Up");
-          }
-          const signUpParams = {
-            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-          };
-          const queryLink = new URLSearchParams(window.location.search);
-          if (queryLink) {
-            signUpParams.source = queryLink.get("utm_source");
-            signUpParams.medium = queryLink.get("utm_medium");
-            signUpParams.campaign = queryLink.get("utm_campaign");
-          }
-          logFirebaseAnlyticsEvent("sign_up", signUpParams);
-          redirect(
-            `/index.html${
-              window.location.search ? `${window.location.search}` : ""
-            }`
-          );
-        });
+      console.log(window.location.search);
+      authentication = authResult;
     })
     .catch(function (error) {
       console.error(error);
@@ -183,31 +206,3 @@ window.intlTelInput(input, {
   separateDialCode: true,
   utilsScript: "external/js/utils.js",
 });
-
-// function countdown() {
-//     var timeLeft = 25;
-// var elem = document.getElementById('some_div');
-// var timerId = setInterval(countdown, 1000);
-//     document.getElementById("resend_otp").style.pointerEvents = "none";
-//     document.getElementById("resend_otp").style.cursor = "default";
-//     document.getElementById('some_div').style.display="block";
-//     document.getElementById("resend_otp").style.color = "#9A9DA0";
-
-//     if (timeLeft == -1) {
-//         clearTimeout(timerId);
-
-//         doSomething();
-//     } else {
-//         elem.innerHTML = "("+timeLeft+")" ;
-//         timeLeft--;
-//     }
-// }
-
-// function doSomething() {
-
-//     document.getElementById("resend_otp").style.pointerEvents = "auto";
-//     document.getElementById('some_div').style.display="none";
-//     document.getElementById("resend_otp").style.cursor = "pointer";
-//     document.getElementById("resend_otp").style.color = "#25456C";
-
-// }

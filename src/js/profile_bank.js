@@ -18,6 +18,7 @@ window.addEventListener('load', (ev) => {
       confirmAcctNumber = document.getElementById('confirm-acc-number').MDCTextField;
       name = document.getElementById('name').MDCTextField;
       phone = document.getElementById('phone-field-mdc').MDCTextField;
+      phone.value = firebase.auth().currentUser.phoneNumber;
       ifsc = document.getElementById('ifsc').MDCTextField;
       const iti = phoneFieldInit(phone.input_);
 
@@ -36,9 +37,22 @@ window.addEventListener('load', (ev) => {
         if (!validPhoneNumber.valid) {
           setHelperInvalid(phone, validPhoneNumber.message);
         }
-        requestCreator('bank')
+        submitBtn.classList.add('in-progress')
+        requestCreator('newBankAccount',{
+          bankAccount: acctNumber.value,
+          ifsc: ifsc.value,
+          name: name.value,
+          
+        }).then((response)=>{
+          console.log(response);
+          setTimeout(()=>{
+            window.history.back()
+          })
+          
+        }).catch(err=>{
+          submitBtn.classList.remomve('in-progress')
+        })
         console.log('done')
-
       })
     }
   })

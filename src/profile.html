@@ -21,8 +21,8 @@
     <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
         <div class="mdc-top-app-bar__row">
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-                <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
-                    aria-label="Open navigation menu">arrow_back</button>
+                <a id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
+                    aria-label="Open navigation menu" href="./home.html">arrow_back</a>
                 <span class="mdc-top-app-bar__title">Profile</span>
             </section>
 
@@ -42,15 +42,16 @@
                             <p id="no_output"></p>
                         </label>
                     </div>
-                    <div class="auth-cont">
-                        <div class="name" id="name"></div>
-                        <div class="mobile" id="mobile"></div>
-                        <div class="email" id="email"></div>
-
+                    <div class="profile-head">
+                        <div class="auth-cont">
+                            <div class="name" id="name"></div>
+                            <div class="mobile" id="mobile"></div>
+                            <div class="email" id="email"></div>
+                        </div>
+                        <span class="material-icons profile_arrow">
+                            keyboard_arrow_right
+                        </span>
                     </div>
-                    <span class="material-icons profile_arrow">
-                        keyboard_arrow_right
-                    </span>
                 </div>
                 <div class="profile-completion hidden">
                     <div class="progress_bar_info">

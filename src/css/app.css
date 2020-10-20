@@ -140,6 +140,9 @@ a {
 .p-10 {
   padding: 10px;
 }
+.p-16 {
+  padding: 16px;
+}
 
 .mb-0 {
   margin-bottom: 0px !important;
