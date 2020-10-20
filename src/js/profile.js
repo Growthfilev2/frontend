@@ -5,7 +5,7 @@ navigator.serviceWorker.onmessage = (event) => {
   console.log("message from worker", event.data);
 };
 
-document.querySelector('.profile-head').addEventListener('click',(ev)=>{
+document.querySelector('.profile-head').addEventListener('click', (ev) => {
   redirect('/profile_edit')
 })
 
@@ -13,7 +13,18 @@ window.addEventListener("load", (ev) => {
   firebase.auth().onAuthStateChanged((user) => {
     loadProfileData(user)
   });
-
+  document.getElementById('file').addEventListener('change', (ev) => {
+    getImageBase64(ev).then(base64 => {
+      document.getElementById('output').src = base64;
+      snacks('Uploading profile image ...')
+      requestCreator('backblaze', {
+        imageBase64: base64
+      }).then(() => {
+        firebase.auth().currentUser.reload();
+        snacks('Profile image uploaded')
+      })
+    })
+  })
   logout.addEventListener('click', (e) => {
     e.preventDefault();
     firebase.auth().signOut().then(() => {
