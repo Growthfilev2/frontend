@@ -57,9 +57,9 @@ const loadProfileData = (user) => {
       document.getElementById("email").innerHTML =
         user.email || "-";
 
-      document.getElementById(
-        "mobile_number"
-      ).innerHTML = user.phoneNumber;
+      // document.getElementById(
+      //   "mobile_number"
+      // ).innerHTML = user.phoneNumber;
       const profileVerificationPercentage = calculateProfileVerification(record);
 
       if (profileVerificationPercentage == 100) return;
