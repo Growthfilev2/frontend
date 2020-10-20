@@ -9,6 +9,7 @@
   <link href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/profile_bank.css">
   <link href="css/app.css" rel="stylesheet" type="text/css">
+
   <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
   <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
   <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
@@ -32,40 +33,32 @@
 
 
 
+    <form id="form-account">
+      <div class="fields">
+        <label class="mdc-text-field mdc-text-field--outlined" id="acct-number">
+          <input type="text" class="mdc-text-field__input" aria-labelledby="my-label-id" required>
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="my-label-id">Bank Account Number</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+        <label class="mdc-text-field mdc-text-field--outlined" id="confirm-acc-number">
+          <input type="text" class="mdc-text-field__input" aria-labelledby="my-label-id" required>
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="my-label-id">Confirm Bank Account Number</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+  
+      </div>
 
-    <div class="fields">
-
-
-
-      <label class="pure-material-textfield-outlined">
-        <input type="text" id="account_number" placeholder=" ">
-        <span>Bank Account Number*</span>
-      </label>
-
-      <label class="pure-material-textfield-outlined">
-        <input type="text" id="account_number_verify" placeholder=" ">
-        <span>Confirm Bank Account Number*</span>
-      </label>
-
-      <label class="pure-material-textfield-outlined">
-        <input type="text" id="ifsc_code" placeholder=" " value="">
-        <span>IFSC Code*</span>
-        <p id="alert_message">* Please enter a valid IFSC number</p>
-      </label>
-
-      <label class="pure-material-textfield-outlined">
-        <input type="text" id="account_holder_name" placeholder=" ">
-        <span>Account Holder*</span>
-      </label>
-
-
-
-
-
-
-      <button id="process_button" type="submit" onclick="bank_validation()">SAVE</button>
-
-    </div>
+    </form>
 
   </div>
 
