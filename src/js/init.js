@@ -11,7 +11,6 @@ var deepLink;
 var firebaseAnalytics;
 var serverTimeUpdated = false;
 
-var isNewUser = false;
 
 window.addEventListener('load', () => {
   if ('serviceWorker' in navigator) {
@@ -203,7 +202,7 @@ function startApp() {
 function getDeepLink() {
   // return new URLSearchParams('?office=Puja Capital&utm_campaign=share_link&action=get-subscription');
   if (deepLink) return deepLink
-  if (isNewUser) return new URLSearchParams('?utm_source=organic')
+  if (isNewUser()) return new URLSearchParams('?utm_source=organic')
   return null;
 }
 
@@ -361,10 +360,14 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  if (!auth.displayName) return redirect('/profile_edit.html?askPhoto=1');
+  if (auth.displayName) return redirect(`/profile_edit.html?askPhoto=1&new_user=${isNewUser()}`);
   redirect('/home.html');
 }
 
+const isNewUser = () => {
+  const metaData = firebase.auth().currentUser.metadata
+  return metaData.creationTime === metaData.lastSignInTime
+}
 
 function checkEmptyIdProofs(record) {
   if (!record.idProof) return true;

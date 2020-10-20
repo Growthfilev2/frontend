@@ -6,7 +6,7 @@ navigator.serviceWorker.onmessage = (event) => {
 };
 
 document.querySelector('.profile-head').addEventListener('click',(ev)=>{
-  redirect('/profile_edit?askPhoto=1')
+  redirect('/profile_edit')
 })
 
 window.addEventListener("load", (ev) => {

@@ -7,6 +7,11 @@ const submitBtn = document.getElementById('submit-btn');
 
 const profileImage = document.getElementById('profile-image');
 
+document.getElementById('upload-image').addEventListener('change',(ev)=>{
+    getImageBase64(ev).then(base64=>{
+        profileImage.src = base64
+    })
+})
 window.addEventListener("load", (ev) => {
     window.mdc.autoInit()
     const searchParams = new URLSearchParams(window.location.search);
@@ -47,7 +52,7 @@ window.addEventListener("load", (ev) => {
                     console.log('name updated');
                     if (user.photoURL !== document.getElementById('profile-image').src) {
                         requestCreator('backblaze', {
-                            base64: document.getElementById('profile-image').src
+                            imageBase64: document.getElementById('profile-image').src
                         })
                         return
                     }
@@ -65,14 +70,17 @@ window.addEventListener("load", (ev) => {
                     return user.sendEmailVerification()
                 }).then((oldVerification) => {
                     console.log(oldVerification)
-                    submitBtn.classList.remove('in-progress')
+                    let timeout = 1
                     if (!oldVerification) {
+                        timeout = 5000
                         console.log('email verification send');
                         snacks('A verification mail has been sent to your inbox. Please click on the link in it to verify your email ID.', 6000);
                     }
                     setTimeout(() => {
+                        submitBtn.classList.remove('in-progress')
+                        if(searchParams.get('new_user') === "true") return redirect('/home')
                         snacks('Profile updated');
-                    }, 5000)
+                    }, timeout)
                 })
                 .catch((error) => {
                     submitBtn.classList.remove('in-progress')
