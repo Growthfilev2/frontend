@@ -430,6 +430,9 @@ a {
   margin-top: 0%;
   display: none;
 }
+.form-submit-btn.in-progress {
+  pointer-events: none;
+}
 
 .form-submit-btn.in-progress .dots {
   display: block;
@@ -476,7 +479,10 @@ form .fields {
   margin: 0 auto;
   padding-bottom: 100px;
 }
+form .form-field {
+  margin-bottom: 10px;
 
+}
 form .form-actionable {
   width: 90%;
   margin: 0 auto;
@@ -492,9 +498,31 @@ form .form-submit-btn {
   width: 100%;
   height: 56px;
   border-radius: 3px;
+  pointer-events: all;
 }
 
 form .fields .mdc-text-field {
   width: 100%;
 }
 
+
+/** iti **/
+.iti__flag {
+  background-image: url("../img/webp/flags.webp"), url("../img/flags.png");
+}
+
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+  .iti__flag {
+    background-image: url("../img/webp/flags@2x.webp"), url("../img/flags@2x.png");
+  }
+}
+
+.mdc-text-field .iti {
+  width: 100%;
+  height: 100%;
+}
+
+.phonenumber-field {
+  padding: 0px;
+}

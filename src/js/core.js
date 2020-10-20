@@ -1179,7 +1179,7 @@ const phoneFieldInit = (input, dropEl, hiddenInput) => {
     initialCountry: "IN",
     formatOnDisplay: true,
     separateDialCode: true,
-    dropdownContainer: dropEl || null,
+    dropdownContainer: dropEl || document.getElementById('country-dom'),
     hiddenInput: hiddenInput || "",
     nationalMode: false
   });
@@ -1212,14 +1212,14 @@ function isAdmin(idTokenResult,office) {
 
 function setHelperInvalid(field, message) {
     field.focus();
-    field.foundation_.setValid(false);
-    field.foundation_.adapter_.shakeLabel(true);
+    field.foundation.setValid(false);
+    field.foundation.adapter.shakeLabel(true);
     field.helperTextContent = message
 }
 
 function setHelperValid(field) {
     field.focus();
-    field.foundation_.setValid(true);
+    field.foundation.setValid(true);
     field.helperTextContent = ''
 
 }

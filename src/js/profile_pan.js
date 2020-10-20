@@ -9,23 +9,23 @@ window.addEventListener('load', (ev) => {
 
       getRootRecord().then(loadPanDetail).catch(console.error);
       const submitBtn = document.getElementById('submit-btn');
-      document.getElementById('pan-upload').addEventListener('change',(evt)=>{
+      document.getElementById('pan-upload').addEventListener('change', (evt) => {
         getImageBase64(evt).then(function (dataURL) {
           loadImage(`${dataURL}`)
         });
       })
-      document.getElementById('pan-form').addEventListener('submit',(ev)=>{
+      document.getElementById('pan-form').addEventListener('submit', (ev) => {
         ev.preventDefault();
         submitBtn.classList.add('in-progress');
-        if(!isPossiblyValidPan(panNumberField.value)) {
-          setHelperInvalid(panNumberField,'Enter correct PAN Number');
+        if (!isPossiblyValidPan(panNumberField.value)) {
+          setHelperInvalid(panNumberField, 'Enter correct PAN Number');
           return
         }
 
         requestCreator('idProof', {
-          pan:{
-            number:panNumberField.value,
-            front:document.querySelector('.upload-image').src
+          pan: {
+            number: panNumberField.value,
+            front: document.querySelector('.upload-image').src
           }
         }).then(function (response) {
           console.log(response)
@@ -38,14 +38,14 @@ window.addEventListener('load', (ev) => {
             store.put(record);
           }
           tx.oncomplete = function () {
-            setTimeout(()=>{
+            setTimeout(() => {
               snacks('PAN uploaded');
               window.history.back();
-            },3000)
+            }, 3000)
           }
         }).catch(function (err) {
           submitBtn.classList.remove('in-progress');
-        });  
+        });
       })
     }
   })
@@ -67,4 +67,3 @@ const loadImage = (src = '../img/pan_sample.png') => {
 const isPossiblyValidPan = (string) => {
   return /^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$/.test(string)
 }
-
