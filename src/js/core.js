@@ -1214,7 +1214,9 @@ function setHelperInvalid(field, message) {
     field.focus();
     field.foundation.setValid(false);
     field.foundation.adapter.shakeLabel(true);
-    field.helperTextContent = message
+    if(message) {
+      field.helperTextContent = message
+    }
 }
 
 function setHelperValid(field) {

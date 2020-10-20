@@ -21,42 +21,21 @@ window.addEventListener('load', (ev) => {
       ifsc = document.getElementById('ifsc').MDCTextField;
       const iti = phoneFieldInit(phone.input_);
 
-      getRootRecord().then(fillAccount).catch(console.error)
       document.getElementById('form-account').addEventListener('submit', (ev) => {
-        [acctNumber,confirmAcctNumber,name,phone,ifsc]
+        ev.preventDefault();
+        
+        if(!validateIFSC(ifsc.value)) {
+          setHelperInvalid(ifsc.input_);
+          return;
+        }
+        if()
       })  
     }
   })
 })
 
-const fillAccount = (record) => {
-  const account = record.linkedAccount[0];
-  if (!hasBankAccount(record)) {
-    document.querySelector('.confirm-acc-number-cont').classList.remove('hidden');
-    return
-  };
-
-  submitBtn.querySelector('.mdc-button__label').textContent = 'UPDATE';
-  acctNumber.value = '';
-  acctNumber.label_.root.textContent = `Account number (${account.bankAccount})`
-  acctNumber.input_.setAttribute('placeholder', 'Re-enter Bank Account Number');
-
-  name.value = account.name || '';
-  phone.value = account.phone || firebase.auth().currentUser.phoneNumber;
-  ifsc.value = account.ifsc;
-  // setFieldsDisabled();
-}
-const setFieldsDisabled = () => {
-  acctNumber.disabled = true;
-  name.disabled = true;
-  phone.disabled = true;
-  ifsc.disabled = true;
-}
 
 
-const hasBankAccount = (record) => {
-  return record.linkedAccount && record.linkedAccount[0]
-}
 const validateIFSC = (string) => {
   return /^[A-Za-z]{4}[a-zA-Z0-9]{7}$/.test(string)
 }
