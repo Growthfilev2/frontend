@@ -28,3 +28,7 @@
 .upload-background .mdc-button {
     margin-top: 15px;
 }
+
+.aadhar-upload:nth-child(3) {
+    margin-top: 10px;
+}

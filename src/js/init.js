@@ -361,7 +361,7 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  if (auth.displayName) return redirect('/profile.html');
+  if (auth.displayName) return redirect('/profile');
   redirect('/home.html');
 }
 

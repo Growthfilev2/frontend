@@ -5,108 +5,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
+    <link href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css" rel="stylesheet">
 
-    
     <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/id-proof.css">
 
-  
-    <script src="js/profile_aadhaar.js"></script>
-  
+    <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+    <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+    <script defer src="js/config.js"></script>
 
-   
-
-    <link
-        href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
-        rel="stylesheet"/>
-        <link href="external/css/material.min.css" rel="stylesheet">
-        <script src="external/js/material.min.js"></script>
-        <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
-  <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
-  <script defer src="js/config.js"></script>
- 
-  <link rel="stylesheet"  type="text/css" href="css/profile_aadhaar.css">
-
-    <!-- NO app.css Included, all styles of profile_aadhaar.html are in profile_aadhaar.css -->
 </head>
 
-<body>
+<body class="mdc-typography">
 
-    <header class="mdc-top-app-bar mdc-top-app-bar--fixed" >
-        <div class="mdc-top-app-bar__row" >
-          <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-            <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"  aria-label="Open navigation menu"><a href="profile.html">arrow_back</a></button>
-            <span class="mdc-top-app-bar__title">Aadhaar Card Details</span>
-          </section>
-          
-        </div>
-      </header>
-
-    <div id="edit_profile">
-
-        
-
-        
-
-        <div class="fields">
-
-
-            <label class="pure-material-textfield-outlined">
-                <input type="text" id="aadhaar_number" placeholder=" " value="">
-                <span id="display_aadhar">Aadhaar Number*</span>
-                <p id="alert_message">* Please enter a valid AADHAR number</p>
-            </label>
-
-           
-
-            <p class="info_text">Upload Picture*</p>
-
-            <div class="background_front">
-                <div class="aadhaar_front">
-
-                    <input type="file" accept="image/*" name="image" id="file_front" onchange="load_front(event)"
-                        style="display: none;">
-
-                    <label for="file_front"> <img id="output_front" />
-                        <br>
-                        <span class="aadhaar_front_text"><span class="material-icons">
-                            add_a_photo 
-                            </span> &nbsp  Aadhaar Front</span>
-
-                </div>
-
-                
-
-            </div>
-
-            
-            <div class="background_back">
-                <div class="aadhaar_back">
-
-                    <input type="file" accept="image/*" name="image" id="file_back" onchange="load_back(event)"
-                        style="display: none;">
-
-                    <label  for="file_back"> <img id="output_back" />
-                        <br>
-                        <span class="aadhaar_back_text"><span class="material-icons">
-                            add_a_photo 
-                            </span> &nbsp  Aadhaar Back</span>
-
-                </div>
-
-                
-
-            </div>
-
-            <button id="process_button" type="submit" id="aadhaar_submit" onclick="aadhaar_validation()">SAVE</button>
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
+        <div class="mdc-top-app-bar__row">
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
+                    aria-label="Open navigation menu"><a href="profile.html">arrow_back</a></button>
+                <span class="mdc-top-app-bar__title">Aadhar Card Details</span>
+            </section>
 
         </div>
+    </header>
 
+    <div id="edit_profile" class="mdc-top-app-bar--fixed-adjust">
+        <form id="aadhar-form">
+            <div class="fields">
+                <div class="aadhar-number">
+                    <label class="mdc-text-field mdc-text-field--outlined" id="aadhar-number">
+                        <input type="text" class="mdc-text-field__input" aria-labelledby="my-label-id" required>
+                        <span class="mdc-notched-outline">
+                            <span class="mdc-notched-outline__leading"></span>
+                            <span class="mdc-notched-outline__notch">
+                                <span class="mdc-floating-label" id="my-label-id">Aadhar Number</span>
+                            </span>
+                            <span class="mdc-notched-outline__trailing"></span>
+                        </span>
+                    </label>
+                    <div class="mdc-text-field-helper-line">
+                        <div class="mdc-text-field-helper-text" aria-hidden="true">Invalid Aadhar Number</div>
+                    </div>
+                </div>
+                <div class="aadhar-upload">
+                    <p class="info_text">Upload Picture*</p>
+                    <div class="upload-background">
+                        <img src="../img/aadhaar_front.png" class="upload-image aadhar-front">
+
+                        <label for="aadhar-front-upload" class="mdc-theme--primary">
+                            <input type="file" class="hidden" id="aadhar-front-upload" accept="image/jpeg">
+                            <i class="material-icons">add_a_photo</i>Aadhar FRONT
+                        </label>
+                    </div>
+                </div>
+                <div class="aadhar-upload">
+                    <div class="upload-background">
+                        <img src="../img/aadhaar_back.png" class="upload-image aadhar-back">
+
+                        <label for="aadhar-back-upload" class="mdc-theme--primary">
+                            <input type="file" class="hidden" id="aadhar-back-upload" accept="image/jpeg">
+                            <i class="material-icons">add_a_photo</i>Aadhar Back
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actionable">
+                <button class="mdc-button mdc-button--raised form-submit-btn" type="submit" id="submit-btn">
+                    <div class="dots">
+                        <div class="dot dot1"></div>
+                        <div class="dot dot2"></div>
+                        <div class="dot dot3"></div>
+                    </div>
+                    <!-- <div class="straight-loader"></div> -->
+                    <span class="mdc-button__label">Submit</span>
+                </button>
+            </div>
+        </form>
     </div>
-
-    
-  <script defer src="js/core.js"></script>
-
+    <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/profile_aadhaar.js"></script>
 </body>
-
 
 </html>

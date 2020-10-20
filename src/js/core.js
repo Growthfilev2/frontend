@@ -520,18 +520,21 @@ function handleError(error) {
 
 
 
-function snacks(message, text, callback, timeout) {
-  snackBar.labelText = message;
-  snackBar.open();
-  snackBar.timeoutMs = timeout || 4000
-  snackBar.actionButtonText = text ? text : 'Okay';
-
-  snackBar.listen('MDCSnackbar:closed', function (evt) {
-    if (evt.detail.reason !== 'action') return;
-    if (callback && typeof callback === 'function') {
-      callback()
-    }
+function snacks(message, timeout) {
+  const el = createElement('div',{
+    className:'mdc-snackbar'
   })
+  el.innerHTML = `<div class="mdc-snackbar__surface">
+  <div class="mdc-snackbar__label"
+       role="status"
+       aria-live="polite">
+      ${message}
+  </div>
+</div>`
+  document.body.appendChild(el);
+  const snackBar = new mdc.snackbar.MDCSnackbar(el);
+  snackBar.timeoutMs = timeout || 4000
+  snackBar.open();
 }
 
 
@@ -734,7 +737,7 @@ function initApp() {
 }
 // ends
 
-const apiHandler = new Worker('js/apiHandler.js?version=198');
+const apiHandler = new Worker('../js/apiHandler.js?version=198');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -1204,4 +1207,19 @@ function isAdmin(idTokenResult,office) {
   if (!idTokenResult.claims.admin.length) return;
   if(!office) return true;
   return idTokenResult.claims.admin.indexOf(office) > -1
+}
+
+
+function setHelperInvalid(field, message) {
+    field.focus();
+    field.foundation_.setValid(false);
+    field.foundation_.adapter_.shakeLabel(true);
+    field.helperTextContent = message
+}
+
+function setHelperValid(field) {
+    field.focus();
+    field.foundation_.setValid(true);
+    field.helperTextContent = ''
+
 }

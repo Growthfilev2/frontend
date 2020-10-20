@@ -474,6 +474,7 @@ form .fields {
   padding: 16px;
   max-width: 600px;
   margin: 0 auto;
+  padding-bottom: 100px;
 }
 
 form .form-actionable {
