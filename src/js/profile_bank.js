@@ -23,13 +23,23 @@ window.addEventListener('load', (ev) => {
 
       document.getElementById('form-account').addEventListener('submit', (ev) => {
         ev.preventDefault();
-        
-        if(!validateIFSC(ifsc.value)) {
-          setHelperInvalid(ifsc.input_);
+
+        if (!validateIFSC(ifsc.value)) {
+          setHelperInvalid(ifsc);
           return;
         }
-        if()
-      })  
+        if (confirmAcctNumber.value !== acctNumber.value) {
+          setHelperInvalid(confirmAcctNumber);
+          return;
+        }
+        const validPhoneNumber = isPhoneNumberValid(iti);
+        if (!validPhoneNumber.valid) {
+          setHelperInvalid(phone, validPhoneNumber.message);
+        }
+        requestCreator('bank')
+        console.log('done')
+
+      })
     }
   })
 })
@@ -38,4 +48,48 @@ window.addEventListener('load', (ev) => {
 
 const validateIFSC = (string) => {
   return /^[A-Za-z]{4}[a-zA-Z0-9]{7}$/.test(string)
+}
+
+
+
+const isPhoneNumberValid = (iti) => {
+  var errorCode = iti.getValidationError();
+  const result = {
+    message: '',
+    valid: false
+  }
+  if (errorCode) {
+    result.message = getPhoneFieldErrorMessage(errorCode);
+    return result
+  }
+  if (!iti.isValidNumber()) {
+    result.message = 'Invalid number';
+    return result
+  }
+  result.valid = true;
+  return result;
+}
+
+const getPhoneFieldErrorMessage = (code) => {
+  let message = ''
+  switch (code) {
+    case 1:
+      message = 'Please enter a correct country code';
+      break;
+
+    case 2:
+      message = 'Number is too short';
+      break;
+    case 3:
+      message = 'Number is too long';
+      break;
+    case 4:
+      message = 'Invalid Number'
+      break;
+
+    default:
+      message = ''
+      break
+  }
+  return message;
 }
