@@ -16,12 +16,12 @@ window.addEventListener('load', (ev) => {
       })
       document.getElementById('pan-form').addEventListener('submit', (ev) => {
         ev.preventDefault();
-        submitBtn.classList.add('in-progress');
+       
         if (!isPossiblyValidPan(panNumberField.value)) {
           setHelperInvalid(panNumberField, 'Enter correct PAN Number');
           return
         }
-
+        submitBtn.classList.add('in-progress');
         requestCreator('idProof', {
           pan: {
             number: panNumberField.value,
@@ -35,11 +35,12 @@ window.addEventListener('load', (ev) => {
           store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
             const record = event.target.result;
             record.pan.front = response.pan.front;
+            record.pan.number = response.pan.number
             store.put(record);
           }
           tx.oncomplete = function () {
+            snacks('PAN uploaded');
             setTimeout(() => {
-              snacks('PAN uploaded');
               window.history.back();
             }, 3000)
           }

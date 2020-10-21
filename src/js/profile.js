@@ -22,7 +22,6 @@ document.getElementById('file').addEventListener('change', (ev) => {
 })
 
 window.addEventListener("load", (ev) => {
-  alert("askldasdjlasd")
   firebase.auth().onAuthStateChanged((user) => {
     loadProfileData(user)
   });
@@ -70,13 +69,13 @@ const loadProfileData = (user) => {
       document.getElementById('progress-bar').style.width = `${profileVerificationPercentage}%`;
 
       const profileBtnsCont = document.getElementById('profile-completion-buttons')
-      if (!record.linkedAccount) {
+      if (!hasBankAccount(record)) {
         profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank'))
       }
       if (!record.pan) {
         profileBtnsCont.appendChild(createProfileBtn('Add pan card', './profile_pan'))
       }
-      if (!record.linkedAccount) {
+      if (!record.aadhar) {
         profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhar'))
       }
     })
@@ -109,7 +108,7 @@ const createProfileBtn = (name, href) => {
 }
 
 const calculateProfileVerification = (rootRecord) => {
-  const fields = [rootRecord.linkedAccount, rootRecord.pan, rootRecord.aadhar];
+  const fields = [rootRecord.linkedAccounts, rootRecord.pan, rootRecord.aadhar];
   return ((fields.filter(value => value).length / fields.length) * 100).toFixed(0)
 }
 

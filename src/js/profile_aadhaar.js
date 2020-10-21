@@ -64,11 +64,12 @@ window.addEventListener('load', (ev) => {
             const record = event.target.result;
             record.aadhar.front = response.aadhar.front;
             record.aadhar.back = response.aadhar.back;
+            record.aadhar.number = response.aadhar.number;
             store.put(record);
           }
           tx.oncomplete = function () {
+            snacks('Aadhar uploaded');
             setTimeout(()=>{
-              snacks('Aadhar uploaded');
               window.history.back();
             },3000)
           }

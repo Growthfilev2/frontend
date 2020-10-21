@@ -5,18 +5,30 @@ window.addEventListener('load', (ev) => {
         req.onsuccess = function (e) {
             db = req.result;
             getRootRecord().then(record => {
-                if (!hasBankAccount(record)) {
-                    return
-                }
-                window.history.replaceState(record.linkedAccount[0], null, window.location.pathname)
-                document.getElementById('bank-list').appendChild(createBankAccountLi(record.linkedAccount[0]));
-                document.getElementById('bank-list').appendChild(createElement('li', {
-                    className: 'mdc-list-divider'
-                }))
+
+                accountList(record)
+                requestCreator('now').then(res => {
+                    accountList(res)
+                }).catch(console.error)
+
             })
         }
     })
 })
+
+const accountList = (rootRecord) => {
+    if (!hasBankAccount(rootRecord)) return;
+    const list = document.getElementById('bank-list')
+    if(!list) return
+
+    const account = rootRecord.linkedAccounts[0];
+    window.history.replaceState(account, null, window.location.pathname)
+    list.innerHTML = ''
+    list.appendChild(createBankAccountLi(account));
+    list.appendChild(createElement('li', {
+        className: 'mdc-list-divider'
+    }))
+}
 
 window.addEventListener('popstate', (ev) => {
     console.log(ev)
@@ -46,16 +58,16 @@ const loadAccountView = (account) => {
         <div class='mdc-typography--headline6'>Account information</div>
         <div class='ml-20 mdc-typography--headline6'>
             <div>${account.name}</div>
-            <div>${account.phonenumber}</div>
+            <div>${account.bankPhoneNumber}</div>
         </div>
     </div>
     `;
 }
 
 const hasBankAccount = (record) => {
-    if (!record.linkedAccount) return;
-    if (!Array.isArray(record.linkedAccount)) return;
-    if (!record.linkedAccount[0]) return;
+    if (!record.linkedAccounts) return;
+    if (!Array.isArray(record.linkedAccounts)) return;
+    if (!record.linkedAccounts[0]) return;
 
     return true
 }

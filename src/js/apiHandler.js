@@ -100,7 +100,7 @@ function handleNow(eventData, db) {
     rootObjectStore.get(eventData.meta.user.uid).onsuccess = function (event) {
       rootRecord = event.target.result
       rootRecord.serverTime = response.timestamp - Date.now()
-      rootRecord.linkedAccount = response.linkedAccounts || null;
+      rootRecord.linkedAccounts = response.linkedAccounts || null;
       let idProof = response.idProof || {}
       rootRecord.pan = idProof.pan;
       rootRecord.aadhar = idProof.aadhar;

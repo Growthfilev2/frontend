@@ -42,13 +42,13 @@ window.addEventListener('load', (ev) => {
           bankAccount: acctNumber.value,
           ifsc: ifsc.value,
           name: name.value,
-          
+          bankPhoneNumber:iti.getNumber(intlTelInputUtils.numberFormat.E164)
         }).then((response)=>{
           console.log(response);
+          snacks('Bank account added')
           setTimeout(()=>{
             window.history.back()
-          })
-          
+          },4000)
         }).catch(err=>{
           submitBtn.classList.remomve('in-progress')
         })
