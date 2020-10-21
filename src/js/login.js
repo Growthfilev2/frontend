@@ -26,7 +26,7 @@ window.addEventListener('load', () => {
         }
 
         return redirect(
-          `/index.html${
+          `/${
               window.location.search ? `${window.location.search}` : ""
             }`
         );
@@ -57,7 +57,7 @@ window.addEventListener('load', () => {
             return redirect(`/profile_edit`)
           }
           redirect(
-            `/index.html${
+            `/${
                 window.location.search ? `${window.location.search}` : ""
               }`
           );

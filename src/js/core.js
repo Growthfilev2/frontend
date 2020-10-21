@@ -731,7 +731,7 @@ function html5Geolocation() {
 function initApp() {
   firebase.auth().onAuthStateChanged(function(user) {
     if (!user) {
-      redirect('/login.html');
+      redirect('/login');
     } 
   });
 }
