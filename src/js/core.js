@@ -1290,9 +1290,10 @@ Dialog.prototype.create = function (type) {
         className: 'mdc-dialog__scrim'
     }))
 
-    const dialogParent = document.getElementById('dialog-container')
-    dialogParent.innerHTML = ''
-    dialogParent.appendChild(parent)
+    document.body.appendChild(parent)
+    // const dialogParent = document.getElementById('dialog-container')
+    // dialogParent.innerHTML = ''
+    // dialogParent.appendChild(parent)
     return new mdc.dialog.MDCDialog(parent);
 }
 
