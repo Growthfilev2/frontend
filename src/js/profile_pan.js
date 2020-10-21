@@ -1,6 +1,7 @@
 let db;
 let panNumberField;
 window.addEventListener('load', (ev) => {
+  alert("123123")
   firebase.auth().onAuthStateChanged(user => {
     const req = window.indexedDB.open(user.uid);
     req.onsuccess = function (e) {
