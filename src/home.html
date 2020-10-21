@@ -3,15 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
     <title>Document</title>
 
     <link rel="stylesheet" href="css/home.css" />
-    <link href="css/app.css" rel="stylesheet" type="text/css" />
+   <link href="css/app.css" rel="stylesheet" type="text/css" />
 
     <link
       href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+      rel="stylesheet"
+    />
+
+    <!-- <script src="external/js/material.min.js"></script>
+    <link rel="stylesheet" href="external/css/material.min.css" /> -->
 
     <script
       defer
@@ -33,16 +41,131 @@
           target="_blank"
           ><img src="img/generic.svg" width="24px" height="24px" alt="info"
         /></a>
+
       </span>
+
+      
+      <span id="profile_pic">
+       
+        <a  href="profile.html"><img id="pfp" src=""  width="24px" height="24px"></a>
+      </span>
+
+
 
       <span id="camera_upload"
         ><img src="img/upload_camera.svg" alt="upload"
       /></span>
       <p id="home_text">Home</p>
     </header>
+    <div class="mdc-top-app-bar--fixed-adjust">
+      <div id="current_duty_card">
+        <div id="current_text">
+          <p class="header">Current Duty</p>
+          <p id="location">
+            <span class="material-icons-outlined"> location_on </span>&nbsp
+            &nbsp<span id="current_location">saasd</span>
+          </p>
+  
+          <p id="checkin_time">
+            <span class="material-icons-outlined"> query_builder </span>&nbsp
+            &nbsp<span id="current_interval">
+              <span id="starting_time">00:</span>-
+              <span id="ending_time">(On Going)</span></span
+            >
+          </p>
+          <p>
+            <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
+              id="total_time"
+              >asdas</span
+            >
+          </p>
+        </div>
+        <div id="finish_button">
+          <button id="finish">FINISH</button>
+        </div>
+      </div>
+  
+      <div id="month_card"> 
+        
+      </div>
+  
+      <span id="day_div_expand"></span>
 
-    <hr id="margin_line" />
+    </div>
+    
+      
+    
 
+
+       <!-- <div id="on_card">
+        
+        <p id="month_date">asd</p>
+        
+        <p id="days_worked">sadw33</p>
+        
+      </div>
+
+      <div id="collapsed" style="display: none;">
+
+        <div id="date_day"> <p id="duty_date">19</p> <p id="duty_day">SAT</p></div>
+        <div id="duty_div">
+          <div id="collapsed_duty">
+          <p><span class="material-icons">
+          location_on
+          </span><span id="duty_address">new Delhi</span>
+        </p>
+        <p>
+          <span class="material-icons">
+          timer
+          </span><span id="total_hours">10h</span>&nbsp&nbsp&nbsp <span class="material-icons">
+            work
+            </span><span id="total_duties">10</span>
+          </p>
+          </div> -->
+       
+        <!-- <div id="expended_duty" style="display: block;">
+         
+            
+           <p id="expended_location">
+              <span class="material-icons-outlined"> location_on </span>&nbsp
+              &nbsp<span id="expended_location">saasd</span>
+            </p>
+    
+            <p id="expended_checkin_time">
+              <span class="material-icons-outlined"> query_builder </span>&nbsp
+              &nbsp<span id="expended_interval">
+                <span id="expended_starting_time">00:</span>-
+                <span id="expended_ending_time">00</span></span
+              >
+            </p>
+            <p>
+              <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
+                id="expended_total_time"
+                >asdas</span>
+            </p>
+          
+        </div> -->
+
+<!--         
+      </div>
+      </div>
+
+       --> 
+
+
+
+   
+    
+
+
+
+
+    
+
+    <script src="js/home.js"></script>
     <script defer src="js/core.js"></script>
+    <script src="js/job.js"></script>
+    <script src="external/js/moment.min.js"></script>
+    
   </body>
 </html>
