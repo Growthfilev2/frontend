@@ -22,7 +22,6 @@ document.getElementById('file').addEventListener('change', (ev) => {
 })
 
 window.addEventListener("load", (ev) => {
-  alert("askldasdjlasd")
   firebase.auth().onAuthStateChanged((user) => {
     loadProfileData(user)
   });
