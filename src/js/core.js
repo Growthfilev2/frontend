@@ -1182,3 +1182,128 @@ function setHelperValid(field) {
     field.helperTextContent = ''
 
 }
+
+function handleLocationError(error) {
+  let alertDialog;
+  switch (error.message) {
+    case 'THRESHOLD EXCEED':
+      handleCheckin(error.body.geopoint)
+      break;
+
+    case 'BROKEN INTERNET CONNECTION':
+      
+      alertDialog = new Dialog('Internet disconnected', 'You are offline. Please check your internet connection and try again').create();
+      alertDialog.open();
+      break;
+
+    case 'TURN ON YOUR WIFI':
+
+      alertDialog = new Dialog('Turn on your WiFi', 'Turn on WiFi to help OnDuty detect your location accurately').create();
+      alertDialog.open();
+      break;
+
+    default:
+      handleError({
+        message: error.message,
+        body: {
+          reason: error.body || error,
+          stack: error.stack || ''
+        }
+      })
+
+      alertDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again').create();
+      alertDialog.open();
+      break;
+  }
+}
+
+
+function Dialog(title, content, id) {
+    this.title = title;
+    this.content = content;
+    this.id = id;
+
+}
+
+Dialog.prototype.create = function (type) {
+    const parent = createElement('div', {
+        className: 'mdc-dialog',
+        role: 'alertDialog',
+        id: this.id
+    })
+    parent.setAttribute('aria-modal', 'true')
+    parent.setAttribute('aria-labelledby', 'Title')
+    parent.setAttribute('aria-describedby', 'content')
+    const container = createElement('div', {
+        className: 'mdc-dialog__container'
+    })
+    const surface = createElement('div', {
+        className: 'mdc-dialog__surface'
+    })
+    const h2 = createElement('h2', {
+        className: 'mdc-dialog__title',
+    })
+    h2.innerHTML = this.title
+    this.footer = createElement('footer', {
+        className: 'mdc-dialog__actions'
+    })
+    const contentContainer = createElement('div', {
+        className: 'mdc-dialog__content'
+    });
+
+    if (this.content instanceof HTMLElement) {
+        contentContainer.appendChild(this.content)
+    } else {
+        contentContainer.innerHTML = this.content
+    }
+
+    if (this.title) {
+        surface.appendChild(h2)
+    }
+    surface.appendChild(contentContainer);
+    if (type !== 'simple') {
+
+        this.cancelButton = createElement('button', {
+            className: 'mdc-button mdc-dialog__button',
+            type: 'button',
+            textContent: 'Close'
+        })
+        this.cancelButton.setAttribute('data-mdc-dialog-action', 'close');
+        this.cancelButton.style.marginRight = 'auto';
+
+        this.okButton = createElement('button', {
+            className: 'mdc-button mdc-dialog__button',
+            type: 'button',
+            textContent: 'Okay'
+        });
+
+
+        this.okButton.setAttribute('data-mdc-dialog-action', 'accept')
+        this.footer.appendChild(this.cancelButton)
+        this.footer.appendChild(this.okButton);
+        surface.appendChild(this.footer)
+    }
+
+    container.appendChild(surface)
+    parent.appendChild(container);
+    parent.appendChild(createElement('div', {
+        className: 'mdc-dialog__scrim'
+    }))
+
+    const dialogParent = document.getElementById('dialog-container')
+    dialogParent.innerHTML = ''
+    dialogParent.appendChild(parent)
+    return new mdc.dialog.MDCDialog(parent);
+}
+
+function dialogButton(name, action) {
+    const button = createElement('button', {
+        className: 'mdc-button mdc-dialog__button',
+        type: 'button',
+        textContent: name
+    });
+
+
+    button.setAttribute('data-mdc-dialog-action', action)
+    return button;
+}

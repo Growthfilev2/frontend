@@ -91,7 +91,7 @@ const loadApp = () => {
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
   if (!window.Worker && !window.indexedDB) {
-    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile  is incompatible with this device').create();
+    const incompatibleDialog = new Dialog('App Incompatiblity', 'OnDuty is incompatible with this device').create();
     incompatibleDialog.open();
     return;
   }
@@ -348,7 +348,7 @@ function noOfficeFoundScreen() {
       <div class='text-container'>
         <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>
         <p class='mdc-typography--body1'>
-          Please contact your administrator
+          No office found in OnDuty. Please contact your administrator
         </p>
       </div>
     </div>
@@ -739,39 +739,6 @@ function failureScreen(error, callback) {
   })
 }
 
-function handleLocationError(error) {
-  let alertDialog;
-  switch (error.message) {
-    case 'THRESHOLD EXCEED':
-      handleCheckin(error.body.geopoint)
-      break;
-
-    case 'BROKEN INTERNET CONNECTION':
-
-      alertDialog = new Dialog(error.message, 'Please Check Your Internet Connection').create();
-      alertDialog.open();
-      break;
-
-    case 'TURN ON YOUR WIFI':
-
-      alertDialog = new Dialog(error.message, 'Enabling Wifi Will Help Growthfile Accurately Detect Your Location').create();
-      alertDialog.open();
-      break;
-
-    default:
-      handleError({
-        message: error.message,
-        body: {
-          reason: error.body || error,
-          stack: error.stack || ''
-        }
-      })
-
-      alertDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
-      alertDialog.open();
-      break;
-  }
-}
 
 function mapView(location) {
 
