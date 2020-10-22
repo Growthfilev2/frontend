@@ -214,7 +214,7 @@ function regulator() {
     var prom;
     loadScreen('loading');
 
-    if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
+    if (appKey.getMode() === 'dev') {
       prom = Promise.resolve();
     } else {
       prom = requestCreator('fcmToken', {
@@ -248,7 +248,7 @@ function regulator() {
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        if (window.location.hostname === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
+        if (window.location.hostname === 'localhost') return Promise.resolve();
 
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);

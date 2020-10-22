@@ -24,8 +24,21 @@ firebase.auth().onAuthStateChanged(user => {
 })
 
 
-const files = ['/', 'css/app.css', 'index.html', 'js/core.js', 'js/config.js']
-const staticCacheName = 'pages-cache-v2';
+const files = ['/',
+    'css/app.css',
+    'index.html',
+    'js/core.js',
+    'js/config.js',
+    'js/init.js',
+    'js/checkin.js',
+    'external/js/intl-utils.js',
+    'external/js/intlTelInput.min.js',
+    'external/js/moment.min.js',
+    'external/img/flags.png',
+    'external/img/flags@2x.png',
+    'external/css/intlTelInput.css'
+]
+const staticCacheName = 'pages-cache-v32';
 
 console.log("there is a change")
 // Listen for install event, set callback
@@ -42,23 +55,22 @@ self.addEventListener('activate', function (event) {
     console.log('Activating new service worker...');
 
     const cacheAllowlist = [staticCacheName];
-  
+
     event.waitUntil(
-      caches.keys().then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheAllowlist.indexOf(cacheName) === -1) {
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheAllowlist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
     );
 
 });
 
 self.addEventListener('fetch', (event) => {
-    // console.log('Fetch event for ', event.request.url);
 
     event.respondWith(
         caches.match(event.request)
@@ -68,11 +80,16 @@ self.addEventListener('fetch', (event) => {
                 return response;
             }
             // console.log('Network request for ', event.request.url);
-            return fetch(event.request).then(response => {
-                return caches.open(staticCacheName).then(cache => {
-                    cache.put(event.request.url, response.clone());
-                    return response;
-                });
+            return fetch(event.request).then(fetchResponse => {
+
+                if (fetchResponse.headers.has('content-type') && matchContentType(fetchResponse.headers.get('content-type'))) {
+                    console.log('caching', event.request.url, fetchResponse.headers.has('content-type') ? fetchResponse.headers.get('content-type') : '');
+                    return caches.open(staticCacheName).then(cache => {
+                        cache.put(event.request.url, fetchResponse.clone());
+                        return fetchResponse
+                    });
+                }
+                return fetchResponse
             });
 
 
@@ -83,6 +100,10 @@ self.addEventListener('fetch', (event) => {
         })
     );
 })
+
+const matchContentType = (contentType) => {
+    return contentType.match(/^text\/css|application\/javascript|font\/|image\/*/i)
+}
 
 self.addEventListener('message', (event) => {
 

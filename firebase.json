@@ -9,17 +9,10 @@
     "cleanUrls":true,
     "headers": [
       {
-        "source": "**/*.@(jpg|jpeg|gif|png|js|css|html)",
+        "source":"/**",
         "headers": [{
           "key": "Cache-Control",
-          "value": "must-revalidate, max-age=3600"
-        }]
-      },
-      {
-        "source": "404.html",
-        "headers": [{
-          "key": "Cache-Control",
-          "value": "max-age=300"
+          "value": "no-cache"
         }]
       }
     ]
