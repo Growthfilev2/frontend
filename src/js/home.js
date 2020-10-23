@@ -204,7 +204,8 @@ function readduty() {
             // if month variable is not equal to current month value
             // create a new card
 
-
+          
+            
 
             if (month != moment(date, 'DD/MM/YYYY').month()) {
 
@@ -229,12 +230,23 @@ function readduty() {
                     
                                       
                 }
+
                 if( pre_month == month){
                     monthCard.style.display="block"
                     
-                                      
                 }
+                
+            //     document.getElementById("show_more_b").addEventListener("click", function(){
 
+
+            //        // document.getElementById("show_more_b").style.display ="none";
+                  
+            //         monthCard.style.display ="block";
+
+            //         addStyle(styles)
+            // })
+               
+           
             
                 
                 one_month = month_array[moment(date, 'DD/MM/YYYY').month()];
@@ -265,10 +277,7 @@ function readduty() {
                 
             }
 
-            document.getElementById("show_more_b").addEventListener("click", function(){
-                monthCard.style.display="block"
-                document.getElementById("show_more_b").style.display="none"
-            })
+           
            
             daysWorkedInMonth++
             monthCard.querySelector('.total-days-worked').innerHTML = "Days Worked: " + daysWorkedInMonth+" Days/ "+ total_working_day +" Days"
@@ -299,7 +308,7 @@ function readduty() {
               <div id="collapsed_duty2" >
               <p><span class="material-icons">
               location_on
-              </span><span id="duty_address2">${date_objects[date].totalLocationsString.substring(0, 21)}  ${date_objects[date].totalDuties == 1 ? " " : date_objects[date].totalDuties-1 + " Others"} </span>
+              </span><span id="duty_address2">${date_objects[date].totalLocationsString.substring(0, 21) }  ${date_objects[date].totalDuties == 1 ? " " : date_objects[date].totalDuties-1 + " Others"} </span>
             </p>
             <p>
               <span class="material-icons">
@@ -371,7 +380,7 @@ function readduty() {
                         card.querySelector('.duties-list').appendChild(collapsed)
     
     
-                        var assignees_displayname = j.assignees[0].displayName
+                        var assignees_displayname = j.assignees[0].displayName 
                         var assignees_phonenumber = j.assignees[0].phoneNumber
                         var assignees_photo = j.assignees[0].photoURL
     
@@ -441,9 +450,10 @@ function readduty() {
                     })
             });
             
-          
+           
 
             monthCard.appendChild(card)
+            
             document.body.appendChild(monthCard)
 
             var first_month = new Date();
@@ -494,6 +504,37 @@ function readduty() {
 
             
         }
+
+       
     }
+
+    
 }
 
+
+ 
+ function addStyle(styles) { 
+              
+    
+    var css = document.createElement('style'); 
+    css.type = 'text/css'; 
+
+    if (css.styleSheet)  
+        css.styleSheet.cssText = styles; 
+    else  
+        css.appendChild(document.createTextNode(styles)); 
+      
+    
+    document.getElementsByTagName("head")[0].appendChild(css); 
+} 
+  
+
+var styles = '#month-card { display: block }'; 
+
+  
+
+document.getElementById("show_more_b").addEventListener("click", function(){
+  document.getElementById("show_more_b").style.display ="none";
+  addStyle(styles)
+
+})
