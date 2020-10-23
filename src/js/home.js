@@ -1,510 +1,499 @@
 var database;
 
 window.addEventListener("load", (ev) => {
-  firebase.auth().onAuthStateChanged((user) => {
-    const dbName = firebase.auth().currentUser.uid;
-    const request = window.indexedDB.open(dbName, DB_VERSION);
+    firebase.auth().onAuthStateChanged((user) => {
+        const dbName = firebase.auth().currentUser.uid;
+        const request = window.indexedDB.open(dbName, DB_VERSION);
 
-    request.onerror = function (event) {
-      console.log("Why didn't you allow my web app to use IndexedDB?!");
-    };
-    request.onsuccess = function (event) {
-      db = event.target.result;
+        request.onerror = function (event) {
+            console.log("Why didn't you allow my web app to use IndexedDB?!");
+        };
+        request.onsuccess = function (event) {
+            db = event.target.result;
 
-      document.getElementById("pfp").src = 
-      firebase.auth().currentUser.photoURL ||
-      firstletter(firebase.auth().currentUser.displayName.charAt(0));
-      
-      read();
-      readduty();
+            document.getElementById("pfp").src =
+                firebase.auth().currentUser.photoURL ||
+                firstletter(firebase.auth().currentUser.displayName.charAt(0));
 
-     
-    };
+            read();
+            readduty();
 
-    request.onupgradeneeded = function (event) {
-      db = event.target.result;
-    };
-  });
+
+        };
+
+        request.onupgradeneeded = function (event) {
+            db = event.target.result;
+        };
+    });
 });
 
 function read() {
 
-  getCurrentJob().then((record) => {
-    document.getElementById("current_location").innerHTML =
-      record.attachment.Location.value;
-    //console.log(record);
-    document.getElementById("starting_time").innerHTML = moment(
-      record.schedule[0].startTime
-    ).format("hh:mm A");
-   
+    getCurrentJob().then((record) => {
+        document.getElementById("current_location").innerHTML =
+            record.attachment.Location.value;
+        //console.log(record);
+        document.getElementById("starting_time").innerHTML = moment(
+            record.schedule[0].startTime
+        ).format("hh:mm A");
 
-    var ms = moment( record.schedule[0].endTime, "DD/MM/YYYY HH:mm:ss").diff(
-      moment( record.schedule[0].startTime, "DD/MM/YYYY HH:mm:ss")
-    );
-    var d = moment.duration(ms);
 
-    document.getElementById("total_time").innerHTML = d.hours()+"h "+ d.minutes()+"m" ;
+        var ms = moment(record.schedule[0].endTime, "DD/MM/YYYY HH:mm:ss").diff(
+            moment(record.schedule[0].startTime, "DD/MM/YYYY HH:mm:ss")
+        );
+        var d = moment.duration(ms);
 
-    
-  });
+        document.getElementById("total_time").innerHTML = d.hours() + "h " + d.minutes() + "m";
+
+        if (record.assignees[0].displayName) {
+            document.getElementById("assignees_name").innerHTML = record.assignees[0].displayName;
+        } else {
+            document.getElementById("assignees_name").innerHTML = record.assignees[0].phoneNumber;
+        }
+
+        if (record.assignees.length > 1) {
+            if (record.assignees.length == 2) {
+                document.getElementById("other_assignees").innerHTML = "  &" + record.assignees.length - 1 + "Other";
+            } else {
+                document.getElementById("other_assignees").innerHTML = "  &" + record.assignees.length - 1 + "Others";
+            }
+        }
+
+
+        document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
+
+        console.log(record)
+
+    });
 }
- function readduty(){
 
-const duties = [];
+function readduty() {
 
-var transaction = db.transaction("activity");
-var store = transaction.objectStore('activity');
+    const duties = [];
+    const timestamp_array = [];
 
-// open cursor on activity object store's index template
-// pass duty as template , this will return all duty activites
+    var transaction = db.transaction("activity");
+    var store = transaction.objectStore('activity');
+
+    // open cursor on activity object store's index template
+    // pass duty as template , this will return all duty activites
+
+
+    let dateObjects = {}
+
+    store.index('template').openCursor('duty').onsuccess = function (evt) {
+        const cursor = evt.target.result;
+        if (!cursor) return;
+
+        // if duty doesn't have a schedule , ignore and continue
+        if (!Array.isArray(cursor.value.schedule)) {
+            cursor.continue();
+            return
+        }
+
+        // if duty doesn't have a start and end time , ignore and continue
+        if (!cursor.value.schedule[0].startTime || !cursor.value.schedule[0].endTime) {
+            cursor.continue();
+            return
+        }
 
 
 
-store.index('template').openCursor('duty').onsuccess = function (evt) {
-    const cursor = evt.target.result;
-    if (!cursor) return;
+        if (cursor.value.schedule[0].startTime == cursor.value.schedule[0].endTime) {
+            cursor.continue();
+            return
+        }
 
-    // if duty doesn't have a schedule , ignore and continue
-    if (!Array.isArray(cursor.value.schedule)) {
-        cursor.continue();
-        return
+        if (!cursor.value.checkins) {
+            cursor.continue();
+            return
+        }
+
+        // if activity's office doesn't match the selected office during checkin , then ignore and continue
+        // if (cursor.value.office !== ApplicationState.selectedOffice) {
+        //     cursor.continue();
+        //     return
+        // }
+
+        timestamp_array.push(cursor.value.timestamp)
+
+        duties.push(cursor.value)
+
+        cursor.continue()
     }
+    transaction.oncomplete = function () {
+        let DT = {}
+        // sort by desciding order;
 
-    // if duty doesn't have a start and end time , ignore and continue
-    if (!cursor.value.schedule[0].startTime || !cursor.value.schedule[0].endTime) {
-        cursor.continue();
-        return
+        const sorted = duties.sort((b, a) => {
+            return b.timestamp - a.timestamp
+        })
+        // create an object where key is month+year combo and its value is an array of duty objects
+        sorted.forEach(duty => {
+            const date = new Date(duty.timestamp);
+
+            if (DT[`${date.getMonth()}${date.getFullYear()}`]) {
+                DT[`${date.getMonth()}${date.getFullYear()}`].push(duty)
+            } else {
+                DT[`${date.getMonth()}${date.getFullYear()}`] = [duty];
+            }
+        })
+
+        console.log(DT)
+
+        const months = Object.keys(dateObjects);
+        let date_objects = {}
+        // loop through the object and caluclate total hours, total locations and total hours worked 
+        // for each date
+        Object.keys(DT).forEach(key => {
+
+            let totalDuties = 0;
+            let totalHoursWorked = 0;
+            let totalLocationsString = '';
+            let currentDate;
+            let activities = []
+            DT[key].forEach(activity => {
+
+                // if current Date is not equal to the activity date then
+                // reset the variable count
+                if (currentDate !== moment(activity.timestamp).format("DD/MM/YYYY")) {
+                    totalDuties = 0;
+                    totalHoursWorked = 0;
+                    totalLocationsString = "";
+                    activities = []
+                }
+                currentDate = moment(activity.timestamp).format("DD/MM/YYYY")
+                // increment the variables beacause all are of same date
+                activities.push(activity)
+                totalDuties++;
+                totalLocationsString += activity.attachment.Location.value + ' & ';
+
+                // filter checkins where creator is self and sort in descinding order;
+
+                const checkins = activity.checkins.filter(v => v.creator.phoneNumber === firebase.auth().currentUser.phoneNumber).sort((a, b) => {
+                    return b.timestamp - a.timestamp;
+                })
+
+                if (checkins.length) {
+                    // use moment to calculate duration
+                    totalHoursWorked += checkins[0].timestamp - checkins[checkins.length - 1].timestamp;
+                }
+
+                // set the values in a new object
+                date_objects[moment(activity.timestamp).format("DD/MM/YYYY")] = {
+                    totalDuties,
+                    totalLocationsString,
+                    totalHoursWorked,
+                    activities
+                }
+
+            })
+        });
+        console.log(date_objects)
+
+        const keys = Object.keys(date_objects);
+        let month;
+        let monthCard;
+        let daysWorkedInMonth = 0;
+        var click=0;
+        // loop the new objects backwards
+
+
+        for (let i = keys.length - 1; i >= 0; i--) {
+            const date = keys[i];
+            // if month variable is not equal to current month value
+            // create a new card
+
+
+
+            if (month != moment(date, 'DD/MM/YYYY').month()) {
+
+
+                //Created an array to convert number into string
+                var month_array = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                var get_year = moment(date, 'DD/MM/YYYY').year();
+
+                var days_array = [];
+
+                if (get_year % 4 == 0) {
+                    days_array = ['31', '29', '31', '30', '31', '30', '31', '31', '30', '31', '30', '31'];
+                } else {
+                    days_array = ['31', '28', '31', '30', '31', '30', '31', '31', '30', '31', '30', '31'];
+                }
+                var first_month = new Date();
+                var current_month = first_month.getMonth();
+                var pre_month = current_month-1
+
+                if( current_month == month){
+                    monthCard.style.display="block"
+                    
+                                      
+                }
+                if( pre_month == month){
+                    monthCard.style.display="block"
+                    
+                                      
+                }
+
+            
+                
+                one_month = month_array[moment(date, 'DD/MM/YYYY').month()];
+                curent_year = moment(date, 'DD/MM/YYYY').year();
+                total_working_day = days_array[moment(date, 'DD/MM/YYYY').month()]
+                
+                
+                monthCard = createElement('div', {
+                    id: 'month-card',
+                    
+
+                })
+                
+                monthCard.innerHTML = ` <div  id="month_card2">
+                <div id="on_card2">
+                <p id="month_date2">${one_month} ${curent_year}</p>
+                
+                <p class="total-days-worked"></p>
+                <span class="material-icons" id="arrow">
+                keyboard_arrow_down
+                </span>
+                </div>
+                </div>
+                `;
+                daysWorkedInMonth = 0
+               
+               
+                
+            }
+
+            document.getElementById("show_more_b").addEventListener("click", function(){
+                monthCard.style.display="block"
+                document.getElementById("show_more_b").style.display="none"
+            })
+           
+            daysWorkedInMonth++
+            monthCard.querySelector('.total-days-worked').innerHTML = "Days Worked: " + daysWorkedInMonth+" Days/ "+ total_working_day +" Days"
+            // count_day++;
+
+            month = moment(date, 'DD/MM/YYYY').month();
+
+            
+            //  console.log(date)
+
+            var days = ['SUN', 'MON', 'TUE', 'WED', 'THUR', 'FRI', 'SAT'];
+
+            var day = days[moment(date, 'DD/MM/YYYY').days()]
+            // Converted total work hours in to hours and minuts
+
+            var Day_total_time = moment.duration(date_objects[date].totalHoursWorked)
+
+            // individual date cards in a date
+            const card = createElement('div', {
+                id: 'collapsed2',
+                
+            });
+
+            card.dataset.date = date
+            card.innerHTML = `
+            <div id="date_day2"> <p id="duty_date2">${date.slice(0,2)}</p> <p id="duty_day2">${day}</p></div>
+            <div id="duty_div2">
+              <div id="collapsed_duty2" >
+              <p><span class="material-icons">
+              location_on
+              </span><span id="duty_address2">${date_objects[date].totalLocationsString.substring(0, 21)}  ${date_objects[date].totalDuties == 1 ? " " : date_objects[date].totalDuties-1 + " Others"} </span>
+            </p>
+            <p>
+              <span class="material-icons">
+              timer
+              </span><span id="total_hours2">${Day_total_time.days()+"d "+ Day_total_time.hours() + "h "+ Day_total_time.minutes()+"m"}</span>&nbsp&nbsp&nbsp <span class="material-icons">
+                work
+                </span><span id="total_duties2"> ${date_objects[date].totalDuties}</span>
+              </p>
+              </div>
+        
+                <div class='duties-list'></div>
+            </div>
+                    `
+                    //Expanded first month
+           
+
+            monthCard.addEventListener("click", function(e){
+                
+                 if(card.style.display=="flex"){
+                    card.style.display="none";
+                   
+                    return
+                }
+                card.style.display="flex"
+                
+             
+
+                
+                           
+                   })
+            // Added event listener on Date Card in order to create Sub Duty Divs 
+            card.addEventListener("click", function (e) {
+                e.stopPropagation()
+                
+                if(card.querySelector('.duties-list').childElementCount) {
+                    card.querySelector('.duties-list').innerHTML = ''
+                    return
+                }
+                    // For loop that reads individual duty in the specific [date]
+                    date_objects[date].activities.forEach(j => {
+    
+    
+                        //  var Day_total_time_individual = 
+    
+                        var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
+                        var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
+    
+    
+                        //console.log(moment(hour).format("hh:mm"))
+                        //  console.log(hour)
+    
+                        var diff = moment.utc(moment(j.schedule[0].endTime || '00').diff(moment(j.schedule[0].startTime))).format('HH:mm');
+    
+                      
+    
+    
+    
+    
+    
+    
+                        // Created sub Duty card here 
+                        const collapsed = createElement('div', {
+                            id: 'expended_duty',
+                            style: "display: block;"
+                        });
+    
+    
+    
+                        card.querySelector('.duties-list').appendChild(collapsed)
+    
+    
+                        var assignees_displayname = j.assignees[0].displayName
+                        var assignees_phonenumber = j.assignees[0].phoneNumber
+                        var assignees_photo = j.assignees[0].photoURL
+    
+    
+                        var other_assignee = "";
+                        var and = "";
+                        if (j.assignees.length > 1) {
+                            and = "&";
+                            if (j.assignees.length == 2) {
+                                other_assignee = j.assignees.length - 1 + " Other";
+                            } else {
+                                other_assignee = j.assignees.length - 1 + " Others";
+                            }
+                        }
+    
+    
+                        //Collapse Section
+    
+                        // if (card.querySelector('.duties-list').childElementCount) {
+                        //     collapsed.innerHTML = ''
+    
+                        // } else {
+                            collapsed.innerHTML = `
+                        <p id="expended_location">
+                        <span class="material-icons-outlined"> location_on </span>&nbsp
+                        &nbsp<span id="expended_location">${j.attachment.Location.value}</span>
+                      </p>
+              
+                      <p id="expended_checkin_time">
+                        <span class="material-icons-outlined"> query_builder </span>&nbsp
+                        &nbsp<span id="expended_interval">
+                          <span id="expended_starting_time">${starttime}</span>-
+                          <span id="expended_ending_time">${endtime}</span></span
+                        >
+                      </p>
+                      <p>
+                        <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
+                          id="expended_total_time"
+                          >${diff.slice(0,2)+"h "+diff.slice(3,5)+"m"}</span>
+                      </p>
+                    
+                      <div style="display: flex;"> 
+                      <div class="mdc-chip-set mdc-chip-set--filter" role="grid" id="assignees_div">
+                      <div class="mdc-chip" id="assignees_div" role="row">
+                        <div class="mdc-chip__ripple"></div>
+                        <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="${assignees_photo}"  width="24px" height="24px"></i>
+                        <span class="mdc-chip__checkmark" >
+                          <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
+                            <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
+                                  d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+                          </svg>
+                        </span>
+                        <span role="gridcell">
+                          <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
+                            <span class="mdc-chip__text" id="assignees_name">${!assignees_displayname ? assignees_phonenumber: assignees_displayname }</span>
+                          </span>
+                        </span>
+                      </div>
+                    
+                    </div>
+                    <span id="other_assignees">${and+" "+ other_assignee}</span>
+                    </div>
+                        `
+    
+                        // }
+    
+                    })
+            });
+            
+          
+
+            monthCard.appendChild(card)
+            document.body.appendChild(monthCard)
+
+            var first_month = new Date();
+            var current_month = first_month.getMonth();
+
+            var today = new Date();
+
+            var dd = today.getDate();
+            var mm = today.getMonth() + 1;
+
+            var yyyy = today.getFullYear();
+            if (dd < 10) {
+              dd = "0" + dd;
+            }
+            if (mm < 10) {
+              mm = "0" + mm;
+            }
+            var today = dd + "/" + mm + "/" + yyyy;
+            var yesterday = dd-1 + "/" + mm + "/" + yyyy;
+            var two_days_ago = dd-2 + "/" + mm + "/" + yyyy;
+
+            console.log(today);
+            if (moment(date, "DD/MM/YYYY").month() == current_month) {
+              card.style.display = "flex";
+
+              if (today == date|| yesterday == date||two_days_ago == date) {
+                document.getElementById("collapsed2").style.display = "flex";
+                document.getElementById("date_day2").style.display = "block";
+                document.getElementById("duty_div2").style.display = "block";
+              }
+              if (yesterday == date||two_days_ago == date) {
+                document.getElementById("collapsed2").style.display = "flex";
+                document.getElementById("date_day2").style.display = "block";
+                document.getElementById("duty_div2").style.display = "block";
+
+                console.log("asd");
+              }
+
+              if (two_days_ago == date) {
+                document.getElementById("collapsed2").style.display = "flex";
+                document.getElementById("date_day2").style.display = "block";
+                document.getElementById("duty_div2").style.display = "block";
+
+                console.log("asd");
+              }
+
+            }
+
+            
+        }
     }
-
-   
-
-    if (cursor.value.schedule[0].startTime == cursor.value.schedule[0].endTime) {
-      cursor.continue();
-      return
-  }
-
-  if (!cursor.value.checkins) {
-    cursor.continue();
-    return
-}
-
-
-  if (!cursor.value.attachment.Date ) {
-    cursor.continue();
-    return
-}
-
-
-
-    // if activity's office doesn't match the selected office during checkin , then ignore and continue
-  //   if(cursor.value.office !== ApplicationState.office) {
-  //     cursor.continue();
-  //     return
-  // }
-
-    duties.push(cursor.value)
-    
-    cursor.continue()
-} 
-
-transaction.oncomplete = function () {
-
-// sort the activities in descinding order, latest first
-const descindingDates = duties.sort((a,b)=>{
-    return b.timestamp - a.timestamp
-})
-
-
-// descindingDates.forEach(function (activity){
-// console.log(activity);
-// })
-
-
-
-var d ;
-var months_array=[];
-var year_array=[];
-var daily_count = 0;
-
-
-
-
-for( var number_of_duties=0;  number_of_duties<duties.length ; number_of_duties++){
-
-  var total_number_checkins = duties[number_of_duties].checkins.length;
-
-  var total_checkins = duties[number_of_duties].checkins.length-1 ;
-
-
-  var total_time_cal = moment(duties[number_of_duties].checkins[total_checkins].timestamp - duties[number_of_duties].checkins[0].timestamp)
-  var Day_total_time = moment.duration(total_time_cal);
-
- // document.getElementById("total_time").innerHTML = Day_total_time.hours()+"h "+ Day_total_time.minutes()+"m" ;
-  
-
-  
-  d= moment.duration(duties[number_of_duties].schedule[0].startTime)
-
-  months_array[number_of_duties]=moment().month(d.months()).format("MMMM");
-  year_array[number_of_duties]=moment().year(d.years()).format("YYYY");
-  
-
-  year_array[number_of_duties]= moment().year();
-
-
-
-  function date_wise_div(){
-
-    var ts = duties[number_of_duties].timestamp; 
-    var date_ob = new Date(ts);
-    var date = ("0" + date_ob.getDate()).slice(-2);
-  
-  
-  
-     return`<div id="collapsed2" style="display: flex;">
-  
-    <div id="date_day2"> <p id="duty_date2">${date}</p> <p id="duty_day2"></p></div>
-    <div id="duty_div2">
-      <div id="collapsed_duty2">
-      <p><span class="material-icons">
-      location_on
-      </span><span id="duty_address2">${duties[number_of_duties].checkins[0].venue[0].address.substring(0, 21)} & ${duties[number_of_duties].checkins.length-1 +" Others"} </span>
-    </p>
-    <p>
-      <span class="material-icons">
-      timer
-      </span><span id="total_hours2">${Day_total_time.hours()+"h "+ Day_total_time.minutes()+"m"}</span>&nbsp&nbsp&nbsp <span class="material-icons">
-        work
-        </span><span id="total_duties2"> ${duties[number_of_duties].checkins.length}</span>
-      </p>
-      </div>
-    
-      
-     
-    </div>
-    </div>`
-  
-  }
-
-
-  
-  if(  months_array[number_of_duties] == "October" )
-{
-
-
-  function createSimpleMenu() {
-    return `
-    <div id="expended_duty" style="display: block;">
-     <p id="expended_location">
-    <span class="material-icons-outlined"> location_on </span>&nbsp
-    &nbsp<span id="expended_location">saasd</span>
-  </p>
-  
-  <p id="expended_checkin_time">
-    <span class="material-icons-outlined"> query_builder </span>&nbsp
-    &nbsp<span id="expended_interval">
-      <span id="expended_starting_time">00:</span>-
-      <span id="expended_ending_time">00</span></span
-    >
-  </p>
-  <p>
-    <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-      id="expended_total_time"
-      >asdas</span>
-  </p>
-  </div>
-  `
-  }
-
-  var month_div = document.createElement("div");
-  var day_div = document.createElement("div");
-
- 
-
- 
-
-
-  day_div.innerHTML = ` <div id="expended_duty" style="display: block;">
-   <p id="expended_location">
-  <span class="material-icons-outlined"> location_on </span>&nbsp
-  &nbsp<span id="expended_location">saasd</span>
-</p>
-
-<p id="expended_checkin_time">
-  <span class="material-icons-outlined"> query_builder </span>&nbsp
-  &nbsp<span id="expended_interval">
-    <span id="expended_starting_time">00:</span>-
-    <span id="expended_ending_time">00</span></span
-  >
-</p>
-<p>
-  <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-    id="expended_total_time"
-    >asdas</span>
-</p>
-</div>
-`
-
-
-  month_div.innerHTML = ` <div class="month_card2" id="oct_card" >
-  <div id="on_card2">
-        
-  <p id="month_date2">${months_array[number_of_duties]} ${year_array[number_of_duties]}</p>
-  
-  <p id="days_worked2">Days Worked</p>
-  
-</div>
-</div>
-${date_wise_div()}
-
-`;
-
-  document.getElementById("month_card").appendChild(month_div);
-  
-  document.getElementById("oct_card").style.display = 'block';
-
-  
-
-}
-
-
-
-
-
-
-
-if( months_array[number_of_duties] == "September")
-{
-
-
-  function createSimpleMenu() {
-    return `
-    <div id="expended_duty" style="display: block;">
-     <p id="expended_location">
-    <span class="material-icons-outlined"> location_on </span>&nbsp
-    &nbsp<span id="expended_location">saasd</span>
-  </p>
-  
-  <p id="expended_checkin_time">
-    <span class="material-icons-outlined"> query_builder </span>&nbsp
-    &nbsp<span id="expended_interval">
-      <span id="expended_starting_time">00:</span>-
-      <span id="expended_ending_time">00</span></span
-    >
-  </p>
-  <p>
-    <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-      id="expended_total_time"
-      >asdas</span>
-  </p>
-  </div>
-  `
-  }
-
-  var sep_div = document.createElement("div");
-  var day_div = document.createElement("div");
-
-  day_div.innerHTML = ` <div id="expended_duty" style="display: block;">
-   <p id="expended_location">
-  <span class="material-icons-outlined"> location_on </span>&nbsp
-  &nbsp<span id="expended_location">saasd</span>
-</p>
-
-<p id="expended_checkin_time">
-  <span class="material-icons-outlined"> query_builder </span>&nbsp
-  &nbsp<span id="expended_interval">
-    <span id="expended_starting_time">00:</span>-
-    <span id="expended_ending_time">00</span></span
-  >
-</p>
-<p>
-  <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-    id="expended_total_time"
-    >asdas</span>
-</p>
-</div>
-`
-
-
-  sep_div.innerHTML = ` <div class="month_card2" id="sep_card"  >
-  <div id="on_card2">
-        
-  <p id="month_date2">${months_array[number_of_duties]} ${year_array[number_of_duties]}</p>
-  
-  <p id="days_worked2">Days Worked</p>
-  
-</div>
-</div>
-
-${date_wise_div()}
-`;
-
-  document.getElementById("month_card").appendChild(sep_div);
-  document.getElementById("sep_card").style.display = 'block';
- 
-
-
-
-}
-
-if( months_array[number_of_duties] == "August")
-{
-
-
-  function createSimpleMenu() {
-    return `
-    <div id="expended_duty" style="display: block;">
-     <p id="expended_location">
-    <span class="material-icons-outlined"> location_on </span>&nbsp
-    &nbsp<span id="expended_location">saasd</span>
-  </p>
-  
-  <p id="expended_checkin_time">
-    <span class="material-icons-outlined"> query_builder </span>&nbsp
-    &nbsp<span id="expended_interval">
-      <span id="expended_starting_time">00:</span>-
-      <span id="expended_ending_time">00</span></span
-    >
-  </p>
-  <p>
-    <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-      id="expended_total_time"
-      >asdas</span>
-  </p>
-  </div>
-  `
-  }
-
-  var aug_div = document.createElement("div");
-  var day_div = document.createElement("div");
-
-  day_div.innerHTML = ` <div id="expended_duty" style="display: block;">
-   <p id="expended_location">
-  <span class="material-icons-outlined"> location_on </span>&nbsp
-  &nbsp<span id="expended_location">saasd</span>
-</p>
-
-<p id="expended_checkin_time">
-  <span class="material-icons-outlined"> query_builder </span>&nbsp
-  &nbsp<span id="expended_interval">
-    <span id="expended_starting_time">00:</span>-
-    <span id="expended_ending_time">00</span></span
-  >
-</p>
-<p>
-  <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-    id="expended_total_time"
-    >asdas</span>
-</p>
-</div>
-`
-
-
-  aug_div.innerHTML = ` <div class="month_card2" id="aug_card"  >
-  <div id="on_card2">
-        
-  <p id="month_date2">${months_array[number_of_duties]} ${year_array[number_of_duties]}</p>
-  
-  <p id="days_worked2">Days Worked</p>
-  
-</div>
-</div>
-
-${date_wise_div()}`;
-
-  document.getElementById("month_card").appendChild(aug_div);
-  document.getElementById("aug_card").style.display = 'block';
- 
-
-
-
-}
-
-if( months_array[number_of_duties] == "July")
-{
-
-
-  function createSimpleMenu() {
-    return `
-    <div id="expended_duty" style="display: block;">
-     <p id="expended_location">
-    <span class="material-icons-outlined"> location_on </span>&nbsp
-    &nbsp<span id="expended_location">saasd</span>
-  </p>
-  
-  <p id="expended_checkin_time">
-    <span class="material-icons-outlined"> query_builder </span>&nbsp
-    &nbsp<span id="expended_interval">
-      <span id="expended_starting_time">00:</span>-
-      <span id="expended_ending_time">00</span></span
-    >
-  </p>
-  <p>
-    <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-      id="expended_total_time"
-      >asdas</span>
-  </p>
-  </div>
-  `
-  }
-
-  var jul_div = document.createElement("div");
-//   var day_div = document.createElement("div");
-
-//   day_div.innerHTML = ` <div id="expended_duty" style="display: block;">
-//    <p id="expended_location">
-//   <span class="material-icons-outlined"> location_on </span>&nbsp
-//   &nbsp<span id="expended_location">saasd</span>
-// </p>
-
-// <p id="expended_checkin_time">
-//   <span class="material-icons-outlined"> query_builder </span>&nbsp
-//   &nbsp<span id="expended_interval">
-//     <span id="expended_starting_time">00:</span>-
-//     <span id="expended_ending_time">00</span></span
-//   >
-// </p>
-// <p>
-//   <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-//     id="expended_total_time"
-//     >asdas</span>
-// </p>
-// </div>
-// `
-
-
-  jul_div.innerHTML = ` <div class="month_card2" id="jul_card"  >
-  <div id="on_card2">
-        
-  <p id="month_date2">${months_array[number_of_duties]} ${year_array[number_of_duties]}</p>
-  
-  <p id="days_worked2">Days Worked</p>
-  
-</div>
-</div>
-
-${date_wise_div()}`;
-
-  document.getElementById("month_card").appendChild(jul_div);
-  document.getElementById("jul_card").style.display = 'block';
- 
-
-
-
-}
-
-
-
-
-
-}
-
-
-
-
-console.log(duties);
-
-}
-
 }
 

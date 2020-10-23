@@ -2,12 +2,14 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+
 }
 
 html,
 body {
   height: 100%;
-  background: #e5e5e5;
+  
+  
   
 }
 
@@ -50,6 +52,19 @@ background-color: white;
     border-radius: 50%;
   }
   
+ 
+#other_assignees{
+  position: relative;
+  top: 16px;
+  font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: 16px;
+letter-spacing: 0em;
+
+}
+
 
 #home_text {
   font-family: Roboto;
@@ -61,6 +76,14 @@ background-color: white;
   text-align: center;
   color: var(--mdc-theme--primary);
   padding-top: 65px;
+}
+
+#assignees_pic{
+  position: relative;
+  top: -8px;
+  border-radius: 50%;
+  left: -3px;
+  
 }
 
 #camera_upload {
@@ -94,15 +117,32 @@ margin-top: 95px;
   letter-spacing: 0em;
   text-align: left;
   padding: 8px;
-  color: var(--mdc-theme--primary);
+  color: #25456C;
 }
 
 
+.total-days-worked{
+  padding: 10px;
+    padding-top: 5px;
+    font-family: Roboto;
+font-size: 12px;
+font-style: normal;
+font-weight: 500;
+line-height: 14px;
+letter-spacing: 0em;
+color: #F2F2F2;
 
+}
+
+#assignees_div_current{
+margin-left: -9px;
+
+}
 .material-icons-outlined {
   position: relative;
   top: 6px;
-  color: var(--mdc-theme--primary);
+  color: #25456C;
+  
 }
 #current_text{
     width: 50%;
@@ -160,16 +200,22 @@ margin-top: 95px;
   }
 
 
-.month_card2{
-display: none;
+#month_card2{
+display: block;
   width: 94.4%;
   margin: 0 auto;
   border-radius: 2px;
   height: 63px;
   background: #25456C;
   margin-bottom: 5px;
-
+ 
 }
+
+
+
+
+
+
 
 
 
@@ -234,12 +280,52 @@ color: #F2F2F2;
 }
 
 #collapsed2{
-    display: flex;
+  position: relative;
+    display: none;
     padding-top: 5px;
     padding-bottom: 5px;
+    
+   
+    
 }
 
+#month-card{
+  display: none;
+}
+
+#arrow{
+
+  position: relative;
+  top: -40px;
+  left: 90%;
+  color: white;
+
+  }
+
+
 #date_day2{
+
+  height: 100%;
+  padding-left: 16px;
+    width: 22%;
+    color: #4F4F4F;
+    font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: 24px;
+letter-spacing: 0.15000000596046448px;
+
+
+
+
+}
+
+#date_day2_hide{
+
+
+  height: 100%;
+  
     width: 22%;
     color: #4F4F4F;
     font-family: Roboto;
@@ -252,9 +338,27 @@ padding: 10px;
 
 
 }
+
+
+
+
 #duty_div2{
     width: 75%;
     font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: 24px;
+letter-spacing: 0.15000000596046448px;
+color: #333333;
+
+
+
+}
+
+#duty_div2_hide{
+  width: 75%;
+  font-family: Roboto;
 font-size: 14px;
 font-style: normal;
 font-weight: 500;
@@ -281,4 +385,47 @@ color: #333333;
       width: 100%;
       border: 2px solid gainsboro;
       
+  }
+
+  #duty_date2{
+    background-color: #25456C;
+    color: white;
+    border-radius: 50%;
+    height: 48px;
+    width: 48px;
+    text-align: center;
+    margin-top: 5px;
+    padding-top: 16px;
+  }
+
+  #duty_day2{
+   padding-left: 8px;
+  }
+  
+  #expended_duty {
+   
+    border: 1px #E5E5E5 solid;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+  }
+
+  #show_more_b{
+    position: absolute;
+    bottom: 0px;
+    padding-bottom: 8px;
+    padding-top: 8px;
+    width: 100%;
+    text-align: center;
+    z-index: 99;
+    background-color: white;
+    font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: 16px;
+letter-spacing: 0em;
+
+
   }

@@ -3,11 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
     <title>Document</title>
 
-    <link rel="stylesheet" href="css/home.css" />
+   
    <link href="css/app.css" rel="stylesheet" type="text/css" />
-
+   <link rel="stylesheet" href="css/home.css" />
     <link
       href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons"
       rel="stylesheet"
@@ -36,7 +37,7 @@
 
       <span id="generic_button">
         <a
-          href="https://api.whatsapp.com/send?phone=919718710267&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
+          href="https://api.whatsapp.com/send?phone=918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
           target="_blank"
           ><img src="img/generic.svg" width="24px" height="24px" alt="info"
         /></a>
@@ -78,15 +79,48 @@
             >asdas</span
           >
         </p>
+<div style="display: flex;" id="assignees_div_current">
+        <div class="mdc-chip-set mdc-chip-set--filter " role="grid" >
+          <div class="mdc-chip " id="for_chips_background" role="row">
+            <div class="mdc-chip__ripple"></div>
+            <i class="material-icons mdc-chip__icon mdc-chip__icon--leading "><img id="assignees_pic" src=""  width="24px" height="24px"></i>
+            <span class="mdc-chip__checkmark" >
+              <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
+                <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
+                      d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+              </svg>
+            </span>
+            <span role="gridcell">
+              <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
+                <span class="mdc-chip__text" id="assignees_name"></span>
+              </span>
+            </span>
+            
+          </div>
+          
+        </div>
+        <span id="other_assignees"></span>
+      </div>
       </div>
       <div id="finish_button">
         <button id="finish">FINISH</button>
       </div>
     </div>
 
-    <div id="month_card"> </div>
+    <div id="month_card"> 
+     
+    </div>
+   
+    <div id="card"></div>
+    <div id="show_more_b" >Show More</div>
+ 
+    
+      
+   
+   
 
 
+  
        <!-- <div id="on_card">
         
         <p id="month_date">asd</p>
@@ -112,6 +146,7 @@
             </span><span id="total_duties">10</span>
           </p>
           </div> -->
+
        
         <!-- <div id="expended_duty" style="display: block;">
          
@@ -136,6 +171,8 @@
           
         </div> -->
 
+
+
 <!--         
       </div>
       </div>
@@ -147,7 +184,7 @@
    
     
 
-    
+
 
 
     
@@ -156,5 +193,6 @@
     <script defer src="js/core.js"></script>
     <script src="js/job.js"></script>
     <script src="external/js/moment.js"></script>
+    
   </body>
 </html>
