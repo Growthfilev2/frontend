@@ -1,266 +1,285 @@
 var database;
 
 window.addEventListener("load", (ev) => {
-    firebase.auth().onAuthStateChanged((user) => {
-        const dbName = firebase.auth().currentUser.uid;
-        const request = window.indexedDB.open(dbName, DB_VERSION);
+  firebase.auth().onAuthStateChanged((user) => {
+    const dbName = firebase.auth().currentUser.uid;
+    const request = window.indexedDB.open(dbName, DB_VERSION);
 
-        request.onerror = function (event) {
-            console.log("Why didn't you allow my web app to use IndexedDB?!");
-        };
-        request.onsuccess = function (event) {
-            db = event.target.result;
+    request.onerror = function (event) {
+      console.log("Why didn't you allow my web app to use IndexedDB?!");
+    };
+    request.onsuccess = function (event) {
+      db = event.target.result;
 
-            document.getElementById("pfp").src =
-                firebase.auth().currentUser.photoURL ||
-                firstletter(firebase.auth().currentUser.displayName.charAt(0));
+      document.getElementById("pfp").src =
+        firebase.auth().currentUser.photoURL ||
+        firstletter(firebase.auth().currentUser.displayName.charAt(0));
 
-            read();
-            readduty();
+      read();
+      readduty();
+    };
 
-
-        };
-
-        request.onupgradeneeded = function (event) {
-            db = event.target.result;
-        };
-    });
+    request.onupgradeneeded = function (event) {
+      db = event.target.result;
+    };
+  });
 });
 
 function read() {
+  getCurrentJob().then((record) => {
+    document.getElementById("current_location").innerHTML =
+      record.attachment.Location.value;
+    //console.log(record);
+    document.getElementById("starting_time").innerHTML = moment(
+      record.schedule[0].startTime
+    ).format("hh:mm A");
 
-    getCurrentJob().then((record) => {
-        document.getElementById("current_location").innerHTML =
-            record.attachment.Location.value;
-        //console.log(record);
-        document.getElementById("starting_time").innerHTML = moment(
-            record.schedule[0].startTime
-        ).format("hh:mm A");
+    var ms = moment(record.schedule[0].endTime, "DD/MM/YYYY HH:mm:ss").diff(
+      moment(record.schedule[0].startTime, "DD/MM/YYYY HH:mm:ss")
+    );
+    var d = moment.duration(ms);
 
+    document.getElementById("total_time").innerHTML =
+      d.hours() + "h " + d.minutes() + "m";
 
-        var ms = moment(record.schedule[0].endTime, "DD/MM/YYYY HH:mm:ss").diff(
-            moment(record.schedule[0].startTime, "DD/MM/YYYY HH:mm:ss")
-        );
-        var d = moment.duration(ms);
+    if (record.assignees[0].displayName) {
+      document.getElementById("assignees_name").innerHTML =
+        record.assignees[0].displayName;
+    } else {
+      document.getElementById("assignees_name").innerHTML =
+        record.assignees[0].phoneNumber;
+    }
 
-        document.getElementById("total_time").innerHTML = d.hours() + "h " + d.minutes() + "m";
+    if (record.assignees.length > 1) {
+      if (record.assignees.length == 2) {
+        document.getElementById("other_assignees").innerHTML =
+          "  &" + record.assignees.length - 1 + "Other";
+      } else {
+        document.getElementById("other_assignees").innerHTML =
+          "  &" + record.assignees.length - 1 + "Others";
+      }
+    }
 
-        if (record.assignees[0].displayName) {
-            document.getElementById("assignees_name").innerHTML = record.assignees[0].displayName;
-        } else {
-            document.getElementById("assignees_name").innerHTML = record.assignees[0].phoneNumber;
-        }
+    document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
 
-        if (record.assignees.length > 1) {
-            if (record.assignees.length == 2) {
-                document.getElementById("other_assignees").innerHTML = "  &" + record.assignees.length - 1 + "Other";
-            } else {
-                document.getElementById("other_assignees").innerHTML = "  &" + record.assignees.length - 1 + "Others";
-            }
-        }
-
-
-        document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
-
-        console.log(record)
-
-    });
+    console.log(record);
+  });
 }
 
 function readduty() {
+  const duties = [];
+  const timestamp_array = [];
 
-    const duties = [];
-    const timestamp_array = [];
+  var transaction = db.transaction("activity");
+  var store = transaction.objectStore("activity");
 
-    var transaction = db.transaction("activity");
-    var store = transaction.objectStore('activity');
+  // open cursor on activity object store's index template
+  // pass duty as template , this will return all duty activites
 
-    // open cursor on activity object store's index template
-    // pass duty as template , this will return all duty activites
+  let dateObjects = {};
 
+  store.index("template").openCursor("duty").onsuccess = function (evt) {
+    const cursor = evt.target.result;
+    if (!cursor) return;
 
-    let dateObjects = {}
-
-    store.index('template').openCursor('duty').onsuccess = function (evt) {
-        const cursor = evt.target.result;
-        if (!cursor) return;
-
-        // if duty doesn't have a schedule , ignore and continue
-        if (!Array.isArray(cursor.value.schedule)) {
-            cursor.continue();
-            return
-        }
-
-        // if duty doesn't have a start and end time , ignore and continue
-        if (!cursor.value.schedule[0].startTime || !cursor.value.schedule[0].endTime) {
-            cursor.continue();
-            return
-        }
-
-
-
-        if (cursor.value.schedule[0].startTime == cursor.value.schedule[0].endTime) {
-            cursor.continue();
-            return
-        }
-
-        if (!cursor.value.checkins) {
-            cursor.continue();
-            return
-        }
-
-        // if activity's office doesn't match the selected office during checkin , then ignore and continue
-        // if (cursor.value.office !== ApplicationState.selectedOffice) {
-        //     cursor.continue();
-        //     return
-        // }
-
-        timestamp_array.push(cursor.value.timestamp)
-
-        duties.push(cursor.value)
-
-        cursor.continue()
+    // if duty doesn't have a schedule , ignore and continue
+    if (!Array.isArray(cursor.value.schedule)) {
+      cursor.continue();
+      return;
     }
-    transaction.oncomplete = function () {
-        let DT = {}
-        // sort by desciding order;
 
-        const sorted = duties.sort((b, a) => {
-            return b.timestamp - a.timestamp
-        })
-        // create an object where key is month+year combo and its value is an array of duty objects
-        sorted.forEach(duty => {
-            const date = new Date(duty.timestamp);
+    // if duty doesn't have a start and end time , ignore and continue
+    if (
+      !cursor.value.schedule[0].startTime ||
+      !cursor.value.schedule[0].endTime
+    ) {
+      cursor.continue();
+      return;
+    }
 
-            if (DT[`${date.getMonth()}${date.getFullYear()}`]) {
-                DT[`${date.getMonth()}${date.getFullYear()}`].push(duty)
-            } else {
-                DT[`${date.getMonth()}${date.getFullYear()}`] = [duty];
-            }
-        })
+    if (
+      cursor.value.schedule[0].startTime == cursor.value.schedule[0].endTime
+    ) {
+      cursor.continue();
+      return;
+    }
 
-        console.log(DT)
+    if (!cursor.value.checkins) {
+      cursor.continue();
+      return;
+    }
 
-        const months = Object.keys(dateObjects);
-        let date_objects = {}
-        // loop through the object and caluclate total hours, total locations and total hours worked 
-        // for each date
-        Object.keys(DT).forEach(key => {
+    // if activity's office doesn't match the selected office during checkin , then ignore and continue
+    // if (cursor.value.office !== ApplicationState.selectedOffice) {
+    //     cursor.continue();
+    //     return
+    // }
 
-            let totalDuties = 0;
-            let totalHoursWorked = 0;
-            let totalLocationsString = '';
-            let currentDate;
-            let activities = []
-            DT[key].forEach(activity => {
+    timestamp_array.push(cursor.value.timestamp);
 
-                // if current Date is not equal to the activity date then
-                // reset the variable count
-                if (currentDate !== moment(activity.timestamp).format("DD/MM/YYYY")) {
-                    totalDuties = 0;
-                    totalHoursWorked = 0;
-                    totalLocationsString = "";
-                    activities = []
-                }
-                currentDate = moment(activity.timestamp).format("DD/MM/YYYY")
-                // increment the variables beacause all are of same date
-                activities.push(activity)
-                totalDuties++;
-                totalLocationsString += activity.attachment.Location.value + ' & ';
+    duties.push(cursor.value);
 
-                // filter checkins where creator is self and sort in descinding order;
+    cursor.continue();
+  };
+  transaction.oncomplete = function () {
+    let DT = {};
+    // sort by desciding order;
 
-                const checkins = activity.checkins.filter(v => v.creator.phoneNumber === firebase.auth().currentUser.phoneNumber).sort((a, b) => {
-                    return b.timestamp - a.timestamp;
-                })
+    const sorted = duties.sort((b, a) => {
+      return b.timestamp - a.timestamp;
+    });
+    // create an object where key is month+year combo and its value is an array of duty objects
+    sorted.forEach((duty) => {
+      const date = new Date(duty.timestamp);
 
-                if (checkins.length) {
-                    // use moment to calculate duration
-                    totalHoursWorked += checkins[0].timestamp - checkins[checkins.length - 1].timestamp;
-                }
+      if (DT[`${date.getMonth()}${date.getFullYear()}`]) {
+        DT[`${date.getMonth()}${date.getFullYear()}`].push(duty);
+      } else {
+        DT[`${date.getMonth()}${date.getFullYear()}`] = [duty];
+      }
+    });
 
-                // set the values in a new object
-                date_objects[moment(activity.timestamp).format("DD/MM/YYYY")] = {
-                    totalDuties,
-                    totalLocationsString,
-                    totalHoursWorked,
-                    activities
-                }
+    console.log(DT);
 
-            })
+    const months = Object.keys(dateObjects);
+    let date_objects = {};
+    // loop through the object and caluclate total hours, total locations and total hours worked
+    // for each date
+    Object.keys(DT).forEach((key) => {
+      let totalDuties = 0;
+      let totalHoursWorked = 0;
+      let totalLocationsString = "";
+      let currentDate;
+      let activities = [];
+      DT[key].forEach((activity) => {
+        // if current Date is not equal to the activity date then
+        // reset the variable count
+        if (currentDate !== moment(activity.timestamp).format("DD/MM/YYYY")) {
+          totalDuties = 0;
+          totalHoursWorked = 0;
+          totalLocationsString = "";
+          activities = [];
+        }
+        currentDate = moment(activity.timestamp).format("DD/MM/YYYY");
+        // increment the variables beacause all are of same date
+        activities.push(activity);
+        totalDuties++;
+        totalLocationsString += activity.attachment.Location.value + " & ";
+
+        // filter checkins where creator is self and sort in descinding order;
+
+        const checkins = activity.checkins
+          .filter(
+            (v) =>
+              v.creator.phoneNumber === firebase.auth().currentUser.phoneNumber
+          )
+          .sort((a, b) => {
+            return b.timestamp - a.timestamp;
+          });
+
+        if (checkins.length) {
+          // use moment to calculate duration
+          totalHoursWorked +=
+            checkins[0].timestamp - checkins[checkins.length - 1].timestamp;
+        }
+
+        // set the values in a new object
+        date_objects[moment(activity.timestamp).format("DD/MM/YYYY")] = {
+          totalDuties,
+          totalLocationsString,
+          totalHoursWorked,
+          activities,
+        };
+      });
+    });
+    console.log(date_objects);
+
+    const keys = Object.keys(date_objects);
+    let month;
+    let monthCard;
+    let daysWorkedInMonth = 0;
+    var click = 0;
+    // loop the new objects backwards
+
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const date = keys[i];
+      // if month variable is not equal to current month value
+      // create a new card
+
+      if (month != moment(date, "DD/MM/YYYY").month()) {
+        //Created an array to convert number into string
+        var month_array = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        var get_year = moment(date, "DD/MM/YYYY").year();
+
+        var days_array = [];
+
+        if (get_year % 4 == 0) {
+          days_array = [
+            "31",
+            "29",
+            "31",
+            "30",
+            "31",
+            "30",
+            "31",
+            "31",
+            "30",
+            "31",
+            "30",
+            "31",
+          ];
+        } else {
+          days_array = [
+            "31",
+            "28",
+            "31",
+            "30",
+            "31",
+            "30",
+            "31",
+            "31",
+            "30",
+            "31",
+            "30",
+            "31",
+          ];
+        }
+
+      
+        var first_month = new Date();
+        var current_month = first_month.getMonth();
+        var pre_month = current_month - 1;
+
+        if (current_month == month) {
+          monthCard.style.display = "block";
+        }
+
+        if (pre_month == month) {
+          monthCard.style.display = "block";
+        }
+
+        one_month = month_array[moment(date, "DD/MM/YYYY").month()];
+        curent_year = moment(date, "DD/MM/YYYY").year();
+        total_working_day = days_array[moment(date, "DD/MM/YYYY").month()];
+
+        monthCard = createElement("div", {
+          id: "month-card",
         });
-        console.log(date_objects)
 
-        const keys = Object.keys(date_objects);
-        let month;
-        let monthCard;
-        let daysWorkedInMonth = 0;
-        var click=0;
-        // loop the new objects backwards
-
-
-        for (let i = keys.length - 1; i >= 0; i--) {
-            const date = keys[i];
-            // if month variable is not equal to current month value
-            // create a new card
-
-          
-            
-
-            if (month != moment(date, 'DD/MM/YYYY').month()) {
-
-
-                //Created an array to convert number into string
-                var month_array = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                var get_year = moment(date, 'DD/MM/YYYY').year();
-
-                var days_array = [];
-
-                if (get_year % 4 == 0) {
-                    days_array = ['31', '29', '31', '30', '31', '30', '31', '31', '30', '31', '30', '31'];
-                } else {
-                    days_array = ['31', '28', '31', '30', '31', '30', '31', '31', '30', '31', '30', '31'];
-                }
-                var first_month = new Date();
-                var current_month = first_month.getMonth();
-                var pre_month = current_month-1
-
-                if( current_month == month){
-                    monthCard.style.display="block"
-                    
-                                      
-                }
-
-                if( pre_month == month){
-                    monthCard.style.display="block"
-                    
-                }
-                
-            //     document.getElementById("show_more_b").addEventListener("click", function(){
-
-
-            //        // document.getElementById("show_more_b").style.display ="none";
-                  
-            //         monthCard.style.display ="block";
-
-            //         addStyle(styles)
-            // })
-               
-           
-            
-                
-                one_month = month_array[moment(date, 'DD/MM/YYYY').month()];
-                curent_year = moment(date, 'DD/MM/YYYY').year();
-                total_working_day = days_array[moment(date, 'DD/MM/YYYY').month()]
-                
-                
-                monthCard = createElement('div', {
-                    id: 'month-card',
-                    
-
-                })
-                
-                monthCard.innerHTML = ` <div  id="month_card2">
+        monthCard.innerHTML = ` <div  id="month_card2">
                 <div id="on_card2">
                 <p id="month_date2">${one_month} ${curent_year}</p>
                 
@@ -271,142 +290,144 @@ function readduty() {
                 </div>
                 </div>
                 `;
-                daysWorkedInMonth = 0
-               
-               
-                
-            }
+        daysWorkedInMonth = 0;
+      }
 
-           
-           
-            daysWorkedInMonth++
-            monthCard.querySelector('.total-days-worked').innerHTML = "Days Worked: " + daysWorkedInMonth+" Days/ "+ total_working_day +" Days"
-            // count_day++;
+      daysWorkedInMonth++;
+      monthCard.querySelector(".total-days-worked").innerHTML =
+        "Days Worked: " +
+        daysWorkedInMonth +
+        " Days/ " +
+        total_working_day +
+        " Days";
+      // count_day++;
 
-            month = moment(date, 'DD/MM/YYYY').month();
+      month = moment(date, "DD/MM/YYYY").month();
 
-            
-            //  console.log(date)
+      //  console.log(date)
 
-            var days = ['SUN', 'MON', 'TUE', 'WED', 'THUR', 'FRI', 'SAT'];
+      var days = ["SUN", "MON", "TUE", "WED", "THUR", "FRI", "SAT"];
 
-            var day = days[moment(date, 'DD/MM/YYYY').days()]
-            // Converted total work hours in to hours and minuts
+      var day = days[moment(date, "DD/MM/YYYY").days()];
+      // Converted total work hours in to hours and minuts
 
-            var Day_total_time = moment.duration(date_objects[date].totalHoursWorked)
+      var Day_total_time = moment.duration(date_objects[date].totalHoursWorked);
 
-            // individual date cards in a date
-            const card = createElement('div', {
-                id: 'collapsed2',
-                
-            });
+      // individual date cards in a date
+      const card = createElement("div", {
+        id: "collapsed2",
+      });
 
-            card.dataset.date = date
-            card.innerHTML = `
-            <div id="date_day2"> <p id="duty_date2">${date.slice(0,2)}</p> <p id="duty_day2">${day}</p></div>
+      card.dataset.date = date;
+      card.innerHTML = `
+            <div id="date_day2"> <p id="duty_date2">${date.slice(
+              0,
+              2
+            )}</p> <p id="duty_day2">${day}</p></div>
             <div id="duty_div2">
               <div id="collapsed_duty2" >
               <p><span class="material-icons">
               location_on
-              </span><span id="duty_address2">${date_objects[date].totalLocationsString.substring(0, 21) }  ${date_objects[date].totalDuties == 1 ? " " : date_objects[date].totalDuties-1 + " Others"} </span>
+              </span><span id="duty_address2">${date_objects[
+                date
+              ].totalLocationsString.substring(0, 21)}  ${
+        date_objects[date].totalDuties == 1
+          ? " "
+          : date_objects[date].totalDuties - 1 + " Others"
+      } </span>
             </p>
             <p>
               <span class="material-icons">
               timer
-              </span><span id="total_hours2">${Day_total_time.days()+"d "+ Day_total_time.hours() + "h "+ Day_total_time.minutes()+"m"}</span>&nbsp&nbsp&nbsp <span class="material-icons">
+              </span><span id="total_hours2">${
+                Day_total_time.days() +
+                "d " +
+                Day_total_time.hours() +
+                "h " +
+                Day_total_time.minutes() +
+                "m"
+              }</span>&nbsp&nbsp&nbsp <span class="material-icons">
                 work
-                </span><span id="total_duties2"> ${date_objects[date].totalDuties}</span>
+                </span><span id="total_duties2"> ${
+                  date_objects[date].totalDuties
+                }</span>
               </p>
               </div>
         
                 <div class='duties-list'></div>
             </div>
-                    `
-                    //Expanded first month
-           
+                    `;
+      //Expanded first month
 
-            monthCard.addEventListener("click", function(e){
-                
-                 if(card.style.display=="flex"){
-                    card.style.display="none";
-                   
-                    return
-                }
-                card.style.display="flex"
-                
-             
+      monthCard.addEventListener("click", function (e) {
+        if (card.style.display == "flex") {
+          card.style.display = "none";
 
-                
-                           
-                   })
-            // Added event listener on Date Card in order to create Sub Duty Divs 
-            card.addEventListener("click", function (e) {
-                e.stopPropagation()
-                
-                if(card.querySelector('.duties-list').childElementCount) {
-                    card.querySelector('.duties-list').innerHTML = ''
-                    return
-                }
-                    // For loop that reads individual duty in the specific [date]
-                    date_objects[date].activities.forEach(j => {
-    
-    
-                        //  var Day_total_time_individual = 
-    
-                        var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
-                        var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
-    
-    
-                        //console.log(moment(hour).format("hh:mm"))
-                        //  console.log(hour)
-    
-                        var diff = moment.utc(moment(j.schedule[0].endTime || '00').diff(moment(j.schedule[0].startTime))).format('HH:mm');
-    
-                      
-    
-    
-    
-    
-    
-    
-                        // Created sub Duty card here 
-                        const collapsed = createElement('div', {
-                            id: 'expended_duty',
-                            style: "display: block;"
-                        });
-    
-    
-    
-                        card.querySelector('.duties-list').appendChild(collapsed)
-    
-    
-                        var assignees_displayname = j.assignees[0].displayName 
-                        var assignees_phonenumber = j.assignees[0].phoneNumber
-                        var assignees_photo = j.assignees[0].photoURL
-    
-    
-                        var other_assignee = "";
-                        var and = "";
-                        if (j.assignees.length > 1) {
-                            and = "&";
-                            if (j.assignees.length == 2) {
-                                other_assignee = j.assignees.length - 1 + " Other";
-                            } else {
-                                other_assignee = j.assignees.length - 1 + " Others";
-                            }
-                        }
-    
-    
-                        //Collapse Section
-    
-                        // if (card.querySelector('.duties-list').childElementCount) {
-                        //     collapsed.innerHTML = ''
-    
-                        // } else {
-                            collapsed.innerHTML = `
+          return;
+        }
+        card.style.display = "flex";
+      });
+      // Added event listener on Date Card in order to create Sub Duty Divs
+      card.addEventListener("click", function (e) {
+        e.stopPropagation();
+
+        if (card.querySelector(".duties-list").childElementCount) {
+          card.querySelector(".duties-list").innerHTML = "";
+          return;
+        }
+        // For loop that reads individual duty in the specific [date]
+        date_objects[date].activities.forEach((j) => {
+          //  var Day_total_time_individual =
+
+          var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
+          var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
+
+          //console.log(moment(hour).format("hh:mm"))
+          //  console.log(hour)
+
+          var diff = moment
+            .utc(
+              moment(j.schedule[0].endTime || "00").diff(
+                moment(j.schedule[0].startTime)
+              )
+            )
+            .format("HH:mm");
+
+          // Created sub Duty card here
+          const collapsed = createElement("div", {
+            id: "expended_duty",
+            style: "display: block;",
+          });
+
+          card.querySelector(".duties-list").appendChild(collapsed);
+
+          var assignees_displayname = j.assignees[0].displayName;
+          var assignees_phonenumber = j.assignees[0].phoneNumber;
+          var assignees_photo = j.assignees[0].photoURL;
+
+          var other_assignee = "";
+          var and = "";
+          if (j.assignees.length > 1) {
+            and = "&";
+            if (j.assignees.length == 2) {
+              other_assignee = j.assignees.length - 1 + " Other";
+            } else {
+              other_assignee = j.assignees.length - 1 + " Others";
+            }
+          }
+
+          //Collapse Section
+
+          // if (card.querySelector('.duties-list').childElementCount) {
+          //     collapsed.innerHTML = ''
+
+          // } else {
+          collapsed.innerHTML = `
                         <p id="expended_location">
                         <span class="material-icons-outlined"> location_on </span>&nbsp
-                        &nbsp<span id="expended_location">${j.attachment.Location.value}</span>
+                        &nbsp<span id="expended_location">${
+                          j.attachment.Location.value
+                        }</span>
                       </p>
               
                       <p id="expended_checkin_time">
@@ -416,10 +437,12 @@ function readduty() {
                           <span id="expended_ending_time">${endtime}</span></span
                         >
                       </p>
-                      <p>
+                      <p id="expended_checkin_totaltime">
                         <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
                           id="expended_total_time"
-                          >${diff.slice(0,2)+"h "+diff.slice(3,5)+"m"}</span>
+                          >${
+                            diff.slice(0, 2) + "h " + diff.slice(3, 5) + "m"
+                          }</span>
                       </p>
                     
                       <div style="display: flex;"> 
@@ -435,106 +458,59 @@ function readduty() {
                         </span>
                         <span role="gridcell">
                           <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
-                            <span class="mdc-chip__text" id="assignees_name">${!assignees_displayname ? assignees_phonenumber: assignees_displayname }</span>
+                            <span class="mdc-chip__text" id="assignees_name">${
+                              !assignees_displayname
+                                ? assignees_phonenumber
+                                : assignees_displayname
+                            }</span>
                           </span>
                         </span>
                       </div>
                     
                     </div>
-                    <span id="other_assignees">${and+" "+ other_assignee}</span>
+                    <span id="other_assignees">${
+                      and + " " + other_assignee
+                    }</span>
                     </div>
-                        `
-    
-                        // }
-    
-                    })
-            });
-            
-           
+                        `;
 
-            monthCard.appendChild(card)
-            
-            document.body.appendChild(monthCard)
+          // }
+        });
+      });
 
-            var first_month = new Date();
-            var current_month = first_month.getMonth();
+      monthCard.appendChild(card);
 
-            var today = new Date();
+      document.body.appendChild(monthCard);
 
-            var dd = today.getDate();
-            var mm = today.getMonth() + 1;
+      var first_month = new Date();
+      var current_month = first_month.getMonth();
 
-            var yyyy = today.getFullYear();
-            if (dd < 10) {
-              dd = "0" + dd;
-            }
-            if (mm < 10) {
-              mm = "0" + mm;
-            }
-            var today = dd + "/" + mm + "/" + yyyy;
-            var yesterday = dd-1 + "/" + mm + "/" + yyyy;
-            var two_days_ago = dd-2 + "/" + mm + "/" + yyyy;
-
-            console.log(today);
-            if (moment(date, "DD/MM/YYYY").month() == current_month) {
-              card.style.display = "flex";
-
-              if (today == date|| yesterday == date||two_days_ago == date) {
-                document.getElementById("collapsed2").style.display = "flex";
-                document.getElementById("date_day2").style.display = "block";
-                document.getElementById("duty_div2").style.display = "block";
-              }
-              if (yesterday == date||two_days_ago == date) {
-                document.getElementById("collapsed2").style.display = "flex";
-                document.getElementById("date_day2").style.display = "block";
-                document.getElementById("duty_div2").style.display = "block";
-
-                console.log("asd");
-              }
-
-              if (two_days_ago == date) {
-                document.getElementById("collapsed2").style.display = "flex";
-                document.getElementById("date_day2").style.display = "block";
-                document.getElementById("duty_div2").style.display = "block";
-
-                console.log("asd");
-              }
-
-            }
-
-            
-        }
-
-       
+      if (moment(date, "DD/MM/YYYY").month() == current_month) {
+        card.style.display = "flex";
+      }
     }
-
-    
+  };
 }
 
+//SHOW MORE SECTION
 
- 
- function addStyle(styles) { 
-              
-    
-    var css = document.createElement('style'); 
-    css.type = 'text/css'; 
+// function addStyle(styles) {
+//   var css = document.createElement("style");
+//   css.type = "text/css";
 
-    if (css.styleSheet)  
-        css.styleSheet.cssText = styles; 
-    else  
-        css.appendChild(document.createTextNode(styles)); 
-      
-    
-    document.getElementsByTagName("head")[0].appendChild(css); 
-} 
+//   if (css.styleSheet) css.styleSheet.cssText = styles;
+//   else css.appendChild(document.createTextNode(styles));
+
+//   document.getElementsByTagName("head")[0].appendChild(css);
+// }
+
+
+document.getElementById("show_more_b").addEventListener("click", function () {
+    document.getElementById("show_more_b").style.display = "none";
+  //  var styles = "#month-card { display: block }";
   
-
-var styles = '#month-card { display: block }'; 
-
+  document.getElementById('month-card').style.display = 'block'
   
-
-document.getElementById("show_more_b").addEventListener("click", function(){
-  document.getElementById("show_more_b").style.display ="none";
-  addStyle(styles)
-
-})
+    //addStyle(styles);
+  });
+  
