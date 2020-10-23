@@ -146,7 +146,8 @@ body {
   margin-left: 50%;
   padding: 10px;
   background-color: white;
-  border: rgba(128, 128, 128, 0.5) 1px solid;
+  border: rgba(128, 128, 128, 0.2) 1px solid;
+  box-shadow: 0 0 5px rgb(129, 126, 126);
   border-radius: 100%;
   color: #de2e2e;
   font-family: Roboto;
@@ -255,9 +256,7 @@ month_date2 {
   padding-bottom: 5px;
 }
 
-#month-card {
-  display: none;
-}
+
 
 #arrow {
   position: relative;

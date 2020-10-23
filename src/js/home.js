@@ -258,7 +258,6 @@ function readduty() {
           ];
         }
 
-      
         var first_month = new Date();
         var current_month = first_month.getMonth();
         var pre_month = current_month - 1;
@@ -276,7 +275,8 @@ function readduty() {
         total_working_day = days_array[moment(date, "DD/MM/YYYY").month()];
 
         monthCard = createElement("div", {
-          id: "month-card",
+          className: "month-card",
+          style: "display:none;",
         });
 
         monthCard.innerHTML = ` <div  id="month_card2">
@@ -292,6 +292,20 @@ function readduty() {
                 `;
         daysWorkedInMonth = 0;
       }
+
+      document
+        .getElementById("show_more_b")
+        .addEventListener("click", function () {
+          document.getElementById("show_more_b").style.display = "none";
+
+          var show_all_card = document.querySelectorAll(".month-card");
+          console.log(show_all_card.length);
+          for (var i = 0; i < show_all_card.length; i++) {
+            show_all_card[i].style.display = "block";
+          }
+
+          //addStyle(styles);
+        });
 
       daysWorkedInMonth++;
       monthCard.querySelector(".total-days-worked").innerHTML =
@@ -491,26 +505,3 @@ function readduty() {
     }
   };
 }
-
-//SHOW MORE SECTION
-
-// function addStyle(styles) {
-//   var css = document.createElement("style");
-//   css.type = "text/css";
-
-//   if (css.styleSheet) css.styleSheet.cssText = styles;
-//   else css.appendChild(document.createTextNode(styles));
-
-//   document.getElementsByTagName("head")[0].appendChild(css);
-// }
-
-
-document.getElementById("show_more_b").addEventListener("click", function () {
-    document.getElementById("show_more_b").style.display = "none";
-  //  var styles = "#month-card { display: block }";
-  
-  document.getElementById('month-card').style.display = 'block'
-  
-    //addStyle(styles);
-  });
-  
