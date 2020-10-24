@@ -77,6 +77,7 @@ function getCurrentJob() {
             timestamp: Date.now(),
             
         };
+        return resolve(record);
         const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
         store.index('timestamp').openCursor(bound).onsuccess = function (e) {
             const cursor = e.target.result;
@@ -1294,3 +1295,11 @@ function showTabs(tabs, id) {
   </div>`
     return div;
 }
+
+
+function isToday(timestamp) {
+  return moment(timestamp).isSame(moment().clone().startOf('day'), 'd')
+}
+
+
+

@@ -1,12 +1,12 @@
 function AppKeys() {
-    this.mode = 'production'
+    this.mode = 'dev'
 }
 AppKeys.prototype.getMode = function () {
     return this.mode
 }
 
 AppKeys.prototype.getMapKey = function () {
-    if(this.mode === 'dev') {
+    if (this.mode === 'dev') {
         return "AIzaSyB2SuCoyi9ngRIy6xZRYuzxoQJDtOheiUM"
     }
     return "AIzaSyBl6SlzDCW51UEYudI8kFwG41KePOjW7xI";
@@ -14,7 +14,7 @@ AppKeys.prototype.getMapKey = function () {
 AppKeys.prototype.getKeys = function () {
     if (this.mode === 'production') {
         return {
-            apiKey:'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+            apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
             authDomain: 'growthfile-207204.firebaseapp.com',
             databaseURL: 'https://growthfile-207204.firebaseio.com',
             projectId: 'growthfile-207204',
@@ -37,6 +37,11 @@ AppKeys.prototype.getBaseUrl = function () {
     return this.mode === 'production' ? 'https://api2.growthfile.com/api/' : 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 }
 
-AppKeys.prototype.dynamicLinkUriPrefix  = function () {
+AppKeys.prototype.dynamicLinkUriPrefix = function () {
     return this.mode === 'production' ? 'https://growthfile.page.link' : 'https://growthfileanalytics.page.link'
+}
+const appKey = new AppKeys();
+firebase.initializeApp(appKey.getKeys())
+if (appKey.getMode() === 'dev') {
+    firebase.auth().settings.appVerificationDisabledForTesting = true
 }

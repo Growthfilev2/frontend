@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Document</title>
+
+  <link href="css/app.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="css/home.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons|Material+Icons+Outlined"
+    rel="stylesheet" />
+
+  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js"></script>
+  <script defer src="js/config.js"></script>
+</head>
+
+<body>
+
+
+  <header id="home_header">
+    <span id="logo">OnDuty</span>
+
+    <span id="generic_button">
+      <a href="https://api.whatsapp.com/send?phone=918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
+        target="_blank"><img src="img/generic.svg" width="24px" height="24px" alt="info" /></a>
+    </span>
+
+    <span id="profile_pic">
+      <a href="profile.html"><img id="pfp" src="" width="24px" height="24px" /></a>
+    </span>
+
+    <span id="camera_upload"><img src="img/upload_camera.svg" alt="upload" /></span>
+    <p id="home_text">Home</p>
+  </header>
+
+  <div id="current_duty_card">
+    <div id="current_text">
+      <p class="header">Current Duty</p>
+      <p id="location">
+        <span class="material-icons-outlined"> location_on </span>&nbsp
+        &nbsp<span id="current_location">saasd</span>
+      </p>
+
+      <p id="checkin_time">
+        <span class="material-icons-outlined"> query_builder </span>&nbsp
+        &nbsp<span id="current_interval">
+          <span id="starting_time">00:</span>-
+          <span id="ending_time">(On Going)</span></span>
+      </p>
+      <p>
+        <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span id="total_time">asdas</span>
+      </p>
+      <div style="display: flex" id="assignees_div_current">
+        <div class="mdc-chip-set mdc-chip-set--filter" role="grid">
+          <div class="mdc-chip" id="for_chips_background" role="row">
+            <div class="mdc-chip__ripple"></div>
+            <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="" width="24px"
+                height="24px" /></i>
+            <span class="mdc-chip__checkmark">
+              <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
+                <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
+                  d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+              </svg>
+            </span>
+            <span role="gridcell">
+              <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
+                <span class="mdc-chip__text" id="assignees_name"></span>
+              </span>
+            </span>
+          </div>
+        </div>
+        <span id="other_assignees"></span>
+      </div>
+    </div>
+    <div id="finish_button">
+      <button id="finish">FINISH</button>
+    </div>
+  </div>
+
+  <div id="card"></div>
+  <div id="show_more_b">Show More</div>
+  <script src="js/core.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/job.js"></script>
+  <script src="external/js/moment.min.js"></script>
+</body>
+
+</html>

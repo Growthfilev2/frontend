@@ -1,107 +1,51 @@
 const dom_root = document.getElementById('app-current-panel');
-const appKey = new AppKeys();
+// const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
 let appTabBar;
-let DB_VERSION = 33;
-var EMAIL_REAUTH;
-var firebaseUI;
-var sliderIndex = 1;
-var sliderTimeout = 10000;
-var sliderInterval;
 var potentialAlternatePhoneNumbers;
-var firebaseDeepLink;
-var facebookDeepLink;
+
+var deepLink;
+
 var firebaseAnalytics;
 var serverTimeUpdated = false;
-var updatedWifiAddresses = {
-  addresses: {},
-  timestamp: null
-}
 
-var isNewUser = false;
-function setFirebaseAnalyticsUserId(id) {
-  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserId) {
-    window.AndroidInterface.setFirebaseAnalyticsUserId(id)
-    return
+
+window.addEventListener('load', () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', {
+        scope: '/'
+      })
+      .then(reg => {
+        console.log('Registration succeeded. Scope is ' + reg.scope);
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+      
+            if(window.location.search && new URLSearchParams(window.location.search).has('action')) {
+              deepLink = new URLSearchParams(window.location.search);
+            }
+            loadApp()
+            return
+          }
+          redirect(`/login${deepLink ? `?${deepLink.toString()}`:''}`);
+        })
+      }).catch((error) => {
+        // registration failed
+        console.log('Registration failed with ' + error);
+      });
   }
-  if (window.messageHandlers && window.messageHandlers.firebaseAnalytics) {
-    window.messageHandlers.firebaseAnalytics.postMessage({
-      command: 'setFirebaseAnalyticsUserId',
-      id: id
-    })
-    return
-  }
-  console.log('No native apis found');
-}
+})
 
-function logFirebaseAnlyticsEvent(name, params) {
-  if (!name) {
-    return;
-  }
-
-  if (window.AndroidInterface && window.AndroidInterface.logFirebaseAnlyticsEvent) {
-    // Call Android interface
-    window.AndroidInterface.logFirebaseAnlyticsEvent(name, JSON.stringify(params));
-  } else if (window.webkit &&
-    window.webkit.messageHandlers &&
-    window.webkit.messageHandlers.firebaseAnalytics) {
-    // Call iOS interface
-    var message = {
-      name: name,
-      parameters: params,
-      command: 'logFirebaseAnlyticsEvent'
-    };
-    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
-  } else {
-    // No Android or iOS interface found
-    console.log("No native APIs found.");
-  }
-}
-
-function setFirebaseAnalyticsUserProperty(name, value) {
-  if (!name || !value) {
-    return;
-  }
-
-  if (window.AndroidInterface && window.AndroidInterface.setFirebaseAnalyticsUserProperty) {
-    // Call Android interface
-    window.AndroidInterface.setFirebaseAnalyticsUserProperty(name, value);
-  } else if (window.webkit &&
-    window.webkit.messageHandlers &&
-    window.webkit.messageHandlers.firebaseAnalytics) {
-    // Call iOS interface
-    var message = {
-      command: 'setFirebaseAnalyticsUserProperty',
-      name: name,
-      value: value
-    };
-    window.webkit.messageHandlers.firebaseAnalytics.postMessage(message);
-  } else {
-    // No Android or iOS interface found
-    console.log("No native APIs found.");
-  }
-}
-
-function parseFacebookDeeplink(link) {
-
-  console.log("fb link ", link)
-  const url = new URL(link);
-  const query = new URLSearchParams(url.search);
-  facebookDeepLink = query;
-  if (!firebase.auth().currentUser) return;
-}
 
 /**
  * long dynamic link intercepted by device containing query parameters
  * @param {string} link 
  */
 
-function parseDynamicLink(link) {
+function getDynamicLink(link) {
   const url = new URL(link);
-  firebaseDeepLink = new URLSearchParams(url.search);
-  if (!firebase.auth().currentUser) return;
+  deepLink = new URLSearchParams(url.search);
 }
 
 /**
@@ -116,49 +60,9 @@ function linkSharedComponent(componentValue) {
     content_type: 'text'
   });
 }
-/**
- * 
- * @param {String} wifiString 
- */
-function updatedWifiScans(wifiString) {
-  console.log("updated wifi", wifiString)
-  const result = {}
-  const splitBySeperator = wifiString.split(",")
-  splitBySeperator.forEach(function (value) {
-    const url = new URLSearchParams(value);
-    if (url.has('ssid')) {
-      url.delete('ssid')
-    }
-    if (!url.has('macAddress')) return;
-    result[url.get("macAddress")] = true
-  })
-  updatedWifiAddresses.addresses = result;
-  updatedWifiAddresses.timestamp = Date.now()
 
-};
 
-/**
- * Global error logger
- */
 
-window.addEventListener('error', function (event) {
-  this.console.error(event.message);
-  if (event.message.toLowerCase().indexOf('script error') > -1) return;
-  if(event.message === "You can't have a focus-trap without at least one focusable element") return;
- 
-  handleError({
-    message: 'global error :' + event.message,
-    body: {
-      lineno: event.lineno,
-      filename: event.filename,
-      colno: event.colno,
-      error: JSON.stringify({
-        stack: event.error.stack,
-        message: event.error.message
-      })
-    }
-  })
-})
 
 /**
  * 
@@ -171,100 +75,7 @@ function imgErr(source) {
   return true;
 }
 
-let native = function () {
-  var deviceInfo = '';
-  var tokenChanged = '';
-  return {
-    setFCMToken: function (token) {
-      console.log('rec ', token)
-      const storedToken = localStorage.getItem('token');
-      console.log('stored token', storedToken)
-      if (storedToken !== token) {
-        tokenChanged = true
-      }
 
-      localStorage.setItem('token', token)
-    },
-    getFCMToken: function () {
-      return localStorage.getItem('token')
-    },
-    isFCMTokenChanged: function () {
-      return tokenChanged;
-    },
-    setName: function (device) {
-      localStorage.setItem('deviceType', device);
-    },
-    getName: function () {
-      return localStorage.getItem('deviceType');
-    },
-
-    setIosInfo: function (iosDeviceInfo) {
-      const queryString = new URLSearchParams(iosDeviceInfo);
-      var obj = {}
-      queryString.forEach(function (val, key) {
-        if (key === 'appVersion') {
-          obj[key] = Number(val)
-        } else {
-          obj[key] = val
-        }
-      })
-      deviceInfo = obj
-      deviceInfo.idbVersion = DB_VERSION
-    },
-    getInfo: function () {
-      if (!this.getName()) return false;
-      const storedInfo = JSON.parse(localStorage.getItem('deviceInfo'));
-      if(storedInfo) return storedInfo;
-      if (this.getName() === 'Android') {
-        deviceInfo = getAndroidDeviceInformation()
-        deviceInfo.idbVersion = DB_VERSION
-        return deviceInfo
-      }
-      return deviceInfo;
-    }
-  }
-}();
-
-
-/**
- * Call different JNI Android Methods to access device information
- */
-function getAndroidDeviceInformation() {
-  return {
-    'id': AndroidInterface.getId(),
-    'deviceBrand': AndroidInterface.getDeviceBrand(),
-    'deviceModel': AndroidInterface.getDeviceModel(),
-    'osVersion': AndroidInterface.getOsVersion(),
-    'baseOs': AndroidInterface.getBaseOs(),
-    'radioVersion': AndroidInterface.getRadioVersion(),
-    'appVersion': Number(AndroidInterface.getAppVersion()),
-  }
-}
-
-window.onpopstate = function (event) {
-  const nonRefreshViews = {
-    'mapView': true,
-    'userSignedOut': true,
-    'profileCheck': true,
-    'login': true,
-    'share': true,
-    'addView': true,
-  };
-
-  if (!event.state) return;
-  if (nonRefreshViews[event.state[0]])  {
-    history.replaceState(['appView'],null,null)
-    return
-  }
-  if(event.state[0] === 'showRating') return;
-  if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
-    history.go(-1);
-    return;
-  };
-  if (window[event.state[0]]) {
-    window[event.state[0]](event.state[1]);
-  }
-}
 
 function preloadImages(urls) {
   urls.forEach(function (url) {
@@ -273,54 +84,22 @@ function preloadImages(urls) {
   })
 }
 
-window.addEventListener('load', function () {
 
-  firebase.initializeApp(appKey.getKeys())
-  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#app-header .mdc-linear-progress'))
+
+const loadApp = () => {
+
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   if (!window.Worker && !window.indexedDB) {
-    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile  is incompatible with this device').create();
+    const incompatibleDialog = new Dialog('App Incompatiblity', 'OnDuty is incompatible with this device').create();
     incompatibleDialog.open();
     return;
   }
 
-  preloadImages(['./img/fetching-location.jpg', './img/wait.jpg', './img/server.jpg', './img/update.jpg', './img/fetching.jpg'])
-  firebase.auth().onAuthStateChanged(function (auth) {
-    if (!auth) {
-      logReportEvent("IN Slider");
-
-      history.pushState(['userSignedOut'], null, null);
-      userSignedOut()
-      return;
-    }
-
-
-    clearInterval(sliderInterval);
-    const header = new mdc.topAppBar.MDCTopAppBar(document.getElementById('app-header'));
-    header.listen('MDCTopAppBar:nav', handleNav);
-    header.root_.classList.add("hidden");
-
-    if (appKey.getMode() === 'production' && !native.getInfo()) return redirect()
-
-    dom_root.classList.remove('hidden');
-    if (EMAIL_REAUTH) {
-      history.pushState(['jobs'], null, null);
-      history.pushState(['profileView'], null, null);
-      history.pushState(['emailUpdation'], null, null);
-      emailUpdation(false, function () {
-        EMAIL_REAUTH = false
-        history.back()
-      })
-      return;
-    }
-
-    localStorage.setItem('error', JSON.stringify({}));
-    localStorage.removeItem('storedLinks');
-    checkNetworkValidation();
-  });
-})
+  localStorage.setItem('error', JSON.stringify({}));
+  localStorage.removeItem('storedLinks');
+  checkNetworkValidation();
+};
 
 
 
@@ -338,199 +117,21 @@ function checkNetworkValidation() {
 
 
 
-function firebaseUiConfig() {
-
-  return {
-    callbacks: {
-      signInSuccessWithAuthResult: function (authResult) {
-        document.querySelector('.login-box').classList.add('hidden')
-        setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
-
-        isNewUser = authResult.additionalUserInfo.isNewUser;
-        if (!authResult.additionalUserInfo.isNewUser) {
-          logReportEvent("login");
-          logFirebaseAnlyticsEvent("login", {
-            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
-          })
-          return false
-        };
-
-        firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
-
-          if (isAdmin(tokenResult)) {
-            logReportEvent("Sign Up Admin");
-            setFirebaseAnalyticsUserProperty("isAdmin", "true");
-          } else {
-            logReportEvent("Sign Up");
-          };
-          const signUpParams = {
-            method: firebase.auth.PhoneAuthProvider.PROVIDER_ID
-          }
-          var queryLink = firebaseDeepLink || facebookDeepLink;
-          if (queryLink) {
-            signUpParams.source = queryLink.get("utm_source");
-            signUpParams.medium = queryLink.get("utm_medium");
-            signUpParams.campaign = queryLink.get("utm_campaign")
-          }
-
-          logFirebaseAnlyticsEvent("sign_up", signUpParams);
-        })
-        return false;
-      },
-      signInFailure: function (error) {
-        return handleUIError(error)
-      },
-      uiShown: function () {
-        logFirebaseAnlyticsEvent('auth_page_open', {})
-        document.querySelector('.login-box').classList.remove('hidden')
-      }
-    },
-    signInFlow: 'popup',
-    signInOptions: [{
-      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-      recaptchaParameters: {
-        type: 'image', // 'audio'
-        size: 'invisible', // 'invisible' or 'compact'
-        badge: 'bottomright' //' bottomright' or 'inline' applies to invisible.
-      },
-      defaultCountry: 'IN',
-
-    }]
-  };
-}
-
-function initializeFirebaseUI() {
-  document.getElementById("app-header").classList.remove("hidden");
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-  <span class="mdc-top-app-bar__title">Login</span>
-  `;
-  header = setHeader(backIcon, '');
-  firebaseUI = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
-  firebaseUI.start(document.getElementById('login-container'), firebaseUiConfig());
-
-}
-
-
-function userSignedOut() {
-  progressBar.close();
-  document.getElementById("dialog-container").innerHTML = '';
-  document.getElementById('step-ui').innerHTML = '';
-  document.getElementById("app-header").classList.add("hidden");
-  if (firebaseUI) {
-    firebaseUI.delete();
-  }
-
-  
-  dom_root.innerHTML = `
-    <div class='slider' id='app-slider' style="background-image:url('./img/welcome.jpg')">
- 
-    <div class="action-button-container">
-          <div class="submit-button-cont">
-              <div class='dot-container'>
-                <span class='dot active'></span>
-                <span class='dot'></span>
-                <span class='dot'></span>
-              </div>
-              <button class="mdc-button mdc-button--raised submit-btn" data-mdc-auto-init="MDCRipple"
-                  id='login-btn'>
-                  <div class="mdc-button__ripple"></div>
-                  
-                  <span class="mdc-button__label">Agree & Continue</span>
-              </button>
-          </div>
-        </div>
-    </div>
-  `;
-
-
-  const sliderEl = document.getElementById('app-slider');
-  const btn = new mdc.ripple.MDCRipple(document.getElementById('login-btn'));
-  btn.root_.addEventListener('click', function () {
-    removeSwipe()
-    dom_root.innerHTML = '';
-    history.pushState(['login'], null, null);
-    initializeFirebaseUI();
-  })
-
-  sliderInterval = setInterval(function () {
-    if (!sliderEl) return
-    sliderSwipe('right')
-  }, sliderTimeout);
-  swipe(sliderEl, sliderSwipe);
-}
-
-
-
-function sliderSwipe(direction) {
-  if (direction === 'left') {
-    if (sliderIndex <= 1) {
-      sliderIndex = 3;
+const loadScreen = (id) => {
+  document.querySelectorAll('.transitions .app-init-screens').forEach(el => {
+    if (el.id === id) {
+      el.classList.remove('hidden')
     } else {
-      sliderIndex--
-
-    }
-  }
-
-  if (direction === 'right') {
-    if (sliderIndex >= 3) {
-      sliderIndex = 1;
-    } else {
-      sliderIndex++
-    }
-  }
-
-  loadSlider();
-  [...document.querySelectorAll('.dot')].forEach(function (dotEl, index) {
-    dotEl.classList.remove('active');
-    if (index == sliderIndex - 1) {
-      dotEl.classList.add('active')
+      el.classList.add('hidden')
     }
   })
 }
 
-function loadSlider() {
-
-  let src = '';
-
-  switch (sliderIndex) {
-    case 1:
-      src = './img/welcome.jpg'
-      break;
-    case 2:
-      src = './img/proof.jpeg'
-
-      break;
-    case 3:
-      src = './img/payments.jpeg'
-      break;
-  }
-  if(document.getElementById('app-slider')) {
-    document.getElementById('app-slider').style.backgroundImage = `url('${src}')`
-  }
+const removeScreen = () => {
+  document.querySelector('.transitions').remove();
 }
 
 
-function loadingScreen(data) {
-  dom_root.innerHTML = `
-  <div class='splash-content loading-screen' id='loading-screen' style="background-image:url('${data.src}');">
-    <div class='text-container' style="${data.src === './img/fetching-location.jpg' ? 'margin-top:110px':''}"> 
-      <div class='text mdc-typography--headline6'>${data.text || ''}</div>
-      <div class="loader">
-        <svg class="circular" viewBox="25 25 50 50">
-          <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10"/>
-        </svg>
-      </div>
-      </div>  
-  </div>
-  `
-
-}
-
-function removeLoadingScreen() {
-  if(document.getElementById('loading-screen')) {
-    document.getElementById('loading-screen').remove()
-  }
-}
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
@@ -554,19 +155,19 @@ function startApp() {
         break;
       case 31:
         const addendumStore = req.transaction.objectStore('addendum');
-        if(!addendumStore.indexNames.contains('timestamp')) {
-          addendumStore.createIndex('timestamp','timestamp');
+        if (!addendumStore.indexNames.contains('timestamp')) {
+          addendumStore.createIndex('timestamp', 'timestamp');
         }
         break;
       case 32:
         const userStore = req.transaction.objectStore('users');
-        userStore.openCursor().onsuccess = function(e){
+        userStore.openCursor().onsuccess = function (e) {
           const cursor = e.target.result;
-          if(!cursor) return;
+          if (!cursor) return;
           delete cursor.value.count;
           userStore.put(cursor.value)
           cursor.continue();
-        }  
+        }
       default:
         console.log('version upgrade');
         break;
@@ -576,12 +177,15 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
+    
     console.log("run app")
+   
     regulator()
-    .then(console.log).catch(function (error) {
-      if (error.type === 'geolocation') return handleLocationError(error)
-      contactSupport()
-    })
+      .then(console.log).catch(function (error) {
+        if (error.type === 'geolocation') return handleLocationError(error)
+        console.log(error)
+        contactSupport()
+      })
   };
 
   req.onerror = function () {
@@ -594,11 +198,11 @@ function startApp() {
 }
 
 
+
 function getDeepLink() {
   // return new URLSearchParams('?office=Puja Capital&utm_campaign=share_link&action=get-subscription');
-  if (firebaseDeepLink) return firebaseDeepLink
-  if (facebookDeepLink) return facebookDeepLink;
-  if (isNewUser) return new URLSearchParams('?utm_source=organic')
+  if (deepLink) return deepLink
+  if (isNewUser()) return new URLSearchParams('?utm_source=organic')
   return null;
 }
 
@@ -608,15 +212,11 @@ function regulator() {
 
   return new Promise(function (resolve, reject) {
     var prom;
-    loadingScreen({
-      src: './img/wait.jpg',
-      text: 'Loading ... '
-    })
+    loadScreen('loading');
 
-    if(appKey.getMode() === 'dev' && window.location.host === 'localhost') {
-        prom = Promise.resolve();
-    }
-    else {
+    if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
+      prom = Promise.resolve();
+    } else {
       prom = requestCreator('fcmToken', {
         token: native.getFCMToken()
       })
@@ -624,13 +224,12 @@ function regulator() {
 
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
-     
+
         if (queryLink.get('action') === 'get-subscription') {
-          loadingScreen({
-            src: './img/wait.jpg',
-            text: 'Adding you in ' + queryLink.get('office')
-          })
-        }
+          loadScreen('adding-to-office');
+          document.querySelector('#adding-to-office .loading-text--headline').textContent = 'Adding you to ' + queryLink.get('office');
+        };
+
         return requestCreator('acquisition', {
           source: queryLink.get('utm_source'),
           medium: queryLink.get('utm_medium'),
@@ -639,25 +238,18 @@ function regulator() {
         })
       })
       .then(function () {
-        loadingScreen({
-          src: './img/server.jpg',
-          text: 'Connecting to server'
-        })
-
+        loadScreen('connecting');
         return requestCreator('now');
       })
       .then(function () {
         serverTimeUpdated = true
-        loadingScreen({
-          src: './img/fetching-location.jpg',
-          text: 'Verifying location'
-        })
+        loadScreen('verifying');
         return appLocation(3)
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        if(window.location.host === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
-        
+        if (window.location.hostname === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
+
         if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
         return requestCreator('device', deviceInfo);
       })
@@ -681,12 +273,6 @@ function contactSupport() {
 
 }
 
-function showErrorMessage() {
-  const el = document.querySelector('#loading-screen .text-container')
-  if (!el) return;
-  el.innerHTML = `<p class='mdc-typography--headline6 mb-10 mt-0'>Error occured</p>
-  <div class='mdc-typography--subtitle2 mdc-theme--primary'>Please try again later</div>`
-}
 
 
 
@@ -728,21 +314,24 @@ function handleCheckin(geopoint, noUser) {
 
     const storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment']
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
-      getRootRecord().then(function(record){
-        if(record.fromTime == 0) {
-          loadingScreen({
-            src: './img/update.jpg',
-            text: 'Fetching your data'
+      getRootRecord().then(function (record) {
+        if (record.fromTime == 0) {
+          loadScreen('loading-data')
+          // serviceWorkerRequestCreator(null).then((res)=>{
+          navigator.serviceWorker.controller.postMessage({
+            type: 'read'
           })
-          requestCreator('Null').then(function () {
-            handleCheckin(geopoint, true)
-          })
+          // })
+          navigator.serviceWorker.onmessage = (event) => {
+            console.log('message from worker', event.data);
+            handleCheckin(geopoint)
+          };
           return
         }
         if (isAdmin(result[0]) || result[1]) return initProfileView();
         return noOfficeFoundScreen();
       })
-   
+
     })
 
   });
@@ -759,7 +348,7 @@ function noOfficeFoundScreen() {
       <div class='text-container'>
         <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>
         <p class='mdc-typography--body1'>
-          Please contact your administrator
+          No office found in OnDuty. Please contact your administrator
         </p>
       </div>
     </div>
@@ -771,113 +360,14 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  if (auth.displayName && auth.photoURL && auth.email) return openReportView()
-  removeLoadingScreen()
-  document.getElementById('app-header').classList.remove('hidden')
-  history.pushState(['profileCheck'], null, null)
-  profileCheck();
+  if (!auth.displayName) return redirect(`/profile_edit?askPhoto=1&new_user=${isNewUser()}`);
+  redirect('/home');
 }
 
-
-
-function miniProfileCard(content, headerTitle, action) {
-
-  return `<div class='mdc-card profile-update-init'>
-  
-  <div class='content-area'>
-  <div id='primary-content'>
-  
-  ${content}
-  </div>
-  </div>
-  ${action}
-</div>`
-
-
+const isNewUser = () => {
+  const metaData = firebase.auth().currentUser.metadata
+  return metaData.creationTime === metaData.lastSignInTime
 }
-
-
-function increaseStep(stepNumber) {
-
-  const prevNumber = stepNumber - 1;
-  if (prevNumber == 0) {
-    document.getElementById(`step${stepNumber}`).classList.add('is-active');
-    return;
-  }
-  document.getElementById(`step${prevNumber}`).classList.remove('is-active');
-  document.getElementById(`step${prevNumber}`).classList.add('is-complete');
-  document.getElementById(`step${stepNumber}`).classList.add('is-active');
-
-}
-
-function checkForPhoto() {
-  const auth = firebase.auth().currentUser;
-  if (auth.photoURL) {
-    increaseStep(3)
-    checkForEmail();
-    return;
-  }
-
-
-  setHeader(`<span class="mdc-top-app-bar__title">Add Photo</span>`, '');
-
-  logReportEvent("Profile Completion Photo")
-  logFirebaseAnlyticsEvent("profile_completion_photo")
-
-  increaseStep(2)
-  const content = `
-
-      <div class='photo-container'>
-      <img src="./img/empty-user.jpg" id="image-update">
-      <button class="mdc-fab mdc-theme--primary-bg" aria-label="Favorite">
-        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">camera</span>
-        <input type='file' accept='image/jpeg;capture=camera' id='choose'>
-      </button>
-      </div>
-  
-      `
-      dom_root.innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
-  document.getElementById('choose').addEventListener('change', function (evt) {
-    getImageBase64(evt).then(function (dataURL) {
-      document.getElementById('image-update').src = dataURL;
-      return requestCreator('backblaze', {
-        'imageBase64': dataURL
-      })
-    }).then(function () {
-      increaseStep(3)
-      checkForEmail()
-    }).catch(function (error) {
-      increaseStep(3)
-      checkForEmail()
-      snacks(error.message)
-    })
-  })
-
-}
-
-function checkForEmail() {
-
-  const auth = firebase.auth().currentUser;
-  if (auth.email && auth.emailVerified) {
-    openReportView();
-    return
-  }
-  getRootRecord().then(function (record) {
-    if (record.skipEmail) {
-      openReportView();
-      return
-    }
-
-    logReportEvent("Profile Completion Email")
-    logFirebaseAnlyticsEvent("profile_completion_email")
-    increaseStep(3)
-    emailUpdation(true, function () {
-      openReportView();
-    });
-  })
-
-}
-
 
 function checkEmptyIdProofs(record) {
   if (!record.idProof) return true;
@@ -921,85 +411,8 @@ function getProfileInformation() {
   })
 }
 
-// function checkForId() {
-//   getProfileInformation().then(function(record){
-//     if (record.skipIdproofs || !checkEmptyIdProofs(record)) {
-//       increaseStep(5);
-//       checkForBankAccount();
-//     }
-//     logReportEvent("Profile Completion Id")
-//     logFirebaseAnlyticsEvent("profile_completion_id")
-//     increaseStep(4);
-//     idProofView(checkForBankAccount);
-
-//   }).catch()
-
-// }
 
 
-// function checkForBankAccount() {
-
-//   getRootRecord().then(function (record) {
-//     if (record.skipBankAccountAdd || record.linkedAccounts.length) {
-//       openReportView();
-//       return;
-//     }
-//     logReportEvent("Profile Completion bank account")
-//     logFirebaseAnlyticsEvent("profile_completion_bank_account")
-//     increaseStep(5)
-//     addNewBankAccount(function () {
-//       loadingScreen();
-//       openReportView()
-//     });
-//   })
-// }
-
-
-function resizeAndCompressImage(image, compressionFactor) {
-  var canvas = document.createElement('canvas');
-  const canvasDimension = new CanvasDimension(image.width, image.height);
-  canvasDimension.setMaxHeight(screen.height)
-  canvasDimension.setMaxWidth(screen.width);
-  const newDimension = canvasDimension.getNewDimension()
-  canvas.width = newDimension.width
-  canvas.height = newDimension.height;
-  var ctx = canvas.getContext("2d");
-  ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
-  const newDataUrl = canvas.toDataURL('image/jpeg', compressionFactor);
-  return newDataUrl;
-
-}
-
-function CanvasDimension(width, height) {
-  this.MAX_HEIGHT = ''
-  this.MAX_WIDTH = ''
-  this.width = width;
-  this.height = height;
-}
-CanvasDimension.prototype.setMaxWidth = function (MAX_WIDTH) {
-  this.MAX_WIDTH = MAX_WIDTH
-}
-CanvasDimension.prototype.setMaxHeight = function (MAX_HEIGHT) {
-  this.MAX_HEIGHT = MAX_HEIGHT
-}
-CanvasDimension.prototype.getNewDimension = function () {
-  if (this.width > this.height) {
-    if (this.width > this.MAX_WIDTH) {
-      this.height *= this.MAX_WIDTH / this.width;
-      this.width = this.MAX_WIDTH;
-    }
-  } else {
-    if (this.height > this.MAX_HEIGHT) {
-      this.width *= this.MAX_HEIGHT / this.height;
-      this.height = this.MAX_HEIGHT
-    }
-  }
-
-  return {
-    width: this.width,
-    height: this.height
-  }
-}
 
 
 
@@ -1013,43 +426,6 @@ function showReLoginDialog(heading, contentText) {
 
 }
 
-function getProfileCompletionTabs() {
-  const dom = `<div class="step-container">
-  <div class="progress">
-    <div class="progress-track"></div>
-    <div id="step1" class="progress-step">
-      <i class='material-icons'>person</i>
-    </div>
-    <div id="step2" class="progress-step">
-      <i class='material-icons'>camera</i>
-    </div>
-    <div id="step3" class="progress-step">
-      <i class='material-icons'>email</i>
-    </div>
-
-  </div>
-
-</div>`
-  return dom
-}
-
-function profileCheck() {
-  const auth = firebase.auth().currentUser;
-  document.getElementById('step-ui').innerHTML = getProfileCompletionTabs();
-  if (!auth.displayName) {
-    logReportEvent("Profile Completion Name")
-    logFirebaseAnlyticsEvent("profile_completion_name")
-    document.getElementById("app-header").classList.remove('hidden');
-    increaseStep(1)
-    updateName(function () {
-      checkForPhoto();
-    });
-    return
-  };
-
-  increaseStep(2)
-  checkForPhoto();
-}
 
 function areObjectStoreValid(names) {
   const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum', ]
@@ -1079,7 +455,8 @@ function getEmployeeDetails(range, indexName) {
       const result = event.target.result;
 
       console.log(result);
-
+     
+  
       return resolve(result)
     }
     getEmployee.onerror = function () {
@@ -1120,7 +497,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key');
-  addendum.createIndex('timestamp','timestamp');
+  addendum.createIndex('timestamp', 'timestamp');
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
 
 
@@ -1245,17 +622,7 @@ function createRootObjectStore(db, uid, fromTime) {
   })
 }
 
-function redirect() {
-  firebase.auth().signOut().then(function () {
-    window.location = 'https://www.growthfile.com';
-  }).catch(function (error) {
-    console.log(error)
-    window.location = 'https://www.growthfile.com';
-    handleError({
-      message: `${error} from redirect`
-    })
-  });
-}
+
 
 
 
@@ -1315,18 +682,6 @@ function checkIDBCount(storeNames) {
 }
 
 
-function openReportView() {
-  document.getElementById('step-ui').innerHTML = ''
-  history.pushState(['appView'],null,null);
-  getCurrentJob().then(function(activity){
-      if(activity.activityId) {
-          activity.isActive = true;
-      }
-       history.pushState(['jobView',activity], null, null)
-       jobView(activity);
-   })
-}
-
 function fillVenueInSub(sub, venue) {
   const vd = sub.venue[0];
   sub.venue = [{
@@ -1361,25 +716,483 @@ function shouldCheckin(geopoint, checkInSubs) {
   return false
 }
 
-function isNewJob(geopoint) {
-  const oldState = JSON.parse(localStorage.getItem('ApplicationState'))
-  if (!oldState) return true
-  if (!oldState.lastCheckInCreated) return true;
-  const today = isToday(oldState.lastCheckInCreated)
-  const hasChangedLocation = isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldState.location, geopoint))
-  
-  if(today) {
-    if(hasChangedLocation) return true
-    return false;
+
+
+function failureScreen(error, callback) {
+
+  dom_root.innerHTML = `
+    <div class="center-abs location-not-found">
+    <i class='material-icons mdc-theme--secondary'>${error.icon || 'location_off'}</i>
+    <p class='mdc-typography--headline5'>
+    ${error.title}
+    </p>
+    <p class='mdc-typography--body1'>
+    ${error.message}
+    </p>
+    <button class="mdc-button mdc-theme--primary-bg" id='try-again'>
+    <span class="mdc-button__label mdc-theme--on-primary">RETRY</span>
+    </button>
+    </div>`
+  document.getElementById('try-again').addEventListener('click', function (evt) {
+    document.querySelector('.center-abs.location-not-found').classList.add('hidden')
+    callback();
+  })
+}
+
+
+function mapView(location) {
+
+  ApplicationState.location = location
+  // progressBar.close();
+
+  const latLng = {
+    lat: location.latitude,
+    lng: location.longitude
   }
-  return true
+  console.log(latLng)
+  const offsetBounds = new GetOffsetBounds(location, 1);
 
+  loadNearByLocations({
+    north: offsetBounds.north(),
+    south: offsetBounds.south(),
+    east: offsetBounds.east(),
+    west: offsetBounds.west()
+  }, location).then(function (nearByLocations) {
+
+    if (!nearByLocations.length) return createUnkownCheckIn(location)
+    if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
+    loadLocationsCard(nearByLocations, location)
+  })
+}
+
+function createUnkownCheckIn(geopoint) {
+  // document.getElementById("app-header").classList.add('hidden')
+  const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
+  ApplicationState.knownLocation = false;
+  if (offices.length == 1) {
+    generateRequestForUnknownCheckin(offices[0], geopoint)
+    return
+  }
+  const officeCard = bottomCard('Choose office');
+
+  offices.forEach(function (office) {
+    const li = createList({
+      primaryText: office,
+      meta: 'navigate_next'
+    });
+    officeCard.ul.appendChild(li);
+  })
+
+  new mdc.list.MDCList(officeCard.ul).listen('MDCList:action', function (evt) {
+    console.log(evt.detail.index)
+    const selectedOffice = offices[evt.detail.index];
+    generateRequestForUnknownCheckin(selectedOffice, geopoint)
+    officeCard.card.classList.add('hidden')
+  })
+  dom_root.appendChild(officeCard.card);
 }
 
 
-function isToday(timestamp) {
-  return moment(timestamp).isSame(moment().clone().startOf('day'),'d')
+function generateRequestForUnknownCheckin(office, geopoint, retries = {
+  subscriptionRetry: 0,
+  invalidRetry: 0
+}) {
+  loadScreen('checkin');
+  document.querySelector('#checkin .loading-text--headline').textContent = 'Checking in'
+  getRootRecord().then(function (rootRecord) {
+    const timestamp = fetchCurrentTime(rootRecord.serverTime)
+
+    const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
+    copy.share = [];
+    copy.timestamp = timestamp
+
+    requestCreator('create', fillVenueInSub(copy, ''), geopoint).then(function () {
+      removeScreen()
+      successDialog('Check-In Created')
+      ApplicationState.venue = ''
+      ApplicationState.selectedOffice = office;
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+      initProfileView();
+
+    }).catch(function (error) {
+      console.log(error)
+      // progressBar.close()
+      const queryLink = getDeepLink();
+
+      if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+
+        if (retries.subscriptionRetry <= 2) {
+          setTimeout(function () {
+            retries.subscriptionRetry++
+            generateRequestForUnknownCheckin(office, geopoint, retries)
+          }, 5000)
+        }
+        return
+      }
+
+      if (error.message === 'Invalid check-in') {
+
+        handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
+          ApplicationState.location = newGeopoint;
+          retries.invalidRetry++
+          generateRequestForUnknownCheckin(office, newGeopoint, retries);
+        });
+        return
+      };
+
+    })
+
+  })
 }
 
 
+function handleInvalidCheckinLocation(retry, callback) {
+  if (retry) return reloadPage();
+
+  if (native.getName() === 'Android') {
+    handleGeoLocationApi().then(callback).catch(function (error) {
+      handleError({
+        message: 'Geolocation failed to get data for retry attempt at invalid checkin',
+        body: error
+      });
+      failureScreen({
+        message: 'There was a problem in detecting your location.',
+        icon: 'location_off',
+        title: 'Failed To Detect Location'
+      }, reloadPage);
+    })
+    return;
+  }
+  try {
+
+    webkit.messageHandlers.locationService.postMessage('start');
+    window.addEventListener('iosLocation', function _iosLocation(e) {
+      callback(e.detail)
+      window.removeEventListener('iosLocation', _iosLocation, true);
+    }, true);
+  } catch (e) {
+
+    failureScreen({
+      message: 'There was a problem in detecting your location.',
+      icon: 'location_off',
+      title: 'Failed To Detect Location'
+    }, reloadPage);
+  }
+}
+
+
+const bottomCard = (heading, listTwoLine) => {
+  const card = createElement('div', {
+    className: 'mdc-card mdc-elevation--z16 mdc-card--outlined bottom-card'
+  })
+  card.appendChild(createElement('h1', {
+    className: 'mdc-typography--headline6',
+    textContent: heading
+  }))
+  const ul = createElement('ul', {
+    className: 'mdc-list pt-0'
+  })
+  if (listTwoLine) {
+    ul.classList.add('mdc-list--two-line', 'mdc-list--avatar-list')
+  }
+  card.appendChild(ul);
+
+  return {
+    ul,
+    card
+  }
+}
+
+function loadLocationsCard(venues, geopoint) {
+
+  ApplicationState.knownLocation = true;
+  const locationCard = bottomCard('Choose duty location', true);
+
+  venues.map(function (venue) {
+    locationCard.ul.appendChild(createList({
+      icon: 'location_on',
+      primaryText: venue.location,
+      secondaryText: venue.office,
+      meta: 'navigate_next'
+    }))
+  })
+
+  new mdc.list.MDCList(locationCard.ul).listen('MDCList:action', function (evt) {
+    console.log(evt.detail.index)
+    const selectedVenue = venues[evt.detail.index];
+    createKnownCheckIn(selectedVenue, geopoint);
+    locationCard.card.classList.add('hidden')
+    // return;
+  })
+  dom_root.appendChild(locationCard.card);
+
+};
+
+function createKnownCheckIn(selectedVenue, geopoint, retries = {
+  subscriptionRetry: 0,
+  invalidRetry: 0
+}) {
+  console.log(selectedVenue)
+
+  const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
+  copy.share = []
+  // progressBar.open()
+  loadScreen('checkin')
+  document.querySelector('#checkin .loading-text--headline').textContent = 'Checking in at ' + selectedVenue.location;
+
+  // return
+  requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
+    removeScreen()
+    successDialog('Check-In Created')
+    ApplicationState.venue = selectedVenue;
+    ApplicationState.selectedOffice = selectedVenue.office;
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    initProfileView()
+  }).catch(function (error) {
+    console.log(error)
+    // progressBar.close()
+    const queryLink = getDeepLink();
+
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+
+      if (retries.subscriptionRetry <= 2) {
+        setTimeout(function () {
+          retries.subscriptionRetry++
+          createKnownCheckIn(selectedVenue, geopoint, retries);
+        }, 5000)
+      }
+      return
+    };
+
+    if (error.message === 'Invalid check-in') {
+
+      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
+        ApplicationState.location = newGeopoint;
+        retries.invalidRetry++
+        createKnownCheckIn(selectedVenue, newGeopoint, retries);
+      });
+      return
+    };
+  })
+}
+
+function snapView(selector) {
+  document.querySelector(selector).innerHTML = `
+  <div class='snap-container'>
+  <h6 class='mdc-typography--headline5 text-center'>
+    Create a photo check-in
+  </h6>
+  <div class='landing-page-container text-center'>
+    <button class="mdc-fab mdc-fab--extended mdc-theme--primary-bg mdc-theme--on-primary">
+      <div class="mdc-fab__ripple"></div>
+      <span class="material-icons mdc-fab__icon">camera</span>
+      <span class="mdc-fab__label">Take photo</span>
+    </button>
+  </div>
+  </div>
+  `;
+
+  document.querySelector('.snap-container .mdc-fab').addEventListener('click', openCamera)
+  openCamera();
+}
+
+function openCamera() {
+  if (native.getName() === "Android") {
+    AndroidInterface.startCamera("setFilePath");
+    return
+  }
+  webkit.messageHandlers.startCamera.postMessage("setFilePath");
+}
+
+function setFilePathFailed(error) {
+  snacks(error);
+}
+
+
+function setFilePath(base64, retries = {
+  subscriptionRetry: 0,
+  invalidRetry: 0
+}) {
+  const url = `data:image/jpg;base64,${base64}`
+  dom_root.innerHTML = `
+  <div class='image-container'>
+    <div id='snap' class="snap-bckg">
+      <div class="form-meta snap-form">
+        <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
+            <textarea
+            class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100"></textarea></div>
+            <button id='snap-submit' class="mdc-fab app-fab--absolute  snap-fab mdc-theme--primary-bg  mdc-ripple-upgraded"
+          style="z-index: 9;">
+          <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  `
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title">Upload photo</span>
+        `
+  const header = setHeader(backIcon, '');
+  header.root_.classList.remove('hidden');
+  const content = document.getElementById('snap')
+  const textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'))
+  const submit = new mdc.ripple.MDCRipple(document.getElementById('snap-submit'))
+
+
+  textarea.focus();
+  textarea.input_.addEventListener('keyup', function () {
+    this.style.paddingTop = '25px';
+    this.style.height = '5px'
+    this.style.height = (this.scrollHeight) + "px";
+    if (this.scrollHeight <= 300) {
+      submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
+    }
+  });
+
+  const image = new Image();
+  image.onload = function () {
+
+    const orientation = getOrientation(image);
+    content.style.backgroundImage = `url(${url})`
+    if (orientation == 'landscape' || orientation == 'sqaure') {
+      content.style.backgroundSize = 'contain'
+    }
+  }
+  image.src = url;
+
+  submit.root_.addEventListener('click', function () {
+    const textValue = textarea.value;
+    sendPhotoCheckinRequest({
+      sub: ApplicationState.officeWithCheckInSubs[ApplicationState.selectedOffice],
+      base64: url,
+      retries: retries,
+      textValue: textValue,
+      knownLocation: true
+    })
+  })
+}
+
+
+function sendPhotoCheckinRequest(request) {
+  const url = request.base64;
+  const textValue = request.textValue;
+  const retries = request.retries;
+  const sub = JSON.parse(JSON.stringify(request.sub))
+  sub.attachment.Photo.value = url || ''
+  sub.attachment.Comment.value = textValue;
+  sub.share = []
+  history.back();
+  requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
+    successDialog('Photo uploaded');
+
+  }).catch(function (error) {
+    const queryLink = getDeepLink();
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+
+      if (retries.subscriptionRetry <= 2) {
+        setTimeout(function () {
+          retries.subscriptionRetry++
+          if (request.knownLocation) {
+            createKnownCheckIn(ApplicationState.venue, geopoint, retries);
+          } else {
+            createUnkownCheckIn(sub.office, geopoint, retries);
+          }
+        }, 5000)
+      }
+      return
+    }
+
+    if (error.message === 'Invalid check-in') {
+      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
+        ApplicationState.location = newGeopoint;
+        retries.invalidRetry++
+        setFilePath(base64, retries);
+      });
+      return
+    };
+  });
+}
+
+function mdcDefaultSelect(data, label, id, option) {
+  const template = `<div class="mdc-select" id=${id}>
+  <i class="mdc-select__dropdown-icon"></i>
+  <select class="mdc-select__native-control">
+  <option disabled selected></option>
+  ${data.map(function(value){
+    return ` <option value='${value}'>
+    ${value}
+    </option>`
+}).join("")}
+${option}
+
+  </select>
+  <label class='mdc-floating-label'>${label}</label>
+  <div class="mdc-line-ripple"></div>
+</div>`
+  return template;
+}
+
+
+function mdcSelectVenue(venues, label, id) {
+  const template = `<div class="mdc-select" id=${id}>
+  <i class="mdc-select__dropdown-icon"></i>
+  <select class="mdc-select__native-control">
+  <option disabled selected value=${JSON.stringify('0')}></option>
+  <option value=${JSON.stringify('1')}>UNKNOWN LOCATION</option>
+
+  ${venues.map(function(value){
+    return ` <option value='${JSON.stringify(value)}'>
+    ${value.location}
+    </option>`
+  }).join("")}
+  
+</select>
+  <label class='mdc-floating-label'>${label}</label>
+  <div class="mdc-line-ripple"></div>
+</div>`
+  return template;
+}
+
+
+
+function getOrientation(image) {
+  if (image.width > image.height) return 'landscape'
+  if (image.height > image.width) return 'potrait'
+  if (image.width == image.height) return 'square'
+}
+
+
+
+
+
+function loadNearByLocations(o, location) {
+  return new Promise(function (resolve, reject) {
+
+    const result = []
+
+    const tx = db.transaction(['map'])
+    const store = tx.objectStore('map');
+    const index = store.index('bounds');
+    const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
+
+    index.openCursor(idbRange).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+
+      if (!ApplicationState.officeWithCheckInSubs[cursor.value.office]) {
+        cursor.continue();
+        return;
+      };
+      if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(location, cursor.value))) {
+        cursor.continue();
+        return;
+      }
+      result.push(cursor.value)
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      return resolve(result);
+    }
+  })
+}
 
