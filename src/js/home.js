@@ -25,12 +25,6 @@ window.addEventListener("load", (ev) => {
   });
 });
 
-function firstletter(A) {
-  var pfp = A.toUpperCase();
-  document.getElementById("output").style.display = "none";
-  document.getElementById("no_output").style.display = "block"
-  document.getElementById("no_output").innerHTML = pfp;
-}
 
 
 
@@ -328,6 +322,21 @@ function readallduties(object_of_dates) {
       card.style.display = "flex";
     }
   }
+
+  document
+  .getElementById("show_more_b")
+  .addEventListener("click", function () {
+    document.getElementById("show_more_b").style.display = "none";
+
+    var show_all_card = document.querySelectorAll(".month-card");
+    console.log(show_all_card.length);
+    for (var i = 0; i < show_all_card.length; i++) {
+      show_all_card[i].style.display = "block";
+    }
+
+
+  });
+  
 }
 
 
@@ -480,16 +489,3 @@ function subDuties(j) {
 
 
 
-document
-  .getElementById("show_more_b")
-  .addEventListener("click", function () {
-    document.getElementById("show_more_b").style.display = "none";
-
-    var show_all_card = document.querySelectorAll(".month-card");
-    console.log(show_all_card.length);
-    for (var i = 0; i < show_all_card.length; i++) {
-      show_all_card[i].style.display = "block";
-    }
-
-
-  });

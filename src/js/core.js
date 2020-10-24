@@ -74,6 +74,12 @@ function setFirebaseAnalyticsUserId(id) {
   console.log('No native apis found');
 }
 
+function firstletter(A) {
+  var pfp = A.toUpperCase();
+  document.getElementById("output").style.display = "none";
+  document.getElementById("no_output").style.display = "block"
+  document.getElementById("no_output").innerHTML = pfp;
+}
 
 
 
