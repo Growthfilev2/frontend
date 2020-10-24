@@ -21,8 +21,8 @@ window.addEventListener('load', () => {
         console.log('Registration succeeded. Scope is ' + reg.scope);
         firebase.auth().onAuthStateChanged(user => {
           if (user) {
-      
-            if(window.location.search && new URLSearchParams(window.location.search).has('action')) {
+
+            if (window.location.search && new URLSearchParams(window.location.search).has('action')) {
               deepLink = new URLSearchParams(window.location.search);
             }
             loadApp()
@@ -177,9 +177,9 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success")
     db = req.result;
-    
+
     console.log("run app")
-   
+
     regulator()
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
@@ -455,8 +455,8 @@ function getEmployeeDetails(range, indexName) {
       const result = event.target.result;
 
       console.log(result);
-     
-  
+
+
       return resolve(result)
     }
     getEmployee.onerror = function () {
@@ -626,35 +626,6 @@ function createRootObjectStore(db, uid, fromTime) {
 
 
 
-function getCheckInSubs() {
-  return new Promise(function (resolve) {
-    const checkInSubs = {};
-    const tx = db.transaction('subscriptions');
-    tx.objectStore('subscriptions')
-      .index('templateStatus')
-      .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
-      .onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
-          cursor.continue();
-          return;
-        }
-        if (checkInSubs[cursor.value.office]) {
-          if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
-            checkInSubs[cursor.value.office] = cursor.value;
-          }
-        } else {
-          checkInSubs[cursor.value.office] = cursor.value
-        }
-        cursor.continue();
-      }
-    tx.oncomplete = function () {
-      delete checkInSubs['xanadu'];
-      return resolve(checkInSubs)
-    }
-  })
-};
 
 
 function checkIDBCount(storeNames) {
@@ -1164,35 +1135,4 @@ function getOrientation(image) {
 
 
 
-
-function loadNearByLocations(o, location) {
-  return new Promise(function (resolve, reject) {
-
-    const result = []
-
-    const tx = db.transaction(['map'])
-    const store = tx.objectStore('map');
-    const index = store.index('bounds');
-    const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
-
-    index.openCursor(idbRange).onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-
-      if (!ApplicationState.officeWithCheckInSubs[cursor.value.office]) {
-        cursor.continue();
-        return;
-      };
-      if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(location, cursor.value))) {
-        cursor.continue();
-        return;
-      }
-      result.push(cursor.value)
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-      return resolve(result);
-    }
-  })
-}
 

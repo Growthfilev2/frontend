@@ -554,11 +554,11 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
 
-    // return resolve({
-    //   latitude:28.7891238,
-    //   longitude:77.128309129323,
-    //   lastLocationTime:Date.now()
-    // })
+    return resolve({
+      latitude:16.7891238,
+      longitude:34.128309129323,
+      lastLocationTime:Date.now()
+    })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -790,30 +790,6 @@ function requestCreator(requestType, requestBody, geopoint) {
   });
 }
 
-// function serviceWorkerRequestCreator() {
-//   // return new Promise(resolve=>{
-//     // firebase.auth().currentUser.getIdToken().then(function (token) {
- 
-//       var auth = firebase.auth().currentUser;
-//       var requestGenerator = {
-//         type: 'read',
-//         meta: {
-//           user: {
-//             token: token,
-//             uid: auth.uid,
-//             displayName: auth.displayName,
-//             photoURL: auth.photoURL,
-//             phoneNumber: auth.phoneNumber,
-//           },
-//           apiUrl: appKey.getBaseUrl(),
-//         },
-//       };
-//       return requestGenerator;
-//       // return resolve(requestGenerator);
-     
-//     // })
-//   // })
-// }
 
 function executeRequest(requestGenerator) {
   const auth = firebase.auth().currentUser;
@@ -1316,4 +1292,66 @@ function dialogButton(name, action) {
 
     button.setAttribute('data-mdc-dialog-action', action)
     return button;
+}
+
+const getCheckInSubs = () => {
+  return new Promise(resolve => {
+    const checkInSubs = {};
+    const tx = db.transaction('subscriptions');
+    tx.objectStore('subscriptions')
+      .index('templateStatus')
+      .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
+      .onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
+          cursor.continue();
+          return;
+        }
+        if (checkInSubs[cursor.value.office]) {
+          if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
+            checkInSubs[cursor.value.office] = cursor.value;
+          }
+        } else {
+          checkInSubs[cursor.value.office] = cursor.value
+        }
+        cursor.continue();
+      }
+    tx.oncomplete = function () {
+      delete checkInSubs['xanadu'];
+      return resolve(checkInSubs)
+    }
+  })
+};
+
+
+const loadNearByLocations = (o, location) => {
+  return new Promise((resolve, reject) => {
+
+    const result = []
+
+    const tx = db.transaction(['map'])
+    const store = tx.objectStore('map');
+    const index = store.index('bounds');
+    const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
+
+    index.openCursor(idbRange).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+
+      if (!ApplicationState.officeWithCheckInSubs[cursor.value.office]) {
+        cursor.continue();
+        return;
+      };
+      if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(location, cursor.value))) {
+        cursor.continue();
+        return;
+      }
+      result.push(cursor.value)
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      return resolve(result);
+    }
+  })
 }
