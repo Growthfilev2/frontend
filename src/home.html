@@ -1,172 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-    <title>Document</title>
 
-    <link rel="stylesheet" href="css/home.css" />
-   <link href="css/app.css" rel="stylesheet" type="text/css" />
-   <link rel="shortcut icon" type="image/png" href="./img/favicon.png"/>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link
-      href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
-      rel="stylesheet"
-    />
+  <title>Document</title>
 
-    <!-- <script src="external/js/material.min.js"></script>
-    <link rel="stylesheet" href="external/css/material.min.css" /> -->
+  <link href="css/app.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="css/home.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons|Material+Icons+Outlined"
+    rel="stylesheet" />
 
-    <script
-      defer
-      src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"
-    ></script>
-    <script
-      defer
-      src="https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js"
-    ></script>
-    <script defer src="js/config.js"></script>
-  </head>
-  <body>
-    <header id="home_header">
-      <span id="logo">OnDuty</span>
+  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
-      <span id="generic_button">
-        <a
-          href="https://api.whatsapp.com/send?phone=919718710267&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
-          target="_blank"
-          ><img src="img/generic.svg" width="24px" height="24px" alt="info"
-        /></a>
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js"></script>
+  <script defer src="js/config.js"></script>
+</head>
 
-      </span>
-
-      
-      <span id="profile_pic">
-       
-        <a  href="./profile"><img id="pfp" src=""  width="24px" height="24px"></a>
-      </span>
+<body>
 
 
+  <header id="home_header">
+    <span id="logo">OnDuty</span>
 
-      <span id="camera_upload"
-        ><img src="img/upload_camera.svg" alt="upload"
-      /></span>
-      <p id="home_text">Home</p>
-    </header>
-    <div class="mdc-top-app-bar--fixed-adjust">
-      <div id="current_duty_card">
-        <div id="current_text">
-          <p class="header">Current Duty</p>
-          <p id="location">
-            <span class="material-icons-outlined"> location_on </span>&nbsp
-            &nbsp<span id="current_location">saasd</span>
-          </p>
-  
-          <p id="checkin_time">
-            <span class="material-icons-outlined"> query_builder </span>&nbsp
-            &nbsp<span id="current_interval">
-              <span id="starting_time">00:</span>-
-              <span id="ending_time">(On Going)</span></span
-            >
-          </p>
-          <p>
-            <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-              id="total_time"
-              >asdas</span
-            >
-          </p>
+    <span id="generic_button">
+      <a href="https://api.whatsapp.com/send?phone=918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
+        target="_blank"><img src="img/generic.svg" width="24px" height="24px" alt="info" /></a>
+    </span>
+
+    <span id="profile_pic">
+      <a href="profile.html"><img id="pfp" src="" width="24px" height="24px" /></a>
+    </span>
+
+    <span id="camera_upload"><img src="img/upload_camera.svg" alt="upload" /></span>
+    <p id="home_text">Home</p>
+  </header>
+
+  <div id="current_duty_card">
+    <div id="current_text">
+      <p class="header">Current Duty</p>
+      <p id="location">
+        <span class="material-icons-outlined"> location_on </span>&nbsp
+        &nbsp<span id="current_location">saasd</span>
+      </p>
+
+      <p id="checkin_time">
+        <span class="material-icons-outlined"> query_builder </span>&nbsp
+        &nbsp<span id="current_interval">
+          <span id="starting_time">00:</span>-
+          <span id="ending_time">(On Going)</span></span>
+      </p>
+      <p>
+        <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span id="total_time">asdas</span>
+      </p>
+      <div style="display: flex" id="assignees_div_current">
+        <div class="mdc-chip-set mdc-chip-set--filter" role="grid">
+          <div class="mdc-chip" id="for_chips_background" role="row">
+            <div class="mdc-chip__ripple"></div>
+            <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="" width="24px"
+                height="24px" /></i>
+            <span class="mdc-chip__checkmark">
+              <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
+                <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
+                  d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+              </svg>
+            </span>
+            <span role="gridcell">
+              <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
+                <span class="mdc-chip__text" id="assignees_name"></span>
+              </span>
+            </span>
+          </div>
         </div>
-        <div id="finish_button">
-          <button id="finish">FINISH</button>
-        </div>
+        <span id="other_assignees"></span>
       </div>
-  
-      <div id="month_card"> 
-        
-      </div>
-  
-      <span id="day_div_expand"></span>
-
     </div>
-    
-      
-    
+    <div id="finish_button">
+      <button id="finish">FINISH</button>
+    </div>
+  </div>
 
+  <div id="card"></div>
+  <div id="show_more_b">Show More</div>
+  <script src="js/core.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/job.js"></script>
+  <script src="external/js/moment.min.js"></script>
+</body>
 
-       <!-- <div id="on_card">
-        
-        <p id="month_date">asd</p>
-        
-        <p id="days_worked">sadw33</p>
-        
-      </div>
-
-      <div id="collapsed" style="display: none;">
-
-        <div id="date_day"> <p id="duty_date">19</p> <p id="duty_day">SAT</p></div>
-        <div id="duty_div">
-          <div id="collapsed_duty">
-          <p><span class="material-icons">
-          location_on
-          </span><span id="duty_address">new Delhi</span>
-        </p>
-        <p>
-          <span class="material-icons">
-          timer
-          </span><span id="total_hours">10h</span>&nbsp&nbsp&nbsp <span class="material-icons">
-            work
-            </span><span id="total_duties">10</span>
-          </p>
-          </div> -->
-       
-        <!-- <div id="expended_duty" style="display: block;">
-         
-            
-           <p id="expended_location">
-              <span class="material-icons-outlined"> location_on </span>&nbsp
-              &nbsp<span id="expended_location">saasd</span>
-            </p>
-    
-            <p id="expended_checkin_time">
-              <span class="material-icons-outlined"> query_builder </span>&nbsp
-              &nbsp<span id="expended_interval">
-                <span id="expended_starting_time">00:</span>-
-                <span id="expended_ending_time">00</span></span
-              >
-            </p>
-            <p>
-              <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-                id="expended_total_time"
-                >asdas</span>
-            </p>
-          
-        </div> -->
-
-<!--         
-      </div>
-      </div>
-
-       --> 
-
-
-
-   
-    
-
-
-
-
-    
-
-    <script src="js/home.js"></script>
-    <script defer src="js/core.js"></script>
-    <script src="js/job.js"></script>
-    <script src="external/js/moment.min.js"></script>
-    
-  </body>
 </html>
