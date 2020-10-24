@@ -1,4 +1,49 @@
 var database;
+navigator.serviceWorker.onmessage = (event) => {
+  console.log('message from worker', event.data);
+  const readResponse = event.data
+  // if new checkin subscriptions comes then update the db
+  getCheckInSubs().then(function (checkInSubs) {
+    ApplicationState.officeWithCheckInSubs = checkInSubs
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+  });
+
+  if (readResponse.activities.some(activity => activity.template === "duty")) {
+    readduty()
+  }
+  const dutyLocations = []
+
+  let prom = Promise.resolve([]);
+  // is user created a checkin from unknown location then venue in application state will be empty
+  // if its empty then find all the nearest locations
+  if (!ApplicationState.venue) {
+    const offsetBounds = new GetOffsetBounds(ApplicationState.location, 1);
+    prom = loadNearByLocations({
+      north: offsetBounds.north(),
+      south: offsetBounds.south(),
+      east: offsetBounds.east(),
+      west: offsetBounds.west()
+    }, ApplicationState.location)
+  }
+
+  prom.then(function (locations) {
+    locations.forEach(function (location) {
+      location.distance = calculateDistanceBetweenTwoPoints(location, ApplicationState.location);
+      dutyLocations.push(location)
+    });
+    // if there are locatiosn nearby, then sort the locatiuns by distance in asc order
+    if (dutyLocations.length) {
+      const sorted = dutyLocations.sort(function (a, b) {
+        return a.distance - b.distance;
+      });
+      // update application state and set the new venue
+      ApplicationState.venue = sorted[0];
+      console.log(sorted[0])
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+      read()
+    };
+  })
+};
 
 window.addEventListener("load", (ev) => {
   firebase.auth().onAuthStateChanged((user) => {
