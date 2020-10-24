@@ -1,50 +1,4 @@
 var database;
-navigator.serviceWorker.onmessage = (event) => {
-  console.log('message from worker', event.data);
-  const readResponse = event.data
-  // if new checkin subscriptions comes then update the db
-  getCheckInSubs().then(function (checkInSubs) {
-    ApplicationState.officeWithCheckInSubs = checkInSubs
-    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-  });
-
-  if (readResponse.activities.some(activity => activity.template === "duty")) {
-    readduty()
-  }
-  const dutyLocations = []
-
-  let prom = Promise.resolve([]);
-  // is user created a checkin from unknown location then venue in application state will be empty
-  // if its empty then find all the nearest locations
-  if (!ApplicationState.venue) {
-    const offsetBounds = new GetOffsetBounds(ApplicationState.location, 1);
-    prom = loadNearByLocations({
-      north: offsetBounds.north(),
-      south: offsetBounds.south(),
-      east: offsetBounds.east(),
-      west: offsetBounds.west()
-    }, ApplicationState.location)
-  }
-
-  prom.then(function (locations) {
-    locations.forEach(function (location) {
-      location.distance = calculateDistanceBetweenTwoPoints(location, ApplicationState.location);
-      dutyLocations.push(location)
-    });
-    // if there are locatiosn nearby, then sort the locatiuns by distance in asc order
-    if (dutyLocations.length) {
-      const sorted = dutyLocations.sort(function (a, b) {
-        return a.distance - b.distance;
-      });
-      // update application state and set the new venue
-      ApplicationState.venue = sorted[0];
-      console.log(sorted[0])
-      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-      read()
-    };
-  })
-};
-
 
 window.addEventListener("load", (ev) => {
   firebase.auth().onAuthStateChanged((user) => {
@@ -117,6 +71,7 @@ function read() {
 
 function readduty() {
   const duties = [];
+  const timestamp_array = [];
 
   var transaction = db.transaction("activity");
   var store = transaction.objectStore("activity");
@@ -124,6 +79,7 @@ function readduty() {
   // open cursor on activity object store's index template
   // pass duty as template , this will return all duty activites
 
+  let dateObjects = {};
 
   store.index("template").openCursor("duty").onsuccess = function (evt) {
     const cursor = evt.target.result;
@@ -136,7 +92,17 @@ function readduty() {
     }
 
     // if duty doesn't have a start and end time , ignore and continue
-    if (!cursor.value.schedule[0].startTime || !cursor.value.schedule[0].endTime) {
+    if (
+      !cursor.value.schedule[0].startTime ||
+      !cursor.value.schedule[0].endTime
+    ) {
+      cursor.continue();
+      return;
+    }
+
+    if (
+      cursor.value.schedule[0].startTime == cursor.value.schedule[0].endTime
+    ) {
       cursor.continue();
       return;
     }
@@ -147,10 +113,12 @@ function readduty() {
     }
 
     // if activity's office doesn't match the selected office during checkin , then ignore and continue
-    if (cursor.value.office !== ApplicationState.selectedOffice) {
-      cursor.continue();
-      return
-    }
+    // if (cursor.value.office !== ApplicationState.selectedOffice) {
+    //     cursor.continue();
+    //     return
+    // }
+
+    timestamp_array.push(cursor.value.timestamp);
 
     duties.push(cursor.value);
 
@@ -176,6 +144,7 @@ function readduty() {
 
     console.log(DT);
 
+    const months = Object.keys(dateObjects);
     let date_objects = {};
     // loop through the object and caluclate total hours, total locations and total hours worked
     // for each date
@@ -305,15 +274,15 @@ function readallduties(object_of_dates) {
     month = moment(date, "DD/MM/YYYY").month();
 
 
-
+   
     // Converted total work hours in to hours and minuts
 
-    const card = createDateCard(date, object_of_dates)
+    const card = createDateCard(date,object_of_dates)
 
     //Expanded first month
 
     monthCard.addEventListener("click", function (e) {
-      if (card.style.display == "flex") {
+      if (card.style.display == "flex" ) {
         card.style.display = "none";
 
         return;
@@ -351,28 +320,27 @@ function readallduties(object_of_dates) {
 
     if (moment(date, "DD/MM/YYYY").month() == current_month) {
       card.style.display = "flex";
-      monthCard.style.display = 'block';
     }
   }
 
   document
-    .getElementById("show_more_b")
-    .addEventListener("click", function () {
-      document.getElementById("show_more_b").style.display = "none";
+  .getElementById("show_more_b")
+  .addEventListener("click", function () {
+    document.getElementById("show_more_b").style.display = "none";
 
-      var show_all_card = document.querySelectorAll(".month-card");
-      console.log(show_all_card.length);
-      for (var i = 0; i < show_all_card.length; i++) {
-        show_all_card[i].style.display = "block";
-      }
+    var show_all_card = document.querySelectorAll(".month-card");
+    console.log(show_all_card.length);
+    for (var i = 0; i < show_all_card.length; i++) {
+      show_all_card[i].style.display = "block";
+    }
 
 
-    });
-
+  });
+  
 }
 
 
-function createDateCard(date, object_of_dates) {
+function createDateCard(date,object_of_dates) {
 
   const day = moment(date, "DD/MM/YYYY").format('ddd').toString().toUpperCase()
   const day_total_time = moment.duration(object_of_dates[date].totalHoursWorked);
@@ -417,10 +385,11 @@ function createDateCard(date, object_of_dates) {
               }</span>
             </p>
             </div>
-      
+            <div><hr id="h_line"><div id="circle"></div></div> 
               <div class='duties-list'></div>
           </div>
-                  `;
+                
+          `;
 
 
   return card;
@@ -465,6 +434,7 @@ function subDuties(j) {
 
 
   collapsed.innerHTML = `
+  <div id="individual_duty">
               <p id="expended_location">
               <span class="material-icons-outlined"> location_on </span>&nbsp
               &nbsp<span id="expended_location">${
@@ -514,7 +484,13 @@ function subDuties(j) {
             and + " " + other_assignee
           }</span>
           </div>
+          </div>
+
+          <div><hr id="h_line"><div id="circle"></div></div> 
               `
   return collapsed;
 
 }
+
+
+

@@ -113,10 +113,3 @@ const calculateProfileVerification = (rootRecord) => {
 }
 
 
-
-const firstletter = (A) => {
-  var pfp = A.toUpperCase();
-  document.getElementById("output").style.display = "none";
-  document.getElementById("no_output").style.display = "block"
-  document.getElementById("no_output").innerHTML = pfp;
-}
