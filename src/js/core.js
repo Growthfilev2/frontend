@@ -74,6 +74,9 @@ function setFirebaseAnalyticsUserId(id) {
   console.log('No native apis found');
 }
 
+
+
+
 function logFirebaseAnlyticsEvent(name, params) {
   if (!name) {
     return;

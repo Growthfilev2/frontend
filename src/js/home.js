@@ -25,6 +25,15 @@ window.addEventListener("load", (ev) => {
   });
 });
 
+function firstletter(A) {
+  var pfp = A.toUpperCase();
+  document.getElementById("output").style.display = "none";
+  document.getElementById("no_output").style.display = "block"
+  document.getElementById("no_output").innerHTML = pfp;
+}
+
+
+
 function read() {
   getCurrentJob().then((record) => {
     document.getElementById("current_location").innerHTML =
@@ -171,7 +180,7 @@ function readduty() {
         const checkins = activity.checkins
           .filter(
             (v) =>
-              v.creator.phoneNumber === firebase.auth().currentUser.phoneNumber
+            v.creator.phoneNumber === firebase.auth().currentUser.phoneNumber
           )
           .sort((a, b) => {
             return b.timestamp - a.timestamp;
@@ -193,93 +202,55 @@ function readduty() {
       });
     });
     console.log(date_objects);
+    readallduties(date_objects)
+  }
 
-    const keys = Object.keys(date_objects);
-    let month;
-    let monthCard;
-    let daysWorkedInMonth = 0;
-    var click = 0;
-    // loop the new objects backwards
+};
 
-    for (let i = keys.length - 1; i >= 0; i--) {
-      const date = keys[i];
-      // if month variable is not equal to current month value
-      // create a new card
 
-      if (month != moment(date, "DD/MM/YYYY").month()) {
-        //Created an array to convert number into string
-        var month_array = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
-        var get_year = moment(date, "DD/MM/YYYY").year();
 
-        var days_array = [];
+function readallduties(object_of_dates) {
 
-        if (get_year % 4 == 0) {
-          days_array = [
-            "31",
-            "29",
-            "31",
-            "30",
-            "31",
-            "30",
-            "31",
-            "31",
-            "30",
-            "31",
-            "30",
-            "31",
-          ];
-        } else {
-          days_array = [
-            "31",
-            "28",
-            "31",
-            "30",
-            "31",
-            "30",
-            "31",
-            "31",
-            "30",
-            "31",
-            "30",
-            "31",
-          ];
-        }
+  const keys = Object.keys(object_of_dates);
+  let month;
+  let monthCard;
+  let daysWorkedInMonth = 0;
 
-        var first_month = new Date();
-        var current_month = first_month.getMonth();
-        var pre_month = current_month - 1;
+  // loop the new objects backwards
 
-        if (current_month == month) {
-          monthCard.style.display = "block";
-        }
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const date = keys[i];
+    // if month variable is not equal to current month value
+    // create a new card
 
-        if (pre_month == month) {
-          monthCard.style.display = "block";
-        }
+    if (month != moment(date, "DD/MM/YYYY").month()) {
+      //Created an array to convert number into string
 
-        one_month = month_array[moment(date, "DD/MM/YYYY").month()];
-        curent_year = moment(date, "DD/MM/YYYY").year();
-        total_working_day = days_array[moment(date, "DD/MM/YYYY").month()];
 
-        monthCard = createElement("div", {
-          className: "month-card",
-          style: "display:none;",
-        });
 
-        monthCard.innerHTML = ` <div  id="month_card2">
+      var first_month = new Date();
+      var current_month = first_month.getMonth();
+      var pre_month = current_month - 1;
+
+      if (current_month == month) {
+        monthCard.style.display = "block";
+      }
+
+      if (pre_month == month) {
+        monthCard.style.display = "block";
+      }
+
+      one_month = moment(date, "DD/MM/YYYY").format('MMMM');
+      curent_year = moment(date, "DD/MM/YYYY").year();
+      total_working_day = moment(date, "YYYY-MM").daysInMonth();
+      console.log("total_working_day")
+
+      monthCard = createElement("div", {
+        className: "month-card",
+        style: "display:none;",
+      });
+
+      monthCard.innerHTML = ` <div  id="month_card2">
                 <div id="on_card2">
                 <p id="month_date2">${one_month} ${curent_year}</p>
                 
@@ -290,218 +261,235 @@ function readduty() {
                 </div>
                 </div>
                 `;
-        daysWorkedInMonth = 0;
-      }
-
-      document
-        .getElementById("show_more_b")
-        .addEventListener("click", function () {
-          document.getElementById("show_more_b").style.display = "none";
-
-          var show_all_card = document.querySelectorAll(".month-card");
-          console.log(show_all_card.length);
-          for (var i = 0; i < show_all_card.length; i++) {
-            show_all_card[i].style.display = "block";
-          }
-
-          //addStyle(styles);
-        });
-
-      daysWorkedInMonth++;
-      monthCard.querySelector(".total-days-worked").innerHTML =
-        "Days Worked: " +
-        daysWorkedInMonth +
-        " Days/ " +
-        total_working_day +
-        " Days";
-      // count_day++;
-
-      month = moment(date, "DD/MM/YYYY").month();
-
-      //  console.log(date)
-
-      var days = ["SUN", "MON", "TUE", "WED", "THUR", "FRI", "SAT"];
-
-      var day = days[moment(date, "DD/MM/YYYY").days()];
-      // Converted total work hours in to hours and minuts
-
-      var Day_total_time = moment.duration(date_objects[date].totalHoursWorked);
-
-      // individual date cards in a date
-      const card = createElement("div", {
-        id: "collapsed2",
-      });
-
-      card.dataset.date = date;
-      card.innerHTML = `
-            <div id="date_day2"> <p id="duty_date2">${date.slice(
-              0,
-              2
-            )}</p> <p id="duty_day2">${day}</p></div>
-            <div id="duty_div2">
-              <div id="collapsed_duty2" >
-              <p><span class="material-icons">
-              location_on
-              </span><span id="duty_address2">${date_objects[
-                date
-              ].totalLocationsString.substring(0, 21)}  ${
-        date_objects[date].totalDuties == 1
-          ? " "
-          : date_objects[date].totalDuties - 1 + " Others"
-      } </span>
-            </p>
-            <p>
-              <span class="material-icons">
-              timer
-              </span><span id="total_hours2">${
-                Day_total_time.days() +
-                "d " +
-                Day_total_time.hours() +
-                "h " +
-                Day_total_time.minutes() +
-                "m"
-              }</span>&nbsp&nbsp&nbsp <span class="material-icons">
-                work
-                </span><span id="total_duties2"> ${
-                  date_objects[date].totalDuties
-                }</span>
-              </p>
-              </div>
-        
-                <div class='duties-list'></div>
-            </div>
-                    `;
-      //Expanded first month
-
-      monthCard.addEventListener("click", function (e) {
-        if (card.style.display == "flex") {
-          card.style.display = "none";
-
-          return;
-        }
-        card.style.display = "flex";
-      });
-      // Added event listener on Date Card in order to create Sub Duty Divs
-      card.addEventListener("click", function (e) {
-        e.stopPropagation();
-
-        if (card.querySelector(".duties-list").childElementCount) {
-          card.querySelector(".duties-list").innerHTML = "";
-          return;
-        }
-        // For loop that reads individual duty in the specific [date]
-        date_objects[date].activities.forEach((j) => {
-          //  var Day_total_time_individual =
-
-          var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
-          var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
-
-          //console.log(moment(hour).format("hh:mm"))
-          //  console.log(hour)
-
-          var diff = moment
-            .utc(
-              moment(j.schedule[0].endTime || "00").diff(
-                moment(j.schedule[0].startTime)
-              )
-            )
-            .format("HH:mm");
-
-          // Created sub Duty card here
-          const collapsed = createElement("div", {
-            id: "expended_duty",
-            style: "display: block;",
-          });
-
-          card.querySelector(".duties-list").appendChild(collapsed);
-
-          var assignees_displayname = j.assignees[0].displayName;
-          var assignees_phonenumber = j.assignees[0].phoneNumber;
-          var assignees_photo = j.assignees[0].photoURL;
-
-          var other_assignee = "";
-          var and = "";
-          if (j.assignees.length > 1) {
-            and = "&";
-            if (j.assignees.length == 2) {
-              other_assignee = j.assignees.length - 1 + " Other";
-            } else {
-              other_assignee = j.assignees.length - 1 + " Others";
-            }
-          }
-
-          //Collapse Section
-
-          // if (card.querySelector('.duties-list').childElementCount) {
-          //     collapsed.innerHTML = ''
-
-          // } else {
-          collapsed.innerHTML = `
-                        <p id="expended_location">
-                        <span class="material-icons-outlined"> location_on </span>&nbsp
-                        &nbsp<span id="expended_location">${
-                          j.attachment.Location.value
-                        }</span>
-                      </p>
-              
-                      <p id="expended_checkin_time">
-                        <span class="material-icons-outlined"> query_builder </span>&nbsp
-                        &nbsp<span id="expended_interval">
-                          <span id="expended_starting_time">${starttime}</span>-
-                          <span id="expended_ending_time">${endtime}</span></span
-                        >
-                      </p>
-                      <p id="expended_checkin_totaltime">
-                        <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
-                          id="expended_total_time"
-                          >${
-                            diff.slice(0, 2) + "h " + diff.slice(3, 5) + "m"
-                          }</span>
-                      </p>
-                    
-                      <div style="display: flex;"> 
-                      <div class="mdc-chip-set mdc-chip-set--filter" role="grid" id="assignees_div">
-                      <div class="mdc-chip" id="assignees_div" role="row">
-                        <div class="mdc-chip__ripple"></div>
-                        <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="${assignees_photo}"  width="24px" height="24px"></i>
-                        <span class="mdc-chip__checkmark" >
-                          <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
-                            <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
-                                  d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-                          </svg>
-                        </span>
-                        <span role="gridcell">
-                          <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
-                            <span class="mdc-chip__text" id="assignees_name">${
-                              !assignees_displayname
-                                ? assignees_phonenumber
-                                : assignees_displayname
-                            }</span>
-                          </span>
-                        </span>
-                      </div>
-                    
-                    </div>
-                    <span id="other_assignees">${
-                      and + " " + other_assignee
-                    }</span>
-                    </div>
-                        `;
-
-          // }
-        });
-      });
-
-      monthCard.appendChild(card);
-
-      document.body.appendChild(monthCard);
-
-      var first_month = new Date();
-      var current_month = first_month.getMonth();
-
-      if (moment(date, "DD/MM/YYYY").month() == current_month) {
-        card.style.display = "flex";
-      }
+      daysWorkedInMonth = 0;
     }
-  };
+
+
+
+    daysWorkedInMonth++;
+
+
+    monthCard.querySelector(".total-days-worked").innerHTML =
+      "Days Worked: " +
+      daysWorkedInMonth +
+      " Days/ " +
+      total_working_day +
+      " Days";
+
+
+    month = moment(date, "DD/MM/YYYY").month();
+
+
+   
+    // Converted total work hours in to hours and minuts
+
+    const card = createDateCard(date,object_of_dates)
+
+    //Expanded first month
+
+    monthCard.addEventListener("click", function (e) {
+      if (card.style.display == "flex" ) {
+        card.style.display = "none";
+
+        return;
+      }
+      card.style.display = "flex";
+    });
+
+
+    // Added event listener on Date Card in order to create Sub Duty Divs
+    card.addEventListener("click", function (e) {
+      e.stopPropagation();
+
+      if (card.querySelector(".duties-list").childElementCount) {
+        card.querySelector(".duties-list").innerHTML = "";
+        return;
+      }
+
+      // For loop that reads individual duty in the specific [date]
+
+      object_of_dates[date].activities.forEach((j) => {
+
+        card.querySelector(".duties-list").appendChild(subDuties(j));
+
+      });
+
+
+    });
+
+    monthCard.appendChild(card);
+
+    document.body.appendChild(monthCard);
+
+    var first_month = new Date();
+    var current_month = first_month.getMonth();
+
+    if (moment(date, "DD/MM/YYYY").month() == current_month) {
+      card.style.display = "flex";
+    }
+  }
 }
+
+
+function createDateCard(date,object_of_dates) {
+
+  const day = moment(date, "DD/MM/YYYY").format('ddd').toString().toUpperCase()
+  const day_total_time = moment.duration(object_of_dates[date].totalHoursWorked);
+
+  // individual date cards in a date
+  const card = createElement("div", {
+    id: "collapsed2",
+  });
+
+  card.dataset.date = date;
+  card.innerHTML = `
+          <div id="date_day2"> <p id="duty_date2">${date.slice(
+            0,
+            2
+          )}</p> <p id="duty_day2">${day}</p></div>
+          <div id="duty_div2">
+            <div id="collapsed_duty2" >
+            <p><span class="material-icons">
+            location_on
+            </span><span id="duty_address2">${object_of_dates[
+              date
+            ].totalLocationsString.substring(0, 21)}  ${
+              object_of_dates[date].totalDuties == 1
+        ? " "
+        : object_of_dates[date].totalDuties - 1 + " Others"
+    } </span>
+          </p>
+          <p>
+            <span class="material-icons">
+            timer
+            </span><span id="total_hours2">${
+              day_total_time.days() +
+              "d " +
+              day_total_time.hours() +
+              "h " +
+              day_total_time.minutes() +
+              "m"
+            }</span>&nbsp&nbsp&nbsp <span class="material-icons">
+              work
+              </span><span id="total_duties2"> ${
+                object_of_dates[date].totalDuties
+              }</span>
+            </p>
+            </div>
+      
+              <div class='duties-list'></div>
+          </div>
+                  `;
+
+
+  return card;
+}
+
+
+
+function subDuties(j) {
+
+  var diff = moment
+    .utc(
+      moment(j.schedule[0].endTime || "00").diff(
+        moment(j.schedule[0].startTime)
+      )
+    )
+    .format("HH:mm");
+
+  var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
+  var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
+
+
+  var assignees_displayname = j.assignees[0].displayName;
+  var assignees_phonenumber = j.assignees[0].phoneNumber;
+  var assignees_photo = j.assignees[0].photoURL;
+
+  var other_assignee = "";
+  var and = "";
+  if (j.assignees.length > 1) {
+    and = "&";
+    if (j.assignees.length == 2) {
+      other_assignee = j.assignees.length - 1 + " Other";
+    } else {
+      other_assignee = j.assignees.length - 1 + " Others";
+    }
+  }
+
+
+  const collapsed = createElement("div", {
+    id: "expended_duty",
+    style: "display: block;",
+  });
+
+
+  collapsed.innerHTML = `
+              <p id="expended_location">
+              <span class="material-icons-outlined"> location_on </span>&nbsp
+              &nbsp<span id="expended_location">${
+                j.attachment.Location.value
+              }</span>
+            </p>
+    
+            <p id="expended_checkin_time">
+              <span class="material-icons-outlined"> query_builder </span>&nbsp
+              &nbsp<span id="expended_interval">
+                <span id="expended_starting_time">${starttime}</span>-
+                <span id="expended_ending_time">${endtime}</span></span
+              >
+            </p>
+            <p id="expended_checkin_totaltime">
+              <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
+                id="expended_total_time"
+                >${
+                  diff.slice(0, 2) + "h " + diff.slice(3, 5) + "m"
+                }</span>
+            </p>
+          
+            <div style="display: flex;"> 
+            <div class="mdc-chip-set mdc-chip-set--filter" role="grid" id="assignees_div">
+            <div class="mdc-chip" id="assignees_div" role="row">
+              <div class="mdc-chip__ripple"></div>
+              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="${assignees_photo}"  width="24px" height="24px"></i>
+              <span class="mdc-chip__checkmark" >
+                <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
+                  <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
+                        d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+                </svg>
+              </span>
+              <span role="gridcell">
+                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
+                  <span class="mdc-chip__text" id="assignees_name">${
+                    !assignees_displayname
+                      ? assignees_phonenumber
+                      : assignees_displayname
+                  }</span>
+                </span>
+              </span>
+            </div>
+          
+          </div>
+          <span id="other_assignees">${
+            and + " " + other_assignee
+          }</span>
+          </div>
+              `
+  return collapsed;
+
+}
+
+
+
+document
+  .getElementById("show_more_b")
+  .addEventListener("click", function () {
+    document.getElementById("show_more_b").style.display = "none";
+
+    var show_all_card = document.querySelectorAll(".month-card");
+    console.log(show_all_card.length);
+    for (var i = 0; i < show_all_card.length; i++) {
+      show_all_card[i].style.display = "block";
+    }
+
+
+  });
