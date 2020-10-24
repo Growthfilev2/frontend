@@ -301,6 +301,24 @@ month_date2 {
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
   color: #333333;
+  
+}
+
+#h_line{
+  display: block; height: 1px;
+    border: 0; border-top: 1px solid #25456c;
+; padding: 0;
+  
+  color:#25456c;
+  margin-top: 10px;
+}
+
+#circle{
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+  background-color:  #25456c;
+  margin-top: -5px;
 }
 
 #duty_div2_hide {
@@ -350,13 +368,17 @@ month_date2 {
   padding-left: 10px;
 }
 
-#expended_duty {
+
+
+#individual_duty{
   border: 1px #e5e5e5 solid;
   padding-top: 14px;
   padding-bottom: 14px;
   margin-top: 14px;
   margin-bottom: 14px;
 }
+
+
 
 #show_more_b {
   position: absolute;

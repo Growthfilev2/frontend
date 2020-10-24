@@ -6,13 +6,21 @@
       "*/.",
       "/node_modules/"
     ],
-    "cleanUrls":true,
+    "trailingSlash": false,
     "headers": [
       {
-        "source": "**/*.@(jpg|jpeg|gif|png|js|css|html)",
+        "source":"/**",
         "headers": [{
           "key": "Cache-Control",
-          "value": "max-age=604800, stale-while-revalidate=30"
+          "value": "no-cache"
+        }]
+      },
+
+      {
+        "source": "**/*.@(jpg|jpeg|gif|png|js|css)",
+        "headers": [{
+          "key": "Cache-Control",
+          "value": "max-age=604800"
         }]
       },
       {

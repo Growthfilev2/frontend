@@ -385,10 +385,11 @@ function createDateCard(date,object_of_dates) {
               }</span>
             </p>
             </div>
-      
+            <div><hr id="h_line"><div id="circle"></div></div> 
               <div class='duties-list'></div>
           </div>
-                  `;
+                
+          `;
 
 
   return card;
@@ -433,6 +434,7 @@ function subDuties(j) {
 
 
   collapsed.innerHTML = `
+  <div id="individual_duty">
               <p id="expended_location">
               <span class="material-icons-outlined"> location_on </span>&nbsp
               &nbsp<span id="expended_location">${
@@ -482,6 +484,9 @@ function subDuties(j) {
             and + " " + other_assignee
           }</span>
           </div>
+          </div>
+
+          <div><hr id="h_line"><div id="circle"></div></div> 
               `
   return collapsed;
 
