@@ -164,7 +164,7 @@ function generateRequestForUnknownCheckin(office, geopoint, retries = {
 
 function handleInvalidCheckinLocation(callback) {
 
-    if (native.getName() === 'Android') {
+    if (_native.getName() === 'Android') {
         handleGeoLocationApi().then(callback).catch(function (error) {
             handleLocationError({
                 message: ''

@@ -818,7 +818,7 @@ function showRating(callSubscription, customer, dutyId) {
                     canEditCustomer: customerSubscription,
                     dutyId: dutyId
                 },
-                deviceType: native.getName()
+                deviceType: _native.getName()
             });
         })
     })

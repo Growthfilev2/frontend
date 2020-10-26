@@ -4,13 +4,7 @@
   "description": "## File structure ``` |   index.html |   .gitignore |   package.json |   README.md | +---css |   |   conversation.css | +---js |   |   apiHandler.js |   |   conversation.js |   |   init.js |   |   panel.js |   |   services.js | ```",
   "main": "index.js",
   "scripts": {
-    "deploy:prod": "firebase use --add growthfile-207204 && firebase deploy --only hosting",
-    "clean": "rm -r dist/v2/js/*.js && rm -r dist/v2/css/bundle.css",
-    "babel": "babel src/js --out-file dist/v2/js/compiled.js --ignore 'src/js/apiHandler.js'",
-    "worker": "babel src/js/apiHandler.js --out-file dist/v2/js/apiHandler.js",
-    "uglify": "uglifyjs dist/v2/js/compiled.js -o dist/v2/js/bundle.min.js -c -m && uglifyjs dist/v2/js/apiHandler.js -o dist/v2/js/apiHandler.js -c -m && rm dist/v2/js/compiled.js",
-    "build-css": "uglifycss src/css/*.css > dist/v2/css/bundle.css",
-    "compile": "npm run clean && npm run babel && npm run worker  && npm run uglify && npm run build-css"
+    "build": "babel src -d dist/v3 --copy-files"
   },
   "repository": {
     "type": "git",
@@ -24,16 +18,18 @@
   },
   "homepage": "https://github.com/GrowthfileV2/frontend#readme",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.5",
-    "babel-minify": "^0.5.0",
-    "babel-preset-env": "^1.7.0",
-    "grunt-cache-bust": "^1.7.0",
-    "uglifycss": "0.0.29"
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.1",
+    "@babel/plugin-transform-object-assign": "^7.10.4",
+    "@babel/preset-env": "^7.11.0",
+    "babel-plugin-transform-runtime": "^6.23.0"
   },
   "dependencies": {
-    "babel-plugin-transform-remove-strict-mode": "0.0.2",
-    "uglify-js": "^3.4.9"
+    "babel-plugin-starts-with-ends-with": "^1.1.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-runtime": "^6.26.0",
+    "browserslist": "^4.13.0",
+    "core-js": "^3.6.5",
+    "exceljs": "^4.1.1"
   }
 }

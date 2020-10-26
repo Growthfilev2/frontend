@@ -1,0 +1,13 @@
+.form-field.photo {
+  text-align: center;
+}
+#profile-image {
+  width: 136px;
+  height: 136px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+form .form-field {
+  margin-bottom: 25px;
+}

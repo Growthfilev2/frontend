@@ -185,7 +185,7 @@ function menuItemMap(item, geopoint) {
     })
     li.setAttribute('role', 'menuitem');
     let spanTag = `<a target="_blank") href='comgooglemaps://?center=${geopoint._latitude},${geopoint._longitude}' class="mdc-list-item__text" on>${item.name}</span>`
-    if (native.getName() === 'Android') {
+    if (_native.getName() === 'Android') {
         spanTag = `<a href='geo:${geopoint._latitude},${geopoint._longitude}?q=${geopoint._latitude},${geopoint._longitude}' class="mdc-list-item__text">${item.name}</a>`
     }
 
@@ -544,7 +544,7 @@ const callShareInterface = (link, shareText) => {
             body: ''
         }
     }
-    if (native.getName() === 'Android') {
+    if (_native.getName() === 'Android') {
         AndroidInterface.share(JSON.stringify(shareObject))
         return
     }

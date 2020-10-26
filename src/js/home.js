@@ -9,7 +9,9 @@ navigator.serviceWorker.onmessage = (event) => {
   });
 
   if (readResponse.activities.some(activity => activity.template === "duty")) {
-    readduty()
+    if(document.getElementById('duties-list')) {
+      readduty()
+    }
   }
   const dutyLocations = []
 
@@ -40,7 +42,9 @@ navigator.serviceWorker.onmessage = (event) => {
       ApplicationState.venue = sorted[0];
       console.log(sorted[0])
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-      read()
+      if(document.getElementById('current_duty_card')) {
+        read()
+      }
     };
   })
 };
@@ -542,9 +546,9 @@ function subDuties(j) {
 
 function openCamera() {
   history.pushState(null, null, '/upload-photo')
-  setFilePath(firebase.auth().currentUser.photoURL);
-  return
-  if (native.getName() === "Android") {
+  // setFilePath(firebase.auth().currentUser.photoURL);
+  // return
+  if (_native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return
   }
@@ -560,9 +564,9 @@ function setFilePath(base64, retries = {
   subscriptionRetry: 0,
   invalidRetry: 0
 }) {
-  // const url = `data:image/jpg;base64,${base64}`
+  const url = `data:image/jpg;base64,${base64}`
   // const url = firebase.auth().currentUser.photoURL;
-  const url = base64
+  // const url = base64
   document.getElementById('app-current-panel').innerHTML = `
   <div class='upload-photo-container'>
      <div class='image-cont'><img id='checkin-photo'></div>

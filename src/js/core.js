@@ -1,3 +1,5 @@
+
+
 const workerResolves = {};
 const workerRejects = {};
 let workerMessageIds = 0;
@@ -13,6 +15,7 @@ var updatedWifiAddresses = {
   timestamp: null
 }
 let DB_VERSION = 33;
+
 
 
 /**
@@ -37,6 +40,60 @@ window.addEventListener('error', function (event) {
     }
   })
 })
+
+const _native = function () {
+  var deviceInfo = '';
+  var tokenChanged = '';
+  return {
+    setFCMToken: function (token) {
+      console.log('rec ', token)
+      const storedToken = localStorage.getItem('token');
+      console.log('stored token', storedToken)
+      if (storedToken !== token) {
+        tokenChanged = true
+      }
+
+      localStorage.setItem('token', token)
+    },
+    getFCMToken: function () {
+      return localStorage.getItem('token')
+    },
+    isFCMTokenChanged: function () {
+      return tokenChanged;
+    },
+    setName: function (device) {
+      localStorage.setItem('deviceType', device);
+    },
+    getName: function () {
+      return localStorage.getItem('deviceType');
+    },
+
+    setIosInfo: function (iosDeviceInfo) {
+      const queryString = new URLSearchParams(iosDeviceInfo);
+      var obj = {}
+      queryString.forEach(function (val, key) {
+        if (key === 'appVersion') {
+          obj[key] = Number(val)
+        } else {
+          obj[key] = val
+        }
+      })
+      deviceInfo = obj
+      deviceInfo.idbVersion = DB_VERSION
+    },
+    getInfo: function () {
+      if (!this.getName()) return false;
+      const storedInfo = JSON.parse(localStorage.getItem('deviceInfo'));
+      if (storedInfo) return storedInfo;
+      if (this.getName() === 'Android') {
+        deviceInfo = getAndroidDeviceInformation()
+        deviceInfo.idbVersion = DB_VERSION
+        return deviceInfo
+      }
+      return deviceInfo;
+    }
+  }
+}();
 
 
 /**
@@ -133,60 +190,6 @@ function setFirebaseAnalyticsUserProperty(name, value) {
 }
 
 
-let native = function () {
-  var deviceInfo = '';
-  var tokenChanged = '';
-  return {
-    setFCMToken: function (token) {
-      console.log('rec ', token)
-      const storedToken = localStorage.getItem('token');
-      console.log('stored token', storedToken)
-      if (storedToken !== token) {
-        tokenChanged = true
-      }
-
-      localStorage.setItem('token', token)
-    },
-    getFCMToken: function () {
-      return localStorage.getItem('token')
-    },
-    isFCMTokenChanged: function () {
-      return tokenChanged;
-    },
-    setName: function (device) {
-      localStorage.setItem('deviceType', device);
-    },
-    getName: function () {
-      return localStorage.getItem('deviceType');
-    },
-
-    setIosInfo: function (iosDeviceInfo) {
-      const queryString = new URLSearchParams(iosDeviceInfo);
-      var obj = {}
-      queryString.forEach(function (val, key) {
-        if (key === 'appVersion') {
-          obj[key] = Number(val)
-        } else {
-          obj[key] = val
-        }
-      })
-      deviceInfo = obj
-      deviceInfo.idbVersion = DB_VERSION
-    },
-    getInfo: function () {
-      if (!this.getName()) return false;
-      const storedInfo = JSON.parse(localStorage.getItem('deviceInfo'));
-      if (storedInfo) return storedInfo;
-      if (this.getName() === 'Android') {
-        deviceInfo = getAndroidDeviceInformation()
-        deviceInfo.idbVersion = DB_VERSION
-        return deviceInfo
-      }
-      return deviceInfo;
-    }
-  }
-}();
-
 
 /**
  * Call different JNI Android Methods to access device information
@@ -215,11 +218,11 @@ function createElement(tagName, attrs) {
 
 
 const redirect = (path) => {
-  window.location = window.location.origin + path;
+  window.location = window.location.origin +'/v3/'+path;
 }
 const logReportEvent = (name) => {
-  const deviceInfo = native.getInfo();
-  if (native.getName() === 'Android' && deviceInfo.appVersion >= 14) {
+  const deviceInfo = _native.getInfo();
+  if (_native.getName() === 'Android' && deviceInfo.appVersion >= 14) {
     AndroidInterface.logEvent(name);
     return;
   }
@@ -470,10 +473,10 @@ function queryPatramsToObject(url, homeMobileCountryCode, homeMobileNetworkCode)
 
 /** request creator utilities */
 function isWifiRequired() {
-  if (native.getName() !== 'Android') return;
+  if (_native.getName() !== 'Android') return;
   if (AndroidInterface.isWifiOn()) return;
 
-  const deviceInfo = native.getInfo();
+  const deviceInfo = _native.getInfo();
   const requiredWifiDevices = {
     'samsung': true,
     'OnePlus': true
@@ -623,7 +626,7 @@ function getLocation() {
       message: 'BROKEN INTERNET CONNECTION',
     })
 
-    if (native.getName() !== 'Android') {
+    if (_native.getName() !== 'Android') {
       try {
         webkit.messageHandlers.locationService.postMessage('start');
         window.addEventListener('iosLocation', function _iosLocation(e) {
@@ -736,7 +739,7 @@ function initApp() {
 }
 // ends
 
-const apiHandler = new Worker('../js/apiHandler.js?version=198');
+const apiHandler = new Worker('./js/apiHandler.js?version=198');
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -844,7 +847,7 @@ function executeRequest(requestGenerator) {
 
 
 function updateApp() {
-  if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
+  if (_native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
   const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
   updateAppDialog.open();
   updateAppDialog.scrimClickAction = ''

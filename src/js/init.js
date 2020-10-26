@@ -15,7 +15,7 @@ var serverTimeUpdated = false;
 window.addEventListener('load', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {
-        scope: '/'
+        scope: '/v3/'
       })
       .then(reg => {
         console.log('Registration succeeded. Scope is ' + reg.scope);
@@ -208,7 +208,7 @@ function getDeepLink() {
 
 function regulator() {
   const queryLink = getDeepLink();
-  const deviceInfo = native.getInfo();
+  const deviceInfo = _native.getInfo();
 
   return new Promise(function (resolve, reject) {
     var prom;
@@ -218,7 +218,7 @@ function regulator() {
       prom = Promise.resolve();
     } else {
       prom = requestCreator('fcmToken', {
-        token: native.getFCMToken()
+        token: _native.getFCMToken()
       })
     };
 

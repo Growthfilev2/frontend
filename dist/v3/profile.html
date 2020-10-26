@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="./css/profile.css">
+    <link rel="shortcut icon" type="image/png" href="./img/favicon.png"/>
+
+    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+    <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+    <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+    <script defer src="js/config.js"></script>
+
+    <!-- <link href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp" rel="stylesheet" /> -->
+</head>
+
+<body class="mdc-typography">
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
+        <div class="mdc-top-app-bar__row">
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                <a id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
+                    aria-label="Open navigation menu" href="./home">arrow_back</a>
+                <span class="mdc-top-app-bar__title">Profile</span>
+            </section>
+
+        </div>
+    </header>
+    <div id="wrapper" class="mdc-top-app-bar--fixed-adjust">
+        <section class="profile-section">
+            <div class="profile_card">
+
+                <div class="details">
+                    <div class="image-cont">
+
+                        <input type="file" accept="image/*" name="image" id="file"
+                            style="display: none;">
+                        <label id="picsum" for="file"> <img id="output" />
+                        <i class="material-icons">edit</i>
+                        </label>
+                    </div>
+                    <div class="profile-head">
+                        <div class="auth-cont">
+                            <div class="name" id="name"></div>
+                            <div class="mobile" id="mobile"></div>
+                            <div class="email" id="email"></div>
+                        </div>
+                        <span class="material-icons profile_arrow">
+                            keyboard_arrow_right
+                        </span>
+                    </div>
+                </div>
+                <div class="profile-completion hidden">
+                    <div class="progress_bar_info">
+                        <p class="info_text">Profile Completion</p>
+                        <div class="percentage"></div>
+                    </div>
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <div id="profile-completion-buttons"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="profile-section">
+        
+            <a class="info_div" href="profile_bank_show">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        account_balance
+                    </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Bank Account</p>
+                    <p class="info_value">Add Bank Details</p>
+                </div>
+
+            </a>
+
+            <a class="info_div" href="profile_aadhaar">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        recent_actors
+                    </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Aadhaar Card</p>
+                    <p class="info_value">Add Aadhaar Details</p>
+                </div>
+
+            </a>
+
+            <a class="info_div" href='profile_pan'>
+
+                <div class="icon">
+                    <span class="material-icons">
+                        recent_actors
+                    </span>
+
+                </div>
+
+                <div>
+                    <p class="info_header">PAN Card</p>
+                    <p class="info_value">Add PAN Details</p>
+                </div>
+
+            </a>
+
+            <a class="info_div" href='./profile_employee' id="employee-meta">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        apartment
+                    </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Employee At</p>
+                    <span id="office_arrow" class="material-icons">
+                        keyboard_arrow_right
+                    </span>
+                    <p class="info_value" id="employee-at">...</p>
+                </div>
+            </a>
+
+        </section>
+        <section class="profile-section">
+            <p class="help_text">INFORMATION</p>
+
+
+            <a class="info_div" href="https://growthfile.com/faq" target="_blank">
+                <div class="icons">
+                    <span class="material-icons icon_img">
+                        question_answer
+                    </span>
+                    <p class="faq_text">FAQs</p>
+                </div>
+            </a>
+
+            <a class="info_div" href="https://growthfile.com/legal#privacy-policy" target="_blank">
+                <div class="icons">
+                    <span class="material-icons icon_img_policy">
+                        policy
+                    </span>
+                    <p class="policy_text">Privacy Policy </p>
+                </div>
+            </a>
+
+            <a class="info_div"
+                href="https://api.whatsapp.com/send?phone=+918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
+                target="_blank">
+                <div class="icons">
+                    <span class="material-icons icon_img_agent">
+                        support_agent
+                    </span>
+                    <p class="policy_text">Contact Us</p>
+                </div>
+            </a>
+        </section>
+        <section class="profile-section">
+            <p class="help_text">SETTINGS</p>
+            <!-- <div class="info_div">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        brightness_medium
+                    </span>
+                </div>
+
+                <div>
+                    <p class="info_header">Personalization</p>
+                    <div class="toggle">
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <p class="info_value">Dark Theme</p>
+                </div>
+
+            </div> -->
+            <div class="info_div">
+
+                <div class="icon">
+                    <span class="material-icons">
+                        login
+                    </span>
+                </div>
+
+                <div id="logout">
+                    <p class="info_header">Log out</p>
+
+                    <p class="info_value">Log out from OnDuty</p>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <script src="js/core.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+
+</body>
+
+</html>
