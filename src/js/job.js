@@ -73,11 +73,12 @@ function getCurrentJob() {
             venue: [],
             canEdit: false,
             supervisior: null,
+            finished: false,
             isActive: false,
             timestamp: Date.now(),
             
         };
-        return resolve(record);
+       
         const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
         store.index('timestamp').openCursor(bound).onsuccess = function (e) {
             const cursor = e.target.result;
@@ -102,8 +103,9 @@ function getCurrentJob() {
                 cursor.continue();
                 return
             };
-            if (cursor.value.isActive == false) {
-                cursor.continue();
+           
+
+            if (cursor.value.finished == false) {
                 return;
             }
             console.log('matched location with duty location')

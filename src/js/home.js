@@ -75,6 +75,14 @@ window.addEventListener("load", (ev) => {
 
 function read() {
   getCurrentJob().then((record) => {
+
+    if(!record.activityId || record.finished==true){
+
+      document.getElementById("current_duty_card").style.display="none";
+      document.getElementById("card").style.marginTop="100px"
+      return
+    }
+
     document.getElementById("current_location").innerHTML =
       record.attachment.Location.value;
     //console.log(record);
@@ -109,8 +117,22 @@ function read() {
     }
 
     document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
-
+    
     console.log(record);
+    
+    document.getElementById("finish").addEventListener("click", function(){
+      const tx = db.transaction('activity', 'readwrite')
+    const objecstore = tx.objectStore('activity');
+    record.finished= true;
+    objecstore.put(record)
+    tx.oncomplete = function () {
+       document.getElementById("current_duty_card").style.display="none";
+      document.getElementById("card").style.marginTop="100px";
+    }
+    })
+    return record;
+  
+
   });
 }
 
@@ -157,11 +179,11 @@ function readduty() {
       return;
     }
 
-    // if activity's office doesn't match the selected office during checkin , then ignore and continue
-    // if (cursor.value.office !== ApplicationState.selectedOffice) {
-    //     cursor.continue();
-    //     return
-    // }
+    //if activity's office doesn't match the selected office during checkin , then ignore and continue
+    if (cursor.value.office !== ApplicationState.selectedOffice) {
+        cursor.continue();
+        return
+    }
 
     timestamp_array.push(cursor.value.timestamp);
 
@@ -187,7 +209,8 @@ function readduty() {
       }
     });
 
-    console.log(DT);
+    
+   // console.log(DT);
 
     const months = Object.keys(dateObjects);
     let date_objects = {};
@@ -240,7 +263,7 @@ function readduty() {
         };
       });
     });
-    console.log(date_objects);
+    
     readallduties(date_objects)
   }
 
@@ -282,7 +305,7 @@ function readallduties(object_of_dates) {
       one_month = moment(date, "DD/MM/YYYY").format('MMMM');
       curent_year = moment(date, "DD/MM/YYYY").year();
       total_working_day = moment(date, "YYYY-MM").daysInMonth();
-      console.log("total_working_day")
+     
 
       monthCard = createElement("div", {
         className: "month-card",

@@ -164,7 +164,7 @@ body {
   font-style: normal;
   font-weight: 500;
   line-height: 24px;
-  letter-spacing: 0.15000000596046448px;
+  letter-spacing: 0.150px;
 }
 
 #current_interval {
@@ -218,6 +218,7 @@ month_date2 {
   text-align: left;
   color: #f2f2f2;
 }
+
 
 #days_worked2 {
   padding: 10px;
