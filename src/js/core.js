@@ -1176,7 +1176,7 @@ function handleLocationError(error) {
       alertDialog = new Dialog('Turn on your WiFi', 'Turn on WiFi to help OnDuty detect your location accurately').create();
       alertDialog.open();
       break;
-
+    
     default:
       handleError({
         message: error.message,

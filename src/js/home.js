@@ -596,7 +596,7 @@ function setFilePath(base64, retries = {
   document.getElementById('home-header').innerHTML = `<div class="mdc-top-app-bar__row">
  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
      <a id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
-         aria-label="Open navigation menu" href="javascript:window.history.back()">arrow_back</a>
+         aria-label="Open navigation menu" href="javascript:redirect('/home')">arrow_back</a>
      <span class="mdc-top-app-bar__title">Photo Check-in</span>
  </section>
 
@@ -638,7 +638,7 @@ function sendPhotoCheckinRequest(request) {
     request.btn.classList.remove('in-progress')
     snacks('Photo uploaded');
     setTimeout(()=>{
-      window.history.back()
+      redirect('/home');
     },3000)
   }).catch(function (error) {
     request.btn.classList.remove('in-progress')

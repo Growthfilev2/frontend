@@ -162,37 +162,27 @@ function generateRequestForUnknownCheckin(office, geopoint, retries = {
 }
 
 
-function handleInvalidCheckinLocation(retry, callback) {
-    if (retry) return reloadPage();
+function handleInvalidCheckinLocation(callback) {
 
     if (native.getName() === 'Android') {
         handleGeoLocationApi().then(callback).catch(function (error) {
-            handleError({
-                message: 'Geolocation failed to get data for retry attempt at invalid checkin',
-                body: error
+            handleLocationError({
+                message: ''
             });
-            failureScreen({
-                message: 'There was a problem in detecting your location.',
-                icon: 'location_off',
-                title: 'Failed To Detect Location'
-            }, reloadPage);
         })
         return;
     }
-    try {
 
+    try {
         webkit.messageHandlers.locationService.postMessage('start');
         window.addEventListener('iosLocation', function _iosLocation(e) {
             callback(e.detail)
             window.removeEventListener('iosLocation', _iosLocation, true);
         }, true);
     } catch (e) {
-
-        failureScreen({
-            message: 'There was a problem in detecting your location.',
-            icon: 'location_off',
-            title: 'Failed To Detect Location'
-        }, reloadPage);
+        handleLocationError({
+            message: ''
+        });
     }
 }
 
