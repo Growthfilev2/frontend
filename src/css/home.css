@@ -8,7 +8,9 @@ html,
 body {
   height: 100%;
 }
-
+.mdc-top-app-bar .material-icons {
+  top:auto;
+}
 #home_header {
   position: fixed;
   z-index: 2;
@@ -93,10 +95,10 @@ body {
   border-radius: 2px;
 
   margin: 0 auto;
-  margin-top: 12px;
+  /* margin-top: 12px; */
   margin-bottom: 10px;
   box-shadow: 0 0 2px #a7a7a7;
-  margin-top: 95px;
+  /* margin-top: 95px; */
 }
 
 .header {
@@ -381,7 +383,7 @@ month_date2 {
 
 
 #show_more_b {
-  position: absolute;
+  position: fixed;
   bottom: 0px;
   padding-bottom: 8px;
   padding-top: 8px;

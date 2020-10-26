@@ -7,13 +7,12 @@
 
   <title>Document</title>
 
+  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
   <link href="css/app.css" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="css/home.css" />
   <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons|Material+Icons+Outlined"
     rel="stylesheet" />
 
-  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
   <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js"></script>
@@ -22,8 +21,18 @@
 
 <body>
 
-
-  <header id="home_header">
+  <header class="mdc-top-app-bar  mdc-top-app-bar--dense">
+    <div class="mdc-top-app-bar__row">
+      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+        <span class="mdc-top-app-bar__title">OnDuty</span>
+      </section>
+      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
+        <a class="material-icons mdc-top-app-bar__action-item mdc-icon-button mdc-theme--on-secondary" href="https://api.whatsapp.com/send?phone=+918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button" aria-label="Help">help</button>
+        <a class="mdc-top-app-bar__action-item mdc-icon-button" href="profile.html"><img id="pfp" src="" width="24px" height="24px" /></a>
+      </section>
+    </div>
+  </header>
+  <!-- <header id="home_header">
     <span id="logo">OnDuty</span>
 
     <span id="generic_button">
@@ -35,59 +44,62 @@
       <a href="profile.html"><img id="pfp" src="" width="24px" height="24px" /></a>
     </span>
 
-    <span id="camera_upload"><img src="img/upload_camera.svg" alt="upload" /></span>
+    <span id="camera_upload" id="upload-checkin-photo"><img src="img/upload_camera.svg" alt="upload" /></span>
     <p id="home_text">Home</p>
-  </header>
-
-  <div id="current_duty_card">
-    <div id="current_text">
-      <p class="header">Current Duty</p>
-      <p id="location">
-        <span class="material-icons-outlined"> location_on </span>&nbsp
-        &nbsp<span id="current_location">saasd</span>
-      </p>
-
-      <p id="checkin_time">
-        <span class="material-icons-outlined"> query_builder </span>&nbsp
-        &nbsp<span id="current_interval">
-          <span id="starting_time">00:</span>-
-          <span id="ending_time">(On Going)</span></span>
-      </p>
-      <p class='active-duty--duration hidden'>
-        <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span id="total_time"></span>
-      </p>
-      <div style="display: flex" id="assignees_div_current">
-        <div class="mdc-chip-set mdc-chip-set--filter" role="grid">
-          <div class="mdc-chip" id="for_chips_background" role="row">
-            <div class="mdc-chip__ripple"></div>
-            <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="" width="24px"
-                height="24px" /></i>
-            <span class="mdc-chip__checkmark">
-              <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
-                <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
-                  d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-              </svg>
-            </span>
-            <span role="gridcell">
-              <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
-                <span class="mdc-chip__text" id="assignees_name"></span>
+  </header> -->
+  <div id="app-current-panel" class="mdc-top-app-bar--fixed-adjust">
+    <div id="current_duty_card">
+      <div id="current_text">
+        <p class="header">Current Duty</p>
+        <p id="location">
+          <span class="material-icons-outlined"> location_on </span>&nbsp
+          &nbsp<span id="current_location">saasd</span>
+        </p>
+  
+        <p id="checkin_time">
+          <span class="material-icons-outlined"> query_builder </span>&nbsp
+          &nbsp<span id="current_interval">
+            <span id="starting_time">00:</span>-
+            <span id="ending_time">(On Going)</span></span>
+        </p>
+        <p class='active-duty--duration hidden'>
+          <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span id="total_time"></span>
+        </p>
+        <div style="display: flex" id="assignees_div_current">
+          <div class="mdc-chip-set mdc-chip-set--filter" role="grid">
+            <div class="mdc-chip" id="for_chips_background" role="row">
+              <div class="mdc-chip__ripple"></div>
+              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="" width="24px"
+                  height="24px" /></i>
+              <span class="mdc-chip__checkmark">
+                <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
+                  <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
+                    d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+                </svg>
               </span>
-            </span>
+              <span role="gridcell">
+                <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
+                  <span class="mdc-chip__text" id="assignees_name"></span>
+                </span>
+              </span>
+            </div>
           </div>
+          <span id="other_assignees"></span>
         </div>
-        <span id="other_assignees"></span>
       </div>
+      <!-- <div id="finish_button">
+        <button id="finish">FINISH</button>
+      </div> -->
     </div>
-    <!-- <div id="finish_button">
-      <button id="finish">FINISH</button>
-    </div> -->
-  </div>
+  
+    <div id="duties-list"></div>
+    <div id="show_more_b">Show More</div>
 
-  <div id="card"></div>
-  <div id="show_more_b">Show More</div>
+  </div>
   <script src="js/core.js"></script>
   <script src="js/home.js"></script>
   <script src="js/job.js"></script>
+  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
   <script src="external/js/moment.min.js"></script>
 </body>
 

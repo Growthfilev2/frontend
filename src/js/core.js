@@ -251,17 +251,7 @@ const logReportEvent = (name) =>{
    return li;
  }
 
- function successDialog(text) {
 
-   const successMark = document.getElementById('success-animation');
-   successMark.classList.remove('hidden');
-   dom_root.style.opacity = '0.1';
-   successMark.querySelector('.success-text').textContent = text;
-   setTimeout(function () {
-     successMark.classList.add('hidden');
-     dom_root.style.opacity = '1';
-   }, 2000);
- }
 
 
  /** Location utilities */

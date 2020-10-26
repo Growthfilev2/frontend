@@ -59,7 +59,9 @@ window.addEventListener("load", (ev) => {
       document.getElementById("pfp").src =
         firebase.auth().currentUser.photoURL ||
         firstletter(firebase.auth().currentUser.displayName.charAt(0));
+        // document.getElementById('upload-checkin-photo').addEventListener('click',()=>{
 
+        // })
       read();
       readduty();
     };
@@ -357,7 +359,7 @@ function readallduties(object_of_dates) {
 
     monthCard.appendChild(card);
 
-    document.body.appendChild(monthCard);
+    document.getElementById('duties-list').appendChild(monthCard);
 
     var first_month = new Date();
     var current_month = first_month.getMonth();
@@ -534,4 +536,126 @@ function subDuties(j) {
               `
   return collapsed;
 
+}
+
+
+
+function openCamera() {
+  setFilePath(firebase.auth().currentUser.photoURL);
+  return
+  if (native.getName() === "Android") {
+    AndroidInterface.startCamera("setFilePath");
+    return
+  }
+  webkit.messageHandlers.startCamera.postMessage("setFilePath");
+}
+
+function setFilePathFailed(error) {
+  snacks(error);
+}
+
+
+function setFilePath(base64, retries = {
+  subscriptionRetry: 0,
+  invalidRetry: 0
+}) {
+  // const url = `data:image/jpg;base64,${base64}`
+  // const url = firebase.auth().currentUser.photoURL;
+  const url = base64
+  document.getElementById('app-current-panel').innerHTML = `
+  <div class='image-container'>
+    <div id='snap' class="snap-bckg">
+      <div class="form-meta snap-form">
+        <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
+            <textarea
+            class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100"></textarea></div>
+            <button id='snap-submit' class="mdc-fab app-fab--absolute  snap-fab mdc-theme--primary-bg  mdc-ripple-upgraded"
+          style="z-index: 9;">
+          <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  `
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title">Photo Check-in</span>
+        `
+
+  const content = document.getElementById('snap')
+  const textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'))
+  const submit = new mdc.ripple.MDCRipple(document.getElementById('snap-submit'))
+
+
+  textarea.focus();
+  textarea.input_.addEventListener('keyup', function () {
+    this.style.paddingTop = '25px';
+    this.style.height = '5px'
+    this.style.height = (this.scrollHeight) + "px";
+    if (this.scrollHeight <= 300) {
+      submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
+    }
+  });
+
+  const image = new Image();
+  image.onload = function () {
+
+    const orientation = getOrientation(image);
+    content.style.backgroundImage = `url(${url})`
+    if (orientation == 'landscape' || orientation == 'sqaure') {
+      content.style.backgroundSize = 'contain'
+    }
+  }
+  image.src = url;
+
+  submit.root_.addEventListener('click', function () {
+    const textValue = textarea.value;
+    sendPhotoCheckinRequest({
+      sub: ApplicationState.officeWithCheckInSubs[ApplicationState.selectedOffice],
+      base64: url,
+      retries: retries,
+      textValue: textValue,
+      knownLocation: true
+    })
+  })
+}
+
+
+function sendPhotoCheckinRequest(request) {
+  const url = request.base64;
+  const textValue = request.textValue;
+  const retries = request.retries;
+  const sub = JSON.parse(JSON.stringify(request.sub))
+  sub.attachment.Photo.value = url || ''
+  sub.attachment.Comment.value = textValue;
+  sub.share = []
+  history.back();
+  requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
+    successDialog('Photo uploaded');
+
+  }).catch(function (error) {
+    const queryLink = getDeepLink();
+    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+
+      if (retries.subscriptionRetry <= 2) {
+        setTimeout(function () {
+          retries.subscriptionRetry++
+          if (request.knownLocation) {
+            createKnownCheckIn(ApplicationState.venue, geopoint, retries);
+          } else {
+            createUnkownCheckIn(sub.office, geopoint, retries);
+          }
+        }, 5000)
+      }
+      return
+    }
+
+    if (error.message === 'Invalid check-in') {
+      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
+        ApplicationState.location = newGeopoint;
+        retries.invalidRetry++
+        setFilePath(base64, retries);
+      });
+      return
+    };
+  });
 }
