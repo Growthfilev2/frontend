@@ -21,7 +21,7 @@
 
 <body>
 
-  <header class="mdc-top-app-bar  mdc-top-app-bar--dense">
+  <header class="mdc-top-app-bar  mdc-top-app-bar--dense" id="home-header">
     <div class="mdc-top-app-bar__row">
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
         <span class="mdc-top-app-bar__title">OnDuty</span>
@@ -31,23 +31,12 @@
         <a class="mdc-top-app-bar__action-item mdc-icon-button" href="profile.html"><img id="pfp" src="" width="24px" height="24px" /></a>
       </section>
     </div>
+    <div class="app-bar--extra full-width">
+      <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Camera" id="photo-upload-btn">camera</button>
+      <div class="mdc-top-app-bar__title text-center mdc-theme--primary">Home</div>
+    </div>
   </header>
-  <!-- <header id="home_header">
-    <span id="logo">OnDuty</span>
-
-    <span id="generic_button">
-      <a href="https://api.whatsapp.com/send?phone=+918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
-        target="_blank"><img src="img/generic.svg" width="24px" height="24px" alt="info" /></a>
-    </span>
-
-    <span id="profile_pic">
-      <a href="profile.html"><img id="pfp" src="" width="24px" height="24px" /></a>
-    </span>
-
-    <span id="camera_upload" id="upload-checkin-photo"><img src="img/upload_camera.svg" alt="upload" /></span>
-    <p id="home_text">Home</p>
-  </header> -->
-  <div id="app-current-panel" class="mdc-top-app-bar--fixed-adjust">
+  <div id="app-current-panel" class="mdc-top-app-bar--fixed-adjust extra--adjust">
     <div id="current_duty_card">
       <div id="current_text">
         <p class="header">Current Duty</p>
@@ -97,8 +86,9 @@
 
   </div>
   <script src="js/core.js"></script>
-  <script src="js/home.js"></script>
   <script src="js/job.js"></script>
+  <script src="js/checkin.js"></script>
+  <script src="js/home.js"></script>
   <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
   <script src="external/js/moment.min.js"></script>
 </body>

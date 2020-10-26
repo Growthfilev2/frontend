@@ -102,6 +102,13 @@ a {
     /* Status bar height on iOS 11+ */
     padding-top: calc(56px + env(safe-area-inset-top));
   }
+  .mdc-top-app-bar--fixed-adjust.extra--adjust {
+    padding-top: calc(97px + 20px);
+    /* Status bar height on iOS 11.0 */
+    padding-top: calc(97px +constant(safe-area-inset-top));
+    /* Status bar height on iOS 11+ */
+    padding-top: calc(97px + env(safe-area-inset-top));
+  }
 }
 
 #app-current-panel {
@@ -474,7 +481,7 @@ form .form-actionable {
   max-width: 480px;
 }
 
-form .form-submit-btn {
+form .form-submit-btn , #snap-submit {
   width: 100%;
   height: 56px;
   border-radius: 3px;

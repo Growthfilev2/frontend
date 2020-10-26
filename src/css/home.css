@@ -8,17 +8,23 @@ html,
 body {
   height: 100%;
 }
+
 .mdc-top-app-bar .material-icons {
-  top:auto;
+  top: auto;
 }
-#home_header {
-  position: fixed;
-  z-index: 2;
+.app-bar--extra {
   width: 100%;
-  height: 89px;
-  background-color: white;
-  border-bottom: 1px solid #d8d5d5;
 }
+
+.app-bar--extra .mdc-icon-button {
+  color: var(--mdc-theme-on-secondary);
+  float: left;
+}
+
+.app-bar--extra .mdc-top-app-bar__title {
+  padding: 16px 48px 0px 16px;
+}
+
 
 #logo {
   position: absolute;
@@ -95,10 +101,9 @@ body {
   border-radius: 2px;
 
   margin: 0 auto;
-  /* margin-top: 12px; */
+  margin-top: 12px;
   margin-bottom: 10px;
   box-shadow: 0 0 2px #a7a7a7;
-  /* margin-top: 95px; */
 }
 
 .header {
@@ -128,11 +133,13 @@ body {
 #assignees_div_current {
   margin-left: -9px;
 }
+
 .material-icons-outlined {
   position: relative;
   top: 6px;
   color: #25456c;
 }
+
 #current_text {
   width: 100%;
 }
@@ -141,6 +148,7 @@ body {
   padding: 20px;
   width: 40%;
 }
+
 #finish {
   height: 69px;
   width: 69px;
@@ -303,23 +311,26 @@ month_date2 {
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
   color: #333333;
-  
+
 }
 
-#h_line{
-  display: block; height: 1px;
-    border: 0; border-top: 1px solid #25456c;
-; padding: 0;
-  
-  color:#25456c;
+#h_line {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #25456c;
+  ;
+  padding: 0;
+
+  color: #25456c;
   margin-top: 10px;
 }
 
-#circle{
+#circle {
   height: 8px;
   width: 8px;
   border-radius: 50%;
-  background-color:  #25456c;
+  background-color: #25456c;
   margin-top: -5px;
 }
 
@@ -344,6 +355,7 @@ month_date2 {
   border: 2px solid gainsboro;
   margin-bottom: 5px;
 }
+
 #expended_duty2 {
   width: 100%;
   border: 2px solid gainsboro;
@@ -372,7 +384,7 @@ month_date2 {
 
 
 
-#individual_duty{
+#individual_duty {
   border: 1px #e5e5e5 solid;
   padding-top: 14px;
   padding-bottom: 14px;
@@ -397,4 +409,16 @@ month_date2 {
   font-weight: 500;
   line-height: 16px;
   letter-spacing: 0em;
+}
+
+
+
+.upload-photo-container #checkin-photo {
+  max-height: 400px;
+  width: 100%;
+}
+.upload-photo-container {
+  padding:16px;
+  padding-top:0px;
+
 }
