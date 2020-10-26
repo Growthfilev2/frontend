@@ -20,19 +20,31 @@
 </head>
 
 <body>
-
+  <div class="success--container hidden center-abs" id="success-animation">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+      <circle class="path circle" fill="none" stroke="#27628E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+        cy="65.1" r="62.1" />
+      <polyline class="path check" fill="none" stroke="#27628E" stroke-width="6" stroke-linecap="round"
+        stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
+    </svg>
+    <p class="success-text mdc-theme--primary"></p>
+  </div>
   <header class="mdc-top-app-bar  mdc-top-app-bar--dense" id="home-header">
     <div class="mdc-top-app-bar__row">
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
         <span class="mdc-top-app-bar__title">OnDuty</span>
       </section>
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
-        <a class="material-icons mdc-top-app-bar__action-item mdc-icon-button mdc-theme--on-secondary" href="https://api.whatsapp.com/send?phone=+918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button" aria-label="Help">help</button>
-        <a class="mdc-top-app-bar__action-item mdc-icon-button" href="profile.html"><img id="pfp" src="" width="24px" height="24px" /></a>
+        <a class="material-icons mdc-top-app-bar__action-item mdc-icon-button mdc-theme--on-secondary"
+          href="https://api.whatsapp.com/send?phone=+918595422858&text=Hi,%20%20I%20just%20clicked%20on%20the%20Generic%20Button"
+          aria-label="Help">help</button>
+          <a class="mdc-top-app-bar__action-item mdc-icon-button" href="profile.html"><img id="pfp" src="" width="24px"
+              height="24px" /></a>
       </section>
     </div>
     <div class="app-bar--extra full-width">
-      <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Camera" id="photo-upload-btn">camera</button>
+      <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Camera"
+        id="photo-upload-btn">camera</button>
       <div class="mdc-top-app-bar__title text-center mdc-theme--primary">Home</div>
     </div>
   </header>
@@ -44,7 +56,7 @@
           <span class="material-icons-outlined"> location_on </span>&nbsp
           &nbsp<span id="current_location">saasd</span>
         </p>
-  
+
         <p id="checkin_time">
           <span class="material-icons-outlined"> query_builder </span>&nbsp
           &nbsp<span id="current_interval">
@@ -58,8 +70,8 @@
           <div class="mdc-chip-set mdc-chip-set--filter" role="grid">
             <div class="mdc-chip" id="for_chips_background" role="row">
               <div class="mdc-chip__ripple"></div>
-              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="" width="24px"
-                  height="24px" /></i>
+              <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src=""
+                  width="24px" height="24px" /></i>
               <span class="mdc-chip__checkmark">
                 <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
                   <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
@@ -80,7 +92,7 @@
         <button id="finish">FINISH</button>
       </div> -->
     </div>
-  
+
     <div id="duties-list"></div>
     <div id="show_more_b">Show More</div>
 

@@ -635,9 +635,11 @@ function sendPhotoCheckinRequest(request) {
   history.back();
   request.btn.classList.add('in-progress')
   requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
-    successDialog('Photo uploaded');
     request.btn.classList.remove('in-progress')
-    window.history.back()
+    snacks('Photo uploaded');
+    setTimeout(()=>{
+      window.history.back()
+    },3000)
   }).catch(function (error) {
     request.btn.classList.remove('in-progress')
     if (error.message === 'Invalid check-in') {

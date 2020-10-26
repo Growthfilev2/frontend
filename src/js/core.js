@@ -206,36 +206,36 @@ function getAndroidDeviceInformation() {
 function createElement(tagName, attrs) {
   const el = document.createElement(tagName)
   if (attrs) {
-      Object.keys(attrs).forEach(function (attr) {
-          el[attr] = attrs[attr]
-      })
+    Object.keys(attrs).forEach(function (attr) {
+      el[attr] = attrs[attr]
+    })
   }
   return el;
 }
 
 
 const redirect = (path) => {
-   window.location = window.location.origin+path;
+  window.location = window.location.origin + path;
 }
-const logReportEvent = (name) =>{
-   const deviceInfo = native.getInfo();
-   if (native.getName() === 'Android' && deviceInfo.appVersion >= 14) {
-     AndroidInterface.logEvent(name);
-     return;
-   }
-   try {
-     webkit.messageHandlers.logEvent.postMessage(name)
-   } catch (e) {
-     console.log(e)
-   }
-   return;
- }
+const logReportEvent = (name) => {
+  const deviceInfo = native.getInfo();
+  if (native.getName() === 'Android' && deviceInfo.appVersion >= 14) {
+    AndroidInterface.logEvent(name);
+    return;
+  }
+  try {
+    webkit.messageHandlers.logEvent.postMessage(name)
+  } catch (e) {
+    console.log(e)
+  }
+  return;
+}
 
- function createList(attr) {
-   const li = createElement('li', {
-     className: 'mdc-list-item'
-   });
-   li.innerHTML = `
+function createList(attr) {
+  const li = createElement('li', {
+    className: 'mdc-list-item'
+  });
+  li.innerHTML = `
      ${attr.icon ? `<i class="mdc-list-item__graphic material-icons mdc-theme--primary" aria-hidden="true">${attr.icon}</i>` :''}
      ${attr.primaryText && attr.secondaryText ? ` <span class="mdc-list-item__text">
        <span class="mdc-list-item__primary-text">
@@ -247,15 +247,15 @@ const logReportEvent = (name) =>{
      </span>
      ${attr.meta ? `<span class='mdc-list-item__meta material-icons'>${attr.meta}</span>` :''}
    `
-   new mdc.ripple.MDCRipple(li)
-   return li;
- }
+  new mdc.ripple.MDCRipple(li)
+  return li;
+}
 
 
 
 
- /** Location utilities */
- function calculateSpeed(distance, time) {
+/** Location utilities */
+function calculateSpeed(distance, time) {
   return distance / time;
 }
 
@@ -266,12 +266,12 @@ function distanceDelta(oldLocation, newLocation) {
 function timeDelta(previousLocationTime, newLocationTime) {
 
   try {
-      const duration = moment.duration(moment(newLocationTime).diff(previousLocationTime));
-      return duration.asMinutes()
+    const duration = moment.duration(moment(newLocationTime).diff(previousLocationTime));
+    return duration.asMinutes()
   } catch (e) {
-      console.log(e)
-      const res = newLocationTime - previousLocationTime;
-      return res / 36e6;
+    console.log(e)
+    const res = newLocationTime - previousLocationTime;
+    return res / 36e6;
   }
 }
 
@@ -283,7 +283,7 @@ function getStoredLocation() {
 
 function isLocationOld(newLocation, oldLocation) {
   if (!oldLocation) return false;
-  return  oldLocation.provider === newLocation.provider &&  oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;    
+  return oldLocation.provider === newLocation.provider && oldLocation.latitude === newLocation.latitude && oldLocation.longitude === newLocation.longitude;
 }
 
 function isLocationMoreThanThreshold(distance) {
@@ -293,12 +293,12 @@ function isLocationMoreThanThreshold(distance) {
 
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
   try {
-      var currentTime = moment();
-      var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds();
-      return duration > threshold
-  } catch(e){
-      const delta = Math.abs((Date.now() - lastLocationTime) / 1000);
-      return delta > threshold;
+    var currentTime = moment();
+    var duration = moment.duration(currentTime.diff(lastLocationTime)).asSeconds();
+    return duration > threshold
+  } catch (e) {
+    const delta = Math.abs((Date.now() - lastLocationTime) / 1000);
+    return delta > threshold;
   }
 }
 
@@ -352,54 +352,54 @@ function getCellularInformation() {
   const carrier = AndroidInterface.getCarrier()
   const wifiQueryString = AndroidInterface.getWifiAccessPoints()
   try {
-      cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+    cellTowerQueryString = AndroidInterface.getCellTowerInformation();
   } catch (e) {
-      handleError({
-          message: e.message,
-          body: {
-              mcc,
-              mnc,
-              radioType,
-              carrier
-          }
-      })
+    handleError({
+      message: e.message,
+      body: {
+        mcc,
+        mnc,
+        radioType,
+        carrier
+      }
+    })
   }
 
   var wifiAccessPointsArray = [];
   var cellTowerArray = [];
   if (wifiQueryString) {
-      wifiAccessPointsArray = parseWifiQuery(wifiQueryString)
+    wifiAccessPointsArray = parseWifiQuery(wifiQueryString)
   };
   if (cellTowerQueryString) {
-      cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString, mcc, mnc))
+    cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString, mcc, mnc))
   }
   const body = {}
 
   if (mcc) {
-      body.homeMobileCountryCode = Number(mcc)
+    body.homeMobileCountryCode = Number(mcc)
   }
   if (mnc) {
-      body.homeMobileNetworkCode = Number(mnc)
+    body.homeMobileNetworkCode = Number(mnc)
   }
   if (carrier) {
-      body.carrier = carrier
+    body.carrier = carrier
   }
   if (radioType) {
-      body.radioType = radioType
+    body.radioType = radioType
   }
 
   if (wifiAccessPointsArray.length) {
-      body.wifiAccessPoints = wifiAccessPointsArray
+    body.wifiAccessPoints = wifiAccessPointsArray
   }
 
   if (cellTowerArray.length) {
-      body.cellTowers = cellTowerArray;
+    body.cellTowers = cellTowerArray;
   }
 
   if (wifiAccessPointsArray.length && cellTowerArray.length) {
-      body.considerIp = false
+    body.considerIp = false
   } else {
-      body.considerIp = true
+    body.considerIp = true
   }
   return body;
 }
@@ -407,7 +407,7 @@ function getCellularInformation() {
 function removeFalseCellIds(cellTowers) {
   const max_value = 2147483647
   const filtered = cellTowers.filter(function (tower) {
-      return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
+    return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
   });
   return filtered
 }
@@ -419,21 +419,21 @@ function parseWifiQuery(queryString) {
 
   const splitBySeperator = queryString.split(",")
   splitBySeperator.forEach(function (value) {
-      const url = new URLSearchParams(value);
-      if (url.has('ssid')) {
-          url.delete('ssid')
-      }
-      if (!url.has('macAddress')) return;
-      const result = {}
-      url.forEach(function (value, key) {
+    const url = new URLSearchParams(value);
+    if (url.has('ssid')) {
+      url.delete('ssid')
+    }
+    if (!url.has('macAddress')) return;
+    const result = {}
+    url.forEach(function (value, key) {
 
-          if (key === 'macAddress') {
-              result[key] = value
-          } else {
-              result[key] = Number(value)
-          }
-      });
-      array.push(result)
+      if (key === 'macAddress') {
+        result[key] = value
+      } else {
+        result[key] = Number(value)
+      }
+    });
+    array.push(result)
   })
   return array;
 }
@@ -443,8 +443,8 @@ function parseQuery(queryString, homeMobileCountryCode, homeMobileNetworkCode) {
   var array = [];
   const splitBySeperator = queryString.split(",")
   splitBySeperator.forEach(function (value) {
-      const url = new URLSearchParams(value);
-      array.push(queryPatramsToObject(url, homeMobileCountryCode, homeMobileNetworkCode))
+    const url = new URLSearchParams(value);
+    array.push(queryPatramsToObject(url, homeMobileCountryCode, homeMobileNetworkCode))
   })
   return array;
 }
@@ -453,15 +453,15 @@ function queryPatramsToObject(url, homeMobileCountryCode, homeMobileNetworkCode)
   let result = {};
   url.forEach(function (value, key) {
 
-      if (key === 'mobileCountryCode' && Number(value) == 0) {
-          result[key] = Number(homeMobileCountryCode);
-          return;
-      }
-      if (key === 'mobileNetworkCode' && Number(value) == 0) {
-          result[key] = Number(homeMobileNetworkCode);
-          return;
-      };
-      result[key] = Number(value)
+    if (key === 'mobileCountryCode' && Number(value) == 0) {
+      result[key] = Number(homeMobileCountryCode);
+      return;
+    }
+    if (key === 'mobileNetworkCode' && Number(value) == 0) {
+      result[key] = Number(homeMobileNetworkCode);
+      return;
+    };
+    result[key] = Number(value)
   })
   return result;
 }
@@ -505,7 +505,7 @@ window.addEventListener('callRead', readDebounce);
 
 function handleError(error) {
   let errorInStorage = JSON.parse(localStorage.getItem('error'));
-  if(!errorInStorage) {
+  if (!errorInStorage) {
     errorInStorage = {}
   }
   if (errorInStorage.hasOwnProperty(error.message)) return
@@ -520,8 +520,8 @@ function handleError(error) {
 
 
 function snacks(message, timeout) {
-  const el = createElement('div',{
-    className:'mdc-snackbar'
+  const el = createElement('div', {
+    className: 'mdc-snackbar'
   })
   el.innerHTML = `<div class="mdc-snackbar__surface">
   <div class="mdc-snackbar__label"
@@ -545,9 +545,9 @@ function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
 
     return resolve({
-      latitude:16.7891238,
-      longitude:34.128309129323,
-      lastLocationTime:Date.now()
+      latitude: 16.7891238,
+      longitude: 34.128309129323,
+      lastLocationTime: Date.now()
     })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
@@ -728,10 +728,10 @@ function html5Geolocation() {
 
 // after logout
 function initApp() {
-  firebase.auth().onAuthStateChanged(function(user) {
+  firebase.auth().onAuthStateChanged(function (user) {
     if (!user) {
       redirect('/login');
-    } 
+    }
   });
 }
 // ends
@@ -1133,28 +1133,28 @@ function toDataURL(src, callback) {
   img.src = src;
 }
 
-function isAdmin(idTokenResult,office) {
+function isAdmin(idTokenResult, office) {
   if (!idTokenResult.claims.hasOwnProperty('admin')) return;
   if (!Array.isArray(idTokenResult.claims.admin)) return;
   if (!idTokenResult.claims.admin.length) return;
-  if(!office) return true;
+  if (!office) return true;
   return idTokenResult.claims.admin.indexOf(office) > -1
 }
 
 
 function setHelperInvalid(field, message) {
-    field.focus();
-    field.foundation.setValid(false);
-    field.foundation.adapter.shakeLabel(true);
-    if(message) {
-      field.helperTextContent = message
-    }
+  field.focus();
+  field.foundation.setValid(false);
+  field.foundation.adapter.shakeLabel(true);
+  if (message) {
+    field.helperTextContent = message
+  }
 }
 
 function setHelperValid(field) {
-    field.focus();
-    field.foundation.setValid(true);
-    field.helperTextContent = ''
+  field.focus();
+  field.foundation.setValid(true);
+  field.helperTextContent = ''
 
 }
 
@@ -1166,7 +1166,7 @@ function handleLocationError(error) {
       break;
 
     case 'BROKEN INTERNET CONNECTION':
-      
+
       alertDialog = new Dialog('Internet disconnected', 'You are offline. Please check your internet connection and try again').create();
       alertDialog.open();
       break;
@@ -1194,94 +1194,94 @@ function handleLocationError(error) {
 
 
 function Dialog(title, content, id) {
-    this.title = title;
-    this.content = content;
-    this.id = id;
+  this.title = title;
+  this.content = content;
+  this.id = id;
 
 }
 
 Dialog.prototype.create = function (type) {
-    const parent = createElement('div', {
-        className: 'mdc-dialog',
-        role: 'alertDialog',
-        id: this.id
+  const parent = createElement('div', {
+    className: 'mdc-dialog',
+    role: 'alertDialog',
+    id: this.id
+  })
+  parent.setAttribute('aria-modal', 'true')
+  parent.setAttribute('aria-labelledby', 'Title')
+  parent.setAttribute('aria-describedby', 'content')
+  const container = createElement('div', {
+    className: 'mdc-dialog__container'
+  })
+  const surface = createElement('div', {
+    className: 'mdc-dialog__surface'
+  })
+  const h2 = createElement('h2', {
+    className: 'mdc-dialog__title',
+  })
+  h2.innerHTML = this.title
+  this.footer = createElement('footer', {
+    className: 'mdc-dialog__actions'
+  })
+  const contentContainer = createElement('div', {
+    className: 'mdc-dialog__content'
+  });
+
+  if (this.content instanceof HTMLElement) {
+    contentContainer.appendChild(this.content)
+  } else {
+    contentContainer.innerHTML = this.content
+  }
+
+  if (this.title) {
+    surface.appendChild(h2)
+  }
+  surface.appendChild(contentContainer);
+  if (type !== 'simple') {
+
+    this.cancelButton = createElement('button', {
+      className: 'mdc-button mdc-dialog__button',
+      type: 'button',
+      textContent: 'Close'
     })
-    parent.setAttribute('aria-modal', 'true')
-    parent.setAttribute('aria-labelledby', 'Title')
-    parent.setAttribute('aria-describedby', 'content')
-    const container = createElement('div', {
-        className: 'mdc-dialog__container'
-    })
-    const surface = createElement('div', {
-        className: 'mdc-dialog__surface'
-    })
-    const h2 = createElement('h2', {
-        className: 'mdc-dialog__title',
-    })
-    h2.innerHTML = this.title
-    this.footer = createElement('footer', {
-        className: 'mdc-dialog__actions'
-    })
-    const contentContainer = createElement('div', {
-        className: 'mdc-dialog__content'
+    this.cancelButton.setAttribute('data-mdc-dialog-action', 'close');
+    this.cancelButton.style.marginRight = 'auto';
+
+    this.okButton = createElement('button', {
+      className: 'mdc-button mdc-dialog__button',
+      type: 'button',
+      textContent: 'Okay'
     });
 
-    if (this.content instanceof HTMLElement) {
-        contentContainer.appendChild(this.content)
-    } else {
-        contentContainer.innerHTML = this.content
-    }
 
-    if (this.title) {
-        surface.appendChild(h2)
-    }
-    surface.appendChild(contentContainer);
-    if (type !== 'simple') {
+    this.okButton.setAttribute('data-mdc-dialog-action', 'accept')
+    this.footer.appendChild(this.cancelButton)
+    this.footer.appendChild(this.okButton);
+    surface.appendChild(this.footer)
+  }
 
-        this.cancelButton = createElement('button', {
-            className: 'mdc-button mdc-dialog__button',
-            type: 'button',
-            textContent: 'Close'
-        })
-        this.cancelButton.setAttribute('data-mdc-dialog-action', 'close');
-        this.cancelButton.style.marginRight = 'auto';
+  container.appendChild(surface)
+  parent.appendChild(container);
+  parent.appendChild(createElement('div', {
+    className: 'mdc-dialog__scrim'
+  }))
 
-        this.okButton = createElement('button', {
-            className: 'mdc-button mdc-dialog__button',
-            type: 'button',
-            textContent: 'Okay'
-        });
-
-
-        this.okButton.setAttribute('data-mdc-dialog-action', 'accept')
-        this.footer.appendChild(this.cancelButton)
-        this.footer.appendChild(this.okButton);
-        surface.appendChild(this.footer)
-    }
-
-    container.appendChild(surface)
-    parent.appendChild(container);
-    parent.appendChild(createElement('div', {
-        className: 'mdc-dialog__scrim'
-    }))
-
-    document.body.appendChild(parent)
-    // const dialogParent = document.getElementById('dialog-container')
-    // dialogParent.innerHTML = ''
-    // dialogParent.appendChild(parent)
-    return new mdc.dialog.MDCDialog(parent);
+  document.body.appendChild(parent)
+  // const dialogParent = document.getElementById('dialog-container')
+  // dialogParent.innerHTML = ''
+  // dialogParent.appendChild(parent)
+  return new mdc.dialog.MDCDialog(parent);
 }
 
 function dialogButton(name, action) {
-    const button = createElement('button', {
-        className: 'mdc-button mdc-dialog__button',
-        type: 'button',
-        textContent: name
-    });
+  const button = createElement('button', {
+    className: 'mdc-button mdc-dialog__button',
+    type: 'button',
+    textContent: name
+  });
 
 
-    button.setAttribute('data-mdc-dialog-action', action)
-    return button;
+  button.setAttribute('data-mdc-dialog-action', action)
+  return button;
 }
 
 const getCheckInSubs = () => {
@@ -1344,4 +1344,17 @@ const loadNearByLocations = (o, location) => {
       return resolve(result);
     }
   })
+}
+
+function successDialog(text) {
+
+  const successMark = document.getElementById('success-animation');
+  successMark.classList.remove('hidden');
+  document.getElementById("app-current-panel").style.opacity = '0.1';
+  successMark.querySelector('.success-text').textContent = text;
+  setTimeout(function () {
+    successMark.classList.add('hidden');
+    document.getElementById("app-current-panel")
+      .style.opacity = '1';
+  }, 2000);
 }
