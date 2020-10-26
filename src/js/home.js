@@ -82,14 +82,13 @@ function read() {
       record.schedule[0].startTime
     ).format("hh:mm A");
 
-    var ms = moment(record.schedule[0].endTime, "DD/MM/YYYY HH:mm:ss").diff(
-      moment(record.schedule[0].startTime, "DD/MM/YYYY HH:mm:ss")
-    );
-    var d = moment.duration(ms);
 
-    document.getElementById("total_time").innerHTML =
-      d.hours() + "h " + d.minutes() + "m";
-
+    if(record.schedule[0].endTime !== record.schedule[0].startTime) {
+      document.querySelector(".active-duty--duration").classList.remove('hidden')
+      document.getElementById("total_time").innerHTML = moment
+      .utc(moment(record.schedule[0].endTime).diff(moment(record.schedule[0].startTime))).format('HH:mm')
+    }
+   
     if (record.assignees[0].displayName) {
       document.getElementById("assignees_name").innerHTML =
         record.assignees[0].displayName;
@@ -319,15 +318,15 @@ function readallduties(object_of_dates) {
     month = moment(date, "DD/MM/YYYY").month();
 
 
-   
+
     // Converted total work hours in to hours and minuts
 
-    const card = createDateCard(date,object_of_dates)
+    const card = createDateCard(date, object_of_dates)
 
     //Expanded first month
 
     monthCard.addEventListener("click", function (e) {
-      if (card.style.display == "flex" ) {
+      if (card.style.display == "flex") {
         card.style.display = "none";
 
         return;
@@ -369,23 +368,23 @@ function readallduties(object_of_dates) {
   }
 
   document
-  .getElementById("show_more_b")
-  .addEventListener("click", function () {
-    document.getElementById("show_more_b").style.display = "none";
+    .getElementById("show_more_b")
+    .addEventListener("click", function () {
+      document.getElementById("show_more_b").style.display = "none";
 
-    var show_all_card = document.querySelectorAll(".month-card");
-    console.log(show_all_card.length);
-    for (var i = 0; i < show_all_card.length; i++) {
-      show_all_card[i].style.display = "block";
-    }
+      var show_all_card = document.querySelectorAll(".month-card");
+      console.log(show_all_card.length);
+      for (var i = 0; i < show_all_card.length; i++) {
+        show_all_card[i].style.display = "block";
+      }
 
 
-  });
-  
+    });
+
 }
 
 
-function createDateCard(date,object_of_dates) {
+function createDateCard(date, object_of_dates) {
 
   const day = moment(date, "DD/MM/YYYY").format('ddd').toString().toUpperCase()
   const day_total_time = moment.duration(object_of_dates[date].totalHoursWorked);
@@ -536,6 +535,3 @@ function subDuties(j) {
   return collapsed;
 
 }
-
-
-
