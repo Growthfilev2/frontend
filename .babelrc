@@ -1,13 +1,12 @@
 {
-  "plugins": ["transform-remove-strict-mode"],
-  "presets": [
-    [
-      "env",
+  "presets": [[
+      "@babel/preset-env",
       {
-        "targets": {
-          "browsers": ["defaults"]
-        }
+        "useBuiltIns": "entry",
+        "corejs": 3
       }
-    ]
-  ]
+    ]],
+  "sourceType": "script",
+  "ignore": ["node_modules","src/external/js/intlTelInput.min.js","src/external/js/moment.min.js","src/external/js/intl-utils.js"],
+  "plugins": ["@babel/plugin-transform-object-assign","starts-with-ends-with"]
 }
