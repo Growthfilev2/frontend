@@ -12,7 +12,7 @@ firebase.auth().onAuthStateChanged(function (user) {
   }
 });
 var files = ['/v3/', 'offline.html', 'error-404.html', 'index.html', 'css/app.css', 'js/core.js', 'js/config.js', 'js/init.js', 'js/checkin.js', 'js/login.js', 'external/js/intl-utils.js', 'external/js/intlTelInput.min.js', 'external/js/moment.min.js', 'external/img/flags.png', 'external/img/flags@2x.png', 'external/css/intlTelInput.css'];
-var staticCacheName = 'pages-cache-v520'; // Listen for install event, set callback
+var staticCacheName = 'pages-cache-v521'; // Listen for install event, set callback
 
 self.addEventListener('install', function (event) {
   // Perform some task
