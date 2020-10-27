@@ -6,11 +6,11 @@ var aadharImages = function aadharImages() {
   var back = document.querySelector('.aadhar-back');
   return {
     setFront: function setFront() {
-      var src = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '../img/aadhaar_front.png';
+      var src = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : './img/aadhaar_front.png';
       front.src = src;
     },
     setBack: function setBack() {
-      var src = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '../img/aadhaar_back.png';
+      var src = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : './img/aadhaar_back.png';
       back.src = src;
     },
     getFront: function getFront() {
@@ -87,9 +87,9 @@ window.addEventListener('load', function (ev) {
 
 var loadAadharDetail = function loadAadharDetail(rootRecord) {
   var aadharData = rootRecord.aadhar;
-  aadharNumberField.value = aadharData.number;
-  imageManager.setFront(aadharData.front);
-  imageManager.setBack(aadharData.back);
+  aadharNumberField.value = aadharData ? aadharData.number : '';
+  imageManager.setFront(aadharData ? aadharData.front : '');
+  imageManager.setBack(aadharData ? aadharData.back : '');
 };
 
 var isPossiblyValidAadharNumber = function isPossiblyValidAadharNumber(string) {

@@ -4,10 +4,10 @@ const aadharImages = () => {
   const front = document.querySelector('.aadhar-front');
   const back = document.querySelector('.aadhar-back');
   return {
-    setFront: (src = '../img/aadhaar_front.png') => {
+    setFront: (src = './img/aadhaar_front.png') => {
       front.src = src
     },
-    setBack: (src = '../img/aadhaar_back.png') => {
+    setBack: (src = './img/aadhaar_back.png') => {
       back.src = src
     },
     getFront: () => {
@@ -84,9 +84,9 @@ window.addEventListener('load', (ev) => {
 
 const loadAadharDetail = (rootRecord) => {
   const aadharData = rootRecord.aadhar;
-  aadharNumberField.value = aadharData.number;
-  imageManager.setFront(aadharData.front)
-  imageManager.setBack(aadharData.back)
+  aadharNumberField.value = aadharData ? aadharData.number : '';
+  imageManager.setFront(aadharData ? aadharData.front :'')
+  imageManager.setBack(aadharData ? aadharData.back :'')
 
 }
 

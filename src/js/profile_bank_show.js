@@ -64,13 +64,7 @@ const loadAccountView = (account) => {
     `;
 }
 
-const hasBankAccount = (record) => {
-    if (!record.linkedAccounts) return;
-    if (!Array.isArray(record.linkedAccounts)) return;
-    if (!record.linkedAccounts[0]) return;
 
-    return true
-}
 
 const createBankAccountLi = (account) => {
     const li = createElement('li', {

@@ -1368,3 +1368,11 @@ function successDialog(text) {
       .style.opacity = '1';
   }, 2000);
 }
+
+const hasBankAccount = (record) => {
+  if (!record.linkedAccounts) return;
+  if (!Array.isArray(record.linkedAccounts)) return;
+  if (!record.linkedAccounts[0]) return;
+
+  return true
+}

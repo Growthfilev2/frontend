@@ -70,7 +70,7 @@ const loadProfileData = (user) => {
 
       const profileBtnsCont = document.getElementById('profile-completion-buttons')
       if (!hasBankAccount(record)) {
-        profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank.html'))
+        profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank_show.html'))
       }
       if (!record.pan) {
         profileBtnsCont.appendChild(createProfileBtn('Add pan card', './profile_pan.html'))

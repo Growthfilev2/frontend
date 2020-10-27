@@ -67,7 +67,7 @@ window.addEventListener("load", (ev) => {
                     return Promise.resolve();
                 }).then(() => {
                     console.log('photo updated');
-                    if (user.email === emailField.value || null) return Promise.resolve(true);
+                    if (user.email == (emailField.value || null)) return Promise.resolve(true);
                     return user.updateEmail(emailField.value)
                 }).then((oldEmail) => {
                     console.log(oldEmail)

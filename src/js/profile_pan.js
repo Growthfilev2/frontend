@@ -54,11 +54,11 @@ window.addEventListener('load', (ev) => {
 
 const loadPanDetail = (rootRecord) => {
   const panData = rootRecord.pan;
-  panNumberField.value = panData.number;
-  loadImage(panData.front)
+  panNumberField.value = panData ? panData.number : '';
+  loadImage(panData ? panData.front : '')
 }
 
-const loadImage = (src = '../img/pan_sample.png') => {
+const loadImage = (src = './img/pan_sample.png') => {
   document.querySelector('.upload-image').src = src;
 
 }

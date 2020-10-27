@@ -7,6 +7,6 @@
       }
     ]],
   "sourceType": "script",
-  "ignore": ["node_modules","src/external/js/intlTelInput.min.js","src/external/js/moment.min.js","src/external/js/intl-utils.js"],
+  "ignore": ["node_modules","src/external/js/intlTelInput.min.js","src/external/js/moment.min.js","src/external/js/intl-utils.js","src/sw.js"],
   "plugins": ["@babel/plugin-transform-object-assign","starts-with-ends-with"]
 }

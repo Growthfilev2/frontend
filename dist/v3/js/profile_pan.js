@@ -56,12 +56,12 @@ window.addEventListener('load', function (ev) {
 
 var loadPanDetail = function loadPanDetail(rootRecord) {
   var panData = rootRecord.pan;
-  panNumberField.value = panData.number;
-  loadImage(panData.front);
+  panNumberField.value = panData ? panData.number : '';
+  loadImage(panData ? panData.front : '');
 };
 
 var loadImage = function loadImage() {
-  var src = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '../img/pan_sample.png';
+  var src = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : './img/pan_sample.png';
   document.querySelector('.upload-image').src = src;
 };
 

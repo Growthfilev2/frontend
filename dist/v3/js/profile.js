@@ -53,7 +53,7 @@ var loadProfileData = function loadProfileData(user) {
       var profileBtnsCont = document.getElementById('profile-completion-buttons');
 
       if (!hasBankAccount(record)) {
-        profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank.html'));
+        profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank_show.html'));
       }
 
       if (!record.pan) {

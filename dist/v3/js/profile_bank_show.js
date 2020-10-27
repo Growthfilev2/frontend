@@ -39,13 +39,6 @@ var loadAccountView = function loadAccountView(account) {
   document.getElementById('bank-view').innerHTML = "<ul class=\"mdc-list mdc-list--two-line\" id=\"bank-list\">\n    ".concat(createBankAccountLi(account).outerHTML, "\n    <li class='mdc-list-divider'></li>\n    </ul>\n    <div class='p-16'>\n        <div class='mdc-typography--headline6'>Account information</div>\n        <div class='ml-20 mdc-typography--headline6'>\n            <div>").concat(account.name, "</div>\n            <div>").concat(account.bankPhoneNumber, "</div>\n        </div>\n    </div>\n    ");
 };
 
-var hasBankAccount = function hasBankAccount(record) {
-  if (!record.linkedAccounts) return;
-  if (!Array.isArray(record.linkedAccounts)) return;
-  if (!record.linkedAccounts[0]) return;
-  return true;
-};
-
 var createBankAccountLi = function createBankAccountLi(account) {
   var li = createElement('li', {
     className: 'mdc-list-item'

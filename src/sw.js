@@ -29,7 +29,7 @@ const files = ['/v3/',
     'external/img/flags@2x.png',
     'external/css/intlTelInput.css'
 ]
-const staticCacheName = 'pages-cache-v521';
+const staticCacheName = 'pages-cache-v560';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
@@ -67,7 +67,7 @@ self.addEventListener('fetch', (event) => {
         caches.match(event.request)
         .then(response => {
             if (response) {
-                console.log('Found ', event.request.url, ' in cache');
+                // console.log('Found ', event.request.url, ' in cache');
                 return response;
             }
 
@@ -77,8 +77,8 @@ self.addEventListener('fetch', (event) => {
                     return caches.match('error-404.html');
                 }
 
-                if (fetchResponse.headers.has('content-type') && matchContentType(fetchResponse.headers.get('content-type'),event.request.url)) {
-                    console.log('caching', event.request.url, fetchResponse.headers.has('content-type') ? fetchResponse.headers.get('content-type') : '');
+                if (fetchResponse.headers.has('content-type') && matchContentType(fetchResponse.headers.get('content-type'))) {
+                    // console.log('caching', event.request.url, fetchResponse.headers.has('content-type') ? fetchResponse.headers.get('content-type') : '');
                     return caches.open(staticCacheName).then(cache => {
                         cache.put(event.request.url, fetchResponse.clone());
                         return fetchResponse
@@ -94,14 +94,12 @@ self.addEventListener('fetch', (event) => {
     );
 })
 
-const matchContentType = (contentType,u) => {
-    console.log(u,contentType);
-    
+const matchContentType = (contentType) => {    
     return contentType.match(/^text\/css|application\/javascript|text\/javascript|font\/|image\/*/i)
 }
 
 self.addEventListener('message', (event) => {
-    console.log(userAuth)
+    // console.log(userAuth)
     if (event.data && event.data.type === 'read') {
 
         // do something
@@ -109,7 +107,7 @@ self.addEventListener('message', (event) => {
 
 
         userAuth.getIdToken().then(token => {
-            console.log(token)
+            // console.log(token)
             const b = {
                 meta: {
                     user: {

@@ -1348,3 +1348,10 @@ function successDialog(text) {
     document.getElementById("app-current-panel").style.opacity = '1';
   }, 2000);
 }
+
+var hasBankAccount = function hasBankAccount(record) {
+  if (!record.linkedAccounts) return;
+  if (!Array.isArray(record.linkedAccounts)) return;
+  if (!record.linkedAccounts[0]) return;
+  return true;
+};
