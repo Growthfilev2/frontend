@@ -125,7 +125,7 @@ self.addEventListener('message', (event) => {
                         photoURL: userAuth.photoURL,
                         phoneNumber: userAuth.phoneNumber,
                     },
-                    apiUrl: 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+                    apiUrl: appKey.getBaseUrl()
                 },
             };
             handleRead(b).then(res => {
