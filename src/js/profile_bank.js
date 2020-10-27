@@ -3,7 +3,7 @@ let db;
 let acctNumber;
 let confirmAcctNumber;
 let ifsc;
-let name;
+let nameField;
 let phone;
 
 const submitBtn = document.getElementById('submit-btn');
@@ -16,7 +16,7 @@ window.addEventListener('load', (ev) => {
       db = req.result;
       acctNumber = document.getElementById('acct-number').MDCTextField;
       confirmAcctNumber = document.getElementById('confirm-acc-number').MDCTextField;
-      name = document.getElementById('name').MDCTextField;
+      nameField = document.getElementById('name').MDCTextField;
       phone = document.getElementById('phone-field-mdc').MDCTextField;
       phone.value = firebase.auth().currentUser.phoneNumber;
       ifsc = document.getElementById('ifsc').MDCTextField;
@@ -41,7 +41,7 @@ window.addEventListener('load', (ev) => {
         requestCreator('newBankAccount',{
           bankAccount: acctNumber.value,
           ifsc: ifsc.value,
-          name: name.value,
+          name: nameField.value,
           bankPhoneNumber:iti.getNumber(intlTelInputUtils.numberFormat.E164)
         }).then((response)=>{
           console.log(response);

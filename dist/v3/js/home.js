@@ -13,6 +13,7 @@ navigator.serviceWorker.onmessage = function (event) {
     return activity.template === "duty";
   })) {
     if (document.getElementById('duties-list')) {
+      document.getElementById('duties-list').innerHTML = '';
       readduty();
     }
   }
@@ -294,6 +295,7 @@ function readallduties(object_of_dates) {
     current_month = first_month.getMonth();
 
     if (moment(date, "DD/MM/YYYY").month() == current_month) {
+      monthCard.style.display = 'block';
       card.style.display = "flex";
     }
   };

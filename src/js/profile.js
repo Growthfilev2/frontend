@@ -76,14 +76,14 @@ const loadProfileData = (user) => {
         profileBtnsCont.appendChild(createProfileBtn('Add pan card', './profile_pan.html'))
       }
       if (!record.aadhar) {
-        profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhar.html'))
+        profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhaar.html'))
       }
     })
 
     db.transaction('children').objectStore('children').index('employees').get(user.phoneNumber).onsuccess = function (e) {
       const record = e.target.result;
       document.getElementById('employee-at').textContent = record.attachment.Designation.value ? `${record.attachment.Designation.value}, ${record.office}` : record.office;
-      document.getElementById('employee-meta').href = `${document.getElementById('employee-meta').href}.html?id=${record.activityId}`;
+      document.getElementById('employee-meta').href = `${document.getElementById('employee-meta').href}?id=${record.activityId}`;
     }
   };
 

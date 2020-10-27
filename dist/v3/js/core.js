@@ -214,7 +214,8 @@ function createElement(tagName, attrs) {
 }
 
 var redirect = function redirect(path) {
-  window.location = "".concat(window.location.origin).concat(window.location.hostname === 'dev' ? "".concat(formatURL(path)) : "/v3/".concat(formatURL(path)));
+  // window.location = `${window.location.origin}/v3/${formatURL(path)}`;
+  window.location = "".concat(window.location.origin).concat(window.location.hostname === 'localhost' ? "".concat(formatURL(path)) : "/v3".concat(formatURL(path)));
 };
 
 var formatURL = function formatURL(url) {

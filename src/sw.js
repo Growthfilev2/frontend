@@ -22,14 +22,22 @@ const files = ['/v3/',
     'js/init.js',
     'js/checkin.js',
     'js/login.js',
+    'home.html',
+    'profile.html',
+    'profile_aadhaar.html',
+    'profile_pan.html',
+    'profile_edit.html',
+    'profile_bank_show.html',
+    'profile_employee.html',
     'external/js/intl-utils.js',
     'external/js/intlTelInput.min.js',
     'external/js/moment.min.js',
     'external/img/flags.png',
     'external/img/flags@2x.png',
-    'external/css/intlTelInput.css'
+    'external/css/intlTelInput.css',
+
 ]
-const staticCacheName = 'pages-cache-v560';
+const staticCacheName = 'pages-cache-v605';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {

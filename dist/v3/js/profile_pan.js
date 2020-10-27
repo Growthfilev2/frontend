@@ -57,11 +57,13 @@ window.addEventListener('load', function (ev) {
 var loadPanDetail = function loadPanDetail(rootRecord) {
   var panData = rootRecord.pan;
   panNumberField.value = panData ? panData.number : '';
-  loadImage(panData ? panData.front : '');
+
+  if (panData && panData.front) {
+    loadImage(panData.front);
+  }
 };
 
-var loadImage = function loadImage() {
-  var src = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : './img/pan_sample.png';
+var loadImage = function loadImage(src) {
   document.querySelector('.upload-image').src = src;
 };
 

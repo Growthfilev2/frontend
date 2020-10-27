@@ -10,6 +10,7 @@ navigator.serviceWorker.onmessage = (event) => {
 
   if (readResponse.activities.some(activity => activity.template === "duty")) {
     if(document.getElementById('duties-list')) {
+      document.getElementById('duties-list').innerHTML = '';
       readduty()
     }
   }
@@ -168,9 +169,7 @@ function readduty() {
     // }
 
     timestamp_array.push(cursor.value.timestamp);
-
     duties.push(cursor.value);
-
     cursor.continue();
   };
   transaction.oncomplete = function () {
@@ -368,6 +367,7 @@ function readallduties(object_of_dates) {
     var current_month = first_month.getMonth();
 
     if (moment(date, "DD/MM/YYYY").month() == current_month) {
+      monthCard.style.display = 'block'
       card.style.display = "flex";
     }
   }

@@ -219,8 +219,8 @@ function createElement(tagName, attrs) {
 
 
 const redirect = (path) => {
- 
-  window.location = `${window.location.origin}${window.location.hostname === 'dev' ?`${formatURL(path)}` :`/v3/${formatURL(path)}`}`;
+    // window.location = `${window.location.origin}/v3/${formatURL(path)}`;
+  window.location = `${window.location.origin}${window.location.hostname === 'localhost' ?`${formatURL(path)}` :`/v3${formatURL(path)}`}`;
 }
 
 const formatURL = (url) => {

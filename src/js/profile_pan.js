@@ -55,10 +55,12 @@ window.addEventListener('load', (ev) => {
 const loadPanDetail = (rootRecord) => {
   const panData = rootRecord.pan;
   panNumberField.value = panData ? panData.number : '';
-  loadImage(panData ? panData.front : '')
+  if(panData && panData.front) {
+    loadImage(panData.front)
+  }
 }
 
-const loadImage = (src = './img/pan_sample.png') => {
+const loadImage = (src) => {
   document.querySelector('.upload-image').src = src;
 
 }

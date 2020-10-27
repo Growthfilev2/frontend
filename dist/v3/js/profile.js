@@ -61,14 +61,14 @@ var loadProfileData = function loadProfileData(user) {
       }
 
       if (!record.aadhar) {
-        profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhar.html'));
+        profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhaar.html'));
       }
     });
 
     db.transaction('children').objectStore('children').index('employees').get(user.phoneNumber).onsuccess = function (e) {
       var record = e.target.result;
       document.getElementById('employee-at').textContent = record.attachment.Designation.value ? "".concat(record.attachment.Designation.value, ", ").concat(record.office) : record.office;
-      document.getElementById('employee-meta').href = "".concat(document.getElementById('employee-meta').href, ".html?id=").concat(record.activityId);
+      document.getElementById('employee-meta').href = "".concat(document.getElementById('employee-meta').href, "?id=").concat(record.activityId);
     };
   };
 };
