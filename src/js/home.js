@@ -121,6 +121,18 @@ function read() {
     console.log(record);
     
     document.getElementById("finish").addEventListener("click", function(){
+      document.getElementById("blur").style.display="block";
+      document.getElementById("comformation_box").style.display="block";
+      current_date = new Date();
+      current_time = current_date.getTime();
+      time= moment(current_time).format("hh:mm A")
+      document.getElementById("current_time").innerHTML = "Time: "+ time;
+      document.getElementById("finish_location").innerHTML= "Location: "+ record.attachment.Location.value;
+      console.log(record.attachment.Location.value)
+    })
+
+
+    document.getElementById("yes_finish").addEventListener("click", function(){
       const tx = db.transaction('activity', 'readwrite')
     const objecstore = tx.objectStore('activity');
     record.finished= true;
@@ -128,6 +140,8 @@ function read() {
     tx.oncomplete = function () {
        document.getElementById("current_duty_card").style.display="none";
       document.getElementById("card").style.marginTop="100px";
+      document.getElementById("blur").style.display="none";
+      document.getElementById("comformation_box").style.display="none";
     }
     })
     return record;
@@ -294,6 +308,9 @@ function readallduties(object_of_dates) {
       var current_month = first_month.getMonth();
       var pre_month = current_month - 1;
 
+      console.log(current_month)
+      console.log(month)
+
       if (current_month == month) {
         monthCard.style.display = "block";
       }
@@ -340,7 +357,9 @@ function readallduties(object_of_dates) {
 
 
     month = moment(date, "DD/MM/YYYY").month();
-
+    if (current_month == month) {
+      monthCard.style.display = "block";
+    }
 
    
     // Converted total work hours in to hours and minuts
