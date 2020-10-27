@@ -2,32 +2,23 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js');
+importScripts('js/config.js');
 var userAuth;
 var meta;
-firebase.initializeApp({
-  apiKey: "AIzaSyB2SuCoyi9ngRIy6xZRYuzxoQJDtOheiUM",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238",
-  appId: "1:1011478688238:web:707166c5b9729182d81eff",
-  measurementId: "G-R2K1J16PTW"
-});
 firebase.auth().onAuthStateChanged(function (user) {
   if (user) {
     console.log(user);
     userAuth = user;
   }
 });
-var files = ['/v3/', 'css/app.css', 'index.html', 'js/core.js', 'js/config.js', 'js/init.js', 'js/checkin.js', 'external/js/intl-utils.js', 'external/js/intlTelInput.min.js', 'external/js/moment.min.js', 'external/img/flags.png', 'external/img/flags@2x.png', 'external/css/intlTelInput.css'];
-var staticCacheName = 'pages-cache-v42';
-console.log("there is a change"); // Listen for install event, set callback
+var files = ['/v3/', 'offline.html', 'error-404.html', 'index.html', 'css/app.css', 'js/core.js', 'js/config.js', 'js/init.js', 'js/checkin.js', 'js/login.js', 'external/js/intl-utils.js', 'external/js/intlTelInput.min.js', 'external/js/moment.min.js', 'external/img/flags.png', 'external/img/flags@2x.png', 'external/css/intlTelInput.css'];
+var staticCacheName = 'pages-cache-v520'; // Listen for install event, set callback
 
 self.addEventListener('install', function (event) {
   // Perform some task
   console.log('Service worker installed', event);
   event.waitUntil(caches.open(staticCacheName).then(function (cache) {
+    console.log("there is a change");
     return cache.addAll(files);
   }));
 });
@@ -51,7 +42,11 @@ self.addEventListener('fetch', function (event) {
 
 
     return fetch(event.request).then(function (fetchResponse) {
-      if (fetchResponse.headers.has('content-type') && matchContentType(fetchResponse.headers.get('content-type'))) {
+      if (fetchResponse.status === 404) {
+        return caches.match('error-404.html');
+      }
+
+      if (fetchResponse.headers.has('content-type') && matchContentType(fetchResponse.headers.get('content-type'), event.request.url)) {
         console.log('caching', event.request.url, fetchResponse.headers.has('content-type') ? fetchResponse.headers.get('content-type') : '');
         return caches.open(staticCacheName).then(function (cache) {
           cache.put(event.request.url, fetchResponse.clone());
@@ -62,15 +57,19 @@ self.addEventListener('fetch', function (event) {
       return fetchResponse;
     });
   })["catch"](function (error) {
-    console.error(error); // TODO 6 - Respond with custom offline page
+    console.error(error);
+    return caches.match('offline.html');
   }));
 });
 
-var matchContentType = function matchContentType(contentType) {
-  return contentType.match(/^text\/css|application\/javascript|font\/|image\/*/i);
+var matchContentType = function matchContentType(contentType, u) {
+  console.log(u, contentType);
+  return contentType.match(/^text\/css|application\/javascript|text\/javascript|font\/|image\/*/i);
 };
 
 self.addEventListener('message', function (event) {
+  console.log(userAuth);
+
   if (event.data && event.data.type === 'read') {
     // do something
     console.log('SW REC message', event.data);

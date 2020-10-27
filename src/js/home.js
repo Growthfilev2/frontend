@@ -61,8 +61,7 @@ window.addEventListener("load", (ev) => {
       db = event.target.result;
 
       document.getElementById("pfp").src =
-        firebase.auth().currentUser.photoURL ||
-        firstletter(firebase.auth().currentUser.displayName.charAt(0));
+        firebase.auth().currentUser.photoURL || './img/ic_pic_upload.png'
       document.getElementById('photo-upload-btn').addEventListener('click', () => {
         openCamera()
       })

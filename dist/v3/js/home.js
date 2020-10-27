@@ -66,7 +66,7 @@ window.addEventListener("load", function (ev) {
 
     request.onsuccess = function (event) {
       db = event.target.result;
-      document.getElementById("pfp").src = firebase.auth().currentUser.photoURL || firstletter(firebase.auth().currentUser.displayName.charAt(0));
+      document.getElementById("pfp").src = firebase.auth().currentUser.photoURL || './img/ic_pic_upload.png';
       document.getElementById('photo-upload-btn').addEventListener('click', function () {
         openCamera();
       });

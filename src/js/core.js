@@ -217,8 +217,15 @@ function createElement(tagName, attrs) {
 }
 
 
+
 const redirect = (path) => {
-  window.location = window.location.origin +'/v3/'+path;
+ 
+  window.location = `${window.location.origin}${window.location.hostname === 'dev' ?`${formatURL(path)}` :`/v3/${formatURL(path)}`}`;
+}
+
+const formatURL = (url) => {
+  if(url.includes(".html")) return url;
+  return `${url}.html`
 }
 const logReportEvent = (name) => {
   const deviceInfo = _native.getInfo();
@@ -547,11 +554,11 @@ function fetchCurrentTime(serverTime) {
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
 
-    return resolve({
-      latitude: 16.7891238,
-      longitude: 34.128309129323,
-      lastLocationTime: Date.now()
-    })
+    // return resolve({
+    //   latitude: 16.7891238,
+    //   longitude: 34.128309129323,
+    //   lastLocationTime: Date.now()
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint

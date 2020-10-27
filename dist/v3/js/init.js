@@ -24,7 +24,7 @@ window.addEventListener('load', function () {
           return;
         }
 
-        redirect("/login".concat(deepLink ? "?".concat(deepLink.toString()) : ''));
+        redirect("/login.html".concat(deepLink ? "?".concat(deepLink.toString()) : ''));
       });
     })["catch"](function (error) {
       // registration failed
@@ -86,7 +86,7 @@ var loadApp = function loadApp() {
 
   localStorage.setItem('error', JSON.stringify({}));
   localStorage.removeItem('storedLinks');
-  checkNetworkValidation();
+  startApp(); // checkNetworkValidation();
 };
 
 function checkNetworkValidation() {
@@ -98,8 +98,6 @@ function checkNetworkValidation() {
     }, checkNetworkValidation);
     return;
   }
-
-  startApp();
 }
 
 var loadScreen = function loadScreen(id) {
@@ -317,7 +315,7 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   var auth = firebase.auth().currentUser;
-  if (!auth.displayName) return redirect("/profile_edit?askPhoto=1&new_user=".concat(isNewUser()));
+  if (!auth.displayName) return redirect("/profile_edit.html?askPhoto=1&new_user=".concat(isNewUser()));
   redirect('/home');
 }
 

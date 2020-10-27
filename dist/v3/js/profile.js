@@ -38,7 +38,7 @@ var loadProfileData = function loadProfileData(user) {
   req.onsuccess = function (e) {
     db = req.result;
     getRootRecord().then(function (record) {
-      document.getElementById("output").src = user.photoURL || firstletter(user.displayName.charAt(0));
+      document.getElementById("output").src = user.photoURL || './img/ic_pic_upload.png';
       document.getElementById("name").innerHTML = user.displayName;
       document.getElementById("mobile").innerHTML = user.phoneNumber;
       document.getElementById("email").innerHTML = user.email || "-"; // document.getElementById(
@@ -53,22 +53,22 @@ var loadProfileData = function loadProfileData(user) {
       var profileBtnsCont = document.getElementById('profile-completion-buttons');
 
       if (!hasBankAccount(record)) {
-        profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank'));
+        profileBtnsCont.appendChild(createProfileBtn('Add bank account', './profile_bank.html'));
       }
 
       if (!record.pan) {
-        profileBtnsCont.appendChild(createProfileBtn('Add pan card', './profile_pan'));
+        profileBtnsCont.appendChild(createProfileBtn('Add pan card', './profile_pan.html'));
       }
 
       if (!record.aadhar) {
-        profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhar'));
+        profileBtnsCont.appendChild(createProfileBtn('Add aadhar card', './profile_aadhar.html'));
       }
     });
 
     db.transaction('children').objectStore('children').index('employees').get(user.phoneNumber).onsuccess = function (e) {
       var record = e.target.result;
       document.getElementById('employee-at').textContent = record.attachment.Designation.value ? "".concat(record.attachment.Designation.value, ", ").concat(record.office) : record.office;
-      document.getElementById('employee-meta').href = "".concat(document.getElementById('employee-meta').href, "?id=").concat(record.activityId);
+      document.getElementById('employee-meta').href = "".concat(document.getElementById('employee-meta').href, ".html?id=").concat(record.activityId);
     };
   };
 };

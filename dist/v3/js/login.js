@@ -19,10 +19,10 @@ window.addEventListener('load', function () {
         });
 
         if (queryParams && queryParams.has('re_auth')) {
-          return redirect("/profile_edit?email=".concat(queryParams.get('email')));
+          return redirect("/profile_edit.html?email=".concat(queryParams.get('email')));
         }
 
-        return redirect("/".concat(window.location.search ? "".concat(window.location.search) : ""));
+        return redirect("/index.html".concat(window.location.search ? "".concat(window.location.search) : ""));
       }
 
       firebase.auth().currentUser.getIdTokenResult().then(function (tokenResult) {
@@ -49,7 +49,7 @@ window.addEventListener('load', function () {
           return redirect("/profile_edit");
         }
 
-        redirect("/".concat(window.location.search ? "".concat(window.location.search) : ""));
+        redirect("/index.html".concat(window.location.search ? "".concat(window.location.search) : ""));
       });
     }, 1500);
   });

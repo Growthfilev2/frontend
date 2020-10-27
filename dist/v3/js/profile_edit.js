@@ -2,10 +2,12 @@ var db;
 var nameField;
 var photo;
 var emailField;
+var uploadedBase64 = null;
 var submitBtn = document.getElementById('submit-btn');
 var profileImage = document.getElementById('profile-image');
 document.getElementById('upload-image').addEventListener('change', function (ev) {
   getImageBase64(ev).then(function (base64) {
+    uploadedBase64 = base64;
     profileImage.src = base64;
   });
 });
@@ -15,19 +17,26 @@ window.addEventListener("load", function (ev) {
 
   if (searchParams.has('askPhoto')) {
     document.querySelector('.form-field.photo').classList.remove('hidden');
+    document.querySelector('.mdc-top-app-bar').classList.add('hidden');
+    document.getElementById('edit_profile').classList.remove('mdc-top-app-bar--fixed-adjust');
   }
 
   nameField = document.getElementById('name').MDCTextField;
   emailField = document.getElementById('email').MDCTextField;
   firebase.auth().onAuthStateChanged(function (user) {
     // loadProfileData(user)
-    nameField.value = user.displayName;
+    nameField.value = user.displayName || '';
     emailField.value = getUserEmail(user);
-    profileImage.src = user.photoURL || '';
+
+    if (user.photoURL) {
+      uploadedBase64 = user.photoURL;
+      profileImage.src;
+    }
+
     document.getElementById('profile-form').addEventListener('submit', function (ev) {
       ev.preventDefault();
 
-      if (!emailReg(emailField.value)) {
+      if (emailField.value && !emailReg(emailField.value)) {
         setHelperInvalid(emailField, 'Incorrect email');
         return;
       }
@@ -49,7 +58,7 @@ window.addEventListener("load", function (ev) {
       prom.then(function () {
         console.log('name updated');
 
-        if (user.photoURL !== document.getElementById('profile-image').src) {
+        if (user.photoURL !== uploadedBase64) {
           requestCreator('backblaze', {
             imageBase64: document.getElementById('profile-image').src
           });
@@ -59,7 +68,7 @@ window.addEventListener("load", function (ev) {
         return Promise.resolve();
       }).then(function () {
         console.log('photo updated');
-        if (user.email === emailField.value) return Promise.resolve(true);
+        if (user.email === emailField.value || null) return Promise.resolve(true);
         return user.updateEmail(emailField.value);
       }).then(function (oldEmail) {
         console.log(oldEmail);
@@ -111,7 +120,7 @@ var getUserEmail = function getUserEmail(user) {
     return searchParams.get('email');
   }
 
-  return user.email;
+  return user.email || '';
 };
 
 var getFirstName = function getFirstName(string) {
@@ -133,7 +142,7 @@ var emailReg = function emailReg(email) {
 
 var revokeSession = function revokeSession(email) {
   firebase.auth().signOut().then(function () {
-    redirect("/login?re_auth=1&email=".concat(encodeURIComponent(email)));
+    redirect("/login.html?re_auth=1&email=".concat(encodeURIComponent(email)));
   })["catch"](function (error) {
     handleError({
       message: 'Sign out error',

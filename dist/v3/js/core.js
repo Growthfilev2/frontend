@@ -214,7 +214,12 @@ function createElement(tagName, attrs) {
 }
 
 var redirect = function redirect(path) {
-  window.location = window.location.origin + '/v3/' + path;
+  window.location = "".concat(window.location.origin).concat(window.location.hostname === 'dev' ? "".concat(formatURL(path)) : "/v3/".concat(formatURL(path)));
+};
+
+var formatURL = function formatURL(url) {
+  if (url.includes(".html")) return url;
+  return "".concat(url, ".html");
 };
 
 var logReportEvent = function logReportEvent(name) {
@@ -535,11 +540,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-    return resolve({
-      latitude: 16.7891238,
-      longitude: 34.128309129323,
-      lastLocationTime: Date.now()
-    });
+    // return resolve({
+    //   latitude: 16.7891238,
+    //   longitude: 34.128309129323,
+    //   lastLocationTime: Date.now()
+    // })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint;

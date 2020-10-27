@@ -28,7 +28,7 @@ window.addEventListener('load', () => {
             loadApp()
             return
           }
-          redirect(`/login${deepLink ? `?${deepLink.toString()}`:''}`);
+          redirect(`/login.html${deepLink ? `?${deepLink.toString()}`:''}`);
         })
       }).catch((error) => {
         // registration failed
@@ -98,7 +98,8 @@ const loadApp = () => {
 
   localStorage.setItem('error', JSON.stringify({}));
   localStorage.removeItem('storedLinks');
-  checkNetworkValidation();
+  startApp();
+  // checkNetworkValidation();
 };
 
 
@@ -112,7 +113,7 @@ function checkNetworkValidation() {
     }, checkNetworkValidation)
     return;
   }
-  startApp();
+ 
 }
 
 
@@ -360,7 +361,7 @@ function noOfficeFoundScreen() {
 
 function initProfileView() {
   const auth = firebase.auth().currentUser;
-  if (!auth.displayName) return redirect(`/profile_edit?askPhoto=1&new_user=${isNewUser()}`);
+  if (!auth.displayName) return redirect(`/profile_edit.html?askPhoto=1&new_user=${isNewUser()}`);
   redirect('/home');
 }
 

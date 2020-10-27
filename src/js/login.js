@@ -22,11 +22,11 @@ window.addEventListener('load', () => {
         });
 
         if (queryParams && queryParams.has('re_auth')) {
-          return redirect(`/profile_edit?email=${queryParams.get('email')}`)
+          return redirect(`/profile_edit.html?email=${queryParams.get('email')}`)
         }
 
         return redirect(
-          `/${
+          `/index.html${
               window.location.search ? `${window.location.search}` : ""
             }`
         );
@@ -57,7 +57,7 @@ window.addEventListener('load', () => {
             return redirect(`/profile_edit`)
           }
           redirect(
-            `/${
+            `/index.html${
                 window.location.search ? `${window.location.search}` : ""
               }`
           );

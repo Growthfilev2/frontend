@@ -3,36 +3,44 @@ let db;
 let nameField;
 let photo;
 let emailField;
+let uploadedBase64 = null
 const submitBtn = document.getElementById('submit-btn');
 
 const profileImage = document.getElementById('profile-image');
 
 document.getElementById('upload-image').addEventListener('change',(ev)=>{
     getImageBase64(ev).then(base64=>{
-        profileImage.src = base64
+        uploadedBase64 = base64;
+        profileImage.src = base64;
     })
 })
 window.addEventListener("load", (ev) => {
     window.mdc.autoInit()
     const searchParams = new URLSearchParams(window.location.search);
+    
     if (searchParams.has('askPhoto')) {
         document.querySelector('.form-field.photo').classList.remove('hidden');
+        document.querySelector('.mdc-top-app-bar').classList.add('hidden')
+        document.getElementById('edit_profile').classList.remove('mdc-top-app-bar--fixed-adjust')
     }
+
     nameField = document.getElementById('name').MDCTextField;
     emailField = document.getElementById('email').MDCTextField;
 
     firebase.auth().onAuthStateChanged((user) => {
         // loadProfileData(user)
 
-        nameField.value = user.displayName;
+        nameField.value = user.displayName || '';
         emailField.value = getUserEmail(user)
 
-
-        profileImage.src = user.photoURL || ''
+        if(user.photoURL) {
+            uploadedBase64 = user.photoURL
+            profileImage.src;
+        }
 
         document.getElementById('profile-form').addEventListener('submit', (ev) => {
             ev.preventDefault();
-            if (!emailReg(emailField.value)) {
+            if (emailField.value && !emailReg(emailField.value)) {
                 setHelperInvalid(emailField, 'Incorrect email');
                 return
             }
@@ -50,7 +58,7 @@ window.addEventListener("load", (ev) => {
             }
             prom.then(() => {
                     console.log('name updated');
-                    if (user.photoURL !== document.getElementById('profile-image').src) {
+                    if (user.photoURL !== uploadedBase64) {
                         requestCreator('backblaze', {
                             imageBase64: document.getElementById('profile-image').src
                         })
@@ -59,7 +67,7 @@ window.addEventListener("load", (ev) => {
                     return Promise.resolve();
                 }).then(() => {
                     console.log('photo updated');
-                    if (user.email === emailField.value) return Promise.resolve(true);
+                    if (user.email === emailField.value || null) return Promise.resolve(true);
                     return user.updateEmail(emailField.value)
                 }).then((oldEmail) => {
                     console.log(oldEmail)
@@ -106,7 +114,7 @@ const getUserEmail = (user) => {
     if (searchParams.has('email')) {
         return searchParams.get('email')
     }
-    return user.email
+    return user.email || ''
 }
 
 const getFirstName = (string) => {
@@ -127,7 +135,7 @@ const emailReg = (email) => {
 
 const revokeSession = (email) => {
     firebase.auth().signOut().then(function () {
-        redirect(`/login?re_auth=1&email=${encodeURIComponent(email)}`)
+        redirect(`/login.html?re_auth=1&email=${encodeURIComponent(email)}`)
     }).catch(function (error) {
         handleError({
             message: 'Sign out error',
