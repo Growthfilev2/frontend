@@ -295,6 +295,13 @@ function handleCheckin(geopoint, noUser) {
 
           navigator.serviceWorker.onmessage = function (event) {
             console.log('message from worker', event.data);
+
+            if (event.data.type === 'error') {
+              handleError(event.data);
+              snacks('Try again later');
+              return;
+            }
+
             handleCheckin(geopoint);
           };
 

@@ -15,7 +15,7 @@ var serverTimeUpdated = false;
 window.addEventListener('load', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {
-        scope: '/v3/'
+        scope: '/'
       })
       .then(reg => {
         console.log('Registration succeeded. Scope is ' + reg.scope);
@@ -325,6 +325,11 @@ function handleCheckin(geopoint, noUser) {
           // })
           navigator.serviceWorker.onmessage = (event) => {
             console.log('message from worker', event.data);
+            if(event.data.type === 'error') {
+              handleError(event.data);
+              snacks('Try again later')
+              return
+            }
             handleCheckin(geopoint)
           };
           return
@@ -332,9 +337,7 @@ function handleCheckin(geopoint, noUser) {
         if (isAdmin(result[0]) || result[1]) return initProfileView();
         return noOfficeFoundScreen();
       })
-
     })
-
   });
 }
 
