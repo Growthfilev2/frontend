@@ -287,11 +287,12 @@ function handleCheckin(geopoint, noUser) {
     Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
       getRootRecord().then(function (record) {
         if (record.fromTime == 0) {
-          loadScreen('loading-data'); // serviceWorkerRequestCreator(null).then((res)=>{
-
+          loadScreen('loading-data');
+          console.log("sending read 0");
+          console.log(navigator.serviceWorker.controller);
           navigator.serviceWorker.controller.postMessage({
             type: 'read'
-          }); // })
+          });
 
           navigator.serviceWorker.onmessage = function (event) {
             console.log('message from worker', event.data);

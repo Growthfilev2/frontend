@@ -113,7 +113,7 @@ function checkNetworkValidation() {
     }, checkNetworkValidation)
     return;
   }
- 
+
 }
 
 
@@ -318,14 +318,14 @@ function handleCheckin(geopoint, noUser) {
       getRootRecord().then(function (record) {
         if (record.fromTime == 0) {
           loadScreen('loading-data')
-          // serviceWorkerRequestCreator(null).then((res)=>{
+          console.log("sending read 0");
+          console.log(navigator.serviceWorker.controller);
           navigator.serviceWorker.controller.postMessage({
             type: 'read'
           })
-          // })
           navigator.serviceWorker.onmessage = (event) => {
             console.log('message from worker', event.data);
-            if(event.data.type === 'error') {
+            if (event.data.type === 'error') {
               handleError(event.data);
               snacks('Try again later')
               return
@@ -655,11 +655,3 @@ function checkIDBCount(storeNames) {
     }
   })
 }
-
-
-
-
-
-
-
-

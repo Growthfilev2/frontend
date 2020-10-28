@@ -114,7 +114,6 @@ function updatedWifiScans(wifiString) {
   })
   updatedWifiAddresses.addresses = result;
   updatedWifiAddresses.timestamp = Date.now()
-
 };
 
 function setFirebaseAnalyticsUserId(id) {
