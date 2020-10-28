@@ -12,7 +12,7 @@ firebase.auth().onAuthStateChanged(user => {
 })
 
 
-const files = ['/',
+const files = ['/v3/',
     'offline.html',
     'error-404.html',
     'index.html',

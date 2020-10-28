@@ -37,13 +37,13 @@ const files = ['/v3/',
     'external/css/intlTelInput.css',
 
 ]
-const staticCacheName = 'pages-cache-v605';
+const staticCacheName = 'pages-cache-v610';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
     // Perform some task
     console.log('Service worker installed', event)
-    
+
     event.waitUntil(caches.open(staticCacheName).then(cache => {
         console.log("there is a change")
         return cache.addAll(files);
@@ -102,7 +102,7 @@ self.addEventListener('fetch', (event) => {
     );
 })
 
-const matchContentType = (contentType) => {    
+const matchContentType = (contentType) => {
     return contentType.match(/^text\/css|application\/javascript|text\/javascript|font\/|image\/*/i)
 }
 
@@ -128,23 +128,25 @@ self.addEventListener('message', (event) => {
                     apiUrl: appKey.getBaseUrl()
                 },
             };
+
             handleRead(b).then(res => {
-                self.clients.matchAll({
-                    includeUncontrolled: true,
-                    type: 'window',
-                }).then((clients) => {
-                    if (clients && clients.length) {
-                        // Send a response - the clients
-                        // array is ordered by last focused
-                        clients[0].postMessage(res);
-                    }
-                });
-            }).catch(console.error)
+                sendResponseToClient(res);
+            }).catch(err => {
+                sendResponseToClient({type: 'error',message:err.message,body:JSON.stringify(err.stack)})
+               
+            })
         })
     }
 })
 
-
+const sendResponseToClient = (response) =>{
+    self.clients.matchAll({
+        includeUncontrolled: true,
+        type: 'window',
+    }).then((clients) => {
+        clients.forEach(client => client.postMessage(response));
+    })
+}
 
 
 /**

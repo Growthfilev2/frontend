@@ -15,7 +15,7 @@ var serverTimeUpdated = false;
 window.addEventListener('load', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {
-        scope: '/'
+        scope: '/v3/'
       })
       .then(reg => {
         console.log('Registration succeeded. Scope is ' + reg.scope);

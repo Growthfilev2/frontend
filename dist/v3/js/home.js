@@ -2,6 +2,12 @@ var database;
 
 navigator.serviceWorker.onmessage = function (event) {
   console.log('message from worker', event.data);
+
+  if (event.data.type === 'error') {
+    handleError(event.data);
+    return;
+  }
+
   var readResponse = event.data; // if new checkin subscriptions comes then update the db
 
   getCheckInSubs().then(function (checkInSubs) {
