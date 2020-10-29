@@ -31,7 +31,6 @@ window.addEventListener('load', (ev) => {
           console.log(response)
           const tx = db.transaction('root', 'readwrite');
           const store = tx.objectStore('root');
-
           store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
             const record = event.target.result;
             record.pan.front = response.pan.front;

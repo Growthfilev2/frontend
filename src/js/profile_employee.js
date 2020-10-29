@@ -18,3 +18,17 @@ window.addEventListener("load", (ev) => {
     };
   });
 });
+
+const loadEmployeeDetails = (record) => {
+
+  document.getElementById("office").innerHTML = record.office
+  document.getElementById("designation").innerHTML = record.attachment.Designation.value || '-'
+  document.getElementById("employee_id").innerHTML = record.attachment['Employee Code'].value || '-'
+  document.getElementById("supervisor").innerHTML = record.attachment['First Supervisor'].value || '-'
+  if(record.attachment.Department) {
+    document.getElementById("department").innerHTML = record.attachment.Department.value || '-'
+  }
+  if(record.attachment.Region) {
+    document.getElementById("region").innerHTML = record.attachment.Region.value || '-'
+  }
+}

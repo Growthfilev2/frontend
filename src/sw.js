@@ -37,7 +37,7 @@ const files = ['/v3/',
     'external/css/intlTelInput.css',
 
 ]
-const staticCacheName = 'pages-cache-v615';
+const staticCacheName = 'pages-cache-v616';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
