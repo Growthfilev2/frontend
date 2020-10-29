@@ -39,6 +39,104 @@ body {
   left: 10px;
 }
 
+#comformation_box{
+  display: none;
+  background-color: white;
+  max-width: 90%;
+  width: 100%;
+  border: 3px solid rgb(255, 255, 255);
+  border-radius: 3px;
+  padding: 10px;
+  box-shadow: 0 0 1px rgb(129, 126, 126);
+  z-index: 99;  
+  position: absolute;
+  left: 20px;
+  top: 35%;
+}
+#blur{
+  display: none;
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-size: cover;
+  background-color: rgba(0, 0, 0,0.5);
+  z-index: 98;
+
+}
+#confirm_header{
+  font-family: Roboto;
+font-size: 16px;
+font-style: normal;
+font-weight: 500;
+line-height: 19px;
+letter-spacing: 0em;
+text-align: left;
+
+}
+
+#current_time{
+  padding-top: 10px;
+  padding-bottom:  10px;
+  font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: 16px;
+letter-spacing: 0em;
+text-align: left;
+
+}
+
+#finish_location{
+  font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0em;
+  text-align: left;
+  
+  padding-bottom: 10px;
+}
+
+
+.confirm_button{
+
+  display: inline;
+  margin-left: 60%;
+  margin-top: 10px;
+  width: 30px;
+
+
+}
+
+#yes_finish{
+  margin-right: 5%;
+  border: transparent ;
+background-color: transparent;
+font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 700;
+line-height: 16px;
+letter-spacing: 0em;
+text-align: left;
+}
+
+#no_hide{
+  margin-left: 10%;
+  border: transparent ;
+background-color: transparent;
+font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 700;
+line-height: 16px;
+letter-spacing: 0em;
+text-align: left;
+}
+
 #generic_button {
   position: absolute;
 
@@ -145,15 +243,15 @@ body {
 }
 
 #finish_button {
-  padding: 20px;
+   padding: 20px;
   width: 40%;
+  
 }
 
-#finish {
+#finish{
   height: 69px;
   width: 69px;
-  margin-top: 35%;
-  margin-left: 50%;
+  margin-top: 50%;
   padding: 10px;
   background-color: white;
   border: rgba(128, 128, 128, 0.2) 1px solid;
@@ -401,7 +499,7 @@ month_date2 {
   padding-top: 8px;
   width: 100%;
   text-align: center;
-  z-index: 99;
+  z-index: 97;
   background-color: white;
   font-family: Roboto;
   font-size: 14px;
