@@ -77,7 +77,6 @@ function getCurrentJob() {
             timestamp: Date.now(),
             
         };
-        return resolve(record);
         const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
         store.index('timestamp').openCursor(bound).onsuccess = function (e) {
             const cursor = e.target.result;

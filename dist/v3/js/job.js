@@ -84,7 +84,6 @@ function getCurrentJob() {
       isActive: false,
       timestamp: Date.now()
     };
-    return resolve(record);
     var bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf());
 
     store.index('timestamp').openCursor(bound).onsuccess = function (e) {
