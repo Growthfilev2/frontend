@@ -12,32 +12,7 @@ var updatedWifiAddresses = {
   addresses: {},
   timestamp: null
 }
-let DB_VERSION = 33;
 
-
-
-/**
- * Global error logger
- */
-
-window.addEventListener('error', function (event) {
-  this.console.error(event.error);
-  if (event.message.toLowerCase().indexOf('script error') > -1) return;
-  if (event.message === "You can't have a focus-trap without at least one focusable element") return;
-
-  handleError({
-    message: 'global error :' + event.message,
-    body: {
-      lineno: event.lineno,
-      filename: event.filename,
-      colno: event.colno,
-      error: JSON.stringify({
-        stack: event.error.stack,
-        message: event.error.message
-      })
-    }
-  })
-})
 
 const _native = function () {
   var deviceInfo = '';
