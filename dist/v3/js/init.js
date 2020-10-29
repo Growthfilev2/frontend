@@ -13,19 +13,74 @@ window.addEventListener('load', function () {
     navigator.serviceWorker.register('./sw.js', {
       scope: '/v3/'
     }).then(function (reg) {
-      console.log('Registration succeeded. Scope is ' + reg.scope);
-      firebase.auth().onAuthStateChanged(function (user) {
-        if (user) {
-          if (window.location.search && new URLSearchParams(window.location.search).has('action')) {
-            deepLink = new URLSearchParams(window.location.search);
+      reg.addEventListener('updatefound', function () {
+        // A wild service worker has appeared in reg.installing!
+        var newWorker = reg.installing; // newWorker.state;
+        // "installing" - the install event has fired, but not yet complete
+        // "installed"  - install complete
+        // "activating" - the activate event has fired, but not yet complete
+        // "activated"  - fully active
+        // "redundant"  - discarded. Either failed install, or it's been
+        //                replaced by a newer version
+
+        newWorker.addEventListener('statechange', function (e) {
+          // newWorker.state has changed
+          if (newWorker.state === "installing") {
+            console.log("new worker is installing");
           }
 
-          loadApp();
-          return;
-        }
+          if (newWorker.state === "installed") {
+            console.log("new worker is installed");
+          }
 
-        redirect("/login.html".concat(deepLink ? "?".concat(deepLink.toString()) : ''));
+          if (newWorker.state === "activating") {
+            console.log("new worker is activating");
+          }
+
+          if (newWorker.state === "activated") {
+            console.log("new worker is activate");
+            firebase.auth().onAuthStateChanged(function (user) {
+              if (user) {
+                if (window.location.search && new URLSearchParams(window.location.search).has('action')) {
+                  deepLink = new URLSearchParams(window.location.search);
+                }
+
+                loadApp();
+                return;
+              }
+
+              redirect("/login.html".concat(deepLink ? "?".concat(deepLink.toString()) : ''));
+            });
+          }
+        });
       });
+
+      if (reg.installing) {
+        console.log("sw installing");
+      }
+
+      if (reg.waiting) {
+        console.log('Registration succeeded. Scope is ' + reg.scope);
+        console.log("sw will update");
+      }
+
+      if (reg.active) {
+        console.log("sw is active");
+        firebase.auth().onAuthStateChanged(function (user) {
+          console.log("auth started");
+
+          if (user) {
+            if (window.location.search && new URLSearchParams(window.location.search).has('action')) {
+              deepLink = new URLSearchParams(window.location.search);
+            }
+
+            loadApp();
+            return;
+          }
+
+          redirect("/login.html".concat(deepLink ? "?".concat(deepLink.toString()) : ''));
+        });
+      }
     })["catch"](function (error) {
       // registration failed
       console.log('Registration failed with ' + error);
@@ -290,22 +345,62 @@ function handleCheckin(geopoint, noUser) {
           loadScreen('loading-data');
           console.log("sending read 0");
           console.log(navigator.serviceWorker.controller);
-          navigator.serviceWorker.controller.postMessage({
-            type: 'read'
+          firebase.auth().currentUser.getIdToken().then(function (token) {
+            fetch("".concat(appKey.getBaseUrl(), "read1?from=0"), {
+              method: 'GET',
+              body: null,
+              headers: {
+                'Content-type': 'application/json',
+                'Authorization': "Bearer ".concat(token)
+              }
+            }).then(function (response) {
+              console.log("read status", response.status);
+
+              if (!response.status || response.status >= 226 || !response.ok) {
+                throw response;
+              }
+
+              return response.json();
+            }).then(function (res) {
+              if (res.hasOwnProperty('success') && !res.success) {
+                snacks('Try again later');
+                handleError({
+                  message: 'read 0 error',
+                  body: JSON.stringify(res)
+                });
+                return;
+              }
+
+              navigator.serviceWorker.controller.postMessage({
+                type: 'read',
+                readResponse: res
+              });
+
+              navigator.serviceWorker.onmessage = function (event) {
+                console.log('message from worker', event.data);
+
+                if (event.data.type === 'error') {
+                  handleError(event.data);
+                  snacks('Try again later');
+                  return;
+                }
+
+                handleCheckin(geopoint);
+              };
+            })["catch"](function (err) {
+              console.log("read err", err);
+              handleError({
+                message: err.message,
+                body: JSON.stringify(err)
+              });
+
+              if (typeof err.text === "function") {
+                err.text().then(function (errorMessage) {
+                  console.log(JSON.parse(errorMessage));
+                });
+              }
+            });
           });
-
-          navigator.serviceWorker.onmessage = function (event) {
-            console.log('message from worker', event.data);
-
-            if (event.data.type === 'error') {
-              handleError(event.data);
-              snacks('Try again later');
-              return;
-            }
-
-            handleCheckin(geopoint);
-          };
-
           return;
         }
 

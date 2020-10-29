@@ -37,7 +37,7 @@ const files = ['/v3/',
     'external/css/intlTelInput.css',
 
 ]
-const staticCacheName = 'pages-cache-v611';
+const staticCacheName = 'pages-cache-v615';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
@@ -52,24 +52,31 @@ self.addEventListener('install', function (event) {
 
 self.addEventListener('activate', function (event) {
     console.log('Activating new service worker...');
+    // event.waitUntil(self.clients.claim())
 
     const cacheAllowlist = [staticCacheName];
-
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheAllowlist.indexOf(cacheName) === -1) {
+                        console.log('deleting', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
-            );
+            ).then(() => {
+                // console.log('claiming client');
+                // event.waitUntil(clients.claim())
+            })
         })
-    );
-
+    )
 });
 
 self.addEventListener('fetch', (event) => {
+    console.log(event.request.url);
+    if (event.request.url.startsWith(appKey.getBaseUrl())) {
+        return event.respondWith(fetch(event.request));
+    }
 
     event.respondWith(
         caches.match(event.request)
@@ -78,7 +85,6 @@ self.addEventListener('fetch', (event) => {
                 // console.log('Found ', event.request.url, ' in cache');
                 return response;
             }
-
             // console.log('Network request for ', event.request.url);
             return fetch(event.request).then(fetchResponse => {
                 if (fetchResponse.status === 404) {
@@ -96,7 +102,7 @@ self.addEventListener('fetch', (event) => {
             });
 
         }).catch(error => {
-            console.error(error)
+            console.log(error)
             return caches.match('offline.html')
         })
     );
@@ -108,38 +114,43 @@ const matchContentType = (contentType) => {
 
 self.addEventListener('message', (event) => {
     // console.log(userAuth)
-    if (event.data && event.data.type === 'read') {
+    if (!event.data) return;
+    if(event.data.type !== 'read') return;
+    console.log('SW REC message', event.data)
 
-        // do something
-        console.log('SW REC message', event.data)
 
-
-        userAuth.getIdToken().then(token => {
-            // console.log(token)
-            const b = {
-                meta: {
-                    user: {
-                        token: token,
-                        uid: userAuth.uid,
-                        displayName: userAuth.displayName,
-                        photoURL: userAuth.photoURL,
-                        phoneNumber: userAuth.phoneNumber,
-                    },
-                    apiUrl: appKey.getBaseUrl()
+    userAuth.getIdToken().then(token => {
+        console.log(token)
+        const config = {
+            meta: {
+                user: {
+                    token: token,
+                    uid: userAuth.uid,
+                    displayName: userAuth.displayName,
+                    photoURL: userAuth.photoURL,
+                    phoneNumber: userAuth.phoneNumber,
                 },
-            };
+                apiUrl: appKey.getBaseUrl()
+            },
+        };
 
-            handleRead(b).then(res => {
-                sendResponseToClient(res);
-            }).catch(err => {
-                sendResponseToClient({type: 'error',message:err.message,body:JSON.stringify(err.stack)})
-               
+        handleRead(config,event.data.readResponse).then(res => {
+            sendResponseToClient(res);
+        }).catch(err => {
+
+            console.error(err)
+            sendResponseToClient({
+                type: 'error',
+                message: err.message,
+                body: JSON.stringify(err.stack)
             })
         })
-    }
+    }).catch(console.log)
+
+
 })
 
-const sendResponseToClient = (response) =>{
+const sendResponseToClient = (response) => {
     self.clients.matchAll({
         includeUncontrolled: true,
         type: 'window',
@@ -187,17 +198,20 @@ const sendErrorRequestToMainThread = (error) => {
     }
     self.postMessage(errorObject)
 }
-const handleRead = (data) => {
+const handleRead = (data, readResponse) => {
     return new Promise((resolve, reject) => {
 
-
+        console.log("call update idb")
         const req = indexedDB.open(data.meta.user.uid);
         req.onsuccess = function () {
             const db = req.result
             updateIDB({
                 payload: data,
-                db: db
-            }).then(resolve).catch(reject)
+                db
+            },readResponse).then(resolve).catch(reject)
+        }
+        req.onerror = function () {
+            console.log(req.error)
         }
     })
 }
@@ -559,8 +573,11 @@ function updateRoot(read, tx, uid) {
     }
 }
 
-function updateIDB(config) {
+function updateIDB(config, readResponse) {
     return new Promise(function (resolve, reject) {
+
+        if (readResponse) return successResponse(readResponse, config.payload.meta, config.db, resolve, reject);
+
 
         const tx = config.db.transaction(['root']);
         const rootObjectStore = tx.objectStore('root');
@@ -579,13 +596,14 @@ function updateIDB(config) {
                 data: null,
                 token: config.payload.meta.user.token
             };
+            console.log("starting read api call")
 
             http(req)
                 .then(function (response) {
                     console.log('read completed')
                     return successResponse(response, config.payload.meta, config.db, resolve, reject);
                 }).catch(function (error) {
-
+                    console.log(error)
                     return reject(error)
                 })
         }
@@ -595,20 +613,25 @@ function updateIDB(config) {
 // Performs XMLHTTPRequest for the API's.
 function http(request) {
     return new Promise(function (resolve, reject) {
+        console.log("call fetch")
         return fetch(request.url, {
-            method: request.method,
+            method: 'GET',
             body: null,
             headers: {
                 'Content-type': 'application/json',
-                'Authorization': `Bearer ${request.token}`
-            }
+                'Authorization': `Bearer ${request.token}`,
+            },
+
+            mode: 'cors', // no-cors, *cors, same-origin
+            cache: 'no-cache'
         }).then(response => {
-            if (!response.status || response.status >= 226 || !response.ok) {
-                throw response
-            }
+            console.log("read status", response.status)
+            // if (!response.status || response.status >= 226 || !response.ok) {
+            //     throw response
+            // }
             return response.json();
         }).then(function (res) {
-
+            console.log("read status", res.status)
             if (res.hasOwnProperty('success') && !res.success) {
                 reject(res);
                 return;
@@ -616,14 +639,18 @@ function http(request) {
             resolve(res)
 
         }).catch(function (err) {
+            console.log("read err", err)
             if (typeof err.text === "function") {
                 err.text().then(errorMessage => {
                     reject(JSON.parse(errorMessage))
                 })
             }
         })
+
     })
 }
+
+
 
 function removeFromOffice(offices, meta, db) {
     return new Promise(function (resolve, reject) {

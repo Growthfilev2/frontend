@@ -1,5 +1,3 @@
-
-
 const workerResolves = {};
 const workerRejects = {};
 let workerMessageIds = 0;
@@ -218,12 +216,12 @@ function createElement(tagName, attrs) {
 
 
 const redirect = (path) => {
-    // window.location = `${window.location.origin}/v3/${formatURL(path)}`;
+  // window.location = `${window.location.origin}/v3/${formatURL(path)}`;
   window.location = `${window.location.origin}${window.location.hostname === 'localhost' ?`${formatURL(path)}` :`/v3${formatURL(path)}`}`;
 }
 
 const formatURL = (url) => {
-  if(url.includes(".html")) return url;
+  if (url.includes(".html")) return url;
   return `${url}.html`
 }
 const logReportEvent = (name) => {
@@ -1185,7 +1183,7 @@ function handleLocationError(error) {
       alertDialog = new Dialog('Turn on your WiFi', 'Turn on WiFi to help OnDuty detect your location accurately').create();
       alertDialog.open();
       break;
-    
+
     default:
       handleError({
         message: error.message,
@@ -1296,29 +1294,33 @@ function dialogButton(name, action) {
 const getCheckInSubs = () => {
   return new Promise(resolve => {
     const checkInSubs = {};
-    const tx = db.transaction('subscriptions');
-    tx.objectStore('subscriptions')
-      .index('templateStatus')
-      .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
-      .onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
-          cursor.continue();
-          return;
-        }
-        if (checkInSubs[cursor.value.office]) {
-          if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
-            checkInSubs[cursor.value.office] = cursor.value;
+    const req = window.indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var database = req.result;
+      const tx = database.transaction('subscriptions');
+      tx.objectStore('subscriptions')
+        .index('templateStatus')
+        .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
+        .onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (!cursor) return;
+          if (!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
+            cursor.continue();
+            return;
           }
-        } else {
-          checkInSubs[cursor.value.office] = cursor.value
+          if (checkInSubs[cursor.value.office]) {
+            if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
+              checkInSubs[cursor.value.office] = cursor.value;
+            }
+          } else {
+            checkInSubs[cursor.value.office] = cursor.value
+          }
+          cursor.continue();
         }
-        cursor.continue();
+      tx.oncomplete = function () {
+        delete checkInSubs['xanadu'];
+        return resolve(checkInSubs)
       }
-    tx.oncomplete = function () {
-      delete checkInSubs['xanadu'];
-      return resolve(checkInSubs)
     }
   })
 };

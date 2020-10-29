@@ -1276,31 +1276,36 @@ function dialogButton(name, action) {
 var getCheckInSubs = function getCheckInSubs() {
   return new Promise(function (resolve) {
     var checkInSubs = {};
-    var tx = db.transaction('subscriptions');
+    var req = window.indexedDB.open(firebase.auth().currentUser.uid);
 
-    tx.objectStore('subscriptions').index('templateStatus').openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING'])).onsuccess = function (event) {
-      var cursor = event.target.result;
-      if (!cursor) return;
+    req.onsuccess = function () {
+      var database = req.result;
+      var tx = database.transaction('subscriptions');
 
-      if (!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
-        cursor["continue"]();
-        return;
-      }
+      tx.objectStore('subscriptions').index('templateStatus').openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING'])).onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (!cursor) return;
 
-      if (checkInSubs[cursor.value.office]) {
-        if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
+        if (!cursor.value.attachment || !cursor.value.venue || !cursor.value.schedule) {
+          cursor["continue"]();
+          return;
+        }
+
+        if (checkInSubs[cursor.value.office]) {
+          if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
+            checkInSubs[cursor.value.office] = cursor.value;
+          }
+        } else {
           checkInSubs[cursor.value.office] = cursor.value;
         }
-      } else {
-        checkInSubs[cursor.value.office] = cursor.value;
-      }
 
-      cursor["continue"]();
-    };
+        cursor["continue"]();
+      };
 
-    tx.oncomplete = function () {
-      delete checkInSubs['xanadu'];
-      return resolve(checkInSubs);
+      tx.oncomplete = function () {
+        delete checkInSubs['xanadu'];
+        return resolve(checkInSubs);
+      };
     };
   });
 };
