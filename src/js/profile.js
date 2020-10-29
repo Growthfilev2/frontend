@@ -112,8 +112,8 @@ const createProfileBtn = (name, href) => {
 }
 
 const calculateProfileVerification = (rootRecord) => {
-  const fields = [rootRecord.linkedAccounts, rootRecord.pan, rootRecord.aadhar];
+
+  const fields = [hasBankAccount(rootRecord), rootRecord.pan, rootRecord.aadhar];
   return ((fields.filter(value => value).length / fields.length) * 100).toFixed(0)
 }
-
 

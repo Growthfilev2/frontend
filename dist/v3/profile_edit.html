@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile</title>
+
+  <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet" />
+  <link href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css" rel="stylesheet">
+
+  <link href="css/app.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="css/profile_user.css" />
+  <link rel="shortcut icon" type="image/png" href="./img/favicon.png"/>
+
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js"></script>
+  <script defer src="js/config.js"></script>
+
+</head>
+
+<body>
+
+  <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
+    <div class="mdc-top-app-bar__row">
+      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+        <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
+          aria-label="Open navigation menu"><a href="./profile.html">arrow_back</a></button>
+        <span class="mdc-top-app-bar__title">Edit Profile</span>
+      </section>
+
+    </div>
+  </header>
+
+  <div id="edit_profile" class="mdc-top-app-bar--fixed-adjust">
+
+    <form id="profile-form">
+      <div class="fields">
+        <div class="form-field photo hidden">
+          <div class="image-cont">
+            <label for="upload-image">
+              <img src="./img/ic_pic_upload.png" id="profile-image">
+              <input type="file" id="upload-image" class="hidden">
+            </label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="mdc-text-field mdc-text-field--outlined" id="name" data-mdc-auto-init="MDCTextField">
+            <input type="text" class="mdc-text-field__input" aria-labelledby="my-label-id" required autocomplete="name">
+            <span class="mdc-notched-outline">
+              <span class="mdc-notched-outline__leading"></span>
+              <span class="mdc-notched-outline__notch">
+                <span class="mdc-floating-label" id="my-label-id">Name</span>
+              </span>
+              <span class="mdc-notched-outline__trailing"></span>
+            </span>
+          </label>
+        </div>
+
+        <div class="form-field">
+          <label class="mdc-text-field mdc-text-field--outlined" id="email" data-mdc-auto-init="MDCTextField">
+            <input type="email" class="mdc-text-field__input" aria-labelledby="my-label-id"
+              autocomplete="email">
+            <span class="mdc-notched-outline">
+              <span class="mdc-notched-outline__leading"></span>
+              <span class="mdc-notched-outline__notch">
+                <span class="mdc-floating-label" id="my-label-id">Email ID</span>
+              </span>
+              <span class="mdc-notched-outline__trailing"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="form-actionable">
+        <button class="mdc-button mdc-button--raised form-submit-btn" type="submit" id="submit-btn"
+          data-mdc-auto-init="MDCRipple">
+          <div class="dots">
+            <div class="dot dot1"></div>
+            <div class="dot dot2"></div>
+            <div class="dot dot3"></div>
+          </div>
+          <!-- <div class="straight-loader"></div> -->
+          <span class="mdc-button__label">SAVE</span>
+        </button>
+      </div>
+    </form>
+
+  </div>
+  <div class="mdc-dialog" id="email-dialog">
+    <div class="mdc-dialog__container">
+      <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true" aria-labelledby="my-dialog-title"
+        aria-describedby="my-dialog-content">
+        <!-- Title cannot contain leading whitespace due to mdc-typography-baseline-top() -->
+        <h2 class="mdc-dialog__title" id="my-dialog-title"> Email Authentication
+        </h2>
+        <div class="mdc-dialog__content" id="my-dialog-content">
+          Please login again to complete verify your email.
+        </div>
+        <div class="mdc-dialog__actions">
+          <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">Cancel</span>
+          </button>
+          <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="accept">
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">RE-LOGIN</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="mdc-dialog__scrim"></div>
+  </div>
+    <script src="js/core.js"></script>
+    <script src="js/profile_edit.js"></script>
+    <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+
+</body>
+
+</html>

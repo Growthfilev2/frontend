@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+
+    <link href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet" type="text/css">
+    <link href="css/profile_bank.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/png" href="./img/favicon.png"/>
+
+    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+    <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+    <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+    <script defer src="js/config.js"></script>
+</head>
+
+<body class="mdc-typography">
+
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
+        <div class="mdc-top-app-bar__row">
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                <button id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
+                    aria-label="Open navigation menu"><a href="javascript:window.history.back()">arrow_back</a></button>
+                <span class="mdc-top-app-bar__title">Bank Details</span>
+            </section>
+        </div>
+    </header>
+
+    <div id="bank-view" class="mdc-top-app-bar--fixed-adjust">
+        <div  class="account-list">
+            <ul class="mdc-list mdc-list--two-line" id="bank-list">
+    
+            </ul>
+            <div class="add-new-account">
+                <ul class="mdc-list">
+                    <a class="mdc-list-item mdc-theme--primary" href="./profile_bank_add.html">
+                        <span class="mdc-list-item__graphic material-icons mdc-theme--primary">
+                            add
+                        </span>
+                        ADD BANK ACCOUNT
+                    </a>
+                </ul>
+                <div class="list-info mdc-typography--subtitle1">By adding a new bank account,it'll overwrite your previous account details</div>
+            </div>
+        </div>
+    </div>
+    <script src="js/core.js"></script>
+    <script src="js/profile_bank_show.js"></script>
+</body>
+
+</html>

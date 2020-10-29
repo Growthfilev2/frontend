@@ -5,15 +5,12 @@ window.addEventListener("load", (ev) => {
 
       const db = event.target.result;
       const id = new URLSearchParams(window.location.search).get('id');
+      if(!id) return;
+      
       db.transaction('activity').objectStore('activity').get(id).onsuccess = function (e) {
         const record = e.target.result;
         if (!record) return;
-        document.getElementById("office").innerHTML = record.office || "-";
-        document.getElementById("designation").innerHTML = record.attachment.Designation.value || "-";
-        document.getElementById("employee_id").innerHTML = record.attachment['Employee Code'].value || "-";
-        document.getElementById("supervisor").innerHTML = record.attachment['First Supervisor'].value || "-";
-        document.getElementById("department").innerHTML = record.attachment.Department.value || "-";
-        document.getElementById("region").innerHTML = record.attachment.Region.value || "-";
+        loadEmployeeDetails(record)
       }
     };
   });

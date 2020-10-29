@@ -43,12 +43,11 @@ window.addEventListener('load', (ev) => {
 
       document.getElementById('aadhar-form').addEventListener('submit', (ev) => {
         ev.preventDefault();
-        submitBtn.classList.add('in-progress');
         if (!isPossiblyValidAadharNumber(aadharNumberField.value)) {
           setHelperInvalid(aadharNumberField, 'Enter correct AADHAR Number');
           return
         }
-
+        submitBtn.classList.add('in-progress');
         requestCreator('idProof', {
           aadhar: {
             number: aadharNumberField.value,
@@ -62,17 +61,26 @@ window.addEventListener('load', (ev) => {
 
           store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
             const record = event.target.result;
-            
-            record.aadhar.front = response.aadhar.front;
-            record.aadhar.back = response.aadhar.back;
-            record.aadhar.number = response.aadhar.number;
-            store.put(record);
+            const aadharRecord = record.aadhar || {}
+
+            try {
+              aadharRecord.front = response.aadhar.front;
+              aadharRecord.back = response.aadhar.back;
+              aadharRecord.number = response.aadhar.number;
+              record.aadhar = aadharRecord;
+              store.put(record);
+            } catch (e) {
+              handleError({
+                message: 'Aadhar Response',
+                body: JSON.stringify(e)
+              })
+            }
           }
           tx.oncomplete = function () {
             snacks('Aadhar uploaded');
-            setTimeout(()=>{
+            setTimeout(() => {
               window.history.back();
-            },3000)
+            }, 3000)
           }
         }).catch(function (err) {
           console.log(err)
@@ -86,11 +94,11 @@ window.addEventListener('load', (ev) => {
 const loadAadharDetail = (rootRecord) => {
   const aadharData = rootRecord.aadhar;
   aadharNumberField.value = aadharData ? aadharData.number : '';
-  if(aadharData && aadharData.front) {
+  if (aadharData && aadharData.front) {
     imageManager.setFront(aadharData.front)
   }
 
-  if(aadharData && aadharData.back) {
+  if (aadharData && aadharData.back) {
     imageManager.setBack(aadharData.back)
   }
 

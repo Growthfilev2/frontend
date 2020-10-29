@@ -33,9 +33,18 @@ window.addEventListener('load', (ev) => {
           const store = tx.objectStore('root');
           store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
             const record = event.target.result;
-            record.pan.front = response.pan.front;
-            record.pan.number = response.pan.number
-            store.put(record);
+            const panRecord = record.pan || {};
+            try {
+              panRecord.front = response.pan.front;
+              panRecord.number = response.pan.number
+              record.pan = panRecord;
+              store.put(record);
+            }catch(e){
+              handleError({
+                message:'Pan response',
+                body:JSON.stringify(response)
+              })
+            }
           }
           tx.oncomplete = function () {
             snacks('PAN uploaded');
