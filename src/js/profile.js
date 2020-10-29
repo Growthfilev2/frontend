@@ -82,7 +82,10 @@ const loadProfileData = (user) => {
 
     db.transaction('children').objectStore('children').index('employees').get(user.phoneNumber).onsuccess = function (e) {
       const record = e.target.result;
-      if(!record) return;
+      if(!record) {
+        document.getElementById('employee-list').remove();
+        return
+      };
       document.getElementById('employee-at').textContent = record.attachment.Designation && record.attachment.Designation.value ? `${record.attachment.Designation.value}, ${record.office}` : record.office;
       document.getElementById('employee-meta').href = `${document.getElementById('employee-meta').href}?id=${record.activityId}`;
     }
