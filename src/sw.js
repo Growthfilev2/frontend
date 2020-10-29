@@ -12,7 +12,8 @@ firebase.auth().onAuthStateChanged(user => {
 })
 
 
-const files = ['/v3/',
+
+const files = [appKey.getMode() === 'dev' ? '/' : '/v3/',
     'offline.html',
     'error-404.html',
     'index.html',
