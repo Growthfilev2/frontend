@@ -55,6 +55,8 @@ navigator.serviceWorker.onmessage = (event) => {
 };
 
 window.addEventListener("load", (ev) => {
+
+  console.log(moment().format("hh:mm"))
   firebase.auth().onAuthStateChanged((user) => {
     const dbName = firebase.auth().currentUser.uid;
     const request = window.indexedDB.open(dbName, DB_VERSION);
@@ -91,6 +93,13 @@ function read() {
       document.getElementById("current_duty_card").style.display="none";
       
       return
+    }
+
+    if(record.activityId){
+
+      document.getElementById("current_duty_card").style.display="flex";
+      
+      
     }
 
 
@@ -131,12 +140,13 @@ function read() {
     console.log(record);
 
     document.getElementById("finish").addEventListener("click", function(){
+      
       document.getElementById("blur").style.display="block";
       document.getElementById("comformation_box").style.display="block";
-      current_date = new Date();
-      current_time = current_date.getTime();
-      time= moment(current_time).format("hh:mm A")
-      document.getElementById("current_time").innerHTML = "Time: "+ time;
+      // current_date = new Date();
+      // current_time = current_date.getTime();
+      // time= moment(current_time).format("hh:mm A")
+      document.getElementById("current_time").innerHTML = "Time: "+ moment().format("hh:mm A");
       document.getElementById("finish_location").innerHTML= "Location: "+ record.attachment.Location.value;
       console.log(record.attachment.Location.value)
     })
@@ -155,6 +165,12 @@ function read() {
     })
 
 
+    document.getElementById("no_hide").addEventListener("click", function(){
+      
+      document.getElementById("comformation_box").style.display="none";
+      document.getElementById("blur").style.display="none";
+    
+    })
   });
 }
 
