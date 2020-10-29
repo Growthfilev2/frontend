@@ -62,6 +62,7 @@ window.addEventListener('load', (ev) => {
 
           store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
             const record = event.target.result;
+            
             record.aadhar.front = response.aadhar.front;
             record.aadhar.back = response.aadhar.back;
             record.aadhar.number = response.aadhar.number;
