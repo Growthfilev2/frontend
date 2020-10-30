@@ -1,3 +1,10 @@
+const {
+  resolve
+} = require("core-js/fn/promise");
+const {
+  construct
+} = require("core-js/fn/reflect");
+
 const workerResolves = {};
 const workerRejects = {};
 let workerMessageIds = 0;
@@ -236,14 +243,10 @@ function createList(attr) {
 
 
 
-/** Location utilities */
-function calculateSpeed(distance, time) {
-  return distance / time;
-}
 
-function distanceDelta(oldLocation, newLocation) {
-  return calculateDistanceBetweenTwoPoints(oldLocation, newLocation);
-}
+
+
+/** Location utilities */
 
 function timeDelta(previousLocationTime, newLocationTime) {
 
@@ -935,14 +938,21 @@ function debounce(func, wait, immeditate) {
   }
 }
 
-function removeChildNodes(parent) {
+/**
+ * remove child nodes from a parent element
+ * @param {HTMLElement} parent 
+ */
+const removeChildNodes = (parent) => {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
 }
 
-function getRootRecord() {
-  return new Promise(function (resolve, reject) {
+/**
+ * Fetches record from root object store
+ */
+const getRootRecord = () => {
+  return new Promise((resolve, reject) => {
     let record;
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootStore = rootTx.objectStore('root')
@@ -963,8 +973,13 @@ function getRootRecord() {
 }
 
 
-function getSubscription(office, template) {
-  return new Promise(function (resolve) {
+/**
+ * Gets a subscription record from subscriptions object store
+ * @param {string} office 
+ * @param {string} template 
+ */
+const getSubscription = (office, template) => {
+  return new Promise((resolve) => {
     const tx = db.transaction(['subscriptions']);
     const subscription = tx.objectStore('subscriptions')
     let range;
@@ -989,101 +1004,89 @@ function getSubscription(office, template) {
   })
 }
 
-
-
-function handleNav(evt) {
-  if (!history.state) return;
-  return history.back();
-}
-
-
-
-function bottomDialog(dialog, ul) {
-  dialog.root_.classList.add('bottom-dialog')
-  ul.singleSelection = true
-  ul.selectedIndex = 0;
-  dialog.rootRecord
-  setTimeout(function () {
-    dialog.root_.querySelector('.mdc-dialog__surface').classList.add('open')
-    ul.foundation_.adapter_.focusItemAtIndex(0);
-  }, 50)
-
-  dialog.listen('MDCDialog:opened', function () {
-    ul.layout();
-  })
-
-  dialog.listen('MDCDialog:closing', function () {
-    dialog.root_.querySelector('.mdc-dialog__surface').classList.remove('open');
-  })
-  dialog.open();
-}
-
-function getImageBase64(evt, compressionFactor = 0.5) {
-  return new Promise(function (resolve, reject) {
+/**
+ * Initiates file reader to read the uploaded image
+ * @param {Event} evt // input type file change event 
+ * @param {float} compressionFactor 
+ */
+const getImageBase64 = (evt, compressionFactor = 0.5) => {
+  return new Promise((resolve, reject) => {
     const files = evt.target.files
     if (!files.length) return;
+
     const file = files[0];
     var fileReader = new FileReader();
-    fileReader.onload = function (fileLoadEvt) {
+    fileReader.addEventListener('load', (event) => {
       const srcData = fileLoadEvt.target.result;
       const image = new Image();
       image.src = srcData;
-      image.onload = function () {
-        const newDataUrl = resizeAndCompressImage(image, compressionFactor);
-        return resolve(newDataUrl)
-      }
-    }
+      image.addEventListener('load', () => {
+        resolve(resizeAndCompressImage(image, compressionFactor))
+      })
+    })
+
+    fileReader.addEventListener('error', (event) => {
+      reject({
+        message: fileReader.error
+      })
+    })
     fileReader.readAsDataURL(file);
   })
 }
-
-function resizeAndCompressImage(image, compressionFactor) {
+/**
+ * resize , compress and convert image to base64 jpeg format
+ * @param {ImageData} image 
+ * @param {float} compressionFactor 
+ */
+const resizeAndCompressImage = (image, compressionFactor) => {
   var canvas = document.createElement('canvas');
   const canvasDimension = new CanvasDimension(image.width, image.height);
-  canvasDimension.setMaxHeight(screen.height)
-  canvasDimension.setMaxWidth(screen.width);
-  const newDimension = canvasDimension.getNewDimension()
+  canvasDimension.maxHeight = screen.height;
+  canvasDimension.maxWidth = screen.width
+  const newDimension = canvasDimension.newDimension;
   canvas.width = newDimension.width
   canvas.height = newDimension.height;
   var ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
   const newDataUrl = canvas.toDataURL('image/jpeg', compressionFactor);
   return newDataUrl;
-
 }
 
-function CanvasDimension(width, height) {
-  this.MAX_HEIGHT = ''
-  this.MAX_WIDTH = ''
-  this.width = width;
-  this.height = height;
-}
-CanvasDimension.prototype.setMaxWidth = function (MAX_WIDTH) {
-  this.MAX_WIDTH = MAX_WIDTH
-}
-CanvasDimension.prototype.setMaxHeight = function (MAX_HEIGHT) {
-  this.MAX_HEIGHT = MAX_HEIGHT
-}
-CanvasDimension.prototype.getNewDimension = function () {
-  if (this.width > this.height) {
-    if (this.width > this.MAX_WIDTH) {
-      this.height *= this.MAX_WIDTH / this.width;
-      this.width = this.MAX_WIDTH;
+class CanvasDimension {
+  static MAX_WIDTH = 0;
+  static MAX_HEIGHT = 0;
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+  }
+  set maxWidth(max_width) {
+    MAX_WIDTH = max_width
+  }
+  set maxHeight(max_height) {
+    MAX_HEIGHT = max_height;
+  }
+  static calculateDimenstion() {
+    if (this.width > this.height) {
+      if (this.width > this.MAX_WIDTH) {
+        this.height *= this.MAX_WIDTH / this.width;
+        this.width = this.MAX_WIDTH;
+      }
+      return
     }
-  } else {
+
     if (this.height > this.MAX_HEIGHT) {
       this.width *= this.MAX_HEIGHT / this.height;
       this.height = this.MAX_HEIGHT
     }
   }
 
-  return {
-    width: this.width,
-    height: this.height
+  get newDimension() {
+    return {
+      width: this.width,
+      height: this.height
+    }
   }
 }
-
-
 
 const phoneFieldInit = (input, dropEl, hiddenInput) => {
 
@@ -1098,24 +1101,12 @@ const phoneFieldInit = (input, dropEl, hiddenInput) => {
 };
 
 
-
-function toDataURL(src, callback) {
-  var img = new Image();
-  // img.crossOrigin = 'Anonymous';
-  img.onload = function () {
-    var canvas = document.createElement('CANVAS');
-    var ctx = canvas.getContext('2d');
-    var dataURL;
-    canvas.height = this.naturalHeight;
-    canvas.width = this.naturalWidth;
-    ctx.drawImage(this, 0, 0);
-    dataURL = canvas.toDataURL();
-    callback(dataURL);
-  };
-  img.src = src;
-}
-
-function isAdmin(idTokenResult, office) {
+/**
+ * Returns if user is admin or not
+ * @param {object} idTokenResult 
+ * @param {string} office 
+ */
+const isAdmin = (idTokenResult, office) => {
   if (!idTokenResult.claims.hasOwnProperty('admin')) return;
   if (!Array.isArray(idTokenResult.claims.admin)) return;
   if (!idTokenResult.claims.admin.length) return;
@@ -1124,7 +1115,7 @@ function isAdmin(idTokenResult, office) {
 }
 
 
-function setHelperInvalid(field, message) {
+const setHelperInvalid = (field, message) => {
   field.focus();
   field.foundation.setValid(false);
   field.foundation.adapter.shakeLabel(true);
@@ -1133,14 +1124,19 @@ function setHelperInvalid(field, message) {
   }
 }
 
-function setHelperValid(field) {
+const setHelperValid = (field) => {
   field.focus();
   field.foundation.setValid(true);
   field.helperTextContent = ''
 
 }
 
-function handleLocationError(error) {
+/**
+ * Shows UI Dialogs when appLocation() rejects.
+ * if no case is matched then error is logged to instant API
+ * @param {object} error 
+ */
+const handleLocationError = (error) => {
   let alertDialog;
   switch (error.message) {
     case 'THRESHOLD EXCEED':
@@ -1248,24 +1244,13 @@ Dialog.prototype.create = function (type) {
   }))
 
   document.body.appendChild(parent)
-  // const dialogParent = document.getElementById('dialog-container')
-  // dialogParent.innerHTML = ''
-  // dialogParent.appendChild(parent)
   return new mdc.dialog.MDCDialog(parent);
 }
 
-function dialogButton(name, action) {
-  const button = createElement('button', {
-    className: 'mdc-button mdc-dialog__button',
-    type: 'button',
-    textContent: name
-  });
 
-
-  button.setAttribute('data-mdc-dialog-action', action)
-  return button;
-}
-
+/**
+ * Gets all confirmed & pending checkin subscriptions for a user
+ */
 const getCheckInSubs = () => {
   return new Promise(resolve => {
     const checkInSubs = {};
@@ -1283,6 +1268,8 @@ const getCheckInSubs = () => {
             cursor.continue();
             return;
           }
+          // handles multipe checkin subscription for same office
+          // subscription with latest timestamp is taken
           if (checkInSubs[cursor.value.office]) {
             if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
               checkInSubs[cursor.value.office] = cursor.value;
@@ -1293,7 +1280,6 @@ const getCheckInSubs = () => {
           cursor.continue();
         }
       tx.oncomplete = function () {
-        delete checkInSubs['xanadu'];
         return resolve(checkInSubs)
       }
     }
@@ -1301,15 +1287,15 @@ const getCheckInSubs = () => {
 };
 
 
-const loadNearByLocations = (o, location) => {
-  return new Promise((resolve, reject) => {
+const loadNearByLocations = (offsetBounds, location) => {
+  return new Promise(resolve => {
 
     const result = []
 
     const tx = db.transaction(['map'])
     const store = tx.objectStore('map');
     const index = store.index('bounds');
-    const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
+    const idbRange = IDBKeyRange.bound([offsetBounds.south, offsetBounds.west], [offsetBounds.north, offsetBounds.east]);
 
     index.openCursor(idbRange).onsuccess = function (event) {
       const cursor = event.target.result;
@@ -1332,13 +1318,13 @@ const loadNearByLocations = (o, location) => {
   })
 }
 
-function successDialog(text) {
+const successDialog = (text) => {
 
   const successMark = document.getElementById('success-animation');
   successMark.classList.remove('hidden');
   document.getElementById("app-current-panel").style.opacity = '0.1';
   successMark.querySelector('.success-text').textContent = text;
-  setTimeout(function () {
+  setTimeout(() => {
     successMark.classList.add('hidden');
     document.getElementById("app-current-panel")
       .style.opacity = '1';
@@ -1351,4 +1337,109 @@ const hasBankAccount = (record) => {
   if (!record.linkedAccounts[0]) return;
 
   return true
+}
+
+
+const getCurrentJob = () => {
+  return new Promise((resolve, reject) => {
+
+    const office = ApplicationState.selectedOffice;
+    const tx = db.transaction('activity');
+    const store = tx.objectStore('activity');
+    const auth = firebase.auth().currentUser;
+
+    let record = {
+      activityName: 'DUTY',
+      attachment: {
+
+        'Duty Type': {
+          value: '',
+          type: 'duty'
+        },
+        'Location': {
+          value: ApplicationState.venue ? ApplicationState.venue.location : ''
+        },
+        'Include': {
+          value: ''
+        },
+        'Supervisor': {
+          value: ''
+        },
+        'Products': {
+          value: [{
+            name: '',
+            rate: '',
+            date: '',
+            quanity: ''
+          }]
+        }
+      },
+
+      "checkins": [],
+      "calls": [],
+      creator: {
+        phoneNumber: '',
+        displayName: '',
+        photoURL: ''
+      },
+      office: ApplicationState.selectedOffice,
+      template: 'duty',
+      schedule: [{
+        startTime: Date.now(),
+        endTime: Date.now(),
+        name: 'Date'
+      }],
+      assignees: [{
+        displayName: auth.displayName,
+        photoURL: auth.photoURL,
+        phoneNumber: auth.phoneNumber
+      }],
+      venue: [],
+      canEdit: false,
+      supervisior: null,
+      isActive: false,
+      timestamp: Date.now(),
+
+    };
+    const bound = IDBKeyRange.bound(moment().startOf('day').valueOf(), moment().endOf('day').valueOf())
+    store.index('timestamp').openCursor(bound).onsuccess = function (e) {
+      const cursor = e.target.result;
+      if (!cursor) return;
+      if (cursor.value.office !== office) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.template !== 'duty') {
+        cursor.continue();
+        return;
+      };
+      if (!isToday(cursor.value.schedule[0].startTime)) {
+        cursor.continue();
+        return;
+      }
+      if (!ApplicationState.venue) {
+        cursor.continue();
+        return
+      }
+      if (cursor.value.attachment.Location.value !== ApplicationState.venue.location) {
+        cursor.continue();
+        return
+      };
+      if (cursor.value.isActive == false) {
+        cursor.continue();
+        return;
+      }
+      console.log('matched location with duty location')
+      record = cursor.value;
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      console.log(record);
+      resolve(record)
+    }
+  })
+}
+
+const isToday = (timestamp) => {
+  return moment(timestamp).isSame(moment().clone().startOf('day'), 'd')
 }
