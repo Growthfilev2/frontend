@@ -25,7 +25,7 @@ navigator.serviceWorker.onmessage = function (event) {
   }
 
   var dutyLocations = [];
-  var prom = Promise.resolve([]); // is user created a checkin from unknown location then venue in application state will be empty
+  var prom = Promise.resolve([ApplicationState.venue]); // is user created a checkin from unknown location then venue in application state will be empty
   // if its empty then find all the nearest locations
 
   if (!ApplicationState.venue) {
@@ -52,10 +52,7 @@ navigator.serviceWorker.onmessage = function (event) {
       ApplicationState.venue = sorted[0];
       console.log(sorted[0]);
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-
-      if (document.getElementById('current_duty_card')) {
-        read();
-      }
+      read();
     }
 
     ;
@@ -63,6 +60,7 @@ navigator.serviceWorker.onmessage = function (event) {
 };
 
 window.addEventListener("load", function (ev) {
+  console.log(moment().format("hh:mm"));
   firebase.auth().onAuthStateChanged(function (user) {
     var dbName = firebase.auth().currentUser.uid;
     var request = window.indexedDB.open(dbName, DB_VERSION);
@@ -89,6 +87,15 @@ window.addEventListener("load", function (ev) {
 
 function read() {
   getCurrentJob().then(function (record) {
+    if (!record.activityId || record.finished == true) {
+      document.getElementById("current_duty_card").style.display = "none";
+      return;
+    }
+
+    if (record.activityId) {
+      document.getElementById("current_duty_card").style.display = "flex";
+    }
+
     document.getElementById("current_location").innerHTML = record.attachment.Location.value; //console.log(record);
 
     document.getElementById("starting_time").innerHTML = moment(record.schedule[0].startTime).format("hh:mm A");
@@ -114,6 +121,32 @@ function read() {
 
     document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
     console.log(record);
+    document.getElementById("finish").addEventListener("click", function () {
+      document.getElementById("blur").style.display = "block";
+      document.getElementById("comformation_box").style.display = "block"; // current_date = new Date();
+      // current_time = current_date.getTime();
+      // time= moment(current_time).format("hh:mm A")
+
+      document.getElementById("current_time").innerHTML = "Time: " + moment().format("hh:mm A");
+      document.getElementById("finish_location").innerHTML = "Location: " + record.attachment.Location.value;
+      console.log(record.attachment.Location.value);
+    });
+    document.getElementById("yes_finish").addEventListener("click", function () {
+      var tx = db.transaction('activity', 'readwrite');
+      var objecstore = tx.objectStore('activity');
+      record.finished = true;
+      objecstore.put(record);
+
+      tx.oncomplete = function () {
+        document.getElementById("current_duty_card").style.display = "none";
+        document.getElementById("blur").style.display = "none";
+        document.getElementById("comformation_box").style.display = "none";
+      };
+    });
+    document.getElementById("no_hide").addEventListener("click", function () {
+      document.getElementById("comformation_box").style.display = "none";
+      document.getElementById("blur").style.display = "none";
+    });
   });
 }
 
@@ -269,7 +302,12 @@ function readallduties(object_of_dates) {
 
     daysWorkedInMonth++;
     monthCard.querySelector(".total-days-worked").innerHTML = "Days Worked: " + daysWorkedInMonth + " Days/ " + total_working_day + " Days";
-    month = moment(date, "DD/MM/YYYY").month(); // Converted total work hours in to hours and minuts
+    month = moment(date, "DD/MM/YYYY").month();
+
+    if (current_month == month) {
+      monthCard.style.display = "block";
+    } // Converted total work hours in to hours and minuts
+
 
     var card = createDateCard(date, object_of_dates); //Expanded first month
 

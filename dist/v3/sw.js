@@ -6,13 +6,13 @@ var meta;
 
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
-        console.log(user)
         userAuth = user;
     }
 })
 
 
-const files = ['/v3/',
+
+const files = [appKey.getMode() === 'dev' ? '/' : '/v3/',
     'offline.html',
     'error-404.html',
     'index.html',
@@ -35,17 +35,14 @@ const files = ['/v3/',
     'external/img/flags.png',
     'external/img/flags@2x.png',
     'external/css/intlTelInput.css',
-
 ]
-const staticCacheName = 'pages-cache-v654';
+const staticCacheName = 'pages-cache-v655';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
     // Perform some task
-    console.log('Service worker installed', event)
 
     event.waitUntil(caches.open(staticCacheName).then(cache => {
-        console.log("there is a change")
         return cache.addAll(files);
     }));
 });
@@ -73,7 +70,6 @@ self.addEventListener('activate', function (event) {
 });
 
 self.addEventListener('fetch', (event) => {
-    console.log(event.request.url);
     if (event.request.url.startsWith(appKey.getBaseUrl())) {
         return event.respondWith(fetch(event.request));
     }
@@ -120,7 +116,6 @@ self.addEventListener('message', (event) => {
 
 
     userAuth.getIdToken().then(token => {
-        console.log(token)
         const config = {
             meta: {
                 user: {
@@ -201,7 +196,6 @@ const sendErrorRequestToMainThread = (error) => {
 const handleRead = (data, readResponse) => {
     return new Promise((resolve, reject) => {
 
-        console.log("call update idb")
         const req = indexedDB.open(data.meta.user.uid);
         req.onsuccess = function () {
             const db = req.result
@@ -409,8 +403,6 @@ function successResponse(read, param, db, resolve, reject) {
     });
 
 
-    console.log(userTimestamp);
-    console.log(counter);
     updateAttendance(read.attendances, attendaceStore)
     updateReimbursements(read.reimbursements, reimbursementStore)
     updatePayments(read.payments, paymentStore);
@@ -460,7 +452,6 @@ function successResponse(read, param, db, resolve, reject) {
 
                 if (lastAddendum) {
                     if (user.mobile !== param.user.phoneNumber) {
-                        console.log('increment count');
                         if (user.count) {
                             user.count += 1;
                         } else {
@@ -520,7 +511,6 @@ function successResponse(read, param, db, resolve, reject) {
 
     updateRoot(read, updateTx, param.user.uid);
     updateTx.oncomplete = function () {
-        console.log("all completed");
         return resolve(read)
     }
     updateTx.onerror = function () {
@@ -568,7 +558,6 @@ function updateRoot(read, tx, uid) {
     store.get(uid).onsuccess = function (event) {
         const record = event.target.result;
         record.fromTime = read.upto;
-        console.log('start adding upto')
         store.put(record);
     }
 }
@@ -596,14 +585,11 @@ function updateIDB(config, readResponse) {
                 data: null,
                 token: config.payload.meta.user.token
             };
-            console.log("starting read api call")
 
             http(req)
                 .then(function (response) {
-                    console.log('read completed')
                     return successResponse(response, config.payload.meta, config.db, resolve, reject);
                 }).catch(function (error) {
-                    console.log(error)
                     return reject(error)
                 })
         }
@@ -613,7 +599,6 @@ function updateIDB(config, readResponse) {
 // Performs XMLHTTPRequest for the API's.
 function http(request) {
     return new Promise(function (resolve, reject) {
-        console.log("call fetch")
         return fetch(request.url, {
             method: 'GET',
             body: null,
@@ -625,13 +610,11 @@ function http(request) {
             mode: 'cors', // no-cors, *cors, same-origin
             cache: 'no-cache'
         }).then(response => {
-            console.log("read status", response.status)
-            // if (!response.status || response.status >= 226 || !response.ok) {
-            //     throw response
-            // }
+            if (!response.status || response.status >= 226 || !response.ok) {
+                throw response
+            }
             return response.json();
         }).then(function (res) {
-            console.log("read status", res.status)
             if (res.hasOwnProperty('success') && !res.success) {
                 reject(res);
                 return;
@@ -639,7 +622,6 @@ function http(request) {
             resolve(res)
 
         }).catch(function (err) {
-            console.log("read err", err)
             if (typeof err.text === "function") {
                 err.text().then(errorMessage => {
                     reject(JSON.parse(errorMessage))
@@ -665,7 +647,6 @@ function removeFromOffice(offices, meta, db) {
                 rootStore.put(record)
             }
             rootTx.oncomplete = function () {
-                console.log("run read after removal")
                 resolve({
                     response: 'Office Removed',
                     success: true
@@ -683,7 +664,6 @@ function removeFromOffice(offices, meta, db) {
         };
 
         deleteTx.onerror = function () {
-            console.log(tx.error)
         }
         removeActivity(offices, deleteTx)
     })

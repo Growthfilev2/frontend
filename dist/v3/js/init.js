@@ -11,8 +11,9 @@ var serverTimeUpdated = false;
 window.addEventListener('load', function () {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {
-      scope: '/v3/'
+      scope: appKey.getMode() === 'dev' ? '/' : '/v3/'
     }).then(function (reg) {
+      var reloadCounter = 0;
       reg.addEventListener('updatefound', function () {
         // A wild service worker has appeared in reg.installing!
         var newWorker = reg.installing; // newWorker.state;
@@ -38,6 +39,8 @@ window.addEventListener('load', function () {
           }
 
           if (newWorker.state === "activated") {
+            if (reloadCounter >= 1) return;
+            reloadCounter++;
             console.log("new worker is activate");
             firebase.auth().onAuthStateChanged(function (user) {
               if (user) {

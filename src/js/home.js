@@ -18,9 +18,11 @@ navigator.serviceWorker.onmessage = (event) => {
       readduty()
     }
   }
+
+
   const dutyLocations = []
 
-  let prom = Promise.resolve([]);
+  let prom = Promise.resolve([ApplicationState.venue]);
   // is user created a checkin from unknown location then venue in application state will be empty
   // if its empty then find all the nearest locations
   if (!ApplicationState.venue) {
@@ -32,6 +34,7 @@ navigator.serviceWorker.onmessage = (event) => {
       west: offsetBounds.west()
     }, ApplicationState.location)
   }
+  
 
   prom.then(function (locations) {
     locations.forEach(function (location) {
@@ -47,9 +50,7 @@ navigator.serviceWorker.onmessage = (event) => {
       ApplicationState.venue = sorted[0];
       console.log(sorted[0])
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-      if(document.getElementById('current_duty_card')) {
         read()
-      }
     };
   })
 };
