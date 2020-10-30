@@ -21,6 +21,8 @@
 </head>
 
 <body>
+
+  <div id="blur"></div>
   <div class="success--container hidden center-abs" id="success-animation">
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
       <circle class="path circle" fill="none" stroke="#27628E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
@@ -88,14 +90,28 @@
           <span id="other_assignees"></span>
         </div>
       </div>
-      <!-- <div id="finish_button">
+      <div id="finish_button">
         <button id="finish">FINISH</button>
-      </div> -->
+      </div>
     </div>
+
 
     <div id="duties-list"></div>
     <div id="show_more_b">Show More</div>
 
+  </div>
+
+  
+  <div id="comformation_box">
+    <div id="content">
+      <p id="confirm_header">Are you sure you want to finish duty?</p>
+      <p id="current_time"></p>
+      <p id="finish_location"></p>
+      <div class="confirm_button"> 
+      <button  id="yes_finish">YES</button>
+      <button  id="no_hide">NO</button>
+    </div>
+    </div>
   </div>
   <script src="js/core.js"></script>
   <script src="js/job.js"></script>
