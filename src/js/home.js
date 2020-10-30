@@ -458,6 +458,9 @@ function createDateCard(date, object_of_dates) {
     id: "collapsed2",
   });
 
+
+  
+
   card.dataset.date = date;
   card.innerHTML = `
           <div id="date_day2"> <p id="duty_date2">${date.slice(
@@ -540,6 +543,15 @@ function subDuties(j) {
     style: "display: block;",
   });
 
+  collapsed.addEventListener("click", function(e){
+    e.stopPropagation();
+    console.log(j)
+    
+    sessionStorage.setItem('passing_duty', JSON.stringify(j));
+    window.location = "jobview.html";
+    
+
+  })
 
   collapsed.innerHTML = `
   <div id="individual_duty">
