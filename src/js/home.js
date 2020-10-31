@@ -102,6 +102,16 @@ function read() {
       
       
     }
+    
+    document.getElementById("current_duty_card").addEventListener("click", function(e){
+      e.stopPropagation();
+      console.log("asd")
+      
+      sessionStorage.setItem('passing_duty', JSON.stringify(record));
+      window.location = "jobview.html";
+      
+  
+    })
 
 
     document.getElementById("current_location").innerHTML =

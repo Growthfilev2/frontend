@@ -41,7 +41,7 @@ body {
 }
 
 #current_duty_card {
-  display: none;
+  display: block;
   padding: 10px;
   width: 94.4%;
   border-radius: 2px;

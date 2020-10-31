@@ -197,7 +197,7 @@ text-align: left;
   padding: 10px;
   width: 94.4%;
   border-radius: 2px;
-
+  z-index: 49;
   margin: 0 auto;
   margin-top: 12px;
   margin-bottom: 10px;
@@ -264,6 +264,7 @@ text-align: left;
   font-weight: 700;
   line-height: 16px;
   letter-spacing: 0.11em;
+  z-index: 50s;
 }
 
 #current_location {

@@ -14,7 +14,7 @@ window.addEventListener("load", (ev) => {
     request.onsuccess = function (event) {
       db = event.target.result;
 
-      currenDuty();
+    //  currenDuty();
       checkins_box(jobview_duty);
     };
 
@@ -32,62 +32,111 @@ window.addEventListener("load", (ev) => {
   );
 });
 
-function currenDuty() {
-  getCurrentJob().then((record) => {
-    if (!record.activityId || record.finished == true) {
-      document.getElementById("checkin_box").style.marginTop = "70px";
-      document.getElementById("current_duty_card").style.display = "none";
+// function currenDuty() {
+//   getCurrentJob().then((record) => {
+//     if (!record.activityId || record.finished == true) {
+    
+//       document.getElementById("current_duty_card").style.display = "none";
 
-      return;
-    }
+//       return;
+//     }
 
-    if (record.activityId) {
-      document.getElementById("current_duty_card").style.display = "flex";
-    }
+//     if (record.activityId) {
+//       document.getElementById("current_duty_heading").innerHTML = "Current Duty";
+//         }
 
-    document.getElementById("current_location").innerHTML =
-      record.attachment.Location.value;
-    //console.log(record);
-    document.getElementById("starting_time").innerHTML = moment(
-      record.schedule[0].startTime
-    ).format("hh:mm A");
+//     document.getElementById("current_location").innerHTML =
+//       record.attachment.Location.value;
+//     //console.log(record);
+//     document.getElementById("starting_time").innerHTML = moment(
+//       record.schedule[0].startTime
+//     ).format("hh:mm A");
 
-    if (record.schedule[0].endTime !== record.schedule[0].startTime) {
-      document
-        .querySelector(".active-duty--duration")
-        .classList.remove("hidden");
-      document.getElementById("total_time").innerHTML = moment
-        .utc(
-          moment(record.schedule[0].endTime).diff(
-            moment(record.schedule[0].startTime)
-          )
-        )
-        .format("HH:mm");
-    }
+//     if (record.schedule[0].endTime !== record.schedule[0].startTime) {
+//       document
+//         .querySelector(".active-duty--duration")
+//         .classList.remove("hidden");
+//       document.getElementById("total_time").innerHTML = moment
+//         .utc(
+//           moment(record.schedule[0].endTime).diff(
+//             moment(record.schedule[0].startTime)
+//           )
+//         )
+//         .format("HH:mm");
+//     }
 
-    if (record.assignees[0].displayName) {
-      document.getElementById("assignees_name").innerHTML =
-        record.assignees[0].displayName;
-    } else {
-      document.getElementById("assignees_name").innerHTML =
-        record.assignees[0].phoneNumber;
-    }
+//     if (record.assignees[0].displayName) {
+//       document.getElementById("assignees_name").innerHTML =
+//         record.assignees[0].displayName;
+//     } else {
+//       document.getElementById("assignees_name").innerHTML =
+//         record.assignees[0].phoneNumber;
+//     }
 
-    if (record.assignees.length > 1) {
-      if (record.assignees.length == 2) {
-        document.getElementById("other_assignees").innerHTML =
-          "  &" + record.assignees.length - 1 + "Other";
-      } else {
-        document.getElementById("other_assignees").innerHTML =
-          "  &" + record.assignees.length - 1 + "Others";
-      }
-    }
+//     if (record.assignees.length > 1) {
+//       if (record.assignees.length == 2) {
+//         document.getElementById("other_assignees").innerHTML =
+//           "  &" + record.assignees.length - 1 + "Other";
+//       } else {
+//         document.getElementById("other_assignees").innerHTML =
+//           "  &" + record.assignees.length - 1 + "Others";
+//       }
+//     }
 
-    document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
-  });
-}
+//     document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
+//   });
+// }
 
 function checkins_box(duty) {
+
+
+  
+
+  document.getElementById("current_location").innerHTML =
+  duty.attachment.Location.value;
+//console.log(record);
+document.getElementById("starting_time").innerHTML = moment(
+  duty.schedule[0].startTime
+).format("hh:mm A");
+
+document.getElementById("ending_time").innerHTML = moment(
+  duty.schedule[0].endTime
+).format("hh:mm A");
+
+if (duty.schedule[0].endTime !== duty.schedule[0].startTime) {
+  document
+    .querySelector(".active-duty--duration")
+    .classList.remove("hidden");
+  document.getElementById("total_time").innerHTML = moment
+    .utc(
+      moment(duty.schedule[0].endTime  - duty.schedule[0].startTime
+      )
+    )
+    .format("HH:mm");
+}
+
+if (duty.assignees[0].displayName) {
+  document.getElementById("assignees_name").innerHTML =
+    duty.assignees[0].displayName;
+} else {
+  document.getElementById("assignees_name").innerHTML =
+    duty.assignees[0].phoneNumber;
+}
+
+if (duty.assignees.length > 1) {
+  if (duty.assignees.length == 2) {
+    document.getElementById("other_assignees").innerHTML =
+      "  &" + duty.assignees.length - 1 + "Other";
+  } else {
+    document.getElementById("other_assignees").innerHTML =
+      "  &" + duty.assignees.length - 1 + "Others";
+  }
+}
+
+document.getElementById("assignees_pic").src = duty.assignees[0].photoURL;
+
+
+
   for (i = 0; i < duty.checkins.length; i++) {
     duty.checkins[i].attachment.Photo.value =
       "https://www.sammobile.com/wp-content/uploads/2019/03/keyguard_default_wallpaper.png";
