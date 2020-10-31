@@ -89,7 +89,9 @@ window.addEventListener("load", (ev) => {
 
 function checkins_box(duty) {
 
-
+if(duty.header == 'CurrentDuty'){
+  document.getElementById("current_duty_heading").innerHTML = 'Current Duty';
+}
   
 
   document.getElementById("current_location").innerHTML =

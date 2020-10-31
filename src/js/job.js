@@ -73,6 +73,7 @@ function getCurrentJob() {
             venue: [],
             canEdit: false,
             supervisior: null,
+            header: '',
             finished: false,
             isActive: false,
             timestamp: Date.now(),

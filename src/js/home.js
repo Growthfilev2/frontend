@@ -98,13 +98,22 @@ function read() {
 
     if(record.activityId){
 
+      const tx = db.transaction('activity', 'readwrite')
+    const objecstore = tx.objectStore('activity');
+    record.header= 'CurrentDuty';
+    objecstore.put(record)
+    
       document.getElementById("current_duty_card").style.display="flex";
       
       
     }
+
+    
     
     document.getElementById("current_duty_card").addEventListener("click", function(e){
       e.stopPropagation();
+
+      
       console.log("asd")
       
       sessionStorage.setItem('passing_duty', JSON.stringify(record));
@@ -116,7 +125,7 @@ function read() {
 
     document.getElementById("current_location").innerHTML =
       record.attachment.Location.value;
-    //console.log(record);
+    console.log(record);
     document.getElementById("starting_time").innerHTML = moment(
       record.schedule[0].startTime
     ).format("hh:mm A");
