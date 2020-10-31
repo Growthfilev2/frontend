@@ -133,7 +133,7 @@ body {
   padding-left: 10px;
   width: 94.4%;
   border-radius: 2px;
-  padding-bottom: 17px;
+
   margin: 0 auto;
 
   margin-bottom: 10px;
@@ -153,12 +153,12 @@ body {
 }
 
 #container {
-  display: inline;
+  display: inline-block;
   text-align: center;
   padding: 3px;
 
   margin-right: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-family: Roboto;
   font-size: 14px;
   font-style: normal;
@@ -167,7 +167,7 @@ body {
 }
 
 .containers {
-  margin-bottom: 10px;
+  
 }
 
 #upload_pics {
@@ -211,4 +211,19 @@ line-height: 12px;
 letter-spacing: 0em;
 
 
+}
+
+#other_assignees {
+  position: relative;
+  top: 16px;
+  font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0em;
+}
+
+#time{
+  
 }
