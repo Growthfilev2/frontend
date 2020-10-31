@@ -152,7 +152,7 @@ document.getElementById("assignees_pic").src = duty.assignees[0].photoURL;
 
     div.innerHTML = `<div id="container"> ${moment(
       duty.checkins[i].timestamp
-    ).format("HH:mm A")} </div>`;
+    ).format("hh:mm A")} </div>`;
 
     document.getElementById("time").appendChild(div);
 
