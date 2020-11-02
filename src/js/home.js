@@ -1,45 +1,51 @@
 var database;
 navigator.serviceWorker.onmessage = (event) => {
-  console.log('message from worker', event.data);
-  if(event.data.type === 'error') {
+  console.log("message from worker", event.data);
+  if (event.data.type === "error") {
     handleError(event.data);
-    return
+    return;
   }
-  const readResponse = event.data
+  const readResponse = event.data;
   // if new checkin subscriptions comes then update the db
   getCheckInSubs().then(function (checkInSubs) {
-    ApplicationState.officeWithCheckInSubs = checkInSubs
-    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    ApplicationState.officeWithCheckInSubs = checkInSubs;
+    localStorage.setItem("ApplicationState", JSON.stringify(ApplicationState));
   });
 
-  if (readResponse.activities.some(activity => activity.template === "duty")) {
-    if(document.getElementById('duties-list')) {
-      document.getElementById('duties-list').innerHTML = '';
-      readduty()
+  if (
+    readResponse.activities.some((activity) => activity.template === "duty")
+  ) {
+    if (document.getElementById("duties-list")) {
+      document.getElementById("duties-list").innerHTML = "";
+      readduty();
     }
   }
 
-
-  const dutyLocations = []
+  const dutyLocations = [];
 
   let prom = Promise.resolve([ApplicationState.venue]);
   // is user created a checkin from unknown location then venue in application state will be empty
   // if its empty then find all the nearest locations
   if (!ApplicationState.venue) {
     const offsetBounds = new GetOffsetBounds(ApplicationState.location, 1);
-    prom = loadNearByLocations({
-      north: offsetBounds.north(),
-      south: offsetBounds.south(),
-      east: offsetBounds.east(),
-      west: offsetBounds.west()
-    }, ApplicationState.location)
+    prom = loadNearByLocations(
+      {
+        north: offsetBounds.north(),
+        south: offsetBounds.south(),
+        east: offsetBounds.east(),
+        west: offsetBounds.west(),
+      },
+      ApplicationState.location
+    );
   }
-  
 
   prom.then(function (locations) {
     locations.forEach(function (location) {
-      location.distance = calculateDistanceBetweenTwoPoints(location, ApplicationState.location);
-      dutyLocations.push(location)
+      location.distance = calculateDistanceBetweenTwoPoints(
+        location,
+        ApplicationState.location
+      );
+      dutyLocations.push(location);
     });
     // if there are locatiosn nearby, then sort the locatiuns by distance in asc order
     if (dutyLocations.length) {
@@ -48,16 +54,18 @@ navigator.serviceWorker.onmessage = (event) => {
       });
       // update application state and set the new venue
       ApplicationState.venue = sorted[0];
-      console.log(sorted[0])
-      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        read()
-    };
-  })
+      console.log(sorted[0]);
+      localStorage.setItem(
+        "ApplicationState",
+        JSON.stringify(ApplicationState)
+      );
+      read();
+    }
+  });
 };
 
 window.addEventListener("load", (ev) => {
-
-  console.log(moment().format("hh:mm"))
+  console.log(moment().format("hh:mm"));
   firebase.auth().onAuthStateChanged((user) => {
     const dbName = firebase.auth().currentUser.uid;
     const request = window.indexedDB.open(dbName, DB_VERSION);
@@ -69,10 +77,12 @@ window.addEventListener("load", (ev) => {
       db = event.target.result;
 
       document.getElementById("pfp").src =
-        firebase.auth().currentUser.photoURL || './img/ic_pic_upload.png'
-      document.getElementById('photo-upload-btn').addEventListener('click', () => {
-        openCamera()
-      })
+        firebase.auth().currentUser.photoURL || "./img/ic_pic_upload.png";
+      document
+        .getElementById("photo-upload-btn")
+        .addEventListener("click", () => {
+          openCamera();
+        });
       read();
       readduty();
     };
@@ -83,114 +93,66 @@ window.addEventListener("load", (ev) => {
   });
 });
 
-
-
-
 function read() {
   getCurrentJob().then((record) => {
+    if (!record.activityId || record.finished == true) {
+      document.getElementById("current_duty_card").style.display = "none";
 
-    if(!record.activityId || record.finished==true){
-
-      document.getElementById("current_duty_card").style.display="none";
-      
-      return
+      return;
     }
 
-    if(record.activityId){
+    if (record.activityId) {
+     
 
-      const tx = db.transaction('activity', 'readwrite')
-    const objecstore = tx.objectStore('activity');
-    record.header= 'CurrentDuty';
-    objecstore.put(record)
+      document.getElementById("current_duty_card").style.display = "flex";
+    }
+
+    document
+      .getElementById("current_location")
+      .addEventListener("click", function (e) {
+        e.stopPropagation();
+
+        pass_currentduty(record);
+      });
+
+      showDuty_card(record);
+
     
-      document.getElementById("current_duty_card").style.display="flex";
-      
-      
-    }
-
-    
-    
-    document.getElementById("current_duty_card").addEventListener("click", function(e){
-      e.stopPropagation();
-
-      
-      console.log("asd")
-      
-      sessionStorage.setItem('passing_duty', JSON.stringify(record));
-      window.location = "jobview.html";
-      
-  
-    })
-
-
-    document.getElementById("current_location").innerHTML =
-      record.attachment.Location.value;
-    console.log(record);
-    document.getElementById("starting_time").innerHTML = moment(
-      record.schedule[0].startTime
-    ).format("hh:mm A");
-
-
-    if (record.schedule[0].endTime !== record.schedule[0].startTime) {
-      document.querySelector(".active-duty--duration").classList.remove('hidden')
-      document.getElementById("total_time").innerHTML = moment
-        .utc(moment(record.schedule[0].endTime).diff(moment(record.schedule[0].startTime))).format('HH:mm')
-    }
-
-    if (record.assignees[0].displayName) {
-      document.getElementById("assignees_name").innerHTML =
-        record.assignees[0].displayName;
-    } else {
-      document.getElementById("assignees_name").innerHTML =
-        record.assignees[0].phoneNumber;
-    }
-
-    if (record.assignees.length > 1) {
-      if (record.assignees.length == 2) {
-        document.getElementById("other_assignees").innerHTML =
-          "  &" + record.assignees.length - 1 + "Other";
-      } else {
-        document.getElementById("other_assignees").innerHTML =
-          "  &" + record.assignees.length - 1 + "Others";
-      }
-    }
-
-    document.getElementById("assignees_pic").src = record.assignees[0].photoURL;
 
     console.log(record);
 
-    document.getElementById("finish").addEventListener("click", function(){
-      
-      document.getElementById("blur").style.display="block";
-      document.getElementById("comformation_box").style.display="block";
+    document.getElementById("finish").addEventListener("click", function () {
+      document.getElementById("blur").style.display = "block";
+      document.getElementById("comformation_box").style.display = "block";
       // current_date = new Date();
       // current_time = current_date.getTime();
       // time= moment(current_time).format("hh:mm A")
-      document.getElementById("current_time").innerHTML = "Time: "+ moment().format("hh:mm A");
-      document.getElementById("finish_location").innerHTML= "Location: "+ record.attachment.Location.value;
-      console.log(record.attachment.Location.value)
-    })
+      document.getElementById("current_time").innerHTML =
+        "Time: " + moment().format("hh:mm A");
+      document.getElementById("finish_location").innerHTML =
+        "Location: " + record.attachment.Location.value;
+      console.log(record.attachment.Location.value);
+    });
 
-    document.getElementById("yes_finish").addEventListener("click", function(){
-      const tx = db.transaction('activity', 'readwrite')
-    const objecstore = tx.objectStore('activity');
-    record.finished= true;
-    objecstore.put(record)
-    tx.oncomplete = function () {
-       document.getElementById("current_duty_card").style.display="none";
-    
-      document.getElementById("blur").style.display="none";
-      document.getElementById("comformation_box").style.display="none";
-    }
-    })
+    document
+      .getElementById("yes_finish")
+      .addEventListener("click", function () {
+        const tx = db.transaction("activity", "readwrite");
+        const objecstore = tx.objectStore("activity");
+        record.finished = true;
+        objecstore.put(record);
+        tx.oncomplete = function () {
+          document.getElementById("current_duty_card").style.display = "none";
 
+          document.getElementById("blur").style.display = "none";
+          document.getElementById("comformation_box").style.display = "none";
+        };
+      });
 
-    document.getElementById("no_hide").addEventListener("click", function(){
-      
-      document.getElementById("comformation_box").style.display="none";
-      document.getElementById("blur").style.display="none";
-    
-    })
+    document.getElementById("no_hide").addEventListener("click", function () {
+      document.getElementById("comformation_box").style.display = "none";
+      document.getElementById("blur").style.display = "none";
+    });
   });
 }
 
@@ -297,7 +259,7 @@ function readduty() {
         const checkins = activity.checkins
           .filter(
             (v) =>
-            v.creator.phoneNumber === firebase.auth().currentUser.phoneNumber
+              v.creator.phoneNumber === firebase.auth().currentUser.phoneNumber
           )
           .sort((a, b) => {
             return b.timestamp - a.timestamp;
@@ -319,15 +281,11 @@ function readduty() {
       });
     });
     console.log(date_objects);
-    readallduties(date_objects)
-  }
-
-};
-
-
+    readallduties(date_objects);
+  };
+}
 
 function readallduties(object_of_dates) {
-
   const keys = Object.keys(object_of_dates);
   let month;
   let monthCard;
@@ -343,8 +301,6 @@ function readallduties(object_of_dates) {
     if (month != moment(date, "DD/MM/YYYY").month()) {
       //Created an array to convert number into string
 
-
-
       var first_month = new Date();
       var current_month = first_month.getMonth();
       var pre_month = current_month - 1;
@@ -357,10 +313,10 @@ function readallduties(object_of_dates) {
         monthCard.style.display = "block";
       }
 
-      one_month = moment(date, "DD/MM/YYYY").format('MMMM');
+      one_month = moment(date, "DD/MM/YYYY").format("MMMM");
       curent_year = moment(date, "DD/MM/YYYY").year();
       total_working_day = moment(date, "YYYY-MM").daysInMonth();
-      console.log("total_working_day")
+      console.log("total_working_day");
 
       monthCard = createElement("div", {
         className: "month-card",
@@ -381,10 +337,7 @@ function readallduties(object_of_dates) {
       daysWorkedInMonth = 0;
     }
 
-
-
     daysWorkedInMonth++;
-
 
     monthCard.querySelector(".total-days-worked").innerHTML =
       "Days Worked: " +
@@ -393,17 +346,14 @@ function readallduties(object_of_dates) {
       total_working_day +
       " Days";
 
-
     month = moment(date, "DD/MM/YYYY").month();
     if (current_month == month) {
       monthCard.style.display = "block";
     }
 
-
-
     // Converted total work hours in to hours and minuts
 
-    const card = createDateCard(date, object_of_dates)
+    const card = createDateCard(date, object_of_dates);
 
     //Expanded first month
 
@@ -415,7 +365,6 @@ function readallduties(object_of_dates) {
       }
       card.style.display = "flex";
     });
-
 
     // Added event listener on Date Card in order to create Sub Duty Divs
     card.addEventListener("click", function (e) {
@@ -429,56 +378,44 @@ function readallduties(object_of_dates) {
       // For loop that reads individual duty in the specific [date]
 
       object_of_dates[date].activities.forEach((j) => {
-
         card.querySelector(".duties-list").appendChild(subDuties(j));
-
       });
-
-
     });
 
     monthCard.appendChild(card);
 
-    document.getElementById('duties-list').appendChild(monthCard);
+    document.getElementById("duties-list").appendChild(monthCard);
 
     var first_month = new Date();
     var current_month = first_month.getMonth();
 
     if (moment(date, "DD/MM/YYYY").month() == current_month) {
-      monthCard.style.display = 'block'
+      monthCard.style.display = "block";
       card.style.display = "flex";
     }
   }
 
-  document
-    .getElementById("show_more_b")
-    .addEventListener("click", function () {
-      document.getElementById("show_more_b").style.display = "none";
+  document.getElementById("show_more_b").addEventListener("click", function () {
+    document.getElementById("show_more_b").style.display = "none";
 
-      var show_all_card = document.querySelectorAll(".month-card");
-      console.log(show_all_card.length);
-      for (var i = 0; i < show_all_card.length; i++) {
-        show_all_card[i].style.display = "block";
-      }
-
-
-    });
-
+    var show_all_card = document.querySelectorAll(".month-card");
+    console.log(show_all_card.length);
+    for (var i = 0; i < show_all_card.length; i++) {
+      show_all_card[i].style.display = "block";
+    }
+  });
 }
 
-
 function createDateCard(date, object_of_dates) {
-
-  const day = moment(date, "DD/MM/YYYY").format('ddd').toString().toUpperCase()
-  const day_total_time = moment.duration(object_of_dates[date].totalHoursWorked);
+  const day = moment(date, "DD/MM/YYYY").format("ddd").toString().toUpperCase();
+  const day_total_time = moment.duration(
+    object_of_dates[date].totalHoursWorked
+  );
 
   // individual date cards in a date
   const card = createElement("div", {
     id: "collapsed2",
   });
-
-
-  
 
   card.dataset.date = date;
   card.innerHTML = `
@@ -493,10 +430,10 @@ function createDateCard(date, object_of_dates) {
             </span><span id="duty_address2">${object_of_dates[
               date
             ].totalLocationsString.substring(0, 21)}  ${
-              object_of_dates[date].totalDuties == 1
-        ? " "
-        : object_of_dates[date].totalDuties - 1 + " Others"
-    } </span>
+    object_of_dates[date].totalDuties == 1
+      ? " "
+      : object_of_dates[date].totalDuties - 1 + " Others"
+  } </span>
           </p>
           <p>
             <span class="material-icons">
@@ -521,14 +458,10 @@ function createDateCard(date, object_of_dates) {
                 
           `;
 
-
   return card;
 }
 
-
-
 function subDuties(j) {
-
   var diff = moment
     .utc(
       moment(j.schedule[0].endTime || "00").diff(
@@ -539,7 +472,6 @@ function subDuties(j) {
 
   var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
   var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
-
 
   var assignees_displayname = j.assignees[0].displayName;
   var assignees_phonenumber = j.assignees[0].phoneNumber;
@@ -556,21 +488,17 @@ function subDuties(j) {
     }
   }
 
-
   const collapsed = createElement("div", {
     id: "expended_duty",
     style: "display: block;",
   });
 
-  collapsed.addEventListener("click", function(e){
+  collapsed.addEventListener("click", function (e) {
     e.stopPropagation();
-    console.log(j)
-    
-    sessionStorage.setItem('passing_duty', JSON.stringify(j));
-    window.location = "jobview.html";
-    
+    console.log(j);
 
-  })
+    pass_duty(j);
+  });
 
   collapsed.innerHTML = `
   <div id="individual_duty">
@@ -591,9 +519,7 @@ function subDuties(j) {
             <p id="expended_checkin_totaltime">
               <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
                 id="expended_total_time"
-                >${
-                  diff.slice(0, 2) + "h " + diff.slice(3, 5) + "m"
-                }</span>
+                >${diff.slice(0, 2) + "h " + diff.slice(3, 5) + "m"}</span>
             </p>
           
             <div style="display: flex;"> 
@@ -619,27 +545,22 @@ function subDuties(j) {
             </div>
           
           </div>
-          <span id="other_assignees">${
-            and + " " + other_assignee
-          }</span>
+          <span id="other_assignees">${and + " " + other_assignee}</span>
           </div>
           </div>
 
           <div><hr id="h_line"><div id="circle"></div></div> 
-              `
+              `;
   return collapsed;
-
 }
 
-
-
 function openCamera() {
-  history.pushState(null, null, '/upload-photo')
+  history.pushState(null, null, "/upload-photo");
   // setFilePath(firebase.auth().currentUser.photoURL);
   // return
   if (_native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
-    return
+    return;
   }
   webkit.messageHandlers.startCamera.postMessage("setFilePath");
 }
@@ -648,21 +569,29 @@ function setFilePathFailed(error) {
   snacks(error);
 }
 
-
-function setFilePath(base64, retries = {
-  subscriptionRetry: 0,
-  invalidRetry: 0
-}) {
-  const url = `data:image/jpg;base64,${base64}`
+function setFilePath(
+  base64,
+  retries = {
+    subscriptionRetry: 0,
+    invalidRetry: 0,
+  }
+) {
+  const url = `data:image/jpg;base64,${base64}`;
   // const url = firebase.auth().currentUser.photoURL;
   // const url = base64
-  document.getElementById('app-current-panel').innerHTML = `
+  document.getElementById("app-current-panel").innerHTML = `
   <div class='upload-photo-container'>
      <div class='image-cont'><img id='checkin-photo'></div>
      <div class='details pt-10'>
         <span class='mdc-typography--caption'>Details</span>
-        <div class='mdc-typography--subtitle1'>${moment().format('DDDD, MMMM MM,YYYY HH:mm')}</div>
-        ${ApplicationState.venue ? `<div class='mdc-typography--subtitle2'> ${ApplicationState.venue.location}</div>` :''}
+        <div class='mdc-typography--subtitle1'>${moment().format(
+          "DDDD, MMMM MM,YYYY HH:mm"
+        )}</div>
+        ${
+          ApplicationState.venue
+            ? `<div class='mdc-typography--subtitle2'> ${ApplicationState.venue.location}</div>`
+            : ""
+        }
         
      </div>
       <div class="form-meta snap-form">
@@ -685,64 +614,79 @@ function setFilePath(base64, retries = {
         </button>
       </div>
   </div>
-  `
-  document.getElementById('home-header').innerHTML = `<div class="mdc-top-app-bar__row">
+  `;
+  document.getElementById(
+    "home-header"
+  ).innerHTML = `<div class="mdc-top-app-bar__row">
  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
      <a id="backicon" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"
          aria-label="Open navigation menu" href="javascript:redirect('/home')">arrow_back</a>
      <span class="mdc-top-app-bar__title">Photo Check-in</span>
  </section>
 
-</div>`
-document.getElementById('app-current-panel').classList.remove('extra--adjust')
+</div>`;
+  document
+    .getElementById("app-current-panel")
+    .classList.remove("extra--adjust");
 
-  const textarea = new mdc.textField.MDCTextField(document.getElementById('photo-text'))
-  const submit = new mdc.ripple.MDCRipple(document.getElementById('snap-submit'))
-  document.getElementById('checkin-photo').src = url;
+  const textarea = new mdc.textField.MDCTextField(
+    document.getElementById("photo-text")
+  );
+  const submit = new mdc.ripple.MDCRipple(
+    document.getElementById("snap-submit")
+  );
+  document.getElementById("checkin-photo").src = url;
 
   textarea.focus();
- 
 
-  submit.root.addEventListener('click', function () {
+  submit.root.addEventListener("click", function () {
     const textValue = textarea.value;
     sendPhotoCheckinRequest({
-      sub: ApplicationState.officeWithCheckInSubs[ApplicationState.selectedOffice],
+      sub:
+        ApplicationState.officeWithCheckInSubs[ApplicationState.selectedOffice],
       base64: url,
       retries: retries,
       textValue: textValue,
       knownLocation: true,
-      btn:submit.root
-    })
-  })
+      btn: submit.root,
+    });
+  });
 }
-
 
 function sendPhotoCheckinRequest(request) {
   const url = request.base64;
   const textValue = request.textValue;
   const retries = request.retries;
-  const sub = JSON.parse(JSON.stringify(request.sub))
-  sub.attachment.Photo.value = url || ''
+  const sub = JSON.parse(JSON.stringify(request.sub));
+  sub.attachment.Photo.value = url || "";
   sub.attachment.Comment.value = textValue;
-  sub.share = []
+  sub.share = [];
   history.back();
-  request.btn.classList.add('in-progress')
-  requestCreator('create', fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
-    request.btn.classList.remove('in-progress')
-    snacks('Photo uploaded');
-    setTimeout(()=>{
-      redirect('/home');
-    },3000)
-  }).catch(function (error) {
-    request.btn.classList.remove('in-progress')
-    if (error.message === 'Invalid check-in') {
-      handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
-        ApplicationState.location = newGeopoint;
-        retries.invalidRetry++
-        setFilePath(base64, retries);
-      });
-      return
-    };
-    snacks(error.message)
-  });
+  request.btn.classList.add("in-progress");
+  requestCreator(
+    "create",
+    fillVenueInSub(sub, ApplicationState.venue),
+    ApplicationState.location
+  )
+    .then(function () {
+      request.btn.classList.remove("in-progress");
+      snacks("Photo uploaded");
+      setTimeout(() => {
+        redirect("/home");
+      }, 3000);
+    })
+    .catch(function (error) {
+      request.btn.classList.remove("in-progress");
+      if (error.message === "Invalid check-in") {
+        handleInvalidCheckinLocation(retries.invalidRetry, function (
+          newGeopoint
+        ) {
+          ApplicationState.location = newGeopoint;
+          retries.invalidRetry++;
+          setFilePath(base64, retries);
+        });
+        return;
+      }
+      snacks(error.message);
+    });
 }

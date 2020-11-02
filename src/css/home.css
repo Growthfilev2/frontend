@@ -273,7 +273,9 @@ text-align: left;
   font-style: normal;
   font-weight: 500;
   line-height: 24px;
+  color: var(--mdc-theme-primary);
   letter-spacing: 0.15000000596046448px;
+  text-decoration: underline;
 }
 
 #current_interval {
