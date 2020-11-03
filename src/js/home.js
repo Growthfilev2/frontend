@@ -112,7 +112,8 @@ function read() {
       .addEventListener("click", function (e) {
         e.stopPropagation();
 
-        pass_currentduty(record);
+        record.header= "CurrentDuty"
+        pass_duty(record);
       });
 
       showDuty_card(record);

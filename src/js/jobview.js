@@ -4,9 +4,6 @@ window.addEventListener("load", (ev) => {
   var parsed_valued = sessionStorage.getItem("passing_duty");
   var jobview_duty = JSON.parse(parsed_valued);
 
-  var parsed_header = sessionStorage.getItem("passing_header");
-  var header = JSON.parse(parsed_header)
-  console.log(header)
 
   firebase.auth().onAuthStateChanged((user) => {
     const dbName = firebase.auth().currentUser.uid;
@@ -19,7 +16,7 @@ window.addEventListener("load", (ev) => {
       db = event.target.result;
 
       //  currenDuty();
-      checkins_box(jobview_duty,header);
+      checkins_box(jobview_duty);
     };
   });
  
@@ -34,43 +31,58 @@ window.addEventListener("load", (ev) => {
  sessionStorage.clear();
 });
 
-function checkins_box(duty,header) {
+function checkins_box(duty) {
   
-  if(header){
-  if (header.header == "CurrentDuty") {
+
+  if (duty.header == "CurrentDuty") {
     document.getElementById("current_duty_heading").innerHTML = "Current Duty";
-  }}
+  }
 
   showDuty_card(duty);
 
+  var timestamp_aray=[]
+
   for (i = 0; i < duty.checkins.length; i++) {
-  //  duty.checkins[i].attachment.Photo.value = "https://www.sammobile.com/wp-content/uploads/2019/03/keyguard_default_wallpaper.png";
+  
+    timestamp_aray.push(duty.checkins[i].timestamp);
 
-    if (i < 1) {
-      var div = createElement("div", {
-        className: "containers",
-        style: "display:inline;",
-      });
+  }
 
-      div.innerHTML = `<div id="container"> ${moment(
-        duty.checkins[i].timestamp
-      ).format("hh:mm A")} </div>`;
+  //Unique Timestamp Trying
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+  
+  
+  
+  var unique = timestamp_aray.filter(onlyUnique);
 
-      document.getElementById("time").appendChild(div);
-    } else {
-      if (duty.checkins[i - 1].timestamp != duty.checkins[i].timestamp) {
-        var div = createElement("div", {
-          className: "containers",
-          style: "display:inline;",
-        });
+  console.log(unique)
 
-        div.innerHTML = `<div id="container"> ${moment(
-          duty.checkins[i].timestamp
-        ).format("hh:mm A")} </div>`;
+  for(var x=0; x < unique.length; x++){
+    var div = createElement("div", {
+      className: "containers",
+      style: "display:inline;",
+    });
 
-        document.getElementById("time").appendChild(div);
-      }
-    }
+    div.innerHTML = `<div id="container"> ${moment(
+      unique[x]
+    ).format("hh:mm A")} </div>`;
+
+    document.getElementById("time").appendChild(div);
+  }
+
+    
+
+    //Checkins Photo
+
+  
+  for (i = 0; i < duty.checkins.length; i++) {
+
+
+    // duty.checkins[i].attachment.Photo.value = "https://www.sammobile.com/wp-content/uploads/2019/03/keyguard_default_wallpaper.png";
+
+    
     if (duty.checkins[i].attachment.Photo.value) {
       var photos = createElement("div", {
         className: "upload_photo",

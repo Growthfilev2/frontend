@@ -1379,16 +1379,6 @@ function pass_duty(duty_array){
   console.log("redirect")
 }
 
-function pass_currentduty(duty_array){
-  sessionStorage.setItem('passing_duty', JSON.stringify(duty_array));
- 
-  const currentheader = {
-    header: "CurrentDuty"
-}
-sessionStorage.setItem('passing_header', JSON.stringify(currentheader))
-  redirect('/jobview.html');
-  console.log("redirect")
-}
 
 function showDuty_card(dutycard_details){
 
