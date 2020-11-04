@@ -398,6 +398,7 @@ function readallduties(object_of_dates) {
 
   document.getElementById("show_more_b").addEventListener("click", function () {
     document.getElementById("show_more_b").style.display = "none";
+    document.getElementById("show_less_b").style.display = "block";
 
     var show_all_card = document.querySelectorAll(".month-card");
     console.log(show_all_card.length);
@@ -405,6 +406,19 @@ function readallduties(object_of_dates) {
       show_all_card[i].style.display = "block";
     }
   });
+
+  document.getElementById("show_less_b").addEventListener("click", function () {
+    document.getElementById("show_more_b").style.display = "block";
+    document.getElementById("show_less_b").style.display = "none";
+
+    var show_all_card = document.querySelectorAll(".month-card");
+    console.log(show_all_card.length);
+    for (var i = 2; i < show_all_card.length; i++) {
+      show_all_card[i].style.display = "none";
+    }
+  });
+
+
 }
 
 function createDateCard(date, object_of_dates) {
@@ -430,13 +444,14 @@ function createDateCard(date, object_of_dates) {
             location_on
             </span><span id="duty_address2">${object_of_dates[
               date
-            ].totalLocationsString.substring(0, 21)}  ${
+            ].totalLocationsString.substring(0, 18)+"..."}  ${
     object_of_dates[date].totalDuties == 1
       ? " "
-      : object_of_dates[date].totalDuties - 1 + " Others"
+      : "& "+ (object_of_dates[date].totalDuties-1) + " Others"
   } </span>
           </p>
           <p>
+          
             <span class="material-icons">
             timer
             </span><span id="total_hours2">${
@@ -451,11 +466,15 @@ function createDateCard(date, object_of_dates) {
               </span><span id="total_duties2"> ${
                 object_of_dates[date].totalDuties
               }</span>
+              
             </p>
+                  <p id="arrow_div"><span class="material-icons" id="day_arrow">keyboard_arrow_down</span></p>
             </div>
+                
             <div><hr id="h_line"><div id="circle"></div></div> 
               <div class='duties-list'></div>
           </div>
+          
                 
           `;
 

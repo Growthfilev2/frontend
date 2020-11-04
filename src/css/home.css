@@ -25,6 +25,20 @@ body {
   padding: 16px 48px 0px 16px;
 }
 
+#day_arrow{
+  color: #25456c; 
+  position: relative;
+  
+  left: 90%;
+  margin-top: -100px;
+}
+
+#arrow_div{
+  margin-top: -20px;
+  
+}
+
+
 
 #logo {
   position: absolute;
@@ -512,7 +526,23 @@ month_date2 {
   letter-spacing: 0em;
 }
 
-
+#show_less_b {
+  display: none;
+  position: fixed;
+  bottom: 0px;
+  padding-bottom: 8px;
+  padding-top: 8px;
+  width: 100%;
+  text-align: center;
+  z-index: 97;
+  background-color: white;
+  font-family: Roboto;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0em;
+}
 
 .upload-photo-container #checkin-photo {
   max-height: 400px;
