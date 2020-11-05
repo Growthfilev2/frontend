@@ -271,6 +271,7 @@ text-align: left;
   border: rgba(128, 128, 128, 0.2) 1px solid;
   box-shadow: 0 0 5px rgb(129, 126, 126);
   border-radius: 100%;
+  padding-left: 8px;
   color: #de2e2e;
   font-family: Roboto;
   font-size: 14px;
