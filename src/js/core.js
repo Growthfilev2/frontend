@@ -1373,7 +1373,7 @@ const hasBankAccount = (record) => {
   return true
 }
 
-function pass_duty(duty_array){
+function passDuty(duty_array){
   sessionStorage.setItem('passing_duty', JSON.stringify(duty_array));
   redirect('/jobview.html');
   console.log("redirect")

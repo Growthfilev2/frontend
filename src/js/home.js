@@ -113,7 +113,7 @@ function read() {
         e.stopPropagation();
 
         record.header= "CurrentDuty"
-        pass_duty(record);
+        passDuty(record);
       });
 
       showDuty_card(record);
@@ -517,7 +517,7 @@ function subDuties(j) {
     e.stopPropagation();
     console.log(j);
 
-    pass_duty(j);
+    passDuty(j);
   });
 
   collapsed.innerHTML = `

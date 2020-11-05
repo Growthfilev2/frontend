@@ -49,9 +49,7 @@ function checkins_box(duty) {
   }
 
   //Unique Timestamp Trying
-  function onlyUnique(value, index, self) {
-    return self.indexOf(value) === index;
-  }
+ 
   
   
   
@@ -104,4 +102,8 @@ function checkins_box(duty) {
   }
 
   console.log(duty);
+}
+
+function onlyUnique(value, index, self) {
+  return self.indexOf(value) === index;
 }
