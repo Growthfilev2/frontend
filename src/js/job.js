@@ -74,6 +74,7 @@ function getCurrentJob() {
             canEdit: false,
             supervisior: null,
             finished: false,
+            header: "",
             isActive: false,
             timestamp: Date.now(),
             
