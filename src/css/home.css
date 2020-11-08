@@ -177,6 +177,7 @@ text-align: left;
   font-weight: 500;
   line-height: 16px;
   letter-spacing: 0em;
+  
 }
 
 #home_text {
@@ -553,4 +554,16 @@ month_date2 {
   padding:16px;
   padding-top:0px;
 
+}
+
+#right_indicator{
+  margin-left: 95%;
+  margin-top: 10px;
+}
+
+#duty_right_indicator{
+  margin: 0 auto;
+  margin-right: 10px;
+
+  
 }

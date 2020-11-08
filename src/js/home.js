@@ -107,15 +107,17 @@ function read() {
       document.getElementById("current_duty_card").style.display = "flex";
     }
 
+    record.header= "CurrentDuty"
+    
     document
       .getElementById("current_location")
       .addEventListener("click", function (e) {
         e.stopPropagation();
 
-        record.header= "CurrentDuty"
+        
         passDuty(record);
       });
-
+      
       showDuty_card(record);
 
     
@@ -142,12 +144,14 @@ function read() {
         const objecstore = tx.objectStore("activity");
         record.finished = true;
         objecstore.put(record);
+        
         tx.oncomplete = function () {
           document.getElementById("current_duty_card").style.display = "none";
 
           document.getElementById("blur").style.display = "none";
           document.getElementById("comformation_box").style.display = "none";
           console.log(record)
+
         };
       });
 
@@ -195,6 +199,22 @@ function readduty() {
       cursor.continue();
       return;
     }
+
+    if (cursor.value.isActive == false) {
+      cursor.continue();
+      return;
+  }
+
+  if (cursor.value.isActive == false) {
+    cursor.continue();
+    return;
+}
+
+if (cursor.value.finished == false) {
+  cursor.continue();
+  return;
+}
+
 
     if (!cursor.value.checkins) {
       cursor.continue();
@@ -330,9 +350,7 @@ function readallduties(object_of_dates) {
                 <p id="month_date2">${one_month} ${curent_year}</p>
                 
                 <p class="total-days-worked"></p>
-                <span class="material-icons" id="arrow">
-                keyboard_arrow_down
-                </span>
+                <span class="material-icons" id="arrow">keyboard_arrow_down</span>
                 </div>
                 </div>
                 `;
@@ -360,13 +378,23 @@ function readallduties(object_of_dates) {
     //Expanded first month
 
     monthCard.addEventListener("click", function (e) {
+      // if(document.getElementById("arrow").innerHTML=="keyboard_arrow_down") {
+      //   console.log("down")
+      //   document.getElementById("arrow").innerHTML=="keyboard_arrow_up"
+      // }
+
       if (card.style.display == "flex") {
         card.style.display = "none";
-
+        document.getElementById("arrow").style.transform= "rotate(0deg)";
         return;
       }
       card.style.display = "flex";
+      document.getElementById("arrow").style.transform= "rotate(180deg)";
+     // document.getElementById("arrow").innerHTML=="keyboard_arrow_down"
     });
+
+
+
 
     // Added event listener on Date Card in order to create Sub Duty Divs
     card.addEventListener("click", function (e) {
@@ -378,11 +406,13 @@ function readallduties(object_of_dates) {
       }
 
       // For loop that reads individual duty in the specific [date]
-
       object_of_dates[date].activities.forEach((j) => {
         card.querySelector(".duties-list").appendChild(subDuties(j));
       });
+      
     });
+
+   
 
     monthCard.appendChild(card);
 
@@ -501,11 +531,11 @@ function subDuties(j) {
   var other_assignee = "";
   var and = "";
   if (j.assignees.length > 1) {
-    and = "&";
+    and = "& ";
     if (j.assignees.length == 2) {
-      other_assignee = j.assignees.length - 1 + " Other";
+      other_assignee = +(j.assignees.length-1) + " Other";
     } else {
-      other_assignee = j.assignees.length - 1 + " Others";
+      other_assignee = +(j.assignees.length-1) + " Others";
     }
   }
 
@@ -523,6 +553,7 @@ function subDuties(j) {
 
   collapsed.innerHTML = `
   <div id="individual_duty">
+  
               <p id="expended_location">
               <span class="material-icons-outlined"> location_on </span>&nbsp
               &nbsp<span id="expended_location">${
@@ -565,9 +596,15 @@ function subDuties(j) {
               </span>
             </div>
           
-          </div>
+          </div >
           <span id="other_assignees">${and + " " + other_assignee}</span>
+          <div id="duty_right_indicator">
+          <span class="material-icons">
+          keyboard_arrow_right
+          </span>
           </div>
+          </div>
+          
           </div>
 
           <div><hr id="h_line"><div id="circle"></div></div> 
