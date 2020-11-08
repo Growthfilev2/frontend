@@ -1382,6 +1382,10 @@ function passDuty(duty_array){
 
 function showDuty_card(dutycard_details){
 
+  document.getElementById("location_icon").style.color = "#25456c";
+  document.getElementById("builder_icon").style.color = "#25456c";
+  document.getElementById("timer_icon").style.color = "#25456c";
+
   document.getElementById("current_location").innerHTML =
       dutycard_details.attachment.Location.value;
     console.log(dutycard_details);

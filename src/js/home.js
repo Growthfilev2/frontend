@@ -329,10 +329,15 @@ function readallduties(object_of_dates) {
 
       if (current_month == month) {
         monthCard.style.display = "block";
+        document.getElementById("month_card2").style.backgroundColor= "#25456c";
+        document.getElementById("month_card2").style.color= "#ffffff";
+        document.getElementById("arrow").style.color="#ffffff"
+
       }
 
       if (pre_month == month) {
         monthCard.style.display = "block";
+        
       }
 
       one_month = moment(date, "DD/MM/YYYY").format("MMMM");
@@ -367,8 +372,14 @@ function readallduties(object_of_dates) {
       " Days";
 
     month = moment(date, "DD/MM/YYYY").month();
+    
     if (current_month == month) {
       monthCard.style.display = "block";
+      monthCard.querySelector("#month_card2").style.backgroundColor= "#25456c";
+      monthCard.querySelector("#month_card2").style.color= "#ffffff";
+      monthCard.querySelector("#arrow").style.color= "#ffffff";
+      
+     
     }
 
     // Converted total work hours in to hours and minuts
@@ -385,11 +396,11 @@ function readallduties(object_of_dates) {
 
       if (card.style.display == "flex") {
         card.style.display = "none";
-        document.getElementById("arrow").style.transform= "rotate(0deg)";
+      //  document.getElementById("arrow").style.transform= "rotate(0deg)";
         return;
       }
       card.style.display = "flex";
-      document.getElementById("arrow").style.transform= "rotate(180deg)";
+     // document.getElementById("arrow").style.transform= "rotate(180deg)";
      // document.getElementById("arrow").innerHTML=="keyboard_arrow_down"
     });
 
@@ -415,7 +426,7 @@ function readallduties(object_of_dates) {
    
 
     monthCard.appendChild(card);
-
+    
     document.getElementById("duties-list").appendChild(monthCard);
 
     var first_month = new Date();
@@ -458,6 +469,20 @@ function createDateCard(date, object_of_dates) {
     object_of_dates[date].totalHoursWorked
   );
 
+  var trying = moment(date, "DD/MM/YYYY").format("D MM YYYY")
+  console.log(trying)
+  
+    const current_date= new Date();
+    var cd = current_date.getDate()-1;
+    var cm = current_date.getMonth()+1;
+    var cy = current_date.getFullYear();
+    var present_date = cd+" "+cm+" "+cy;
+  console.log(present_date)
+ 
+
+
+ 
+
   // individual date cards in a date
   const card = createElement("div", {
     id: "collapsed2",
@@ -471,7 +496,7 @@ function createDateCard(date, object_of_dates) {
           )}</p> <p id="duty_day2">${day}</p></div>
           <div id="duty_div2">
             <div id="collapsed_duty2" >
-            <p><span class="material-icons">
+            <p><span id="current_location_icon" class="material-icons-outlined">
             location_on
             </span><span id="duty_address2">${object_of_dates[
               date
@@ -483,7 +508,7 @@ function createDateCard(date, object_of_dates) {
           </p>
           <p>
           
-            <span class="material-icons">
+            <span id="current_timer_icon" class="material-icons-outlined">
             timer
             </span><span id="total_hours2">${
               day_total_time.days() +
@@ -492,8 +517,8 @@ function createDateCard(date, object_of_dates) {
               "h " +
               day_total_time.minutes() +
               "m"
-            }</span>&nbsp&nbsp&nbsp <span class="material-icons">
-              work
+            }</span>&nbsp&nbsp&nbsp <span id="current_totaltime_icon" class="material-icons">
+            work_outline
               </span><span id="total_duties2"> ${
                 object_of_dates[date].totalDuties
               }</span>
@@ -508,9 +533,43 @@ function createDateCard(date, object_of_dates) {
           
                 
           `;
+         
+         
+  
+          if(trying==present_date){
 
+            card.querySelector("#duty_date2").style.backgroundColor="#25456c";
+            card.querySelector("#duty_date2").style.color="#ffffff";
+            card.querySelector("#current_location_icon").style.color="#25456c";
+            card.querySelector("#current_totaltime_icon").style.color="#25456c";
+            card.querySelector("#current_timer_icon").style.color="#25456c";
+            card.querySelector("#h_line").style.color="#25456c";
+            card.querySelector("#circle").style.backgroundColor="#25456c";
+        
+          }
+    
   return card;
 }
+
+// function addStyle(styles) { 
+              
+//   /* Create style document */ 
+//   var css = document.createElement('style'); 
+//   css.type = 'text/css'; 
+
+//   if (css.styleSheet)  
+//       css.styleSheet.cssText = styles; 
+//   else  
+//       css.appendChild(document.createTextNode(styles)); 
+    
+//   /* Append style to the tag name */ 
+//   document.getElementsByTagName("head")[0].appendChild(css); 
+//   return ""
+// } 
+
+
+
+
 
 function subDuties(j) {
   var diff = moment

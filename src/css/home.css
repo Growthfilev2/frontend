@@ -26,7 +26,7 @@ body {
 }
 
 #day_arrow{
-  color: #25456c; 
+  color:black; 
   position: relative;
   
   left: 90%;
@@ -35,6 +35,7 @@ body {
 
 #arrow_div{
   margin-top: -20px;
+  
   
 }
 
@@ -240,7 +241,7 @@ text-align: left;
   font-weight: 500;
   line-height: 14px;
   letter-spacing: 0em;
-  color: #f2f2f2;
+  
 }
 
 #assignees_div_current {
@@ -250,7 +251,7 @@ text-align: left;
 .material-icons-outlined {
   position: relative;
   top: 6px;
-  color: #25456c;
+  color: #333333;
 }
 
 #current_text {
@@ -318,21 +319,14 @@ text-align: left;
   margin: 0 auto;
   border-radius: 2px;
   height: 63px;
-  background: #25456c;
+  background-color: white;
   margin-bottom: 5px;
+  color: black;
+  box-shadow: 0 0 2px #a7a7a7;
+
 }
 
-month_date2 {
-  padding: 10px;
-  font-family: Roboto;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 16px;
-  letter-spacing: 0em;
-  text-align: left;
-  color: #f2f2f2;
-}
+
 
 #month_date2 {
   padding: 10px;
@@ -343,7 +337,7 @@ month_date2 {
   line-height: 16px;
   letter-spacing: 0em;
   text-align: left;
-  color: #f2f2f2;
+ 
 }
 
 #days_worked2 {
@@ -389,7 +383,7 @@ month_date2 {
   position: relative;
   top: -40px;
   left: 90%;
-  color: white;
+  
 }
 
 #date_day2 {
@@ -431,15 +425,17 @@ month_date2 {
 
 }
 
+
+
 #h_line {
   display: block;
   height: 1px;
   border: 0;
-  border-top: 1px solid #25456c;
+  border-top: 1px solid #9C9797;
   ;
   padding: 0;
 
-  color: #25456c;
+  color: #9C9797;
   margin-top: 10px;
 }
 
@@ -447,8 +443,9 @@ month_date2 {
   height: 8px;
   width: 8px;
   border-radius: 50%;
-  background-color: #25456c;
+  background-color: #9C9797;
   margin-top: -5px;
+  color: #9C9797;
 }
 
 #duty_div2_hide {
@@ -465,7 +462,8 @@ month_date2 {
 .material-icons {
   position: relative;
   top: 6px;
-  color: #25456c;
+  color: #333333;
+
 }
 
 #collapsed_duty2 {
@@ -485,14 +483,15 @@ month_date2 {
 }
 
 #duty_date2 {
-  background-color: #25456c;
-  color: white;
+ 
+  color: black;
   border-radius: 50%;
   height: 48px;
   width: 48px;
   text-align: center;
   margin-top: 5px;
   padding-top: 16px;
+  box-shadow: 0 0 2px #a7a7a7;
 }
 
 #duty_day2 {
