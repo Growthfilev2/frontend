@@ -473,7 +473,7 @@ function createDateCard(date, object_of_dates) {
   console.log(trying)
   
     const current_date= new Date();
-    var cd = current_date.getDate()-1;
+    var cd = current_date.getDate();
     var cm = current_date.getMonth()+1;
     var cy = current_date.getFullYear();
     var present_date = cd+" "+cm+" "+cy;
