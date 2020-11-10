@@ -477,7 +477,7 @@ function readallduties(object_of_dates) {
 
 
 }
-var count_duty=0;
+
 function createDateCard(date, object_of_dates) {
   const day = moment(date, "DD/MM/YYYY").format("ddd").toString().toUpperCase();
   const day_total_time = moment.duration(
