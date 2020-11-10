@@ -105,6 +105,10 @@ function read() {
      
 
       document.getElementById("current_duty_card").style.display = "flex";
+    
+      document.getElementById("location_icon").style.color = "#25456c";
+      document.getElementById("builder_icon").style.color = "#25456c";
+     document.getElementById("timer_icon").style.color = "#25456c";
     }
 
     record.header= "CurrentDuty"
@@ -307,6 +311,7 @@ if (cursor.value.finished == false) {
   };
 }
 
+
 function readallduties(object_of_dates) {
   const keys = Object.keys(object_of_dates);
   let month;
@@ -378,6 +383,7 @@ function readallduties(object_of_dates) {
       monthCard.querySelector("#month_card2").style.backgroundColor= "#25456c";
       monthCard.querySelector("#month_card2").style.color= "#ffffff";
       monthCard.querySelector("#arrow").style.color= "#ffffff";
+      monthCard.querySelector("#arrow").style.transform= "rotate(180deg)";
       
      
     }
@@ -393,15 +399,16 @@ function readallduties(object_of_dates) {
       //   console.log("down")
       //   document.getElementById("arrow").innerHTML=="keyboard_arrow_up"
       // }
-
+      
       if (card.style.display == "flex") {
         card.style.display = "none";
-      //  document.getElementById("arrow").style.transform= "rotate(0deg)";
+        monthCard.querySelector("#arrow").style.transform= "rotate(0deg)";
+      
         return;
       }
       card.style.display = "flex";
-     // document.getElementById("arrow").style.transform= "rotate(180deg)";
-     // document.getElementById("arrow").innerHTML=="keyboard_arrow_down"
+      monthCard.querySelector("#arrow").style.transform= "rotate(180deg)";
+     // document.getElementById("arrow").innerHTML="keyboard_arrow_down"
     });
 
 
@@ -413,13 +420,21 @@ function readallduties(object_of_dates) {
 
       if (card.querySelector(".duties-list").childElementCount) {
         card.querySelector(".duties-list").innerHTML = "";
+        card.querySelector("#day_arrow").style.transform= "rotate(0deg)"
         return;
       }
 
+      card.querySelector("#day_arrow").style.transform= "rotate(180deg)"
+      
       // For loop that reads individual duty in the specific [date]
       object_of_dates[date].activities.forEach((j) => {
-        card.querySelector(".duties-list").appendChild(subDuties(j));
+        card.querySelector(".duties-list").appendChild(subDuties(j));      
+        card.querySelector("#inner_location_icon").style.color= "#25456c";
+        card.querySelector("#inner_builder_icon").style.color= "#25456c";
+        card.querySelector("#inner_timer_icon").style.color= "#25456c";  
       });
+
+      
       
     });
 
@@ -462,7 +477,7 @@ function readallduties(object_of_dates) {
 
 
 }
-
+var count_duty=0;
 function createDateCard(date, object_of_dates) {
   const day = moment(date, "DD/MM/YYYY").format("ddd").toString().toUpperCase();
   const day_total_time = moment.duration(
@@ -490,6 +505,7 @@ function createDateCard(date, object_of_dates) {
 
   card.dataset.date = date;
   card.innerHTML = `
+  
           <div id="date_day2"> <p id="duty_date2">${date.slice(
             0,
             2
@@ -547,7 +563,9 @@ function createDateCard(date, object_of_dates) {
             card.querySelector("#circle").style.backgroundColor="#25456c";
         
           }
-    
+
+          
+         
   return card;
 }
 
@@ -607,6 +625,8 @@ function subDuties(j) {
     e.stopPropagation();
     console.log(j);
 
+
+
     passDuty(j);
   });
 
@@ -614,21 +634,21 @@ function subDuties(j) {
   <div id="individual_duty">
   
               <p id="expended_location">
-              <span class="material-icons-outlined"> location_on </span>&nbsp
+              <span id="inner_location_icon" class="material-icons-outlined"> location_on </span>&nbsp
               &nbsp<span id="expended_location">${
                 j.attachment.Location.value
               }</span>
             </p>
     
             <p id="expended_checkin_time">
-              <span class="material-icons-outlined"> query_builder </span>&nbsp
+              <span id="inner_builder_icon" class="material-icons-outlined"> query_builder </span>&nbsp
               &nbsp<span id="expended_interval">
                 <span id="expended_starting_time">${starttime}</span>-
                 <span id="expended_ending_time">${endtime}</span></span
               >
             </p>
             <p id="expended_checkin_totaltime">
-              <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
+              <span id="inner_timer_icon" class="material-icons-outlined"> timer </span>&nbsp &nbsp<span
                 id="expended_total_time"
                 >${diff.slice(0, 2) + "h " + diff.slice(3, 5) + "m"}</span>
             </p>
@@ -714,7 +734,7 @@ function setFilePath(
       <div class="form-meta snap-form">
       <label class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--no-label" id="photo-text">
           <span class="mdc-text-field__resizer">
-            <textarea class="mdc-text-field__input" rows="1" cols="40" aria-label="Label" placeholder='Photo Description'></textarea>
+            <textarea id="description_box" class="mdc-text-field__input" rows="1" cols="40" aria-label="Label" placeholder='Photo Description'></textarea>
           </span>
           <span class="mdc-notched-outline">
             <span class="mdc-notched-outline__leading"></span>

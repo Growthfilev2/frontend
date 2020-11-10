@@ -459,6 +459,10 @@ text-align: left;
   color: #333333;
 }
 
+#description_box{
+  height: 50px;
+}
+
 .material-icons {
   position: relative;
   top: 6px;
