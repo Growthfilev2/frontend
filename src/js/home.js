@@ -250,6 +250,7 @@ function readduty() {
 
     const months = Object.keys(dateObjects);
     let date_objects = {};
+    
     // loop through the object and caluclate total hours, total locations and total hours worked
     // for each date
     Object.keys(DT).forEach((key) => {
@@ -309,7 +310,7 @@ function readallduties(object_of_dates) {
   let month;
   let monthCard;
   let daysWorkedInMonth = 0;
-
+  var month_count= 0; 
   // loop the new objects backwards
 
   for (let i = keys.length - 1; i >= 0; i--) {
@@ -359,6 +360,7 @@ function readallduties(object_of_dates) {
                 </div>
                 `;
       daysWorkedInMonth = 0;
+      month_count++;
      
 
     }
@@ -373,6 +375,7 @@ function readallduties(object_of_dates) {
       " Days";
 
     month = moment(date, "DD/MM/YYYY").month();
+    
 
     if (current_month == month) {
       monthCard.style.display = "block";
@@ -473,6 +476,11 @@ function readallduties(object_of_dates) {
       show_all_card[i].style.display = "none";
     }
   });
+
+  if(month_count<3){
+    document.getElementById("show_more_b").style.display = "none";
+    document.getElementById("show_less_b").style.display = "none";
+  }
 }
 
 function createDateCard(date, object_of_dates) {
