@@ -4,7 +4,7 @@
   "description": "## File structure ``` |   index.html |   .gitignore |   package.json |   README.md | +---css |   |   conversation.css | +---js |   |   apiHandler.js |   |   conversation.js |   |   init.js |   |   panel.js |   |   services.js | ```",
   "main": "index.js",
   "scripts": {
-    "build": "babel src -d dist/v3 --copy-files"
+    "build": "babel src -d dist --copy-files"
   },
   "repository": {
     "type": "git",

@@ -15,7 +15,7 @@ var serverTimeUpdated = false;
 window.addEventListener('load', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {
-        scope: appKey.getMode() === 'dev' ? '/' : '/v3/'
+        scope: '/'
       })
       .then(reg => {
         let reloadCounter = 0
