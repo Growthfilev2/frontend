@@ -104,9 +104,9 @@ function read() {
     if (record.activityId) {
       document.getElementById("current_duty_card").style.display = "flex";
 
-      document.getElementById("location_icon").style.color = "#25456c";
-      document.getElementById("builder_icon").style.color = "#25456c";
-      document.getElementById("timer_icon").style.color = "#25456c";
+      document.getElementById("location_icon").style.color = "var(--mdc-theme-primary)";
+      document.getElementById("builder_icon").style.color = "var(--mdc-theme-primary)";
+      document.getElementById("timer_icon").style.color = "var(--mdc-theme-primary)";
     }
 
     record.header = "CurrentDuty";
@@ -328,9 +328,9 @@ function readallduties(object_of_dates) {
       if (current_month == month) {
         monthCard.style.display = "block";
         document.getElementById("month_card2").style.backgroundColor =
-          "#25456c";
-        document.getElementById("month_card2").style.color = "#ffffff";
-        document.getElementById("arrow").style.color = "#ffffff";
+          "var(--mdc-theme-primary)";
+        document.getElementById("month_card2").style.color = "var(--mdc-theme-on-primary)";
+        document.getElementById("arrow").style.color = "var(--mdc-theme-on-primary)";
       }
 
       if (pre_month == month) {
@@ -379,9 +379,9 @@ function readallduties(object_of_dates) {
 
     if (current_month == month) {
       monthCard.style.display = "block";
-      monthCard.querySelector("#month_card2").style.backgroundColor = "#25456c";
-      monthCard.querySelector("#month_card2").style.color = "#ffffff";
-      monthCard.querySelector("#arrow").style.color = "#ffffff";
+      monthCard.querySelector("#month_card2").style.backgroundColor = "var(--mdc-theme-primary)";
+      monthCard.querySelector("#month_card2").style.color = "var(--mdc-theme-on-primary)";
+      monthCard.querySelector("#arrow").style.color = "var(--mdc-theme-on-primary)";
       monthCard.querySelector("#arrow").style.transform = "rotate(180deg)";
     }
 
@@ -553,13 +553,13 @@ function createDateCard(date, object_of_dates) {
           `;
 
   if (trying == present_date) {
-    card.querySelector("#duty_date2").style.backgroundColor = "#25456c";
-    card.querySelector("#duty_date2").style.color = "#ffffff";
-    card.querySelector("#current_location_icon").style.color = "#25456c";
-    card.querySelector("#current_totaltime_icon").style.color = "#25456c";
-    card.querySelector("#current_timer_icon").style.color = "#25456c";
-    card.querySelector("#h_line").style.color = "#25456c";
-    card.querySelector("#circle").style.backgroundColor = "#25456c";
+    card.querySelector("#duty_date2").style.backgroundColor = "var(--mdc-theme-primary)";
+    card.querySelector("#duty_date2").style.color = "var(--mdc-theme-on-primary)";
+    card.querySelector("#current_location_icon").style.color = "var(--mdc-theme-primary)";
+    card.querySelector("#current_totaltime_icon").style.color = "var(--mdc-theme-primary)";
+    card.querySelector("#current_timer_icon").style.color = "var(--mdc-theme-primary)";
+    card.querySelector("#h_line").style.color = "var(--mdc-theme-primary)";
+    card.querySelector("#circle").style.backgroundColor = "var(--mdc-theme-primary)";
   }
 
   return card;

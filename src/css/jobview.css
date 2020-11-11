@@ -71,7 +71,7 @@ body {
   letter-spacing: 0em;
   text-align: left;
   padding: 8px;
-  color: #25456c;
+  color:var(--mdc-theme-primary);
 }
 
 .total-days-worked {
@@ -93,7 +93,7 @@ body {
 .material-icons-outlined {
   position: relative;
   top: 6px;
-  color: #25456c;
+  color: var(--mdc-theme-primary);
 }
 
 #current_text {

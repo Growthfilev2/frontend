@@ -229,7 +229,7 @@ text-align: left;
   letter-spacing: 0em;
   text-align: left;
   padding: 8px;
-  color: #25456c;
+  color: var(--mdc-theme-primary);
 }
 
 .total-days-worked {
