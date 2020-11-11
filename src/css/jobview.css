@@ -149,7 +149,7 @@ body {
   letter-spacing: 0em;
   text-align: left;
   margin-bottom: 15px;
-  color: #25456c;
+  color: var(--mdc-theme-primary);
 }
 
 #container {

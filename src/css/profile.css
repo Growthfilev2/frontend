@@ -242,9 +242,18 @@ a {
   margin-bottom: 0px;
 }
 
+#employee-list{
+  
+  width: 100%;
+}
+
+
+
 #office_arrow {
-  position: absolute;
-  right: 10px;
+  position: relative;
+  left:  92%;
+  top: -24px;
+
 }
 
 
@@ -309,9 +318,22 @@ a {
   letter-spacing: 0.05em;
 }
 
+#employee_text{
+  display: flex;
+}
+
+#dar_theme{
+  display: flex;
+  width: 100%;
+}
+
+#dark_theme_text{
+  width: 80%;
+}
 .toggle {
-  position: absolute;
-  right: 10px;
+  position: relative;
+  top: 25px;
+  
 }
 
 .switch {
