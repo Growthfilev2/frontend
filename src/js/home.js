@@ -102,29 +102,24 @@ function read() {
     }
 
     if (record.activityId) {
-     
-
       document.getElementById("current_duty_card").style.display = "flex";
-    
+
       document.getElementById("location_icon").style.color = "#25456c";
       document.getElementById("builder_icon").style.color = "#25456c";
-     document.getElementById("timer_icon").style.color = "#25456c";
+      document.getElementById("timer_icon").style.color = "#25456c";
     }
 
-    record.header= "CurrentDuty"
-    
+    record.header = "CurrentDuty";
+
     document
       .getElementById("current_location")
       .addEventListener("click", function (e) {
         e.stopPropagation();
 
-        
         passDuty(record);
       });
-      
-      showDuty_card(record);
 
-    
+    showDuty_card(record);
 
     console.log(record);
 
@@ -138,7 +133,7 @@ function read() {
         "Time: " + moment().format("hh:mm A");
       document.getElementById("finish_location").innerHTML =
         "Location: " + record.attachment.Location.value;
-     // console.log(record.attachment.Location.value);
+      // console.log(record.attachment.Location.value);
     });
 
     document
@@ -148,14 +143,13 @@ function read() {
         const objecstore = tx.objectStore("activity");
         record.finished = true;
         objecstore.put(record);
-        
+
         tx.oncomplete = function () {
           document.getElementById("current_duty_card").style.display = "none";
 
           document.getElementById("blur").style.display = "none";
           document.getElementById("comformation_box").style.display = "none";
-          console.log(record)
-
+          console.log(record);
         };
       });
 
@@ -207,18 +201,17 @@ function readduty() {
     if (cursor.value.isActive == false) {
       cursor.continue();
       return;
-  }
+    }
 
-  if (cursor.value.isActive == false) {
-    cursor.continue();
-    return;
-}
+    if (cursor.value.isActive == false) {
+      cursor.continue();
+      return;
+    }
 
-if (cursor.value.finished == false) {
-  cursor.continue();
-  return;
-}
-
+    if (cursor.value.finished == false) {
+      cursor.continue();
+      return;
+    }
 
     if (!cursor.value.checkins) {
       cursor.continue();
@@ -311,7 +304,6 @@ if (cursor.value.finished == false) {
   };
 }
 
-
 function readallduties(object_of_dates) {
   const keys = Object.keys(object_of_dates);
   let month;
@@ -324,7 +316,7 @@ function readallduties(object_of_dates) {
     const date = keys[i];
     // if month variable is not equal to current month value
     // create a new card
-
+  
     if (month != moment(date, "DD/MM/YYYY").month()) {
       //Created an array to convert number into string
 
@@ -334,37 +326,41 @@ function readallduties(object_of_dates) {
 
       if (current_month == month) {
         monthCard.style.display = "block";
-        document.getElementById("month_card2").style.backgroundColor= "#25456c";
-        document.getElementById("month_card2").style.color= "#ffffff";
-        document.getElementById("arrow").style.color="#ffffff"
-
+        document.getElementById("month_card2").style.backgroundColor =
+          "#25456c";
+        document.getElementById("month_card2").style.color = "#ffffff";
+        document.getElementById("arrow").style.color = "#ffffff";
       }
 
       if (pre_month == month) {
         monthCard.style.display = "block";
-        
       }
 
       one_month = moment(date, "DD/MM/YYYY").format("MMMM");
       curent_year = moment(date, "DD/MM/YYYY").year();
       total_working_day = moment(date, "YYYY-MM").daysInMonth();
-      console.log("total_working_day");
+      
 
       monthCard = createElement("div", {
         className: "month-card",
         style: "display:none;",
+        onclick: "arrow_f()"
       });
 
-      monthCard.innerHTML = ` <div  id="month_card2">
+      monthCard.innerHTML = ` <div  id="month_card2" >
                 <div id="on_card2">
                 <p id="month_date2">${one_month} ${curent_year}</p>
                 
                 <p class="total-days-worked"></p>
-                <span class="material-icons" id="arrow">keyboard_arrow_down</span>
+                
+                <span class="material-icons arrow_class" id="arrow" >keyboard_arrow_down</span>
                 </div>
+               
                 </div>
                 `;
       daysWorkedInMonth = 0;
+     
+
     }
 
     daysWorkedInMonth++;
@@ -377,42 +373,48 @@ function readallduties(object_of_dates) {
       " Days";
 
     month = moment(date, "DD/MM/YYYY").month();
-    
+
     if (current_month == month) {
       monthCard.style.display = "block";
-      monthCard.querySelector("#month_card2").style.backgroundColor= "#25456c";
-      monthCard.querySelector("#month_card2").style.color= "#ffffff";
-      monthCard.querySelector("#arrow").style.color= "#ffffff";
-      monthCard.querySelector("#arrow").style.transform= "rotate(180deg)";
-      
-     
+      monthCard.querySelector("#month_card2").style.backgroundColor = "#25456c";
+      monthCard.querySelector("#month_card2").style.color = "#ffffff";
+      monthCard.querySelector("#arrow").style.color = "#ffffff";
+      monthCard.querySelector("#arrow").style.transform = "rotate(180deg)";
     }
 
     // Converted total work hours in to hours and minuts
 
     const card = createDateCard(date, object_of_dates);
 
+    
     //Expanded first month
-
+   
     monthCard.addEventListener("click", function (e) {
-      // if(document.getElementById("arrow").innerHTML=="keyboard_arrow_down") {
-      //   console.log("down")
-      //   document.getElementById("arrow").innerHTML=="keyboard_arrow_up"
+
+     
+      // if(card.style.display == "flex"){
+      //   document.getElementById("arrow").style.transform = "rotate(0deg)";
+      // }else{
+       document.getElementById("arrow").style.transform = "rotate(180deg)";
       // }
-      
+
+
       if (card.style.display == "flex") {
         card.style.display = "none";
-        monthCard.querySelector("#arrow").style.transform= "rotate(0deg)";
-      
+        document.getElementById("arrow").style.transform = "rotate(0deg)";
+
+       //document.getElementsByClassName("arrow_class")[1].style.transform  = "rotate(0deg)";
+
         return;
       }
       card.style.display = "flex";
-      monthCard.querySelector("#arrow").style.transform= "rotate(180deg)";
-     // document.getElementById("arrow").innerHTML="keyboard_arrow_down"
+
+     
+       
+   //  document.getElementById("arrow").style.transform = "rotate(180deg)";
+     // document.getElementsByClassName("arrow_class")[1].style.transform  = "rotate(180deg)";
+
     });
-
-
-
 
     // Added event listener on Date Card in order to create Sub Duty Divs
     card.addEventListener("click", function (e) {
@@ -420,28 +422,25 @@ function readallduties(object_of_dates) {
 
       if (card.querySelector(".duties-list").childElementCount) {
         card.querySelector(".duties-list").innerHTML = "";
-        card.querySelector("#day_arrow").style.transform= "rotate(0deg)"
+        card.querySelector("#day_arrow").style.transform = "rotate(0deg)";
         return;
       }
 
-      card.querySelector("#day_arrow").style.transform= "rotate(180deg)"
-      
+      card.querySelector("#day_arrow").style.transform = "rotate(180deg)";
+
       // For loop that reads individual duty in the specific [date]
       object_of_dates[date].activities.forEach((j) => {
-        card.querySelector(".duties-list").appendChild(subDuties(j));      
-        card.querySelector("#inner_location_icon").style.color= "#25456c";
-        card.querySelector("#inner_builder_icon").style.color= "#25456c";
-        card.querySelector("#inner_timer_icon").style.color= "#25456c";  
+        card.querySelector(".duties-list").appendChild(subDuties(j));
+        // card.querySelector("#inner_location_icon").style.color= "#25456c";
+        // card.querySelector("#inner_builder_icon").style.color= "#25456c";
+        // card.querySelector("#inner_timer_icon").style.color= "#25456c";
       });
-
-      
-      
     });
 
-   
-
     monthCard.appendChild(card);
+
     
+
     document.getElementById("duties-list").appendChild(monthCard);
 
     var first_month = new Date();
@@ -474,8 +473,6 @@ function readallduties(object_of_dates) {
       show_all_card[i].style.display = "none";
     }
   });
-
-
 }
 
 function createDateCard(date, object_of_dates) {
@@ -484,19 +481,15 @@ function createDateCard(date, object_of_dates) {
     object_of_dates[date].totalHoursWorked
   );
 
-  var trying = moment(date, "DD/MM/YYYY").format("D MM YYYY")
-  console.log(trying)
+  var trying = moment(date, "DD/MM/YYYY").format("D MM YYYY");
   
-    const current_date= new Date();
-    var cd = current_date.getDate();
-    var cm = current_date.getMonth()+1;
-    var cy = current_date.getFullYear();
-    var present_date = cd+" "+cm+" "+cy;
-  console.log(present_date)
- 
 
-
- 
+  const current_date = new Date();
+  var cd = current_date.getDate();
+  var cm = current_date.getMonth() + 1;
+  var cy = current_date.getFullYear();
+  var present_date = cd + " " + cm + " " + cy;
+  
 
   // individual date cards in a date
   const card = createElement("div", {
@@ -514,12 +507,13 @@ function createDateCard(date, object_of_dates) {
             <div id="collapsed_duty2" >
             <p><span id="current_location_icon" class="material-icons-outlined">
             location_on
-            </span><span id="duty_address2">${object_of_dates[
-              date
-            ].totalLocationsString.substring(0, 18)+"..."}  ${
+            </span><span id="duty_address2">${
+              object_of_dates[date].totalLocationsString.substring(0, 18) +
+              "..."
+            }  ${
     object_of_dates[date].totalDuties == 1
       ? " "
-      : "& "+ (object_of_dates[date].totalDuties-1) + " Others"
+      : "& " + (object_of_dates[date].totalDuties - 1) + " Others"
   } </span>
           </p>
           <p>
@@ -549,45 +543,35 @@ function createDateCard(date, object_of_dates) {
           
                 
           `;
-         
-         
-  
-          if(trying==present_date){
 
-            card.querySelector("#duty_date2").style.backgroundColor="#25456c";
-            card.querySelector("#duty_date2").style.color="#ffffff";
-            card.querySelector("#current_location_icon").style.color="#25456c";
-            card.querySelector("#current_totaltime_icon").style.color="#25456c";
-            card.querySelector("#current_timer_icon").style.color="#25456c";
-            card.querySelector("#h_line").style.color="#25456c";
-            card.querySelector("#circle").style.backgroundColor="#25456c";
-        
-          }
+  if (trying == present_date) {
+    card.querySelector("#duty_date2").style.backgroundColor = "#25456c";
+    card.querySelector("#duty_date2").style.color = "#ffffff";
+    card.querySelector("#current_location_icon").style.color = "#25456c";
+    card.querySelector("#current_totaltime_icon").style.color = "#25456c";
+    card.querySelector("#current_timer_icon").style.color = "#25456c";
+    card.querySelector("#h_line").style.color = "#25456c";
+    card.querySelector("#circle").style.backgroundColor = "#25456c";
+  }
 
-          
-         
   return card;
 }
 
-// function addStyle(styles) { 
-              
-//   /* Create style document */ 
-//   var css = document.createElement('style'); 
-//   css.type = 'text/css'; 
+// function addStyle(styles) {
 
-//   if (css.styleSheet)  
-//       css.styleSheet.cssText = styles; 
-//   else  
-//       css.appendChild(document.createTextNode(styles)); 
-    
-//   /* Append style to the tag name */ 
-//   document.getElementsByTagName("head")[0].appendChild(css); 
+//   /* Create style document */
+//   var css = document.createElement('style');
+//   css.type = 'text/css';
+
+//   if (css.styleSheet)
+//       css.styleSheet.cssText = styles;
+//   else
+//       css.appendChild(document.createTextNode(styles));
+
+//   /* Append style to the tag name */
+//   document.getElementsByTagName("head")[0].appendChild(css);
 //   return ""
-// } 
-
-
-
-
+// }
 
 function subDuties(j) {
   var diff = moment
@@ -610,9 +594,9 @@ function subDuties(j) {
   if (j.assignees.length > 1) {
     and = "& ";
     if (j.assignees.length == 2) {
-      other_assignee = +(j.assignees.length-1) + " Other";
+      other_assignee = +(j.assignees.length - 1) + " Other";
     } else {
-      other_assignee = +(j.assignees.length-1) + " Others";
+      other_assignee = +(j.assignees.length - 1) + " Others";
     }
   }
 
@@ -624,8 +608,6 @@ function subDuties(j) {
   collapsed.addEventListener("click", function (e) {
     e.stopPropagation();
     console.log(j);
-
-
 
     passDuty(j);
   });
@@ -827,3 +809,4 @@ function sendPhotoCheckinRequest(request) {
       snacks(error.message);
     });
 }
+
