@@ -17,6 +17,25 @@
   --mdc-theme--warning: yellow;
 }
 
+body.dark {
+  --mdc-theme-primary: #3C99CD;
+  --mdc-theme-secondary: #161616;
+  --mdc-theme-background: #7c909e;
+  --mdc-theme-on-primary: #000000;
+  --mdc-theme-on-secondary: rgb(255, 255, 255);
+  --mdc-theme-text-primary-on-light: #000000;
+  --mdc-theme-text-primary-on-dark: #cccccc;
+  --mdc-theme--error: red;
+  --mdc-theme--success: #20bd20;
+  --mdc-theme--warning: yellow;
+  background: #0B0B0B
+  
+}
+
+.mdc-top-app-bar__row{
+  background-color: var(--mdc-theme-secondary);
+}
+
 html {
   box-sizing: border-box;
   /* height: 100%; */
@@ -61,7 +80,7 @@ a {
 }
 
 .mdc-top-app-bar__row {
-  background-color: rgb(255, 255, 255);
+  background-color: var(--mdc-theme-secondary);
 }
 
 .mdc-top-app-bar__section--align-start {
@@ -78,7 +97,7 @@ a {
   font-weight: 500;
   line-height: 19px;
   letter-spacing: 0em;
-  color: rgba(51, 51, 51, 1);
+  color: var(--mdc-theme-on-secondary)
 }
 
 
@@ -517,3 +536,4 @@ form .fields .mdc-text-field {
 .phonenumber-field {
   padding: 0px;
 }
+

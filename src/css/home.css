@@ -27,7 +27,7 @@ body {
 }
 
 #day_arrow{
-  color:black; 
+  color:var(--mdc-theme-on-secondary); 
   position: relative;
   left: 90%;
   margin-top: -100px;
@@ -39,7 +39,9 @@ body {
   
 }
 
-
+.mdc-top-app-bar__row{
+  background-color: var(--mdc-theme-secondary);
+}
 
 #logo {
   position: absolute;
@@ -178,6 +180,7 @@ text-align: left;
   font-weight: 500;
   line-height: 16px;
   letter-spacing: 0em;
+  color: var(--mdc-theme-on-secondary);
   
 }
 
@@ -251,7 +254,7 @@ text-align: left;
 .material-icons-outlined {
   position: relative;
   top: 6px;
-  color: #333333;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #current_text {
@@ -295,6 +298,11 @@ text-align: left;
   text-decoration: underline;
 }
 
+#home_header{
+  color: var(--mdc-theme-primary);
+}
+
+
 #current_interval {
   font-family: Roboto;
   font-size: 14px;
@@ -302,6 +310,7 @@ text-align: left;
   font-weight: 500;
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #total_time {
@@ -311,6 +320,7 @@ text-align: left;
   font-weight: 500;
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #month_card2 {
@@ -321,7 +331,7 @@ text-align: left;
   height: 63px;
   background-color: var(--mdc-theme-secondary);
   margin-bottom: 5px;
-  color: black;
+  color:var(--mdc-theme-on-secondary);
   box-shadow: 0 0 2px #a7a7a7;
 
 }
@@ -473,6 +483,28 @@ text-align: left;
 #collapsed_duty2 {
   border: 2px solid gainsboro;
   margin-bottom: 5px;
+  color: var(--mdc-theme-secondary);
+}
+
+#duty_date2{
+  color: var(--mdc-theme-on-secondary);
+}
+
+
+#duty_day2{
+  color: var(--mdc-theme-on-secondary);
+}
+
+#duty_address2{
+  color: var(--mdc-theme-on-secondary);
+}
+
+#total_hours2{
+  color: var(--mdc-theme-on-secondary);
+}
+
+#total_duties2{
+  color: var(--mdc-theme-on-secondary);
 }
 
 #expended_duty2 {
@@ -488,7 +520,7 @@ text-align: left;
 
 #duty_date2 {
  
-  color: black;
+  color: var(--mdc-theme-on-secondary);
   border-radius: 50%;
   height: 48px;
   width: 48px;

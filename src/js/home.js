@@ -535,7 +535,7 @@ function createDateCard(date, object_of_dates) {
               "h " +
               day_total_time.minutes() +
               "m"
-            }</span>&nbsp&nbsp&nbsp <span id="current_totaltime_icon" class="material-icons">
+            }</span>&nbsp&nbsp&nbsp <span id="current_totaltime_icon" class="material-icons-outlined">
             work_outline
               </span><span id="total_duties2"> ${
                 object_of_dates[date].totalDuties

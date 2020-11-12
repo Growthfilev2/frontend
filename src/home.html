@@ -33,7 +33,7 @@
     <p class="success-text mdc-theme--primary"></p>
   </div>
   <header class="mdc-top-app-bar  mdc-top-app-bar--dense" id="home-header">
-    <div class="mdc-top-app-bar__row">
+    <div id="top_header_bar" class="mdc-top-app-bar__row">
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
         <span class="mdc-top-app-bar__title">OnDuty</span>
       </section>
@@ -48,7 +48,7 @@
     <div class="app-bar--extra full-width">
       <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Camera"
         id="photo-upload-btn">add_a_photo</button>
-      <div class="mdc-top-app-bar__title text-center mdc-theme--primary">Home</div>
+      <div class="mdc-top-app-bar__title text-center" id="home_header">Home</div>
     </div>
   </header>
   <div id="app-current-panel" class="mdc-top-app-bar--fixed-adjust extra--adjust">
@@ -60,7 +60,7 @@
           &nbsp<span class="mdc-theme--primary" id="current_location"></span>
         </p>
         <p id="checkin_time">
-          <span id="builder_icon" class="material-icons-outlined"> query_builder </span>&nbsp
+          <span id="builder_icon" class="material-icons-outlined"> query_builder</span>&nbsp
           &nbsp<span id="current_interval">
             <span id="starting_time">00:</span>-
             <span id="ending_time">(On Going)</span></span>

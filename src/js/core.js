@@ -1387,7 +1387,7 @@ function showDuty_card(dutycard_details){
   document.getElementById("current_location").innerHTML =
       dutycard_details.attachment.Location.value;
     console.log(dutycard_details);
-    document.getElementById("starting_time").innerHTML = moment(
+    document.getElementById("starting_time").innerHTML =moment(
       dutycard_details.schedule[0].startTime
     ).format("hh:mm A");
 
@@ -1429,4 +1429,13 @@ function showDuty_card(dutycard_details){
     }
 
     document.getElementById("assignees_pic").src = dutycard_details.assignees[0].photoURL;
+    
 }
+
+
+
+
+document.addEventListener('DOMContentLoaded', (event) => {
+  ((localStorage.getItem('mode')) === 'dark') ? document.querySelector('body').classList.add('dark') : document.querySelector('body').classList.remove('dark')
+  
+})
