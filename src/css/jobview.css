@@ -52,6 +52,10 @@ body {
   box-shadow: 0 0 2px #a7a7a7;
 }
 
+#backicon{
+  color: var(--mdc-theme-on-secondary);
+}
+
 #header_date {
   font-family: Roboto;
   font-size: 16px;
@@ -96,6 +100,9 @@ body {
   color: var(--mdc-theme-primary);
 }
 
+
+
+
 #current_text {
   width: 100%;
 }
@@ -107,6 +114,7 @@ body {
   font-weight: 500;
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #current_interval {
@@ -116,6 +124,7 @@ body {
   font-weight: 500;
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #total_time {
@@ -125,6 +134,7 @@ body {
   font-weight: 500;
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #checkin_box {
@@ -166,9 +176,7 @@ body {
   box-shadow: 0 0 2px #a7a7a7;
 }
 
-.containers {
-  
-}
+
 
 #upload_pics {
   width: 88%;
@@ -195,6 +203,7 @@ body {
     margin-top: 5px;
   float: left;
   margin-left: 5px;
+  color: var(--mdc-theme-primary);
 
 }
 
@@ -209,7 +218,7 @@ font-style: normal;
 font-weight: 500;
 line-height: 12px;
 letter-spacing: 0em;
-
+color: black;
 
 }
 
@@ -222,8 +231,9 @@ letter-spacing: 0em;
   font-weight: 500;
   line-height: 16px;
   letter-spacing: 0em;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #time{
-  
+  color: var(--mdc-theme-on-secondary);
 }

@@ -33,7 +33,7 @@ a{
 }
 
 #backicon{
-  color:rgb(0, 0, 0);
+  color: var(--mdc-theme-on-secondary);
 }
 
 .mdc-top-app-bar__title{

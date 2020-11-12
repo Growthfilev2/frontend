@@ -10,3 +10,7 @@
     color: #4F4F4F;
     margin-left: 19%;
 }
+
+#backicon {
+    color: var(--mdc-theme-on-secondary);
+  }

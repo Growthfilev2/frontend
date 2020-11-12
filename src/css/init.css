@@ -24,8 +24,12 @@
 .loading-text{
  width: 100%;
  margin-left: -13px;
+ color: var(--mdc-theme-on-secondary);
 }
 
+.loading-text--headline{
+  color: var(--mdc-theme-on-secondary);
+}
 
 
 

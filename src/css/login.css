@@ -1,5 +1,6 @@
 html, body {
     height: 100%;
+    overflow: hidden;
   }
   
   *{
@@ -37,6 +38,7 @@ html, body {
   letter-spacing: 0em;
   text-align: center;
   margin-bottom: 7.34%;
+  color: var(--mdc-theme-on-secondary);
   }
   
   #login_section{
@@ -48,14 +50,14 @@ html, body {
   
 
   #phoneNumber:focus{
-    outline-color: #25456C;
+    outline-color: var(--mdc-theme-primary);
   }
 
 
   #phoneNumber{
     height: 56px;
-    background: none;
-    border: 1px solid #25456C;
+    background: white;
+    border: 1px solid var(--mdc-theme-primary);
     box-shadow: 0px 1px 1px 0px rgba(0, 0, 0,0.3);
     font-size: 16px;
     font-weight: bold;
@@ -83,6 +85,7 @@ font-weight: 500;
 line-height: 15px;
 letter-spacing: 0em;
 text-align: center;
+color: var(--mdc-theme-on-secondary);
 
   
   }
@@ -93,7 +96,7 @@ text-align: center;
     background: #ffffff;
    margin-top: 15px;
   font-style: normal;
-  border: 1px solid #25456C;
+  border: 1px solid var(--mdc-theme-primary);
   font-size: 18px;
   color: #25456C;
   
@@ -102,11 +105,11 @@ text-align: center;
 
 
 .otp_number:focus{
-  outline-color: #25456C;
+  outline-color: var(--mdc-theme-primary);
 }
   #sign-in-button:focus {
     outline: -webkit-focus-ring-color auto 1px;
-    outline-color: #25456C;
+    outline-color: var(--mdc-theme-primary);
     outline-style: auto;
     outline-width: 1px;
 }
@@ -114,10 +117,10 @@ text-align: center;
   #sign-in-button{
     height: 56px;
     width: 284px;
-    background: #25456C;
+    background: var(--mdc-theme-primary);
    margin-top: 15px;
   font-style: normal;
-  border: 1px solid #25456C;
+  border: 1px solid var(--mdc-theme-primary);
   font-size: 18px;
   color: white;
   }
@@ -143,7 +146,7 @@ text-align: center;
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0em;
-  color: #767272;
+  color: var(--mdc-theme-on-secondary);
   margin-top: 12px;
   }
   
@@ -158,7 +161,7 @@ text-align: center;
   width: 46.86px;
   height: 46.86px;
   background: #FDFDFD;
-  border: 1px solid #25456C;
+  border: 1px solid var(--mdc-theme-primary);
   box-sizing: border-box;
   border-radius: 2px;
   text-align: center;
@@ -181,7 +184,7 @@ text-align: center;
   
   text-align: center;
   
-  color: #25456C;
+  color: var(--mdc-theme-primary);
   }
 
   .resend{
@@ -190,12 +193,12 @@ text-align: center;
   }
   
   .change_number{
-    color: #25456C;
+    color: var(--mdc-theme-primary);
   }
 
   a{
     text-decoration: none;
-    color:  #25456C;
+    color:  var(--mdc-theme-primary);
   }
 
   .material-icons{
