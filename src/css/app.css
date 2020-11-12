@@ -15,6 +15,8 @@
   --mdc-theme--error: red;
   --mdc-theme--success: #20bd20;
   --mdc-theme--warning: yellow;
+  --profile-gray--text: #3d3c3c;
+  --line: #0000001a;
 }
 
 body.dark {
@@ -28,6 +30,8 @@ body.dark {
   --mdc-theme--error: red;
   --mdc-theme--success: #20bd20;
   --mdc-theme--warning: yellow;
+  --profile-gray--text: #b1adad;
+  --line: #f5efef1a;
   background: #0B0B0B
   
 }
