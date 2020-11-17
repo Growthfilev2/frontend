@@ -38,8 +38,8 @@
     <form id="form-account">
       <div class="fields">
         <div class="form-field">
-          <label class="mdc-text-field mdc-text-field--outlined" id="acct-number" data-mdc-auto-init="MDCTextField">
-            <input type="text" class="mdc-text-field__input" aria-labelledby="my-label-id" required>
+          <label class="mdc-text-field mdc-text-field--outlined"  id="acct-number" data-mdc-auto-init="MDCTextField">
+            <input type="text" class="mdc-text-field__input" style="color: var(--mdc-theme-on-secondary)" aria-labelledby="my-label-id" required>
             <span class="mdc-notched-outline">
               <span class="mdc-notched-outline__leading"></span>
               <span class="mdc-notched-outline__notch">
@@ -103,8 +103,11 @@
           <label class="mdc-text-field mdc-text-field--outlined mdc-text-field--no-label phonenumber-field"
           data-mdc-auto-init="MDCTextField" id="phone-field-mdc">
             <input class="mdc-text-field__input" required type="tel" id="phonenumber">
-            <span class="mdc-notched-outline mdc-notched-outline--no-label">
+            <span class="mdc-notched-outline">
               <span class="mdc-notched-outline__leading"></span>
+              <span class="mdc-notched-outline__notch">
+                <span class="mdc-floating-label" id="my-label-id">Phone Number</span>
+              </span>
               <span class="mdc-notched-outline__trailing"></span>
             </span>
           </label>

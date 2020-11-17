@@ -45,9 +45,7 @@
     color: var(--mdc-theme-primary);
 }
 
-#aadhar-number{
-    color: var(--mdc-theme-primary);
-}
+
 
 .mdc-button__label{
     color: white; 
@@ -56,3 +54,7 @@
 .info_text{
     color: var(--mdc-theme-on-secondary);
 }
+
+#my-label-id{
+    color: var(--mdc-theme-on-secondary)
+  }
