@@ -1347,7 +1347,7 @@ const loadNearByLocations = (o, location) => {
       cursor.continue();
     }
     tx.oncomplete = function () {
-      return resolve(result);
+      return resolve([]);
     }
   })
 }
