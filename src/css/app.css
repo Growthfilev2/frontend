@@ -19,6 +19,21 @@
   --line: #0000001a;
 }
 
+body.light{
+  --mdc-theme-primary: #184466;
+  --mdc-theme-secondary: #ffffff;
+  --mdc-theme-background: #7c909e;
+  --mdc-theme-on-primary: #ffffff;
+  --mdc-theme-on-secondary: black;
+  --mdc-theme-text-primary-on-light: #ffffff;
+  --mdc-theme-text-primary-on-dark: #cccccc;
+  --mdc-theme--error: red;
+  --mdc-theme--success: #20bd20;
+  --mdc-theme--warning: yellow;
+  --profile-gray--text: #3d3c3c;
+  --line: #0000001a;
+}
+
 body.dark {
   --mdc-theme-primary: #3C99CD;
   --mdc-theme-secondary: #161616;
