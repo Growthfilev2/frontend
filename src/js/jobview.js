@@ -28,7 +28,7 @@ window.addEventListener("load", (ev) => {
     "DD MMMM YYYY"
   );
 
- sessionStorage.clear();
+ 
 });
 
 function checkins_box(duty) {
