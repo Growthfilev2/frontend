@@ -104,9 +104,7 @@ function getCurrentJob() {
                 return
             };
 
-            if (cursor.value.finished == false) {
-                return;
-            }
+          
             
             if (cursor.value.isActive == false) {
                 cursor.continue();

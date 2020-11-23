@@ -7,6 +7,18 @@
     font-size: 14px;
     line-height: 14px;
     /* letter-spacing: 0.02em; */
-    color: #4F4F4F;
+    color: var(--profile-gray--text);
     margin-left: 19%;
 }
+
+#backicon {
+    color: var(--mdc-theme-on-secondary);
+  }
+
+#my-label-id{
+    color: var(--mdc-theme-on-secondary)
+  }
+
+.material-icons, .mdc-list-item__text, .mdc-list-item__secondary-text, .inline-flex{
+color: var(--mdc-theme-on-secondary);
+  }

@@ -22,6 +22,7 @@ document.getElementById('file').addEventListener('change', (ev) => {
 })
 
 window.addEventListener("load", (ev) => {
+  localStorage.getItem('mode') === 'dark' ? document.getElementById("toggle_theme").innerHTML="Light Theme" : document.getElementById("toggle_theme").innerHTML="Dark Theme";
   firebase.auth().onAuthStateChanged((user) => {
     loadProfileData(user)
   });
@@ -117,3 +118,8 @@ const calculateProfileVerification = (rootRecord) => {
   return ((fields.filter(value => value).length / fields.length) * 100).toFixed(0)
 }
 
+document.querySelector("#darkTheme").addEventListener("click", function(e){
+  localStorage.setItem('mode', (localStorage.getItem('mode') || 'dark') === 'dark' ? 'light' : 'dark');
+  localStorage.getItem('mode') === 'dark' ? document.querySelector('body').classList.add('dark') : document.querySelector('body').classList.remove('dark') 
+  localStorage.getItem('mode') === 'dark' ? document.getElementById("toggle_theme").innerHTML="Light Theme" : document.getElementById("toggle_theme").innerHTML="Dark Theme"
+})

@@ -1382,12 +1382,20 @@ function passDuty(duty_array){
 
 function showDuty_card(dutycard_details){
 
+
+
   document.getElementById("current_location").innerHTML =
       dutycard_details.attachment.Location.value;
     console.log(dutycard_details);
-    document.getElementById("starting_time").innerHTML = moment(
+    document.getElementById("starting_time").innerHTML =moment(
       dutycard_details.schedule[0].startTime
     ).format("hh:mm A");
+
+    if(dutycard_details.header != "CurrentDuty"){
+    document.getElementById("ending_time").innerHTML = moment(
+      dutycard_details.schedule[0].endTime
+    ).format("hh:mm A");
+  }
 
     if (dutycard_details.schedule[0].endTime !== dutycard_details.schedule[0].startTime) {
       document
@@ -1413,12 +1421,21 @@ function showDuty_card(dutycard_details){
     if (dutycard_details.assignees.length > 1) {
       if (dutycard_details.assignees.length == 2) {
         document.getElementById("other_assignees").innerHTML =
-          "  &" + dutycard_details.assignees.length - 1 + "Other";
+          "  & " + (dutycard_details.assignees.length - 1) + " Other";
       } else {
         document.getElementById("other_assignees").innerHTML =
-          "  &" + dutycard_details.assignees.length - 1 + "Others";
+          "  & " + (dutycard_details.assignees.length - 1) + " Others";
       }
     }
 
     document.getElementById("assignees_pic").src = dutycard_details.assignees[0].photoURL;
+    
 }
+
+
+
+
+document.addEventListener('DOMContentLoaded', (event) => {
+  ((localStorage.getItem('mode')) === 'dark') ? document.querySelector('body').classList.add('dark') : document.querySelector('body').classList.remove('dark')
+  
+})

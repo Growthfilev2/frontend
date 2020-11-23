@@ -25,7 +25,7 @@
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0.05em;
-  color: rgba(0, 0, 0, 1);
+  color: var(--mdc-theme-on-secondary);
 }
 
 .info_value {
@@ -37,7 +37,7 @@
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0.05em;
-  color: rgba(61, 60, 60, 1);
+  color: var(--profile-gray--text);
 }
 
 .details_div {
@@ -48,4 +48,12 @@
 
 #edit_profile {
   display: none;
+}
+
+#backicon{
+  color: var(--mdc-theme-on-secondary);
+}
+
+.material-icons{
+  color: var(--mdc-theme-primary);
 }

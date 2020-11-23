@@ -11,3 +11,7 @@
 form .form-field {
   margin-bottom: 25px;
 }
+
+#backicon{
+  color: var(--mdc-theme-on-secondary);
+}
