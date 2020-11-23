@@ -1,5 +1,4 @@
 
-
 .profile-section {
   border-bottom: solid 1px var(--line);
   width: 100%;
@@ -23,6 +22,8 @@
 #backicon{
 color: var(--mdc-theme-on-secondary);
 }
+
+
 
 
 #picsum i {
