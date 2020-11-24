@@ -494,6 +494,9 @@ a {
 /** floating label **/
 .mdc-floating-label.mdc-floating-label--float-above {
   color: var(--mdc-theme-primary) !important;
+  background-color: var(--background-color) ;
+  margin-right: -3px;
+  margin-left: -2px;
 }
 
 /** form **/
@@ -553,11 +556,17 @@ form .fields .mdc-text-field {
   padding: 0px;
 }
 
-.mdc-text-field, .mdc-text-field--focused{
+.mdc-text-field{
   border: 1px solid var(--mdc-theme-on-secondary);
 }
+
+
 
 .mdc-text-field--label-floating, .mdc-text-field--invalid{
   border: 1px solid transparent;
 }
 
+.mdc-text-field--outlined{
+  border: 1px solid var(--mdc-theme-primary);
+  border-radius: 4.5px;
+  }
