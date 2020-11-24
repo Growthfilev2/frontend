@@ -495,8 +495,9 @@ a {
 .mdc-floating-label.mdc-floating-label--float-above {
   color: var(--mdc-theme-primary) !important;
   background-color: var(--background-color) ;
-  margin-right: -3px;
-  margin-left: -2px;
+  margin-left: 7px;
+  
+
 }
 
 /** form **/
@@ -562,8 +563,9 @@ form .fields .mdc-text-field {
 
 
 
-.mdc-text-field--label-floating, .mdc-text-field--invalid{
-  border: 1px solid transparent;
+
+.mdc-text-field--invalid{
+border: hidden;
 }
 
 .mdc-text-field--outlined{
