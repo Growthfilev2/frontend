@@ -26,3 +26,13 @@ color: var(--mdc-theme-on-secondary);
   #submit-btn{
     color: var(--mdc-theme-primary);
   }
+
+  .iti__selected-dial-code{
+    color: var(--mdc-theme-on-secondary);
+  }
+
+  .mdc-text-field__input{
+    border: 1px solid var(--mdc-theme-on-secondary);
+  }
+
+  

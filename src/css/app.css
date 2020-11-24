@@ -78,7 +78,7 @@ html {
 
 .mdc-fab,
 .mdc-button--raised {
-  background-color: #103153 !important;
+  background-color: var (--mdc-theme-primary) !important;
   color: var(--mdc-theme-on-primary) !important;
   z-index: 1;
 }
@@ -551,5 +551,13 @@ form .fields .mdc-text-field {
 
 .phonenumber-field {
   padding: 0px;
+}
+
+.mdc-text-field, .mdc-text-field--focused{
+  border: 1px solid var(--mdc-theme-on-secondary);
+}
+
+.mdc-text-field--label-floating, .mdc-text-field--invalid{
+  border: 1px solid transparent;
 }
 
