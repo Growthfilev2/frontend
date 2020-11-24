@@ -15,3 +15,11 @@ form .form-field {
 #backicon{
   color: var(--mdc-theme-on-secondary);
 }
+
+.mdc-button--raised {
+  background-color: var (--mdc-theme-primary);
+}
+
+.mdc-button__label{
+  color: var(--mdc-theme-on-secondary);
+}

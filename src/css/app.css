@@ -78,7 +78,7 @@ html {
 
 .mdc-fab,
 .mdc-button--raised {
-  background-color: #103153 !important;
+  background-color: var (--mdc-theme-primary) !important;
   color: var(--mdc-theme-on-primary) !important;
   z-index: 1;
 }
@@ -494,6 +494,10 @@ a {
 /** floating label **/
 .mdc-floating-label.mdc-floating-label--float-above {
   color: var(--mdc-theme-primary) !important;
+  background-color: var(--background-color) ;
+  margin-left: 7px;
+  
+
 }
 
 /** form **/
@@ -553,3 +557,18 @@ form .fields .mdc-text-field {
   padding: 0px;
 }
 
+.mdc-text-field{
+  border: 1px solid var(--mdc-theme-on-secondary);
+}
+
+
+
+
+.mdc-text-field--invalid{
+border: hidden;
+}
+
+.mdc-text-field--outlined{
+  border: 1px solid var(--mdc-theme-primary);
+  border-radius: 4.5px;
+  }
