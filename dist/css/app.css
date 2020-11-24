@@ -15,6 +15,41 @@
   --mdc-theme--error: red;
   --mdc-theme--success: #20bd20;
   --mdc-theme--warning: yellow;
+  --profile-gray--text: #3d3c3c;
+  --line: #0000001a;
+  --mdc-theme-header: #184466;
+  --background-color: #ffffff;
+}
+
+body.dark {
+  --mdc-theme-primary: #57b1e0;
+  --mdc-theme-secondary: #16202C;
+  --mdc-theme-background: #7c909e;
+  --mdc-theme-on-primary: #000000;
+  --mdc-theme-on-secondary: rgb(255, 255, 255);
+  --mdc-theme-text-primary-on-light: #000000;
+  --mdc-theme-text-primary-on-dark: #cccccc;
+  --mdc-theme--error: red;
+  --mdc-theme--success: #20bd20;
+  --mdc-theme--warning: yellow;
+  --profile-gray--text: #b1adad;
+  --line: #f5efef1a;
+  --background-color: #16202C;
+  background-color: #16202C;
+  --mdc-theme-header: #ffffff;
+  
+}
+
+body.light{
+  --mdc-theme-primary: #184466;
+  --mdc-theme-secondary: #ffffff;
+  --mdc-theme-on-secondary: black;
+  --profile-gray--text: #3d3c3c;
+ 
+}
+
+.mdc-top-app-bar__row{
+  background-color: var(--mdc-theme-secondary);
 }
 
 html {
@@ -43,7 +78,7 @@ html {
 
 .mdc-fab,
 .mdc-button--raised {
-  background-color: #103153 !important;
+  background-color: var (--mdc-theme-primary) !important;
   color: var(--mdc-theme-on-primary) !important;
   z-index: 1;
 }
@@ -61,7 +96,7 @@ a {
 }
 
 .mdc-top-app-bar__row {
-  background-color: rgb(255, 255, 255);
+  background-color: var(--mdc-theme-secondary);
 }
 
 .mdc-top-app-bar__section--align-start {
@@ -78,7 +113,7 @@ a {
   font-weight: 500;
   line-height: 19px;
   letter-spacing: 0em;
-  color: rgba(51, 51, 51, 1);
+  color: var(--mdc-theme-on-secondary)
 }
 
 
@@ -459,6 +494,10 @@ a {
 /** floating label **/
 .mdc-floating-label.mdc-floating-label--float-above {
   color: var(--mdc-theme-primary) !important;
+  background-color: var(--background-color) ;
+  margin-left: 7px;
+  
+
 }
 
 /** form **/
@@ -498,16 +537,16 @@ form .fields .mdc-text-field {
 
 
 /** iti **/
-.iti__flag {
+/* .iti__flag {
   background-image: url("../img/webp/flags.webp"), url("../img/flags.png");
-}
+} */
 
-@media (-webkit-min-device-pixel-ratio: 2),
+/* @media (-webkit-min-device-pixel-ratio: 2),
 (min-resolution: 192dpi) {
   .iti__flag {
     background-image: url("../img/webp/flags@2x.webp"), url("../img/flags@2x.png");
   }
-}
+} */
 
 .mdc-text-field .iti {
   width: 100%;
@@ -517,3 +556,19 @@ form .fields .mdc-text-field {
 .phonenumber-field {
   padding: 0px;
 }
+
+.mdc-text-field{
+  border: 1px solid var(--mdc-theme-on-secondary);
+}
+
+
+
+
+.mdc-text-field--invalid{
+border: hidden;
+}
+
+.mdc-text-field--outlined{
+  border: 1px solid var(--mdc-theme-primary);
+  border-radius: 4.5px;
+  }

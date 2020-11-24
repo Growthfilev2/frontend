@@ -19,7 +19,6 @@ window.addEventListener("load", function (ev) {
   var Header = moment(jobview_duty.timestamp); // 1
 
   document.getElementById("header_date").innerHTML = Header.format("DD MMMM YYYY");
-  sessionStorage.clear();
 });
 
 function checkins_box(duty) {
