@@ -1436,6 +1436,15 @@ function showDuty_card(dutycard_details){
 
 
 document.addEventListener('DOMContentLoaded', (event) => {
-  ((localStorage.getItem('mode')) === 'dark') ? document.querySelector('body').classList.add('dark') : document.querySelector('body').classList.remove('dark')
   
+  
+  if (localStorage.getItem('mode') === 'dark') {
+    document.querySelector('body').classList.add('dark')
+    document.querySelector('body').classList.remove('light')
+
+  }else{
+    document.querySelector('body').classList.remove('dark')
+    
+  }
+
 })

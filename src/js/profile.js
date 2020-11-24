@@ -1,3 +1,5 @@
+
+
 let db;
 const logout = document.getElementById("logout");
 
@@ -22,7 +24,16 @@ document.getElementById('file').addEventListener('change', (ev) => {
 })
 
 window.addEventListener("load", (ev) => {
-  localStorage.getItem('mode') === 'dark' ? document.getElementById("toggle_theme").innerHTML="Light Theme" : document.getElementById("toggle_theme").innerHTML="Dark Theme";
+
+  if (localStorage.getItem('mode') === 'dark') {
+    
+    document.getElementById("darkTheme").checked = true;
+
+  }else{
+    document.querySelector('body').classList.remove('dark');
+    
+  }
+
   firebase.auth().onAuthStateChanged((user) => {
     loadProfileData(user)
   });
@@ -119,7 +130,19 @@ const calculateProfileVerification = (rootRecord) => {
 }
 
 document.querySelector("#darkTheme").addEventListener("click", function(e){
-  localStorage.setItem('mode', (localStorage.getItem('mode') || 'dark') === 'dark' ? 'light' : 'dark');
-  localStorage.getItem('mode') === 'dark' ? document.querySelector('body').classList.add('dark') : document.querySelector('body').classList.remove('dark') 
-  localStorage.getItem('mode') === 'dark' ? document.getElementById("toggle_theme").innerHTML="Light Theme" : document.getElementById("toggle_theme").innerHTML="Dark Theme"
+
+ 
+
+  localStorage.setItem('mode', (localStorage.getItem('mode')) === 'dark' ? 'light' : 'dark');
+
+  if (localStorage.getItem('mode') === 'dark') {
+    document.querySelector('body').classList.add('dark');
+    document.getElementById("darkTheme").checked = true;
+
+  }else{
+    document.querySelector('body').classList.remove('dark');
+    
+  }
+
+
 })

@@ -22,3 +22,7 @@
 .material-icons, .mdc-list-item__text, .mdc-list-item__secondary-text, .inline-flex{
 color: var(--mdc-theme-on-secondary);
   }
+
+  #submit-btn{
+    color: var(--mdc-theme-primary);
+  }
