@@ -1334,7 +1334,7 @@ var loadNearByLocations = function loadNearByLocations(o, location) {
     };
 
     tx.oncomplete = function () {
-      return resolve([]);
+      return resolve(result);
     };
   });
 };
