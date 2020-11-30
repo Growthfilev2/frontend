@@ -36,7 +36,7 @@ const files = ['/v3/',
     'external/img/flags@2x.png',
     'external/css/intlTelInput.css',
 ]
-const staticCacheName = 'pages-cache-v604';
+const staticCacheName = 'pages-cache-v500';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
