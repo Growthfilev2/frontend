@@ -1451,8 +1451,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 function handleQRUrl(url) {
   console.log(url);
-  firebase.auth().currentUser.getIdToken().then(results => {
-    const token = results[0];
+  firebase.auth().currentUser.getIdToken().then(token => {
     if (_native.getName() === 'Android') {
       AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
       return
