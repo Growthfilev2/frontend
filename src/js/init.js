@@ -104,6 +104,12 @@ function getDynamicLink(link) {
   deepLink = new URLSearchParams(url.search);
 }
 
+/** To be removed in next ios release */
+function parseDynamicLink(link) {
+  const url = new URL(link);
+  deepLink = new URLSearchParams(url.search);
+}
+
 /**
  * 
  * @param {string} componentValue 
@@ -281,7 +287,7 @@ function regulator() {
 
     prom.then(function () {
         if (!queryLink) return Promise.resolve();
-
+          
         if (queryLink.get('action') === 'get-subscription') {
           loadScreen('adding-to-office');
           document.querySelector('#adding-to-office .loading-text--headline').textContent = 'Adding you to ' + queryLink.get('office');

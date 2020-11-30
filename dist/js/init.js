@@ -99,6 +99,13 @@ function getDynamicLink(link) {
   var url = new URL(link);
   deepLink = new URLSearchParams(url.search);
 }
+/** To be removed in next ios release */
+
+
+function parseDynamicLink(link) {
+  var url = new URL(link);
+  deepLink = new URLSearchParams(url.search);
+}
 /**
  * 
  * @param {string} componentValue 

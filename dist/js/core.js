@@ -1402,3 +1402,15 @@ document.addEventListener('DOMContentLoaded', function (event) {
     document.querySelector('body').classList.remove('dark');
   }
 });
+
+function handleQRUrl(url) {
+  console.log(url);
+  firebase.auth().currentUser.getIdToken().then(function (results) {
+    var token = results[0];
+
+    if (_native.getName() === 'Android') {
+      AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
+      return;
+    }
+  });
+}

@@ -473,9 +473,6 @@ function subDuties(j) {
 }
 
 function openCamera() {
-  history.pushState(null, null, "/upload-photo"); // setFilePath(firebase.auth().currentUser.photoURL);
-  // return
-
   if (_native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return;
@@ -493,6 +490,11 @@ function setFilePath(base64) {
     subscriptionRetry: 0,
     invalidRetry: 0
   };
+
+  if (window.location.pathname.split("/").indexOf('upload-photo') == -1) {
+    history.pushState(null, null, "/upload-photo");
+  }
+
   var url = "data:image/jpg;base64,".concat(base64); // const url = firebase.auth().currentUser.photoURL;
   // const url = base64
 
@@ -524,7 +526,6 @@ function sendPhotoCheckinRequest(request) {
   sub.attachment.Photo.value = url || "";
   sub.attachment.Comment.value = textValue;
   sub.share = [];
-  history.back();
   request.btn.classList.add("in-progress");
   requestCreator("create", fillVenueInSub(sub, ApplicationState.venue), ApplicationState.location).then(function () {
     request.btn.classList.remove("in-progress");
