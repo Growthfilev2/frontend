@@ -134,12 +134,13 @@ a {
   line-height: 16px;
   letter-spacing: -0.01em;
   margin-left: 11px;
-  color: rgba(61, 60, 60, 1);
+  color: var(--mdc-theme-on-secondary);
   width: 88%;
 }
 
 .percentage {
   margin-left: auto;
+  color: var(--mdc-theme-on-secondary);
 }
 
 #profile_percentage {
@@ -168,6 +169,12 @@ a {
   background: var(--mdc-theme-primary);
   height: 6px;
   width: 0%;
+ 
+}
+
+#progress_background{
+  border: 1px solid var(--mdc-theme-on-secondary);
+  border-radius: 10px;
   margin-bottom: 10px
 }
 

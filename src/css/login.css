@@ -20,6 +20,12 @@ html, body {
               font-family: 'Roboto';
               
   }
+
+  #upper_logo{
+    position: absolute;
+    right: 10px;
+    top: 10px;
+  }
   
   .wrapper{
     position: absolute;
