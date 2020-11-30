@@ -403,6 +403,17 @@ color: var(--mdc-theme-on-secondary);
   
 }
 
+.mdc-typography--caption, .mdc-typography--subtitle1, .mdc-typography--subtitle2{
+  color: var(--mdc-theme-on-secondary);
+}
+
+
+
+
+.mdc-button__label{
+  color: white;
+}
+
 #date_day2 {
   height: 100%;
   padding-left: 16px;
@@ -478,6 +489,7 @@ color: var(--mdc-theme-on-secondary);
 
 #description_box{
   height: 50px;
+  color: var(--mdc-theme-on-secondary);
 }
 
 .material-icons {
