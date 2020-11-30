@@ -1451,8 +1451,25 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 function handleQRUrl(url) {
   console.log(url);
-  firebase.auth().currentUser.getIdToken().then(results => {
-    const token = results[0];
+  // getRootRecord().then(function (rootRecord) {
+  //   const timestamp = fetchCurrentTime(rootRecord.serverTime)
+
+  //   const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
+  //   copy.share = [];
+  //   copy.timestamp = timestamp;
+
+  //   requestCreator('create', fillVenueInSub(copy, ''), ApplicationState.location).then(function () {
+  //     // removeScreen()
+  //     // successDialog('Check-In Created')
+  //     ApplicationState.venue = ''
+  //     ApplicationState.selectedOffice = office;
+  //     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+  //     // initProfileView();
+  //   });
+  // })
+
+  // createUnkownCheckIn(ApplicationState.location,true)
+  firebase.auth().currentUser.getIdToken().then(token => {
     if (_native.getName() === 'Android') {
       AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
       return

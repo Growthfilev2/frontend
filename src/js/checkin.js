@@ -81,12 +81,18 @@ function mapView(location) {
     })
 }
 
-function createUnkownCheckIn(geopoint) {
+function createUnkownCheckIn(geopoint,multipleOffice) {
     // document.getElementById("app-header").classList.add('hidden')
     const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
     ApplicationState.knownLocation = false;
     if (offices.length == 1) {
         generateRequestForUnknownCheckin(offices[0], geopoint)
+        return
+    }
+    if(multipleOffice) {
+        offices.forEach(office=>{
+            generateRequestForUnknownCheckin(office, geopoint)
+        })
         return
     }
     const officeCard = bottomCard('Choose office');
