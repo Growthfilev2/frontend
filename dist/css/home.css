@@ -300,6 +300,7 @@ color: var(--mdc-theme-on-secondary);
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
   text-decoration: underline;
+  color: var(--mdc-theme-on-secondary);
  
 }
 

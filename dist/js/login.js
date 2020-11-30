@@ -15,6 +15,7 @@ window.addEventListener('load', function () {
     document.querySelector('body').style.width = "100%";
     document.querySelector('body').style.height = "100%";
     document.querySelector('body').style.backgroundPosition = "fixed";
+    document.getElementById("logo_dark").src = "img/logo_login_dark.svg";
   }
 
   firebase.auth().onAuthStateChanged(function (user) {

@@ -20,7 +20,19 @@ navigator.serviceWorker.onmessage = function (event) {
   })) {
     if (document.getElementById("duties-list")) {
       document.getElementById("duties-list").innerHTML = "";
-      readduty();
+      firebase.auth().onAuthStateChanged(function (user) {
+        var dbName = firebase.auth().currentUser.uid;
+        var request = window.indexedDB.open(dbName, DB_VERSION);
+
+        request.onerror = function (event) {
+          console.log("Why didn't you allow my web app to use IndexedDB?!");
+        };
+
+        request.onsuccess = function (event) {
+          db = event.target.result;
+          readduty();
+        };
+      });
     }
   }
 
