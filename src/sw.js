@@ -84,7 +84,7 @@ self.addEventListener('fetch', (event) => {
             // console.log('Network request for ', event.request.url);
             return fetch(event.request).then(fetchResponse => {
                 if (fetchResponse.status === 404) {
-                    return caches.match('/error-404.html');
+                    return caches.match('error-404.html');
                 }
 
                 if (fetchResponse.headers.has('content-type') && matchContentType(fetchResponse.headers.get('content-type'))) {
@@ -99,7 +99,7 @@ self.addEventListener('fetch', (event) => {
 
         }).catch(error => {
             console.log(error)
-            return caches.match('/offline.html')
+            return caches.match('offline.html')
         })
     );
 })
