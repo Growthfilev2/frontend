@@ -1,0 +1,38 @@
+.account-list .mdc-list-item {
+    font-weight: 500;
+}
+
+.add-new-account .list-info {
+    padding-right: 16px;
+    font-size: 14px;
+    line-height: 14px;
+    /* letter-spacing: 0.02em; */
+    color: var(--profile-gray--text);
+    margin-left: 19%;
+}
+
+#backicon {
+    color: var(--mdc-theme-on-secondary);
+  }
+
+#my-label-id{
+    color: var(--mdc-theme-on-secondary)
+  }
+
+.material-icons, .mdc-list-item__text, .mdc-list-item__secondary-text, .inline-flex{
+color: var(--mdc-theme-on-secondary);
+  }
+
+  #submit-btn{
+    color: var(--mdc-theme-primary);
+  }
+
+  .iti__selected-dial-code{
+    color: var(--mdc-theme-on-secondary);
+  }
+
+  .mdc-text-field__input{
+    border: 1px solid var(--mdc-theme-on-secondary);
+  }
+
+  

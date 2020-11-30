@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Growthfile</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css" />
+
+  <link href="css/app.css" rel="stylesheet" type="text/css" />
+  <link href="css/init.css" rel="stylesheet" type="text/css" />
+  <link rel="shortcut icon" type="image/png" href="./img/favicon.png" />
+
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js"></script>
+  <script defer src="js/config.js"></script>
+  <script defer src="js/core.js"></script>
+</head>
+
+<body class="mdc-typography">
+  <div class="success--container hidden center-abs" id="success-animation">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+      <circle class="path circle" fill="none" stroke="#27628E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+        cy="65.1" r="62.1" />
+      <polyline class="path check" fill="none" stroke="#27628E" stroke-width="6" stroke-linecap="round"
+        stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
+    </svg>
+    <p class="success-text mdc-theme--primary"></p>
+  </div>
+
+  <div id="app-current-panel">
+    <div class="transitions">
+      <div id="loading" class="app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Loading.svg" />
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">
+          Loading
+        </div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        
+        <div class="loading-text">
+          Please wait while we connect you to onDuty
+        </div>
+      
+      </div>
+      <div id="adding-to-office" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Loading.svg" />
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6"></div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text">
+          Please wait while we add you to your company
+        </div>
+      </div>
+      <div id="connecting" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Connecting to Servcer.svg" />
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">
+          Connecting to server
+        </div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text">Please wait while we connect to server</div>
+      </div>
+      <div id="verifying" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Location.svg" />
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">
+          Verifying location
+        </div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text">
+          Please wait while we fetch your location
+        </div>
+      </div>
+      <div id="loading-data" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Connecting to Servcer.svg" />
+        </div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6">
+          Fetching data
+        </div>
+        <div class="loading-text">Please wait while we fetch your data</div>
+      </div>
+
+      <div id="checkin" class="hidden app-init-screens">
+        <div class="loader-image">
+          <img src="./img/Location.svg" />
+        </div>
+        <div class="loading-text--headline mdc-typography--headline6"></div>
+        <div class="dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="snackbar-container">
+    <div class="mdc-snackbar">
+      <div class="mdc-snackbar__surface">
+        <div class="mdc-snackbar__label" role="status" aria-live="polite"></div>
+        <div class="mdc-snackbar__actions">
+          <button type="button" class="mdc-button mdc-snackbar__action">
+            Okay
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="dialog-container"></div>
+  <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+  <script src="js/component.js"></script>
+  <script src="js/checkin.js"></script>
+  <script src="js/init.js"></script>
+</body>
+
+</html>

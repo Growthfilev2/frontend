@@ -29,11 +29,7 @@ navigator.serviceWorker.onmessage = (event) => {
           db = event.target.result;
           readduty();
         };
-    
-       
       });
-
-   
     }
   }
 
