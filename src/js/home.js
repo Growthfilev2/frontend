@@ -704,6 +704,10 @@ function subDuties(j) {
 }
 
 function openCamera() {
+<<<<<<< HEAD
+=======
+  history.pushState(null, null, "/upload-photo");
+>>>>>>> parent of 470415b0... Merge branch 'master' into jobview
   disableBack();
   history.pushState(null, null, "/upload-photo");
  
