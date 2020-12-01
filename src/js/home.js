@@ -704,8 +704,9 @@ function subDuties(j) {
 }
 
 function openCamera() {
-  history.pushState(null, null, "/upload-photo");
   disableBack();
+  history.pushState(null, null, "/upload-photo");
+ 
   // setFilePath(firebase.auth().currentUser.photoURL);
   // return
   if (_native.getName() === "Android") {
