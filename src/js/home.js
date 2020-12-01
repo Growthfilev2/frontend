@@ -695,6 +695,8 @@ function subDuties(j) {
 
 function openCamera() {
 
+  disableBack();
+
   if (_native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return;
@@ -834,3 +836,7 @@ function sendPhotoCheckinRequest(request) {
     });
 }
 
+function disableBack() 
+{
+   window.history.forward()
+   }
