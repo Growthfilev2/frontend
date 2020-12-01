@@ -1,0 +1,62 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+    <form id='iframe-form'>
+
+        <section class="attachment-section section-block">
+            <div class="text-field-block">
+
+                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField">
+                    <i class="material-icons mdc-text-field__icon">person</i>
+                    <input class="mdc-text-field__input" id="name-input" required data-field='Name'>
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Name</label>
+                </div>
+            </div>
+
+
+        </section>
+        <section class="form-actionable section-block">
+            <div class="form-buttons">
+
+                <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+            </div>
+        </section>
+    </form>
+    
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script>
+      
+        function init(template) {
+        
+            const copy = JSON.parse(JSON.stringify(template));
+            document.getElementById('name-input').value = copy.attachment.Name.value;
+            window.mdc.autoInit();
+
+            var form = document.getElementById('iframe-form');
+             ;
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+                copy.attachment.Name.value = document.getElementById('name-input').value;
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+            })
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Growthfile</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="shortcut icon" type="image/png" href="img/favicon.png" />
+  <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+    integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
+  <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.3.0/firebase-ui-auth.css" />
+  <link href="external/css/material.min.css" rel="stylesheet" type="text/css">
+  <link href="css/bundle.css?version=199" rel="stylesheet" type="text/css">
+
+  <meta property="al:android:url" content="growthfile://app?utm_source=facebook_post_test&utm_medium=facebook_test&utm_campaign=facebook_test_campaign">
+  <meta property="al:android:package" content="com.growthfile.growthfileNew">
+  <meta property="al:android:app_name" content="Growthfile">
+  <meta property="fb:app_id" content="425454438063638">
+  <meta property="al:ios:url" content="growthfile://app" />
+  <meta property="al:ios:app_store_id" content="1441388774" />
+  <meta property="al:ios:app_name" content="Growthfile" />
+  <meta property="og:title" content="Growthfile" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="Growthfile app" />
+  <meta property="og:image" content="https://growthfilev2-0.firebaseapp.com/v2/img/ic_launcher.png" />
+  <meta property="al:web:should_fallback" content="false" />
+</head>
+<body class="mdc-typography">
+  <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
+    <div class='mdc-top-app-bar__row'>
+      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
+        <a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+        <span class="mdc-top-app-bar__title"></span>
+      </section>
+      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
+      </section>
+    </div>
+    <div role="progressbar" id='main-progress-bar'
+      class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+      <div class="mdc-linear-progress__buffering-dots"></div>
+      <div class="mdc-linear-progress__buffer"></div>
+      <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+        <span class="mdc-linear-progress__bar-inner"></span>
+      </div>
+      <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+        <span class="mdc-linear-progress__bar-inner"></span>
+      </div>
+    </div>
+  </header>
+  </div>
+
+  <div class="success--container hidden center-abs" id="success-animation">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+      <circle class="path circle" fill="none" stroke="#27628E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+        cy="65.1" r="62.1" />
+      <polyline class="path check" fill="none" stroke="#27628E" stroke-width="6" stroke-linecap="round"
+        stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
+    </svg>
+    <p class="success-text mdc-theme--primary"></p>
+
+  </div>
+  
+  <div class="hidden login-box">
+    <div id='login-container'></div>
+    <span class="text-center mdc-typography--subtitle1 legal-links"><a href="https://growthfile.com/legal#privacy-policy" target="_blank">Privacy policy</a><span> &amp; </span><a href="https://growthfile.com/legal#terms-of-use-user" target="_blank">Terms of use</a></span>
+  </div>
+  <div id='step-ui'></div>
+  <div id="app-current-panel"></div>
+  <div id="snackbar-container">
+    <div class="mdc-snackbar">
+      <div class="mdc-snackbar__surface">
+        <div class="mdc-snackbar__label" role="status" aria-live="polite">
+        </div>
+        <div class="mdc-snackbar__actions">
+          <button type="button" class="mdc-button mdc-snackbar__action">Okay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id='dialog-container'>
+  </div>
+
+  <script src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
+  <script src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
+  <script src="https://www.gstatic.com/firebasejs/ui/4.3.0/firebase-ui-auth.js"></script>
+
+  <script src='external/js/material.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+    integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+    integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
+  <script src="js/bundle.min.js?version=199"></script>
+  <script>
+    function onMomentLoadFail() {
+      const sc = document.createElement("script");
+      sc.setAttribute('src', 'external/js/moment.min.js')
+      document.body.appendChild(sc);
+    }
+  </script>
+  <script onerror="onMomentLoadFail()" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"
+    integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
+</body>
+
+</html>

@@ -33,7 +33,7 @@
     <p class="success-text mdc-theme--primary"></p>
   </div>
   <header class="mdc-top-app-bar  mdc-top-app-bar--dense" id="home-header">
-    <div id="top_header_bar" class="mdc-top-app-bar__row">
+    <div class="mdc-top-app-bar__row">
       <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
         <span class="mdc-top-app-bar__title">OnDuty</span>
       </section>
@@ -48,7 +48,7 @@
     <div class="app-bar--extra full-width">
       <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Camera"
         id="photo-upload-btn">add_a_photo</button>
-      <div class="mdc-top-app-bar__title text-center" id="home_header">Home</div>
+      <div class="mdc-top-app-bar__title text-center mdc-theme--primary">Home</div>
     </div>
   </header>
   <div id="app-current-panel" class="mdc-top-app-bar--fixed-adjust extra--adjust">
@@ -56,17 +56,17 @@
       <div id="current_text">
         <p class="header">Current Duty</p>
         <p id="location">
-          <span id="location_icon" class="material-icons-outlined"> location_on </span>&nbsp
-          &nbsp<span  id="current_location"></span>
+          <span class="material-icons-outlined"> location_on </span>&nbsp
+          &nbsp<span id="current_location"></span>
         </p>
         <p id="checkin_time">
-          <span id="builder_icon" class="material-icons-outlined"> query_builder</span>&nbsp
+          <span class="material-icons-outlined"> query_builder </span>&nbsp
           &nbsp<span id="current_interval">
             <span id="starting_time">00:</span>-
             <span id="ending_time">(On Going)</span></span>
         </p>
         <p class='active-duty--duration hidden'>
-          <span id="timer_icon" class="material-icons-outlined"> timer </span>&nbsp &nbsp<span id="total_time"></span>
+          <span class="material-icons-outlined"> timer </span>&nbsp &nbsp<span id="total_time"></span>
         </p>
         <div style="display: flex" id="assignees_div_current">
           <div class="mdc-chip-set mdc-chip-set--filter" role="grid">
@@ -88,20 +88,16 @@
             </div>
           </div>
           <span id="other_assignees"></span>
-          
         </div>
       </div>
       <div id="finish_button">
         <button id="finish">FINISH</button>
       </div>
-    
     </div>
 
-    
 
-       <div id="duties-list"></div>
+    <div id="duties-list"></div>
     <div id="show_more_b">Show More</div>
-    <div id="show_less_b">Show Less</div>
 
   </div>
 

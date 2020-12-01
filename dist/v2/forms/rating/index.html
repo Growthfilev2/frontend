@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+        integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+    <link href="./rating.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="mdc-typography">
+
+    <form id='form'>
+        <div class="feedback-card text-center">
+            <div class="customer-section mt-10 mdc-typography--headline6">
+                <div id="customer-name" style="display: inline-flex;" class="full-width">
+                    <div class="text mdc-theme--primary"></div>
+                    <div class="edit-icon">
+                        <i class="material-icons" id='edit-name'>edit</i>
+                    </div>
+                </div>
+                <div class="contact-section mt-10">
+                    <div class="inline-flex">
+                        <h1 class="mdc-typography--body1">
+                            Add  contact
+                        </h1>
+                        <i class="material-icons mdc-theme--primary" id='contact-btn' style="margin-left:auto;">add_ic_call</i>
+                       
+                    </div>
+                    <div class="contact-container" hidden>
+                        <div class="">
+                            <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--no-label" id='contact-number'>
+                                <input class="mdc-text-field__input"   type="tel" 
+                                aria-controls="phonenumber-helper-text" aria-describedby="phonenumber-helper-text" placeholder="phone number">
+                                <div class="mdc-notched-outline">
+                                  <div class="mdc-notched-outline__leading"></div>
+                                  <div class="mdc-notched-outline__trailing"></div>
+                                </div>
+                              </div>
+                           
+                              <div class="mdc-text-field-helper-line">
+                                <div class="mdc-text-field-helper-text"></div>
+                              </div>
+                        </div>
+                        <div class="">
+                            <div class="mdc-text-field" id="contact-name">
+            
+                                <input class="mdc-text-field__input">
+                                <div class="mdc-line-ripple"></div>
+                                <label for="contact-name" class="mdc-floating-label">Name</label>
+                            </div>
+                        </div>
+                      
+                    </div>
+                </div>
+            </div>
+
+            <div class="products-section">
+
+
+            </div>
+            <div class="rating-section">
+
+                <div class="rating-area">
+                    <div class="rating-stars">
+                        <i class="material-icons rating-star" data-rate="1">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="2">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="3">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="4">star_outline</i>
+                        <i class="material-icons rating-star" data-rate="5">star_outline</i>
+                    </div>
+
+                </div>
+                <div class="feedback-area">
+                    <div class="form-component">
+                        <div class="mdc-text-field mdc-text-field--textarea" data-mdc-auto-init="MDCTextField">
+                            <textarea class="mdc-text-field__input" rows="4" cols="100" id='feedback'></textarea>
+                            <div class="mdc-notched-outline mdc-notched-outline--upgraded">
+                                <div class="mdc-notched-outline__leading"></div>
+                                <div class="mdc-notched-outline__notch">
+                                    <label for="textarea" class="mdc-floating-label" style="">Feedback
+                                        (optional)</label>
+                                </div>
+                                <div class="mdc-notched-outline__trailing"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="rating-action-buttons">
+                <button class="mdc-button mdc-button--outlined" data-mdc-auto-init="MDCRipple" id="skip-rating"
+                    type="button">
+                    <span class="mdc-button__label">skip</span>
+                </button>
+                <input type="submit" value="give rating" class="mdc-button mdc-button--raised mdc-ripple-upgraded"
+                    data-mdc-auto-init="MDCRipple" id='give-rating'>
+            </div>
+        </div>
+    </form>
+    <div id='dialog-container'></div>
+    <div id='snackbar-container'></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=7"></script>
+    <script src="./index.js"></script>
+  
+</body>
+
+</html>

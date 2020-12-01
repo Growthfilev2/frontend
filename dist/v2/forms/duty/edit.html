@@ -1,0 +1,431 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+        integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
+</head>
+
+<body>
+    <form id='iframe-form'>
+
+        <section class="attachment-section section-block">
+            <div class="mdc-layout-grid__inner">
+
+                <div
+                    class="mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-8-tablet mdc-layout-grid__cell--span-4-desktop">
+                    <div class="text-field-block" style="padding-top: 0px;">
+                        <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--no-label"
+                            data-mdc-auto-init="MDCTextField" id="supervisor-field">
+                            <input type="text" class="mdc-text-field__input" required data-field='Supervisor' type="tel"
+                                placeholder="Supervisor number">
+                            <div class="mdc-notched-outline">
+                                <div class="mdc-notched-outline__leading"></div>
+
+                                <div class="mdc-notched-outline__trailing"></div>
+                            </div>
+                        </div>
+                        <div class="mdc-text-field-helper-line">
+                            <div class="mdc-text-field-helper-text"></div>
+                        </div>
+                    </div>
+
+                    <div class="schedule-container" data-schedule-name="Duty">
+                        <div class="text-field-block">
+                            <div class='inline-flex' data-schedule-type='start'>
+                                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                                    <input class="mdc-text-field__input" required type="date" v
+                                        data-name="Duty start date">
+                                    <div class="mdc-line-ripple"></div>
+                                    <label class="mdc-floating-label">Start date</label>
+                                </div>
+                                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                                    <input class="mdc-text-field__input" required type="time"
+                                        data-name="Duty start time">
+                                    <div class="mdc-line-ripple"></div>
+                                    <label class="mdc-floating-label">Start time</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-field-block">
+                            <div class='inline-flex' data-schedule-type='end'>
+                                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                                    <input class="mdc-text-field__input" required type="date" data-name="Duty end date">
+                                    <div class="mdc-line-ripple"></div>
+                                    <label class="mdc-floating-label">End date</label>
+                                </div>
+                                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                                    <input class="mdc-text-field__input" required type="time" data-name="Duty end time">
+                                    <div class="mdc-line-ripple"></div>
+                                    <label class="mdc-floating-label">End time</label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="text-field-block">
+                        <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Duty Type">
+                            <i class="mdc-select__dropdown-icon"></i>
+                            <select class="mdc-select__native-control">
+                                <option value="" selected></option>
+
+                            </select>
+                            <label class="mdc-floating-label">Duty type</label>
+                            <div class="mdc-line-ripple"></div>
+                        </div>
+                    </div>
+                    <div class="text-field-block"> 
+                    <div class="form-component product-container">
+                            <div class="mdc-select"  id='product-select'>
+                                <i class="mdc-select__dropdown-icon"></i>
+                                <select class="mdc-select__native-control">
+                                    <option value="" selected></option>
+                                </select>
+                                <label class="mdc-floating-label">Product</label>
+                                <div class="mdc-line-ripple"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-4-desktop employee-grid">
+                    <div class="employee-choose-container">
+
+                        <div class="search-container">
+                            <div class="mdc-text-field mdc-text-field--with-leading-icon"
+                                data-mdc-auto-init="MDCTextField" id='employee-search-field'>
+                                <i class="material-icons mdc-text-field__icon">search</i>
+                                <input class="mdc-text-field__input" data-field='Name'>
+                                <div class="mdc-line-ripple"></div>
+                                <label class="mdc-floating-label">Select employees</label>
+                            </div>
+                        </div>
+                        <ul class="mdc-list mdc-list--two-line search-list" id='employee-list' role="group"
+                            aria-label="List with checkbox items">
+
+                        </ul>
+                    </div>
+
+                </div>
+                <div
+                    class="mdc-layout-grid__cell--span-4-phone mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-4-desktop duty-details">
+                    <div class="customer-choose-container">
+
+                        <div class="search-container">
+                            <div class="mdc-text-field mdc-text-field--with-leading-icon"
+                                data-mdc-auto-init="MDCTextField" id='customer-search-field'>
+                                <i class="material-icons mdc-text-field__icon">search</i>
+                                <input class="mdc-text-field__input" data-field='Name'>
+                                <div class="mdc-line-ripple"></div>
+                                <label class="mdc-floating-label">Select customer</label>
+                            </div>
+                        </div>
+                        <ul class="mdc-list mdc-list--two-line search-list" id='customer-list' role="radiogroup">
+
+                        </ul>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+        <section class="form-actionable section-block">
+            <div class="form-buttons">
+                <button class="mdc-button" type="button" data-mdc-auto-init="MDCRipple" id='cancel-form'>
+                    CANCEL
+                </button>
+                <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+            </div>
+        </section>
+    </form>
+    <div id="snackbar-container"></div>
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
+    <script>
+        let template = ''
+        const productsChoosen = {}
+        const employeeSearchField = new mdc.textField.MDCTextField(document.getElementById('employee-search-field'))
+        const customerSearchField = new mdc.textField.MDCTextField(document.getElementById('customer-search-field'))
+        const dutyTypeSelect = new mdc.select.MDCSelect(document.querySelector(`[data-type="Duty Type"]`));
+        const productSelect = new mdc.select.MDCSelect(document.getElementById('product-select'))
+
+        let employeeList;
+        let customerList;
+        dutyTypeSelect.disabled = true;
+        const superVisorField = document.querySelector(`[data-field="Supervisor"]`);
+        let iti = phoneFieldInit(superVisorField);
+
+
+
+        function init(subscription, dataObject) {
+            template = JSON.parse(JSON.stringify(subscription))
+            template.share = [];
+            window.mdc.autoInit();
+
+            initEmployeeAdd(dataObject.employee);
+            initCustomerAdd(dataObject.customers)
+            initDutyDetailsAdd(dataObject);
+            initProductsAdd(dataObject.products);
+            document.getElementById('iframe-form').addEventListener('submit', function (evt) {
+                evt.preventDefault();
+                // if (!employeeList.selectedIndex.length) {
+                //     showSnacksApiResponse('Please choose atleast 1 employee')
+                //     return
+                // }
+                // if (customerList.selectedIndex == -1) {
+                //     showSnacksApiResponse('Please choose atleast 1 location')
+                //     return;
+                // }
+                if(validateList(employeeList)) {
+                    employeeList.selectedIndex.forEach((index) => {
+                        template.attachment.Include.value += dataObject.employee[index].attachment[
+                            'Phone Number'].value + ','
+                            template.share.push(dataObject.employee[index].attachment[
+                            'Phone Number'].value)
+                    })
+                }
+                if(validateList(customerList)) {
+                    template.attachment.Location.value = dataObject.customers[customerList.selectedIndex]
+                        .venue[0].location
+
+                }
+               
+                if (!iti.isValidNumber()) {
+                    const superField = new mdc.textField.MDCTextField(document.getElementById(
+                        'supervisor-field'));
+                    setHelperInvalid(superField);
+                    superField.helperTextContent = 'Please enter a valid number';
+                    return;
+                }
+                template.attachment.Supervisor.value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
+                const newSchedule = getNewSchedule(subscription)
+                if(dutyTypeSelect.value) {
+                    template.attachment['Duty Type'].value = dutyTypeSelect.value;
+                }
+                template.attachment.Products.value = [{
+                    name: '',
+                    date: '',
+                    quantity: '',
+                    rate: ''
+                }]
+                if (newSchedule) {
+                    console.log(newSchedule)
+                    console.log(template)
+                 
+                    template.schedule = newSchedule
+                    parent.postMessage({
+                        body: template,
+                        name: 'sendFormToParent'
+                    }, parentOrigin)
+                    toggleSubmit()
+                }
+
+            })
+        }
+
+
+
+        function initEmployeeAdd(employees) {
+            const ul = document.getElementById('employee-list')
+            if (!employees.length) {
+                employeeSearchField.disabled = true;
+                ul.insertAdjacentElement('afterend', addMore("employee",'employee'))
+                return
+            }
+            loadEmployees(employees, ul);
+            employeeList = new mdc.list.MDCList(ul)
+            employeeSearchField.input_.addEventListener('input', function (evt) {
+                const inputValue = evt.target.value.trim();
+                initializeEmployeeSearch(inputValue.toLowerCase(), employeeList)
+            })
+        }
+
+        function initCustomerAdd(customers) {
+            const ul = document.getElementById('customer-list')
+            if (!customers.length) {
+                customerSearchField.disabled = true;
+                ul.insertAdjacentElement('afterend', addMore("customer",'customer'))
+                return
+            }
+            
+            loadCustomers(customers, ul)
+            customerList = new mdc.list.MDCList(ul);
+            customerList.listen('MDCList:action', function (event) {
+                customerSearchField.value = customers[event.detail.index].venue[0].location
+            })
+            customerSearchField.input_.addEventListener('input', function (evt) {
+                const inputValue = evt.target.value.trim();
+                initializeCustomerSearch(inputValue.toLowerCase(), customerList)
+            })
+        }
+
+        function initProductsAdd(products) {
+            if(!products.length) return productSelect.disabled = true;
+
+            const el = document.querySelector('.product-container')
+            productSelect.nativeControl_.innerHTML += createSelectOptions(products);
+            el.removeAttribute('hidden')
+
+            productSelect.listen('MDCSelect:change', function (event) {
+                console.log(event);
+                if (!event.detail.index) return;
+                if (document.querySelector(`[data-product-name="${event.detail.value}"]`)) return;
+                const card = productCard(event.detail.value);
+                card.querySelector('#remove-card').addEventListener('click', function (e) {
+                    e.preventDefault();
+                    card.remove();
+
+                    delete productsChoosen[card.dataset.productName];
+                    console.log(productsChoosen)
+                })
+                el.appendChild(card)
+                productsChoosen[event.detail.value] = {
+                    "name": event.detail.value,
+                    "quantity": "",
+                    "rate": "",
+                    "date": "",
+                }
+
+                console.log(productsChoosen)
+            })
+
+        }
+
+        function initializeEmployeeSearch(inputValue, el) {
+            el.listElements.forEach(function (li) {
+                if (li.dataset.name.toLowerCase().indexOf(inputValue) > -1 || li.dataset.number.toLowerCase()
+                    .indexOf(inputValue) > -1) {
+                    li.removeAttribute('hidden')
+                } else {
+                    li.setAttribute('hidden', true)
+                }
+            })
+        }
+
+        function initializeCustomerSearch(inputValue, el) {
+            el.listElements.forEach(function (li) {
+                if (li.dataset.location.toLowerCase().indexOf(inputValue) > -1 || li.dataset.address
+                    .toLowerCase()
+                    .indexOf(inputValue) > -1) {
+                    li.removeAttribute('hidden')
+                } else {
+                    li.setAttribute('hidden', true)
+                }
+            })
+        }
+
+        function loadEmployees(employees, ul) {
+            employees.forEach(function (employee, index) {
+                const number = employee.attachment['Phone Number'].value;
+                if(ul.querySelector(`li[data-number="${number}"]`)) return;
+                let name;
+                if(employee.attachment.Name) {
+                    name = employee.attachment.Name.value;
+                }
+                const li = checkboxLi(name || number, index, number);
+                li.dataset.number = number;
+                li.dataset.name = name;
+                ul.appendChild(li)
+            })
+
+        }
+
+        function loadCustomers(customers, ul) {
+            customers.forEach(function (customer, index) {
+
+                const location = customer.venue[0].location;
+                const address = customer.venue[0].address;
+
+                const li = radioLi(location || address, index, address);
+                li.dataset.location = location;
+                li.dataset.address = address;
+                ul.appendChild(li)
+            })
+        }
+
+        function initDutyDetailsAdd(data) {
+            document.querySelector('.duty-details').style.display = 'block'
+            document.querySelector('.duty-details').scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest"
+            })
+
+            if (data.dutyTypes.length) {
+                const names = [];
+                data.dutyTypes.forEach(type => {
+                    names.push(type.attachment.Name.value)
+                })
+                dutyTypeSelect.nativeControl_.innerHTML += createSelectOptions(names);
+                dutyTypeSelect.disabled = false
+            }
+
+            iti.setNumber(template.attachment['Supervisor'].value);
+            initializeDates(template, createDate(new Date()), createTime(new Date()));
+        }
+
+        function openView(evt) {
+            let view = null
+            switch (evt.target.dataset.type) {
+                case 'employee':
+                    view = 'Users'
+                    break;
+
+                case 'product':
+                    view = 'Products'
+                    break;
+
+                case 'customer':
+                    view = 'Customers'
+                    break;
+
+                default:
+                    view = null
+                    break
+            }
+
+            parent.postMessage({
+                name: 'openForm',
+                body: {
+                    view: view
+                }
+            }, parentOrigin)
+
+        }
+
+        function addMore(text,type) {
+            const btn = createElement('button', {
+                className: 'mdc-button mdc-button--outlined',
+                textContent: `Add ${text}`,
+                type: 'button'
+            })
+
+            new mdc.ripple.MDCRipple(btn)
+            btn.dataset.type = type
+            btn.addEventListener('click', openView);
+            return btn;
+           
+        }
+
+        function validateList(list) {
+            if(!list) return;
+            if(Array.isArray(list.selectedIndex)) {
+                if(!list.selectedIndex.length) return
+                return true
+            } 
+            if(list.selectedIndex > -1) return true;
+            return 
+        }
+    </script>
+</body>
+
+</html>

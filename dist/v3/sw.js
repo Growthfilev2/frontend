@@ -12,7 +12,7 @@ firebase.auth().onAuthStateChanged(user => {
 
 
 
-const files = ['/v3/',
+const files = [appKey.getMode() === 'dev' ? '/' : '/v3/',
     'offline.html',
     'error-404.html',
     'index.html',
@@ -36,7 +36,7 @@ const files = ['/v3/',
     'external/img/flags@2x.png',
     'external/css/intlTelInput.css',
 ]
-const staticCacheName = 'pages-cache-v500';
+const staticCacheName = 'pages-cache-v656';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {

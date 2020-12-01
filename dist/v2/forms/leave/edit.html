@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body>
+    <form class='forms' id='form'>
+
+        <div class="form-list">
+            <div class="form-component leave-type-select-container" hidden>
+                <div class="mdc-select" data-mdc-auto-init="MDCSelect">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Leave-Type</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+            <div class="form-component schedules">
+                <p class="mdc-typography--body1 mdc-theme--primary mt-0 mb-0">Leave Dates</p>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
+                    <input class=" mdc-text-field__input" type="date" data-name="Leave Dates start date">
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
+                    <input class=" mdc-text-field__input" type="date" data-name="Leave Dates end date">
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='reason'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Reason</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="action-button-container">
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="Apply leave" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple">
+                </div>
+            </div>
+        </div>
+    </form>
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script>
+        window.mdc.autoInit();
+
+        var formEl = document.getElementById('form');
+
+
+
+        function init(subscriptionTemplate) {
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+            const reason = new mdc.textField.MDCTextField(document.getElementById('reason'));
+            if (subscriptionTemplate.date) {
+                subscriptionTemplate.schedule.forEach(function (name) {
+                    const startfield = document.querySelector(`[data-name="${name} start date"]`);
+                    const endField = document.querySelector(`[data-name="${name} end date"]`);
+                    startfield.disabled = true;
+                    endField.disabled = true;
+                    startfield.parentElement.classList.add('mdc-text-field--disabled');
+                    endField.parentElement.classList.add('mdc-text-field--disabled');
+                    startfield.value = endField.value = createDate(new Date(subscriptionTemplate.date))
+                });
+            } else {
+                initializeDates(subscriptionTemplate, createDate(getTommorowDate()))
+            }
+            getDropDownContent(subscriptionTemplate.office, 'leave-type', 'officeTemplate').then(function (result) {
+                if (!result.string) return;
+                select.nativeControl_.setAttribute('required', 'true')
+                select.nativeControl_.innerHTML += result.string;
+                document.querySelector('.leave-type-select-container').removeAttribute('hidden');
+            })
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const tx = parent.db.transaction('calendar')
+                const store = tx.objectStore('calendar')
+
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                const scheduleDescriptor = copy.schedule[0];
+                copy.attachment['Leave Type'].value = select.value;
+                copy.attachment.Reason.value = reason.value;
+                copy.share = []
+                const newSchedule = getNewSchedule(subscriptionTemplate)
+                if (!newSchedule) return;
+                copy.schedule = newSchedule
+                if (copy.date) {
+                    delete copy.date
+                }
+               parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+              
+               
+            })
+        }
+    </script>
+</body>
+
+</html>

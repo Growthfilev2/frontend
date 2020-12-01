@@ -1,0 +1,82 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+    <form id='iframe-form'>
+
+        <section class="attachment-section section-block">
+            <div class="text-field-block">
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                    <input class="mdc-text-field__input" id="name-input" required data-field='Name'>
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Name</label>
+                </div>
+            </div>
+
+            <div class="text-field-block">
+                <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Scheduled Only">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                        <option value="True" selected>true</option>
+                        <option value="False" selected>false</option>
+                    </select>
+                    <label class="mdc-floating-label">Specialized</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+         
+
+        </section>
+        <section class="form-actionable section-block">
+            <div class="form-buttons">
+                <button class="mdc-button" type="button" data-mdc-auto-init="MDCRipple" id='cancel-form'>
+                    CANCEL
+                </button>
+                <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+            </div>
+            </div>
+    </form>
+
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js"></script>
+    <script>
+      
+
+        function init(template) {
+           
+            const copy = JSON.parse(JSON.stringify(template));
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'))
+            select.value = copy.attachment['Specialized'].value
+            document.getElementById('name-input').value = copy.attachment.Name.value;
+            var form = document.getElementById('iframe-form');
+            window.mdc.autoInit();
+             ;
+
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+                copy.attachment.Name.value = document.getElementById('name-input').value;
+                copy.attachment['Specialized'].value = Boolean(select.value)
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+            })
+
+        }
+    </script>
+
+</body>
+
+</html>

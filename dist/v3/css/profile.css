@@ -1,6 +1,7 @@
 
+
 .profile-section {
-  border-bottom: solid 1px var(--line);
+  border-bottom: solid 1px rgba(0, 0, 0, 0.1);
   width: 100%;
   padding: 10px 0px;
 }
@@ -18,14 +19,6 @@
 #picsum {
   position: relative;
 }
-
-#backicon{
-color: var(--mdc-theme-on-secondary);
-}
-
-
-
-
 #picsum i {
   position: absolute;
   bottom: 0;
@@ -103,7 +96,6 @@ a {
   letter-spacing: 0.04em;
   padding-bottom: 5px;
   color: rgba(61, 60, 60, 1);
-  color: var(--mdc-theme-on-secondary);
 }
 
 .mobile,
@@ -114,11 +106,7 @@ a {
   line-height: 14px;
   letter-spacing: 0em;
   padding-bottom: 5px;
-  color: var(--mdc-theme-on-secondary);
-}
-
-.profile_arrow{
-  color: var(--mdc-theme-on-secondary);
+  color: rgba(61, 60, 60, 1);
 }
 
 .progress_bar_info {
@@ -134,13 +122,12 @@ a {
   line-height: 16px;
   letter-spacing: -0.01em;
   margin-left: 11px;
-  color: var(--mdc-theme-on-secondary);
+  color: rgba(61, 60, 60, 1);
   width: 88%;
 }
 
 .percentage {
   margin-left: auto;
-  color: var(--mdc-theme-on-secondary);
 }
 
 #profile_percentage {
@@ -169,12 +156,6 @@ a {
   background: var(--mdc-theme-primary);
   height: 6px;
   width: 0%;
- 
-}
-
-#progress_background{
-  border: 1px solid var(--mdc-theme-on-secondary);
-  border-radius: 10px;
   margin-bottom: 10px
 }
 
@@ -223,7 +204,7 @@ a {
 
 
 .icon {
-  color:var(--mdc-theme-primary);
+  color: rgba(24, 68, 102, 1);
   /* margin-top: 31.25px; */
   margin-left: 14.25px;
   height: 13.5px;
@@ -257,23 +238,13 @@ a {
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0.05em;
-  color: var(--profile-gray--text);
+  color: rgba(61, 60, 60, 1);
   margin-bottom: 0px;
 }
 
-#employee-list{
-  
-  width: 100%;
-}
-
-
-
 #office_arrow {
-  position: relative;
-  left:  92%;
-  top: -24px;
-  color:  var(--mdc-theme-on-secondary); ;
-
+  position: absolute;
+  right: 10px;
 }
 
 
@@ -286,7 +257,6 @@ a {
   font-weight: 400;
   letter-spacing: 0.11em;
   text-align: left;
-  color: var(--profile-gray--text);
 }
 
 .icons {
@@ -339,22 +309,9 @@ a {
   letter-spacing: 0.05em;
 }
 
-#employee_text{
-  display: flex;
-}
-
-#dar_theme{
-  display: flex;
-  width: 100%;
-}
-
-#dark_theme_text{
-  width: 80%;
-}
 .toggle {
-  position: relative;
-  top: 25px;
-  
+  position: absolute;
+  right: 10px;
 }
 
 .switch {

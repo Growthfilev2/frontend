@@ -33,11 +33,7 @@ a{
 }
 
 #backicon{
-  color: var(--mdc-theme-on-secondary);
-}
-
-#aadhar-number{
-  background-color: red;
+  color:rgb(0, 0, 0);
 }
 
 .mdc-top-app-bar__title{

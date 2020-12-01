@@ -82,7 +82,6 @@ function getCurrentJob() {
       canEdit: false,
       supervisior: null,
       finished: false,
-      header: "",
       isActive: false,
       timestamp: Date.now()
     };
@@ -120,6 +119,10 @@ function getCurrentJob() {
       }
 
       ;
+
+      if (cursor.value.finished == false) {
+        return;
+      }
 
       if (cursor.value.isActive == false) {
         cursor["continue"]();

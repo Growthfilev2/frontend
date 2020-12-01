@@ -1,0 +1,80 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+    integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
+</head>
+
+<body>
+
+    <form id='iframe-form' style="padding-top: 18px;">
+
+        <section class="attachment-section section-block">
+            <div class="text-field-block">
+                <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--no-label"  data-mdc-auto-init="MDCTextField">
+                    <input class="mdc-text-field__input" id="number-input" required type="tel" data-field="Phone Number"
+                    aria-controls="phonenumber-helper-text" aria-describedby="phonenumber-helper-text" placeholder="phone number">
+                    <div class="mdc-notched-outline">
+                      <div class="mdc-notched-outline__leading"></div>
+                      <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                  </div>
+               
+                  <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text"></div>
+                  </div>
+            </div>
+
+        </section>
+        <section class="form-actionable section-block">
+            <div class="form-buttons">
+               
+                <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+            </div>
+            </div>
+    </form>
+    
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
+    <script>
+        
+        function init(template) {
+            window.mdc.autoInit();
+            var form = document.getElementById('iframe-form');
+            const field = new mdc.textField.MDCTextField(document.querySelector(".mdc-text-field"))
+            field.value = template.attachment['Phone Number'].value;
+            const iti = phoneFieldInit(field.input_);
+             ;
+            form.addEventListener("submit", function (evt) {
+
+                evt.preventDefault();
+                if (!iti.isValidNumber()) {
+                    setHelperInvalid(field)
+                    field.helperTextContent = 'Please enter a valid number'
+                    return
+                }
+
+                const value = iti.getNumber(intlTelInputUtils.numberFormat.E164);
+                template.attachment['Phone Number'].value = value;               
+                parent.postMessage({
+                    body: template,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+            })
+            
+        }
+    </script>
+
+</body>
+
+</html>

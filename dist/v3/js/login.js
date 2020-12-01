@@ -7,17 +7,6 @@ window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier("sign-in-button",
   }
 });
 window.addEventListener('load', function () {
-  if (localStorage.getItem('mode') === 'dark') {
-    document.querySelector('body').style.backgroundImage = "url(../img/login_background_dark.svg)";
-    document.querySelector('body').style.position = "fixed";
-    document.querySelector('body').style.backgroundRepeat = "no-repeat";
-    document.querySelector('body').style.backgroundSize = "cover";
-    document.querySelector('body').style.width = "100%";
-    document.querySelector('body').style.height = "100%";
-    document.querySelector('body').style.backgroundPosition = "fixed";
-    document.getElementById("logo_dark").src = "img/logo_login_dark.svg";
-  }
-
   firebase.auth().onAuthStateChanged(function (user) {
     if (!user) return;
     setTimeout(function () {

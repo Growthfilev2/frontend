@@ -1,0 +1,274 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body class="mdc-typography">
+
+    <form id='iframe-form' style="padding-top: 18px;">
+        <section class="attachment-section section-block">
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Name">
+
+                    <input class="mdc-text-field__input" id="name-input" required>
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Name</label>
+                </div>
+            </div>
+
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Phone Number">
+
+                    <input class="mdc-text-field__input" id="name-input" required type="tel">
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Employee phone number</label>
+                </div>
+            </div>
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Employee Code">
+
+                    <input class="mdc-text-field__input" id="name-input">
+                    <div class="mdc-line-ripple"></div>
+                    <label for="name-input" class="mdc-floating-label">Employee code</label>
+                </div>
+            </div>
+            <div class="text-field-block">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="First Supervisor">
+
+                    <input class="mdc-text-field__input" required type="tel">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">First Supervisor</label>
+                </div>
+            </div>
+            <div style="width:100%">
+
+                <div class="text-field-block" style="width:49%;float:left;">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Daily Start Time">
+    
+                        <input class="mdc-text-field__input" type="time">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="name-input" class="mdc-floating-label">Daily Start Time</label>
+                    </div>
+                </div>
+                <div class="text-field-block" style="width:49%;float:right;">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Daily End Time">
+                        <input class="mdc-text-field__input" type="time">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="name-input" class="mdc-floating-label">Daily End Time</label>
+                    </div>
+                </div>
+            </div>
+            <a href="#" class="mdc-theme--primary mdc-typography" onclick="showMore(this)">Show more</a>
+            <div class="employee-meta-fields" hidden>
+                <div class="text-field-block">
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Department">
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Department</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+              
+                <div class="text-field-block">
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Region">
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Region</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+               
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Task Specialization">
+                        <input class="mdc-text-field__input" id="task-specialization-input">
+                        <div class="mdc-line-ripple"></div>
+                        <label for="task-specialization-input" class="mdc-floating-label">Task Specialization</label>
+                    </div>
+                </div>
+                <div class="width:100%">
+    
+                    <div class="text-field-block" style="width: 49%; float: left;">
+                        <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Start Point Latitude">
+                            <input class="mdc-text-field__input" type="string">
+                            <div class="mdc-line-ripple"></div>
+                            <label class="mdc-floating-label">Start Point Latitude</label>
+                        </div>
+                    </div>
+        
+                    <div class="text-field-block" style="width: 49%; float: right;">
+                        <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Start Point Longitude">
+                            <input class="mdc-text-field__input" type="string">
+                            <div class="mdc-line-ripple"></div>
+                            <label class="mdc-floating-label">Start Point Longitude</label>
+                        </div>
+                    </div>
+    
+                </div>
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="KM Rate">
+                        <input class="mdc-text-field__input" type="string">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">KM Rate</label>
+                    </div>
+                </div>
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="Base Location">
+                        <input class="mdc-text-field__input" type="string">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">Base Location</label>
+                    </div>
+                </div>
+    
+                <div class="text-field-block">
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" data-type="KM Daily Limit">
+                        <input class="mdc-text-field__input" type="string">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">KM Daily Limit</label>
+                    </div>
+                </div>
+                <div class="text-field-block">
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Location Validation Check">
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                            <option value="True" selected>true</option>
+                            <option value="False" selected>false</option>
+                        </select>
+                        <label class="mdc-floating-label">Location Validation Check</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+
+          
+                </div>
+                <div class="text-field-block">
+                    <div class="mdc-select" data-mdc-auto-init="MDCSelect" data-type="Scheduled Only">
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                            <option value="True" selected>true</option>
+                            <option value="False" selected>false</option>
+                        </select>
+                        <label class="mdc-floating-label">Scheduled Only</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </section>
+        <section class="form-actionable section-block">
+            <div class="form-buttons">
+                <input type='submit' class='mdc-button mdc-button--raised' value='SAVE' data-mdc-auto-init="MDCRipple">
+            </div>
+            </div>
+    </form>
+
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script>
+        const employeeMetaFieldsCont = document.querySelector('.employee-meta-fields');
+     
+
+        function showMore(el) {
+
+            if(employeeMetaFieldsCont['hidden']) {
+                employeeMetaFieldsCont.removeAttribute('hidden')
+                el.textContent = 'Show less'
+                return
+            }
+            employeeMetaFieldsCont.setAttribute('hidden',true)
+            el.textContent = 'Show more'
+
+        }
+
+        
+        function init(template,data) {
+            window.mdc.autoInit();
+            const departmentSelectInit = new mdc.select.MDCSelect( document.querySelector(`[data-type="Department"]`));
+            const regionSelectInit = new mdc.select.MDCSelect(document.querySelector(`[data-type="Region"]`));
+            departmentSelectInit.disabled = true;
+            regionSelectInit.disabled = true;
+            console.log(departmentSelectInit)
+            var form = document.getElementById('iframe-form');
+            const copy = JSON.parse(JSON.stringify(template));
+            console.log(template)
+            console.log(data)
+
+            Object.keys(copy.attachment).forEach(function (key) {
+                const el = document.querySelector(`[data-type="${key}"]`);
+                let field;
+                if (!el) return;
+                if (el.classList.contains('mdc-text-field')) {
+                    field = new mdc.textField.MDCTextField(el);
+                }
+                if (el.classList.contains('mdc-select')) {
+                    field = new mdc.select.MDCSelect(el)
+                }
+                
+                field.value = String(copy.attachment[key].value) || "";
+            });
+            
+
+            if(data.department.length) {
+           
+                departmentSelectInit.nativeControl_.innerHTML += createSelectOptions(data.department);
+                departmentSelectInit.value = copy['attachment']['Department'].value;
+                departmentSelectInit.disabled = false
+            }
+
+            if(data.region.length) {
+             
+                regionSelectInit.nativeControl_.innerHTML += createSelectOptions(data.region);
+                regionSelectInit.value = copy.attachment['Region'].value;
+                regionSelectInit.disabled = false
+            }
+
+
+            form.addEventListener("submit", function (evt) {
+                evt.preventDefault();
+
+                Object.keys(copy.attachment).forEach(function (key) {
+                    const el = document.querySelector(`[data-type="${key}"]`);
+                    let field;
+                    if (!el) return;
+                    if (el.classList.contains('mdc-text-field')) {
+                        field = new mdc.textField.MDCTextField(el);
+                    }
+                    if (el.classList.contains('mdc-select')) {
+                        field = new mdc.select.MDCSelect(el)
+                    }
+                    let value = field.value
+                    if (copy.attachment[key].type === 'number') {
+                        value = Number(value)
+                    }
+                    if (copy.attachment[key].type === 'boolean') {
+                        value = value ? converStringToBoolean(value) : ""
+
+                    }
+                    copy.attachment[key].value = value
+                })
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+            })
+        }
+        function converStringToBoolean(string) {
+            return string === 'true'
+        }
+    </script>
+
+</body>
+
+</html>

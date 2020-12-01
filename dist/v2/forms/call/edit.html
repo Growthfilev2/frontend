@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+
+<body>
+    <form class='forms' id='form'>
+        <div class="form-list">
+            <div class="form-component  customer-container" hidden>
+
+                <div class="mdc-select" data-mdc-auto-init="MDCSelect" id='customer-select'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label mdc-floating-label--float-above">Customer</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component  product-container" hidden>
+                <div class="mdc-select"  id='product-select'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Products</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+
+            </div>
+
+            <div class="form-component">
+                <div style="
+                    display: inline-flex;
+                    align-items: center;
+                    width: 100%;" class="add-photo-container">
+                    <label class="mdc-image-list__label">Add A photo ?</label>
+                    <div class="mdc-fab mdc-fab--mini mdc-list-item__meta mdc-theme--primary-bg" id='add-photo'>
+                        <i class="material-icons mdc-theme--on-primary">add_a_photo</i>
+                    </div>
+                </div>
+                <ul class="mdc-image-list my-image-list  mdc-image-list--masonry" hidden>
+                    <li class="mdc-image-list__item">
+                        <img class="mdc-image-list__image" src="../../img/placeholder.png" id='call-image'>
+                        <div class="mdc-image-list__supporting mdc-theme--primary-bg">
+                            <span class="mdc-image-list__label mdc-theme--on-primary">Photo</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='special-instruction'>
+                    <textarea class="mdc-text-field__input" rows="4" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Special Instruction</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="action-button-container">
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="SUBMIT" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script>
+        window.mdc.autoInit();
+        let photo = '';
+        let subscriptionTemplate = ''
+        const productsChoosen = {};
+
+        function init(subscriptionTemplate) {
+            console.log(deviceType);
+
+            const selectCustomer = new mdc.select.MDCSelect(document.getElementById('customer-select'));
+            const selectProduct = new mdc.select.MDCSelect(document.getElementById('product-select'));
+            const instruction = new mdc.textField.MDCTextField(document.getElementById('special-instruction'))
+
+            getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+                if (!result.string) return;
+
+
+                selectCustomer.nativeControl_.innerHTML += result.string;
+                selectCustomer.nativeControl_.setAttribute('required', 'true')
+                document.querySelector('.customer-container').removeAttribute('hidden')
+
+            })
+
+            getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
+                if (!result.string) return;
+                const el = document.querySelector('.product-container')
+                selectProduct.nativeControl_.innerHTML += result.string;
+                selectProduct.nativeControl_.setAttribute('required', 'true');
+                el.removeAttribute('hidden')
+                
+                selectProduct.listen('MDCSelect:change',function(event){
+                    console.log(event);
+                    if(!event.detail.index) return;
+                    if(document.querySelector(`[data-product-name="${event.detail.value}"]`)) return;
+                    const card = productCard(event.detail.value);
+                    card.querySelector('#remove-card').addEventListener('click',function(e){
+                        e.preventDefault();
+                        card.remove();
+                     
+                        delete productsChoosen[card.dataset.productName];
+                        console.log(productsChoosen) 
+                    })
+                    el.appendChild(card)
+                    productsChoosen[event.detail.value] = {
+                            "name": event.detail.value,
+                            "quantity": "",
+                            "rate": "",
+                            "date": "", 
+                    }
+                   
+                    console.log(productsChoosen)
+                })
+            })
+            document.getElementById('add-photo').addEventListener('click', function () {
+                if (parent.native.getName() === 'Android') {
+                    parent.AndroidInterface.startCamera("callImage");
+                    return;
+                }
+                parent.webkit.messageHandlers.startCamera.postMessage("callImage")
+            })
+
+            var formEl = document.getElementById('form');
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Customer'].value = selectCustomer.value;
+                copy.attachment['Special Instruction'].value = instruction.value;
+                
+                [...document.querySelectorAll('.product-card')].forEach(function(el){
+                    productsChoosen[el.dataset.productName].date = '';
+                    productsChoosen[el.dataset.productName].quantity = '';
+                    productsChoosen[el.dataset.productName].rate = '';
+
+                    [...el.querySelectorAll('.mdc-text-field')].forEach(function(field){
+                        const fieldDataset = field.dataset.productDetail;
+                        let value = field.querySelector('input').value
+                        if(fieldDataset === 'date') {
+                            value =  value ?  Date.parse(value) : "";
+                        }
+                        if(fieldDataset === 'quantity' || fieldDataset === 'rate') {
+                            value = value ? Number(value) : "" ;
+                        }
+        
+                        productsChoosen[el.dataset.productName][fieldDataset] = value
+                    })
+                });
+               
+                const array = []
+                const finalProducts = Object.keys(productsChoosen);
+                finalProducts.forEach(function(name){
+                    array.push(productsChoosen[name])
+                })
+                copy.attachment.Products.value = array
+                copy.share = []
+                copy.attachment['Photo'].value = photo;
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+            })
+        }
+
+
+        function setCallImage(base64) {
+            const el = document.getElementById('call-image')
+            document.querySelector('.add-photo-container').setAttribute('hidden',true);
+            document.querySelector('.mdc-image-list--masonry').removeAttribute('hidden')
+            el.src = `data:image/jpg;base64,${base64}`;
+            photo = `data:image/jpg;base64,${base64}`;
+        }
+
+    </script>
+</body>
+
+</html>

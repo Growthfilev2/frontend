@@ -21,12 +21,6 @@ document.getElementById('file').addEventListener('change', function (ev) {
   });
 });
 window.addEventListener("load", function (ev) {
-  if (localStorage.getItem('mode') === 'dark') {
-    document.getElementById("darkTheme").checked = true;
-  } else {
-    document.querySelector('body').classList.remove('dark');
-  }
-
   firebase.auth().onAuthStateChanged(function (user) {
     loadProfileData(user);
   });
@@ -106,14 +100,3 @@ var calculateProfileVerification = function calculateProfileVerification(rootRec
     return value;
   }).length / fields.length * 100).toFixed(0);
 };
-
-document.querySelector("#darkTheme").addEventListener("click", function (e) {
-  localStorage.setItem('mode', localStorage.getItem('mode') === 'dark' ? 'light' : 'dark');
-
-  if (localStorage.getItem('mode') === 'dark') {
-    document.querySelector('body').classList.add('dark');
-    document.getElementById("darkTheme").checked = true;
-  } else {
-    document.querySelector('body').classList.remove('dark');
-  }
-});

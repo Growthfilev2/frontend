@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <form class='forms' id='form'>
+
+        <div class="form-list">
+
+            <div class="form-component customer-select-container hidden">
+                <div class="mdc-select" id='customer'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Customer</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+
+
+            <div class="form-component hidden product-container">
+                <div class="mdc-select"  id='product-select'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Product</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='order-value'>
+                    <input class="mdc-text-field__input" type="number">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Estimated Order Value</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField"
+                    id='instruction'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Special Instructions
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="action-button-container">
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="SUBMIT" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple">
+                </div>
+            </div>
+    </form>
+    </div>
+
+    </div>
+
+    <script src="../external/js/material.min.js"></script>
+
+    <script src="../js/common.js?version=6">
+    </script>
+    <script>
+        window.mdc.autoInit();
+
+        let subscriptionTemplate = ''
+        const productsChoosen = {};
+
+        function init(subscriptionTemplate) {
+
+            const formEl = document.getElementById('form');
+
+
+            const customer = new mdc.select.MDCSelect(document.getElementById('customer'))
+            const product = new mdc.select.MDCSelect(document.getElementById('product-select'))
+            const orderValue = new mdc.textField.MDCTextField(document.getElementById('order-value'))
+            const instruction = new mdc.textField.MDCTextField(document.getElementById('instruction'))
+
+
+            getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+
+                if (result.string) {
+                    document.querySelector('.customer-select-container').removeAttribute('hidden');
+                    customer.nativeControl_.innerHTML += result.string
+                    customer.nativeControl_.setAttribute('required', 'true')
+                }
+            });
+
+            getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
+                if (!result.string) return;
+                const el = document.querySelector('.product-container')
+                product.nativeControl_.innerHTML += result.string;
+                product.nativeControl_.setAttribute('required', 'true');
+                el.removeAttribute('hidden')
+
+                product.listen('MDCSelect:change', function (event) {
+                    console.log(event);
+                    if (!event.detail.index) return;
+                    if (document.querySelector(`[data-product-name="${event.detail.value}"]`)) return;
+                    const card = productCard(event.detail.value);
+                    card.querySelector('#remove-card').addEventListener('click', function (e) {
+                        e.preventDefault();
+                        card.remove();
+
+                        delete productsChoosen[card.dataset.productName];
+                        console.log(productsChoosen)
+                    })
+                    el.appendChild(card)
+                    productsChoosen[event.detail.value] = {
+                        "name": event.detail.value,
+                        "quantity": "",
+                        "rate": "",
+                        "date": "",
+                    }
+
+                    console.log(productsChoosen)
+                })
+            })
+
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Estimated Order Value'].value = orderValue.value;
+                copy.attachment['Special Instruction'].value = instruction.value;
+                copy.attachment['Customer'].value = customer.value
+                copy.share = [];
+                [...document.querySelectorAll('.product-card')].forEach(function (el) {
+                    productsChoosen[el.dataset.productName].date = '';
+                    productsChoosen[el.dataset.productName].quantity = '';
+                    productsChoosen[el.dataset.productName].rate = '';
+
+                    [...el.querySelectorAll('.mdc-text-field')].forEach(function (field) {
+                        const fieldDataset = field.dataset.productDetail;
+                        let value = field.querySelector('input').value
+                        if (fieldDataset === 'date') {
+                            value = value ? Date.parse(value) : "";
+                        }
+                        if (fieldDataset === 'quantity' || fieldDataset === 'rate') {
+                            value = value ? Number(value) : "";
+                        }
+
+                        productsChoosen[el.dataset.productName][fieldDataset] = value
+                    })
+                });
+
+                const array = []
+                const finalProducts = Object.keys(productsChoosen);
+                finalProducts.forEach(function (name) {
+                    array.push(productsChoosen[name])
+                })
+                copy.attachment.Products.value = array
+                copy.share = []
+
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+            })
+        }
+    </script>
+</body>
+
+</html>

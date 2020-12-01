@@ -215,7 +215,7 @@ function createElement(tagName, attrs) {
 
 var redirect = function redirect(path) {
   // window.location = `${window.location.origin}/v3/${formatURL(path)}`;
-  window.location = "".concat(window.location.origin).concat(window.location.hostname === 'localhost' ? "".concat(formatURL(path)) : "".concat(formatURL(path)));
+  window.location = "".concat(window.location.origin).concat(window.location.hostname === 'localhost' ? "".concat(formatURL(path)) : "/v3".concat(formatURL(path)));
 };
 
 var formatURL = function formatURL(url) {
@@ -1356,59 +1356,3 @@ var hasBankAccount = function hasBankAccount(record) {
   if (!record.linkedAccounts[0]) return;
   return true;
 };
-
-function passDuty(duty_array) {
-  sessionStorage.setItem('passing_duty', JSON.stringify(duty_array));
-  redirect('/jobview.html');
-  console.log("redirect");
-}
-
-function showDuty_card(dutycard_details) {
-  document.getElementById("current_location").innerHTML = dutycard_details.attachment.Location.value;
-  console.log(dutycard_details);
-  document.getElementById("starting_time").innerHTML = moment(dutycard_details.schedule[0].startTime).format("hh:mm A");
-
-  if (dutycard_details.header != "CurrentDuty") {
-    document.getElementById("ending_time").innerHTML = moment(dutycard_details.schedule[0].endTime).format("hh:mm A");
-  }
-
-  if (dutycard_details.schedule[0].endTime !== dutycard_details.schedule[0].startTime) {
-    document.querySelector(".active-duty--duration").classList.remove("hidden");
-    document.getElementById("total_time").innerHTML = moment.utc(moment(dutycard_details.schedule[0].endTime).diff(moment(dutycard_details.schedule[0].startTime))).format("HH:mm");
-  }
-
-  if (dutycard_details.assignees[0].displayName) {
-    document.getElementById("assignees_name").innerHTML = dutycard_details.assignees[0].displayName;
-  } else {
-    document.getElementById("assignees_name").innerHTML = dutycard_details.assignees[0].phoneNumber;
-  }
-
-  if (dutycard_details.assignees.length > 1) {
-    if (dutycard_details.assignees.length == 2) {
-      document.getElementById("other_assignees").innerHTML = "  & " + (dutycard_details.assignees.length - 1) + " Other";
-    } else {
-      document.getElementById("other_assignees").innerHTML = "  & " + (dutycard_details.assignees.length - 1) + " Others";
-    }
-  }
-
-  document.getElementById("assignees_pic").src = dutycard_details.assignees[0].photoURL;
-}
-
-document.addEventListener('DOMContentLoaded', function (event) {
-  if (localStorage.getItem('mode') === 'dark') {
-    document.querySelector('body').classList.add('dark');
-    document.querySelector('body').classList.remove('light');
-  } else {
-    document.querySelector('body').classList.remove('dark');
-  }
-});
-
-function handleQRUrl(url) {
-  console.log(url);
-  firebase.auth().currentUser.getIdToken().then(function (token) {
-    if (_native.getName() === 'Android') {
-      AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
-      return;
-    }
-  });
-}

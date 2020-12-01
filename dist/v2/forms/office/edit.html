@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+        integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <form class='forms integrated-form' id='form'>
+        <div class="form-list">
+            <div class="form-component">
+                <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--no-label"
+                    data-mdc-auto-init="MDCTextField" id="phone-number">
+                    <input class=" mdc-text-field__input" type="tel" required autocomplete="tel-national">
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">
+                    </div>
+                </div>
+            </div>
+            <div class="form-component display-name">
+                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField">
+                    <input class=" mdc-text-field__input" type="text" id='display-name' required autocomplete="name">
+                    <label for="input" class="mdc-floating-label">Your name</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
+                        id="logo">account_circle</i>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">Enter your name
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-component email">
+
+
+                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField">
+                    <input class=" mdc-text-field__input" type="email" id="email" name="email" required
+                        autocomplete="email">
+                    <label for="email" class="mdc-floating-label">Email</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">email</i>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">Enter your email
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField">
+                    <input class=" mdc-text-field__input" type="text" id="office-name" required
+                        autocomplete="organization">
+                    <label for="input" class="mdc-floating-label">Company name</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">business</i>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">Enter the name of
+                        your office</div>
+                </div>
+            </div>
+
+            <div class="form-component pt-10">
+                <div class="mdc-text-field mdc-text-field--textarea " data-mdc-auto-init="MDCTextField">
+                    <textarea class="mdc-text-field__input" rows="2" cols="40" required id="address"
+                        autocomplete="street-address"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Office address</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg">Enter your office
+                        address</div>
+                </div>
+
+            </div>
+            <input type="submit" style="visibility: hidden;width:1px;height:1px;" id="submit-form">
+        </div>
+        </div>
+    </form>
+    <div id="country-dom"></div>
+
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
+
+    <script>
+        window.mdc.autoInit();
+        const address = document.getElementById('address')
+        const officeName = document.getElementById('office-name')
+        const username = document.getElementById('display-name')
+        const email = document.getElementById('email')
+        const phoneNumber = new mdc.textField.MDCTextField(document.getElementById('phone-number'));
+
+        const iti = phoneFieldInit(phoneNumber.input_, document.getElementById('country-dom'));
+        var formEl = document.getElementById('form');
+        let officeTemplate;
+
+        function getPhoneNumber() {
+            var error = iti.getValidationError();
+            if (error !== 0) {
+                const message = getPhoneFieldErrorMessage(error);
+                setHelperInvalid(phoneNumber, message);
+                return
+            }
+            if (!iti.isValidNumber()) {
+                setHelperInvalid(phoneNumber, 'Invalid number. Please check again');
+                return;
+            }
+            setHelperValid(phoneNumber);
+            parent.postMessage({
+                body: iti.getNumber(intlTelInputUtils.numberFormat.E164),
+                name: 'verifyUser'
+            }, parentOrigin);
+        }
+
+        function getFormData() {
+            document.getElementById('submit-form').click()
+        }
+
+
+        function init(subscriptionTemplate, auth) {
+            officeTemplate = JSON.parse(JSON.stringify(subscriptionTemplate));
+            if (auth.displayName) {
+                document.querySelector('.form-component.display-name').remove()
+            }
+            if (auth.email) {
+                document.querySelector('.form-component.email').remove()
+            }
+            formEl.addEventListener('invalid',function(){
+                parent.postMessage({
+                        name: 'enableSubmitBtn'
+                    }, parentOrigin);
+            },true)
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                officeTemplate.registeredOfficeAddress = address.value;
+                officeTemplate.name = officeName.value;
+                const authProps = {
+                    displayName: auth.displayName || username.value,
+                    email: auth.email || email.value,
+                    phoneNumber: iti.getNumber(intlTelInputUtils.numberFormat.E164)
+                }
+                officeTemplate.firstContact = authProps
+
+                parent.postMessage({
+                    body: {
+                        auth: authProps,
+                        office: officeTemplate
+                    },
+                    name: 'sendOfficeData'
+                }, parentOrigin);
+
+            })
+
+        }
+    </script>
+
+</body>
+
+</html>

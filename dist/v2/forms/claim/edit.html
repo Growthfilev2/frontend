@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <form class='forms' id='form'>
+
+        <div class="form-list">
+            <div class="form-component schedules">
+                <p class="mdc-typography--body1 mdc-theme--primary mb-0 mt-0">Date</p>
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
+                    <input class=" mdc-text-field__input" type="date" data-name='Date start date'>
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
+                    <input class=" mdc-text-field__input" type="date" data-name='Date end date'>
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+            <hr>
+            <div class="form-component claim-type-select-container" hidden>
+                <div class="mdc-select">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Claim-Type</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id="total-amount">
+                    <input class=" mdc-text-field__input" type="number" min="1" step="any" id='amount-number' required>
+                    <label for="input" class="mdc-floating-label">Amount</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+            </div>
+
+            <div class="form-component">
+                <div style="
+                    display: inline-flex;
+                    align-items: center;
+                    width: 100%;" class="add-photo-container">
+                    <label class="mdc-image-list__label">Add A photo ?</label>
+                    <div class="mdc-fab mdc-fab--mini mdc-list-item__meta mdc-theme--primary-bg" id='add-photo'>
+                        <i class="material-icons mdc-theme--on-primary">add_a_photo</i>
+                    </div>
+                </div>
+                <ul class="mdc-image-list my-image-list  mdc-image-list--masonry" hidden>
+                    <li class="mdc-image-list__item">
+                        <img class="mdc-image-list__image" src="../../img/placeholder.png" id='expense-image'>
+                        <div class="mdc-image-list__supporting mdc-theme--primary-bg">
+                            <span class="mdc-image-list__label mdc-theme--on-primary">Photo</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <hr>
+
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField"
+                    id='description'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Details</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-button-container">
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="CREATE CLAIM" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple">
+                </div>
+            </div>
+    </form>
+    </div>
+
+    </div>
+
+    <script src="../external/js/material.min.js"></script>
+
+    <script src="../js/common.js?version=6"></script>
+    <script>
+        window.mdc.autoInit();
+        let photo = '';
+
+        function setExpenseImage(base64) {
+            const el = document.getElementById('expense-image')
+            document.querySelector('.add-photo-container').setAttribute('hidden',true);
+            document.querySelector('.mdc-image-list--masonry').removeAttribute('hidden')
+            el.src = `data:image/jpg;base64,${base64}`;
+            photo = `data:image/jpg;base64,${base64}`;
+        }
+
+
+
+        function init(subscriptionTemplate) {
+            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+            const totalAmount = new mdc.textField.MDCTextField(document.getElementById('total-amount'));
+            const details = new mdc.textField.MDCTextField(document.getElementById('description'));
+            console.log(totalAmount)
+
+            totalAmount.input_.onkeydown = function (evt) {
+                if (evt.keyCode == 190) return true;
+                if (!((evt.keyCode > 95 && evt.keyCode < 106) ||
+                        (evt.keyCode > 47 && evt.keyCode < 58) ||
+                        evt.keyCode == 8)) {
+
+                    return false;
+                }
+            }
+
+            initializeDates(subscriptionTemplate, createDate(new Date()))
+
+            document.getElementById('add-photo').addEventListener('click', function () {
+                if (parent.native.getName() === 'Android') {
+                    parent.AndroidInterface.startCamera("expenseClaimImage");
+                    return;
+                }
+                parent.webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
+            })
+
+            getDropDownContent(subscriptionTemplate.office, 'claim-type', 'officeTemplate').then(function (result) {
+                if (!result.string) return;
+                
+                select.nativeControl_.innerHTML += result.string;
+                select.nativeControl_.setAttribute('required', 'true')
+                document.querySelector('.claim-type-select-container').removeAttribute('hidden');
+
+            })
+
+            console.log(parent)
+            var formEl = document.getElementById('form');
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+
+                copy.attachment.Amount.value = totalAmount.value;
+                copy.attachment['Claim Type'].value = select.value;
+                copy.attachment.Details.value = details.value;
+                copy.attachment['Photo URL'].value = photo;
+                copy.share = []
+                const newSchedule = getNewSchedule(subscriptionTemplate);
+                if (!newSchedule) return
+
+                copy.schedule = newSchedule
+                parent.postMessage({
+                    body: copy,
+                    name: 'sendFormToParent'
+                }, parentOrigin);
+                toggleSubmit()
+
+            })
+        }
+    </script>
+</body>
+
+</html>

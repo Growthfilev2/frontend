@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../external/css/material.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/css/intlTelInput.css"
+        integrity="sha256-rTKxJIIHupH7lFo30458ner8uoSSRYciA0gttCkw1JE=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+
+<body>
+    <form class='forms' id='form'>
+        <div class="form-list">
+            <div class="form-component">
+                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='branch-name'>
+                    <input class=" mdc-text-field__input" type="text" id="" required>
+                    <label for="input" class="mdc-floating-label" id="cc">Branch Name</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
+                        id="logo">perm_identity</i>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="contact-container form-component">
+
+                <div class="inline-flex mb-10">
+                    <h1 class="mdc-typography--headline6 mdc-theme--primary">
+                        Branch contact
+                    </h1>
+                    <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini add-phone-fab" aria-label="Favorite"
+                        id='contact-btn' data-mdc-auto-init="MDCRipple">
+                        <div class="mdc-fab__ripple"></div>
+                        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">person_add</span>
+                    </button>
+                </div>
+
+            </div>
+
+            
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='address'>
+                    <textarea class="mdc-text-field__input" rows="4" cols="100" required="true"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Address</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="action-button-container">
+
+                <div class="submit-button-cont">
+                    <input type="submit" value="SUBMIT" class="mdc-button mdc-button--raised submit-btn"
+                        data-mdc-auto-init="MDCRipple">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script src="../external/js/material.min.js"></script>
+    <script src="../js/common.js?version=6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/intlTelInput.min.js"
+        integrity="sha256-A/Wxs8NO1wOZocO2zj1k69Pkw3qPlg9ZNKYVynIM0xQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.2/js/utils.js"
+        integrity="sha256-0j199Z187LMKPysQFGVwcQ3At8V3Qg6PD0bOD50+gu4=" crossorigin="anonymous"></script>
+    <script>
+        window.mdc.autoInit();
+        let branchContact = '';
+        let subscriptionTemplate = ''
+      
+        const itis = {}
+        const maxContacts = 2;
+        let currentContactsAdded = 1;
+        const contactBtn = document.getElementById('contact-btn')
+        let contactList;
+
+        function init(template) {
+            console.log(deviceType);
+            subscriptionTemplate = template;
+          
+            const branchName = new mdc.textField.MDCTextField(document.getElementById('branch-name'))
+            const branchAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
+            branchName.value = template.attachment['Name'].value;
+            branchAddress.value = template.venue[0].address;
+            
+            if (!deviceType) {
+                document.querySelector('.action-button-container .submit-button-cont').style.position = 'relative';
+                const cont = textFieldTelephoneWithHelper({
+                    customClass: 'mt-10 contact-field',
+                    placeholder: 'Primary contact',
+                    id: 'primary-contac',
+                    value:subscriptionTemplate.attachment['First Contact'].value || '',
+                    required: false
+                });
+                const field = new mdc.textField.MDCTextField(cont.querySelector('.mdc-text-field'));
+                document.querySelector('.contact-container').appendChild(cont)
+                field.input_.dataset.type = 'First Contact';
+                const initField = phoneFieldInit(field.input_);
+                itis['First Contact'] = {
+                    'mdc': field,
+                    'iti': initField
+                }
+                field.focus()
+            } else {
+                const ul = createElement('ul', {
+                    className: 'mdc-list mdc-list--two-line mdc-list--avatar-list',
+                    id: 'contact-list'
+                })
+                document.querySelector('.contact-container').appendChild(ul)
+                contactList = new mdc.list.MDCList(ul)
+                console.log(contactList)
+            }
+
+
+
+            contactBtn.addEventListener('click', function (e) {
+
+                e.preventDefault();
+
+                const contact = callContact('setContactForbranch');
+                let field;
+                if (contact) {
+
+                    const field = new mdc.textField.MDCTextField(contact.querySelector('.mdc-text-field'));
+                    field.input_.dataset.type = 'Second Contact';
+                    field.value = subscriptionTemplate.attachment['Second Contact'].value;
+                    const initField = phoneFieldInit(field.input_);
+                    itis['Second Contact'] = {
+                        'mdc': field,
+                        'iti': initField
+                    }
+                    field.focus()
+
+                    const remove = contact.querySelector('.mdc-icon-button');
+                    remove.addEventListener('click', function () {
+                        contact.remove();
+                        currentContactsAdded--
+                        delete itis['Second Contact']
+                        toggleContactBtn()
+                    })
+                    document.querySelector('.contact-container').appendChild(contact);
+                }
+                currentContactsAdded++
+                toggleContactBtn()
+            });
+
+          
+            
+            var formEl = document.getElementById('form');
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                const vd = subscriptionTemplate.venue[0];
+                copy.attachment.Name.value = branchName.value;
+              
+                let areAllNumberValid = true
+              
+                if (!deviceType) {
+
+                    Object.keys(itis).forEach(function (name) {
+                        const iti = itis[name]['iti'];
+                        const mdc = itis[name]['mdc'];
+
+                        const phoneNumberValidity = isPhoneNumberValid(iti)
+                        if (!phoneNumberValidity.valid) {
+                            setHelperInvalid(mdc);
+                            mdc.helperTextContent = phoneNumberValidity.message;
+                            areAllNumberValid = false;
+                            return;
+                        }
+                        const number = iti.getNumber(intlTelInputUtils.numberFormat.E164)
+                        copy.attachment[name].value = number
+                      
+                    })
+                }
+                copy.status = 'PENDING'
+                copy.venue[0].address = branchAddress.value;
+                copy.venue[0].location = branchName.value
+                copy.share = []
+                if(!subscriptionTemplate.attachment.Name.value) {
+                    const newSchedule = createEmptySchedule(subscriptionTemplate)
+                    copy.schedule = newSchedule;
+                }
+                
+            
+                console.log(copy);
+                if (areAllNumberValid) {
+
+                    parent.postMessage({
+                        body: copy,
+                        name: 'sendFormToParent'
+                    }, parentOrigin);
+                    toggleSubmit()
+                }
+            })
+
+        }
+
+        function toggleContactBtn() {
+
+            if (currentContactsAdded == 2) {
+                contactBtn.setAttribute('hidden',true)
+                return
+            }
+            if (currentContactsAdded < 2) {
+                contactBtn.removeAttribute('hidden')
+            }
+        }
+
+        function setContact(contactObject) {
+            if (document.querySelector(`[data-number="${contactObject.phoneNumber}"]`)) return
+
+            const li = createPhoneNumberLi(contactObject, false, function () {
+
+                subscriptionTemplate.attachment[li.dataset.type].value = '';
+               
+                contactBtn.removeAttribute('hidden')
+                if (!contactList.listElements.length) {
+                    document.querySelector('.contact-container .inline-flex').appendChild(contactBtn);
+                    return;
+                }
+            });
+
+            if (!subscriptionTemplate.attachment['First Contact'].value) {
+                subscriptionTemplate.attachment['First Contact'].value = contactObject.phoneNumber
+                li.dataset.type = 'First Contact'
+            } else {
+                subscriptionTemplate.attachment['Second Contact'].value = contactObject.phoneNumber
+                li.dataset.type = 'Second Contact'
+            }
+          
+
+            contactList.root_.appendChild(li)
+            document.querySelector(".contact-container").appendChild(contactBtn);
+            if (contactList.listElements.length == 2) {
+                contactBtn.setAttribute('hidden',true)
+                return;
+            }
+
+
+        }
+    </script>
+</body>
+
+</html>
