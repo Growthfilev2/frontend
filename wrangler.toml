@@ -1,0 +1,8 @@
+name = "newsite"
+type = "javascript"
+account_id = "5b02b9e873b59397f93ddddbbc6f3237"
+workers_dev = true
+route = "https://app.growthfile.com/*"
+zone_id = "68ad225aa686f502e54ed65060c7f610"
+[site]
+bucket = "./dist"
