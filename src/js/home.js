@@ -81,6 +81,7 @@ navigator.serviceWorker.onmessage = (event) => {
 };
 
 window.addEventListener("load", (ev) => {
+
   console.log(moment().format("hh:mm"));
   firebase.auth().onAuthStateChanged((user) => {
     const dbName = firebase.auth().currentUser.uid;
@@ -108,6 +109,11 @@ window.addEventListener("load", (ev) => {
     };
   });
 });
+
+function disableBack() 
+{
+   window.history.forward()
+   }
 
 function read() {
   getCurrentJob().then((record) => {
@@ -699,6 +705,7 @@ function subDuties(j) {
 
 function openCamera() {
   history.pushState(null, null, "/upload-photo");
+  disableBack();
   // setFilePath(firebase.auth().currentUser.photoURL);
   // return
   if (_native.getName() === "Android") {
