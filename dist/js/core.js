@@ -1405,20 +1405,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 function handleQRUrl(url) {
   console.log(url);
-  getRootRecord().then(function (rootRecord) {
-    var timestamp = fetchCurrentTime(rootRecord.serverTime);
-    var copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
-    copy.share = [];
-    copy.timestamp = timestamp;
-    requestCreator('create', fillVenueInSub(copy, ''), ApplicationState.location).then(function () {
-      // removeScreen()
-      // successDialog('Check-In Created')
-      ApplicationState.venue = '';
-      ApplicationState.selectedOffice = office;
-      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState)); // initProfileView();
-    });
-  }); // createUnkownCheckIn(ApplicationState.location,true)
-
   firebase.auth().currentUser.getIdToken().then(function (token) {
     if (_native.getName() === 'Android') {
       AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
