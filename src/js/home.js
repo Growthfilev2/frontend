@@ -119,9 +119,11 @@ function read() {
       document.getElementById("location_icon").style.color = "var(--mdc-theme-primary)";
       document.getElementById("builder_icon").style.color = "var(--mdc-theme-primary)";
       document.getElementById("timer_icon").style.color = "var(--mdc-theme-primary)";
+      
     }
 
     record.header = "CurrentDuty";
+    
 
     document
       .getElementById("current_location")
@@ -132,7 +134,7 @@ function read() {
       });
 
     showDuty_card(record);
-
+    
     console.log(record);
 
     document.getElementById("finish").addEventListener("click", function () {
@@ -163,7 +165,15 @@ function read() {
           document.getElementById("comformation_box").style.display = "none";
           console.log(record);
         };
+        
+        
+          sessionStorage.setItem('current_duty', JSON.stringify(record));
+          
+        
       });
+
+      sessionStorage.setItem('current_duty', JSON.stringify(record));
+      console.log(record)
 
     document.getElementById("no_hide").addEventListener("click", function () {
       document.getElementById("comformation_box").style.display = "none";
@@ -318,6 +328,14 @@ function readduty() {
 }
 
 function readallduties(object_of_dates) {
+
+  var parsed_valued = sessionStorage.getItem("current_duty");
+  var current_view_duty = JSON.parse(parsed_valued);
+
+
+
+
+
   const keys = Object.keys(object_of_dates);
   let month;
   let monthCard;
@@ -356,8 +374,7 @@ function readallduties(object_of_dates) {
 
       monthCard = createElement("div", {
         className: "month-card",
-        style: "display:none;",
-        onclick: "arrow_f()"
+        style: "display:none;"
       });
 
       monthCard.innerHTML = ` <div  id="month_card2" >
@@ -401,7 +418,7 @@ function readallduties(object_of_dates) {
 
     const card = createDateCard(date, object_of_dates);
 
-    
+    //console.log(date)
     //Expanded first month
    
     monthCard.addEventListener("click", function (e) {
@@ -493,6 +510,166 @@ function readallduties(object_of_dates) {
     document.getElementById("show_more_b").style.display = "none";
     document.getElementById("show_less_b").style.display = "none";
   }
+
+
+  if(keys.length==0 && current_view_duty){
+    console.log(current_view_duty)
+
+    var date = new Date(current_view_duty.timestamp); // Thu Apr 09 2020 14:28:32 GMT+0100 (British Summer Time)
+    let year = date.getFullYear()
+    
+    let month = date.getMonth();
+    
+    let name_month =moment().month(month).format("MMMM");
+
+    let working_day = getDaysInMonth(month+1, year);
+    console.log(working_day)
+    console.log(name_month, year);
+
+    function getDaysInMonth(month,year) {
+     
+     return new Date(year, month, 0).getDate();
+
+    };
+
+    monthCard = createElement("div", {
+      className: "C_month-card",
+      style: "display:block;"
+    });
+
+    monthCard.innerHTML = ` <div  id="C_month_card2" >
+              <div id="on_card2">
+              <p id="month_date2">${name_month} ${year}</p>
+              
+              <p class="total-days-worked">Day Worked: 1 Day/${working_day} Days </p>
+              
+              <span class="material-icons arrow_class" id="C_arrow" >keyboard_arrow_up</span>
+              </div>
+             
+              </div>
+              `;
+
+
+  let only_date =date.getDate();
+
+  var weekDayName =  moment(current_view_duty.timestamp).format('ddd').toString().toUpperCase();
+  console.log(weekDayName)
+
+  console.log(only_date)
+
+  const C_day_total_time = moment(current_view_duty.checkins[0].timestamp).format("hh:mm A")
+  ;
+  console.log(C_day_total_time)
+
+
+
+  
+
+   card = createElement("div", {
+                id: "C_collapsed2",
+              });
+              card.innerHTML = `
+  
+              <div id="date_day2"> <p style="background-color: "var(--mdc-theme-primary)";  id="duty_date2">${only_date}</p> <p id="duty_day2">${weekDayName}</p></div>
+              <div id="duty_div2">
+                <div id="collapsed_duty2" >
+                <p><span id="current_location_icon" class="material-icons-outlined">
+                location_on
+                </span><span id="duty_address2">${current_view_duty.checkins[0].venue[0].address.slice(0,35)} </span>
+              </p>
+              <p>
+              
+               <span id="current_totaltime_icon" class="material-icons-outlined">
+                work_outline
+                  </span><span id="total_duties2"> ${current_view_duty.checkins.length}</span>
+                  
+                </p>
+                      <p id="arrow_div"><span class="material-icons" id="day_arrow">keyboard_arrow_down</span></p>
+                </div>
+                    
+                <div><hr id="h_line"><div id="circle"></div></div> 
+                  <div class='duties-list'></div>
+              </div>
+              
+                    
+              `;
+              var assignees_displayname = current_view_duty.assignees[0].displayName;
+              var assignees_phonenumber = current_view_duty.assignees[0].phoneNumber;
+              var assignees_photo = current_view_duty.assignees[0].photoURL;
+
+              const collapsed = createElement("div", {
+                id: "C_expended_duty",
+                style: "display: block;",
+              });
+            
+              collapsed.addEventListener("click", function (e) {
+                e.stopPropagation();
+              
+            
+                passDuty(current_view_duty);
+              });
+            
+              collapsed.innerHTML = `
+              <div id="C_individual_duty">
+              
+                          <p id="expended_location">
+                          <span id="inner_location_icon" class="material-icons-outlined"> location_on </span>&nbsp
+                          &nbsp<span id="expended_location">${
+                            current_view_duty.checkins[0].venue[0].address
+                          }</span>
+                        </p>
+                
+                        <p id="expended_checkin_time">
+                          <span id="inner_builder_icon" class="material-icons-outlined"> query_builder </span>&nbsp
+                          &nbsp<span id="expended_interval">
+                            <span id="expended_starting_time">${C_day_total_time}</span>-
+                            <span id="expended_ending_time">On-Going</span></span
+                          >
+                        </p>
+                        
+                      
+                        <div style="display: flex;"> 
+                        <div class="mdc-chip-set mdc-chip-set--filter" role="grid" id="assignees_div">
+                        <div class="mdc-chip" id="assignees_div" role="row">
+                          <div class="mdc-chip__ripple"></div>
+                          <i class="material-icons mdc-chip__icon mdc-chip__icon--leading"><img id="assignees_pic" src="${assignees_photo}"  width="24px" height="24px"></i>
+                          <span class="mdc-chip__checkmark" >
+                            <svg class="mdc-chip__checkmark-svg" viewBox="-2 -3 30 30">
+                              <path class="mdc-chip__checkmark-path" fill="none" stroke="black"
+                                    d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+                            </svg>
+                          </span>
+                          <span role="gridcell">
+                            <span role="checkbox" tabindex="0" aria-checked="false" class="mdc-chip__primary-action">
+                              <span class="mdc-chip__text" id="assignees_name">${
+                                !assignees_displayname
+                                  ? assignees_phonenumber
+                                  : assignees_displayname
+                              }</span>
+                            </span>
+                          </span>
+                        </div>
+                      
+                      </div >
+                      <span id="other_assignees"></span>
+                      <div id="duty_right_indicator">
+                      <span class="material-icons">
+                      keyboard_arrow_right
+                      </span>
+                      </div>
+                      </div>
+                      
+                      </div>
+            
+                     
+                          `;
+
+              document.getElementById("first_card").appendChild(monthCard);
+             document.getElementById("expanded_duty").appendChild(card);
+             document.getElementById("dutyview").appendChild(collapsed);
+  }
+ 
+
 }
 
 function createDateCard(date, object_of_dates) {
@@ -594,6 +771,7 @@ function createDateCard(date, object_of_dates) {
 // }
 
 function subDuties(j) {
+  
   var diff = moment
     .utc(
       moment(j.schedule[0].endTime || "00").diff(
