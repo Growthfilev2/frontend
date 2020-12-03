@@ -9,6 +9,8 @@ var deepLink;
 var firebaseAnalytics;
 var serverTimeUpdated = false;
 window.addEventListener('load', function () {
+  updateApp();
+  return
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {
       scope: '/v3/'
