@@ -512,6 +512,7 @@ function readallduties(object_of_dates) {
   }
 
 
+
   if(keys.length==0 && current_view_duty){
     console.log(current_view_duty)
 
@@ -575,7 +576,7 @@ function readallduties(object_of_dates) {
                 <div id="collapsed_duty2" >
                 <p><span id="current_location_icon" class="material-icons-outlined">
                 location_on
-                </span><span id="duty_address2">${current_view_duty.checkins[0].venue[0].address.slice(0,35)} </span>
+                </span><span id="duty_address2">${current_view_duty.attachment.Location.value.slice(0,30)} </span>
               </p>
               <p>
               
@@ -615,7 +616,7 @@ function readallduties(object_of_dates) {
                           <p id="expended_location">
                           <span id="inner_location_icon" class="material-icons-outlined"> location_on </span>&nbsp
                           &nbsp<span id="expended_location">${
-                            current_view_duty.checkins[0].venue[0].address
+                            current_view_duty.attachment.Location.value
                           }</span>
                         </p>
                 
