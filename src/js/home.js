@@ -164,6 +164,7 @@ function read() {
           document.getElementById("blur").style.display = "none";
           document.getElementById("comformation_box").style.display = "none";
           console.log(record);
+          location.reload();
         };
         
         
