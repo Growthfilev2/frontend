@@ -341,21 +341,6 @@ color: var(--mdc-theme-on-secondary);
   box-shadow: 0 0 2px #a7a7a7;
 }
 
-.C_month-card{
-
-}
-
-#C_month_card2 {
-  display: block;
-  width: 94.4%;
-  margin: 0 auto;
-  border-radius: 2px;
-  height: 63px;
-  background-color: var(--mdc-theme-primary);
-  margin-bottom: 5px;
-  color:var(--mdc-theme-on-secondary);
-  box-shadow: 0 0 2px #a7a7a7;
-}
 
 
 
@@ -409,13 +394,6 @@ color: var(--mdc-theme-on-secondary);
   padding-bottom: 5px;
 }
 
-#C_collapsed2{
-  position: relative;
-  display: flex;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
 
 #arrow {
   position: relative;
@@ -424,12 +402,6 @@ color: var(--mdc-theme-on-secondary);
   
 }
 
-#C_arrow{
-  position: relative;
-  top: -40px;
-  left: 90%;
-  color: white;
-}
 
 .mdc-typography--caption, .mdc-typography--subtitle1, .mdc-typography--subtitle2{
   color: var(--mdc-theme-on-secondary);
@@ -560,9 +532,7 @@ color: var(--mdc-theme-on-secondary);
   border: 2px solid gainsboro;
 }
 
-#C_expended_duty{
 
-}
 
 #expended_location,
 #expended_checkin_time,
@@ -605,16 +575,6 @@ letter-spacing: 0.15000000596046448px;
   margin-bottom: 14px;
 }
 
-#C_individual_duty{
-  width: 75%;
-  border: 1px #e5e5e5 solid;
-  padding-top: 14px;
-  padding-bottom: 14px;
-  margin-top: 14px;
-  margin-bottom: 14px;
-  margin-left: 22%;
-  
-}
 
 #show_more_b {
   position: fixed;
