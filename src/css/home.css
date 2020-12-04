@@ -339,8 +339,8 @@ color: var(--mdc-theme-on-secondary);
   margin-bottom: 5px;
   color:var(--mdc-theme-on-secondary);
   box-shadow: 0 0 2px #a7a7a7;
-
 }
+
 
 
 
@@ -395,13 +395,25 @@ color: var(--mdc-theme-on-secondary);
 }
 
 
-
 #arrow {
   position: relative;
   top: -40px;
   left: 90%;
   
 }
+
+
+.mdc-typography--caption, .mdc-typography--subtitle1, .mdc-typography--subtitle2{
+  color: var(--mdc-theme-on-secondary);
+}
+
+
+
+
+.mdc-button__label{
+  color: white;
+}
+
 
 #date_day2 {
   height: 100%;
@@ -478,6 +490,7 @@ color: var(--mdc-theme-on-secondary);
 
 #description_box{
   height: 50px;
+  color: var(--mdc-theme-on-secondary);
 }
 
 .material-icons {
@@ -519,11 +532,21 @@ color: var(--mdc-theme-on-secondary);
   border: 2px solid gainsboro;
 }
 
+
+
 #expended_location,
 #expended_checkin_time,
 #expended_checkin_totaltime {
   padding-left: 10px;
   color: var(--mdc-theme-on-secondary);
+  font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: 24px;
+letter-spacing: 0.15000000596046448px;
+
+
 }
 
 #duty_date2 {
@@ -551,7 +574,6 @@ color: var(--mdc-theme-on-secondary);
   margin-top: 14px;
   margin-bottom: 14px;
 }
-
 
 
 #show_more_b {

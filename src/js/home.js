@@ -77,7 +77,7 @@ navigator.serviceWorker.onmessage = (event) => {
 };
 
 window.addEventListener("load", (ev) => {
-  console.log(moment().format("hh:mm"));
+//  console.log(moment().format("hh:mm"));
   firebase.auth().onAuthStateChanged((user) => {
     const dbName = firebase.auth().currentUser.uid;
     const request = window.indexedDB.open(dbName, DB_VERSION);
@@ -114,14 +114,17 @@ function read() {
     }
 
     if (record.activityId) {
+
       document.getElementById("current_duty_card").style.display = "flex";
 
       document.getElementById("location_icon").style.color = "var(--mdc-theme-primary)";
       document.getElementById("builder_icon").style.color = "var(--mdc-theme-primary)";
       document.getElementById("timer_icon").style.color = "var(--mdc-theme-primary)";
+      
     }
 
     record.header = "CurrentDuty";
+    
 
     document
       .getElementById("current_location")
@@ -132,7 +135,7 @@ function read() {
       });
 
     showDuty_card(record);
-
+    
     console.log(record);
 
     document.getElementById("finish").addEventListener("click", function () {
@@ -161,9 +164,18 @@ function read() {
 
           document.getElementById("blur").style.display = "none";
           document.getElementById("comformation_box").style.display = "none";
-          console.log(record);
+         // console.log(record);
+          
         };
+        
+        
+          
+          
+        
       });
+
+      
+      console.log(record)
 
     document.getElementById("no_hide").addEventListener("click", function () {
       document.getElementById("comformation_box").style.display = "none";
@@ -203,22 +215,12 @@ function readduty() {
       return;
     }
 
-    if (
-      cursor.value.schedule[0].startTime == cursor.value.schedule[0].endTime
-    ) {
-      cursor.continue();
-      return;
-    }
 
     if (cursor.value.isActive == false) {
       cursor.continue();
       return;
     }
 
-    if (cursor.value.isActive == false) {
-      cursor.continue();
-      return;
-    }
 
     if (cursor.value.finished == false) {
       cursor.continue();
@@ -239,8 +241,10 @@ function readduty() {
     timestamp_array.push(cursor.value.timestamp);
     duties.push(cursor.value);
     cursor.continue();
+   
   };
   transaction.oncomplete = function () {
+  //  console.log(duties);
     let DT = {};
     // sort by desciding order;
 
@@ -258,7 +262,7 @@ function readduty() {
       }
     });
 
-    console.log(DT);
+    
 
     const months = Object.keys(dateObjects);
     let date_objects = {};
@@ -312,7 +316,7 @@ function readduty() {
         };
       });
     });
-    console.log(date_objects);
+  //  console.log(date_objects);
     readallduties(date_objects);
   };
 }
@@ -356,8 +360,7 @@ function readallduties(object_of_dates) {
 
       monthCard = createElement("div", {
         className: "month-card",
-        style: "display:none;",
-        onclick: "arrow_f()"
+        style: "display:none;"
       });
 
       monthCard.innerHTML = ` <div  id="month_card2" >
@@ -401,7 +404,7 @@ function readallduties(object_of_dates) {
 
     const card = createDateCard(date, object_of_dates);
 
-    
+    //console.log(date)
     //Expanded first month
    
     monthCard.addEventListener("click", function (e) {
@@ -493,6 +496,8 @@ function readallduties(object_of_dates) {
     document.getElementById("show_more_b").style.display = "none";
     document.getElementById("show_less_b").style.display = "none";
   }
+ 
+
 }
 
 function createDateCard(date, object_of_dates) {
@@ -594,6 +599,7 @@ function createDateCard(date, object_of_dates) {
 // }
 
 function subDuties(j) {
+
   var diff = moment
     .utc(
       moment(j.schedule[0].endTime || "00").diff(
@@ -604,7 +610,7 @@ function subDuties(j) {
 
   var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
   var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
-
+ // console.log(j);
   var assignees_displayname = j.assignees[0].displayName;
   var assignees_phonenumber = j.assignees[0].phoneNumber;
   var assignees_photo = j.assignees[0].photoURL;
@@ -631,7 +637,7 @@ function subDuties(j) {
 
     passDuty(j);
   });
-
+  
   collapsed.innerHTML = `
   <div id="individual_duty">
   
@@ -694,6 +700,8 @@ function subDuties(j) {
 }
 
 function openCamera() {
+
+  disableBack();
 
   if (_native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
@@ -834,3 +842,7 @@ function sendPhotoCheckinRequest(request) {
     });
 }
 
+function disableBack() 
+{
+   window.history.forward()
+   }
