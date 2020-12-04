@@ -70,7 +70,7 @@ navigator.serviceWorker.onmessage = function (event) {
 };
 
 window.addEventListener("load", function (ev) {
-  console.log(moment().format("hh:mm"));
+  //  console.log(moment().format("hh:mm"));
   firebase.auth().onAuthStateChanged(function (user) {
     var dbName = firebase.auth().currentUser.uid;
     var request = window.indexedDB.open(dbName, DB_VERSION);
@@ -134,10 +134,10 @@ function read() {
       tx.oncomplete = function () {
         document.getElementById("current_duty_card").style.display = "none";
         document.getElementById("blur").style.display = "none";
-        document.getElementById("comformation_box").style.display = "none";
-        console.log(record);
+        document.getElementById("comformation_box").style.display = "none"; // console.log(record);
       };
     });
+    console.log(record);
     document.getElementById("no_hide").addEventListener("click", function () {
       document.getElementById("comformation_box").style.display = "none";
       document.getElementById("blur").style.display = "none";
@@ -169,16 +169,6 @@ function readduty() {
       return;
     }
 
-    if (cursor.value.schedule[0].startTime == cursor.value.schedule[0].endTime) {
-      cursor["continue"]();
-      return;
-    }
-
-    if (cursor.value.isActive == false) {
-      cursor["continue"]();
-      return;
-    }
-
     if (cursor.value.isActive == false) {
       cursor["continue"]();
       return;
@@ -205,6 +195,7 @@ function readduty() {
   };
 
   transaction.oncomplete = function () {
+    //  console.log(duties);
     var DT = {}; // sort by desciding order;
 
     var sorted = duties.sort(function (b, a) {
@@ -220,7 +211,6 @@ function readduty() {
         DT["".concat(date.getMonth()).concat(date.getFullYear())] = [duty];
       }
     });
-    console.log(DT);
     var months = Object.keys(dateObjects);
     var date_objects = {}; // loop through the object and caluclate total hours, total locations and total hours worked
     // for each date
@@ -266,8 +256,8 @@ function readduty() {
           activities: activities
         };
       });
-    });
-    console.log(date_objects);
+    }); //  console.log(date_objects);
+
     readallduties(date_objects);
   };
 }
@@ -305,8 +295,7 @@ function readallduties(object_of_dates) {
       total_working_day = moment(date, "YYYY-MM").daysInMonth();
       monthCard = createElement("div", {
         className: "month-card",
-        style: "display:none;",
-        onclick: "arrow_f()"
+        style: "display:none;"
       });
       monthCard.innerHTML = " <div  id=\"month_card2\" >\n                <div id=\"on_card2\">\n                <p id=\"month_date2\">".concat(one_month, " ").concat(curent_year, "</p>\n                \n                <p class=\"total-days-worked\"></p>\n                \n                <span class=\"material-icons arrow_class\" id=\"arrow\" >keyboard_arrow_down</span>\n                </div>\n               \n                </div>\n                ");
       daysWorkedInMonth = 0;
@@ -326,7 +315,8 @@ function readallduties(object_of_dates) {
     } // Converted total work hours in to hours and minuts
 
 
-    var card = createDateCard(date, object_of_dates); //Expanded first month
+    var card = createDateCard(date, object_of_dates); //console.log(date)
+    //Expanded first month
 
     monthCard.addEventListener("click", function (e) {
       // if(card.style.display == "flex"){
@@ -454,7 +444,8 @@ function createDateCard(date, object_of_dates) {
 function subDuties(j) {
   var diff = moment.utc(moment(j.schedule[0].endTime || "00").diff(moment(j.schedule[0].startTime))).format("HH:mm");
   var starttime = moment(j.schedule[0].startTime).format("hh:mm A");
-  var endtime = moment(j.schedule[0].endTime).format("hh:mm A");
+  var endtime = moment(j.schedule[0].endTime).format("hh:mm A"); // console.log(j);
+
   var assignees_displayname = j.assignees[0].displayName;
   var assignees_phonenumber = j.assignees[0].phoneNumber;
   var assignees_photo = j.assignees[0].photoURL;
@@ -485,6 +476,7 @@ function subDuties(j) {
 }
 
 function openCamera() {
+  // history.pushState(null, null, "/upload-photo");
   if (_native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return;
@@ -559,4 +551,8 @@ function sendPhotoCheckinRequest(request) {
 
     snacks(error.message);
   });
+}
+
+function disableBack() {
+  window.history.forward();
 }
