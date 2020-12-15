@@ -15,6 +15,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="./css/app.css" />
   <link rel="stylesheet" type="text/css" href="./css/login.css" />
+  <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
+
   <script defer src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
   <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js'></script>
   <script defer src='https://www.gstatic.com/firebasejs/7.6.2/firebase-auth.js'></script>
@@ -24,15 +26,19 @@
 
 
 <body >
+ 
 
   <div id="upper_logo">
     <img id="logo_dark" src="img/login_logo.svg" >
   </div>
 
+  
+  <div id="firebaseui-auth-container" ></div>
+  <div id="loading">Loading...</div>
 
   <div class="outer-div"><div class="inner-div">© Growthfile</div></div>
 
-  <div class="wrapper">
+  <!-- <div class="wrapper">
 
     <div class="header">
       <p>Log in</p>
@@ -82,12 +88,16 @@
           create
           </span> &nbsp &nbsp Change Phone Number</a>
       </div>
-    </div>
+    </div> -->
 
     <script src="external/js/intl-utils.js"></script>
     <script src="external/js/intlTelInput.min.js"></script>
     <script defer src="js/core.js"></script>
-    <script defer src="js/login.js"></script>
+     <script defer src="js/login.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.js"></script>
+
 </body>
 
 </html>
+
+
