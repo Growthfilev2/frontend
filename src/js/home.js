@@ -127,7 +127,7 @@ function read() {
     
 
     document
-      .getElementById("current_location")
+      .getElementById("current_duty_card")
       .addEventListener("click", function (e) {
         e.stopPropagation();
 
@@ -138,7 +138,8 @@ function read() {
     
     console.log(record);
 
-    document.getElementById("finish").addEventListener("click", function () {
+    document.getElementById("finish").addEventListener("click", function (e) {
+      e.stopPropagation();
       document.getElementById("blur").style.display = "block";
       document.getElementById("comformation_box").style.display = "block";
       // current_date = new Date();
