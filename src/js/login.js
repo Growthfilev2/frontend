@@ -29,7 +29,7 @@ ui.start('#firebaseui-auth-container', {
         badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
       },
       defaultCountry: 'IN', 
-      defaultNationalNumber: '9999955555',
+     
      
     }
   ]
@@ -40,8 +40,7 @@ ui.start('#firebaseui-auth-container', {
 var uiConfig = {
   callbacks: {
     signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-      firebase.auth().onAuthStateChanged(function (user) {
-        if (!user) return;
+    
         setTimeout(() => {
           const queryParams = new URLSearchParams(window.location.search);
           // after login send custom events to fb analytics and firebase analytics
@@ -92,8 +91,7 @@ var uiConfig = {
                   }`
               );
             });
-        }, 1500)
-      });
+        }, 1500);
       return false;
     },
     uiShown: function() {
