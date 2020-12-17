@@ -325,6 +325,23 @@ color: var(--mdc-theme-on-secondary);
     text-align: center;
     margin-top: 50%;
   }
+
+  .mdl-button--raised{
+    background-color: var(--mdc-theme-primary) !important;
+  }
+
+  .mdl-button--colored{
+    background-color: var(--mdc-theme-primary) !important;
+  }
+
+  .firebaseui-link{
+    color: var(--mdc-theme-primary) !important;
+    text-decoration: underline;
+  }
+  
+  .mdl-button--primary, .mdl-button--primary{
+    color: var(--mdc-theme-primary) !important;
+  }
   
   /* html, body {
     height: 100%;
