@@ -289,7 +289,7 @@ color: var(--mdc-theme-on-secondary);
   font-weight: 700;
   line-height: 16px;
   letter-spacing: 0.11em;
-  z-index: 50s;
+  z-index: 50;
 }
 
 #current_location {
@@ -299,7 +299,6 @@ color: var(--mdc-theme-on-secondary);
   font-weight: 500;
   line-height: 24px;
   letter-spacing: 0.15000000596046448px;
-  text-decoration: underline;
   color: var(--mdc-theme-on-secondary);
  
 }
@@ -496,7 +495,7 @@ color: var(--mdc-theme-on-secondary);
 .material-icons {
   position: relative;
   top: 6px;
-  color: #333333;
+  color: var(--mdc-theme-on-secondary);
 
 }
 
@@ -631,6 +630,16 @@ letter-spacing: 0.15000000596046448px;
 #duty_right_indicator{
   margin: 0 auto;
   margin-right: 10px;
+}
 
-  
+#currentduty_right_indicator{
+
+ position: relative;
+ left: 100%;
+ top: 10px;
+
+}
+
+#right_arrow{
+  color: var(--mdc-theme-on-secondary);
 }
