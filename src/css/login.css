@@ -342,7 +342,15 @@ color: var(--mdc-theme-on-secondary);
   .mdl-button--primary, .mdl-button--primary{
     color: var(--mdc-theme-primary) !important;
   }
+
+ 
+  .firebaseui-tos, .firebaseui-title, .firebaseui-id-phone-number, .mdl-textfield__label, .firebaseui-id-country-selector-code, .firebaseui-text, .firebaseui-id-resend-countdown, .firebaseui-id-phone-confirmation-code{
+    color: var(--mdc-theme-on-secondary);
+  }
   
+  .mdl-card {
+    background-color: transparent;
+  }
   /* html, body {
     height: 100%;
   }
