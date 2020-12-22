@@ -842,7 +842,7 @@ function executeRequest(requestGenerator) {
 
 function updateApp() {
   if (_native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
-  var updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create();
+  var updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use OnDuty. Click Okay to Install Lastest Version from Google Play Store.').create();
   updateAppDialog.open();
   updateAppDialog.scrimClickAction = '';
   updateAppDialog.listen('MDCDialog:opened', function () {
@@ -852,6 +852,9 @@ function updateApp() {
   updateAppDialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
     AndroidInterface.openGooglePlayStore('com.growthfile.growthfileNew');
+    setTimeout(()=>{
+      updateAppDialog.open();
+    },1000)
   });
 }
 
