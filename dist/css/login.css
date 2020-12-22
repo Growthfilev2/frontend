@@ -76,9 +76,10 @@ html, body {
  
   .outer-div
   {
-    position: absolute;
+    position: fixed;
     bottom: 10px;
     width: 100%;
+    z-index: -1;
   }
   .inner-div
   {
@@ -93,7 +94,7 @@ line-height: 15px;
 letter-spacing: 0em;
 text-align: center;
 color: var(--mdc-theme-on-secondary);
-
+z-index: -1;
   
   }
 
@@ -352,3 +353,11 @@ color: var(--mdc-theme-on-secondary);
     background-color: transparent;
   }
   .firebaseui-textfield.mdl-textfield .firebaseui-label::after{background-color:var(--mdc-theme-primary)}
+
+  .firebaseui-button {
+    background-color: var(--mdc-theme-on-primary)
+  }
+
+  .firebaseui-tos-link{
+    background-color: var(--mdc-theme-on-primary)
+  }
