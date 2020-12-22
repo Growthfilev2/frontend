@@ -8,6 +8,7 @@ html,
 body {
   height: 100%;
   background-color: var(--mdc-theme-secondary);
+  
 }
 
 .mdc-top-app-bar .material-icons {
@@ -634,9 +635,10 @@ letter-spacing: 0.15000000596046448px;
 
 #currentduty_right_indicator{
 
- position: relative;
- left: 100%;
- top: 10px;
+ 
+ margin-left: 95px;
+ margin-top: 10px;
+ 
 
 }
 
