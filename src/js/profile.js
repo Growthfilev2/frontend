@@ -1,3 +1,5 @@
+
+
 let db;
 const logout = document.getElementById("logout");
 
@@ -22,6 +24,16 @@ document.getElementById('file').addEventListener('change', (ev) => {
 })
 
 window.addEventListener("load", (ev) => {
+
+  if (localStorage.getItem('mode') === 'dark') {
+    
+    document.getElementById("darkTheme").checked = true;
+
+  }else{
+    document.querySelector('body').classList.remove('dark');
+    
+  }
+
   firebase.auth().onAuthStateChanged((user) => {
     loadProfileData(user)
   });
@@ -117,3 +129,20 @@ const calculateProfileVerification = (rootRecord) => {
   return ((fields.filter(value => value).length / fields.length) * 100).toFixed(0)
 }
 
+document.querySelector("#darkTheme").addEventListener("click", function(e){
+
+ 
+
+  localStorage.setItem('mode', (localStorage.getItem('mode')) === 'dark' ? 'light' : 'dark');
+
+  if (localStorage.getItem('mode') === 'dark') {
+    document.querySelector('body').classList.add('dark');
+    document.getElementById("darkTheme").checked = true;
+
+  }else{
+    document.querySelector('body').classList.remove('dark');
+    
+  }
+
+
+})

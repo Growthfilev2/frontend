@@ -11,7 +11,7 @@ var serverTimeUpdated = false;
 window.addEventListener('load', function () {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {
-      scope: appKey.getMode() === 'dev' ? '/' : '/v3/'
+      scope: '/v3/'
     }).then(function (reg) {
       var reloadCounter = 0;
       reg.addEventListener('updatefound', function () {
@@ -96,6 +96,13 @@ window.addEventListener('load', function () {
  */
 
 function getDynamicLink(link) {
+  var url = new URL(link);
+  deepLink = new URLSearchParams(url.search);
+}
+/** To be removed in next ios release */
+
+
+function parseDynamicLink(link) {
   var url = new URL(link);
   deepLink = new URLSearchParams(url.search);
 }

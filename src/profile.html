@@ -7,7 +7,7 @@
     <title>Profile</title>
     <link href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="./css/profile.css">
+    <link rel="stylesheet" href="css/profile.css">
     <link rel="shortcut icon" type="image/png" href="./img/favicon.png"/>
 
     <link href="https://fonts.googleapis.com/icon?family=Roboto:300,400,500|Material+Icons" rel="stylesheet">
@@ -58,7 +58,9 @@
                         <p class="info_text">Profile Completion</p>
                         <div class="percentage"></div>
                     </div>
+                    <div id="progress_background">
                     <div class="progress-bar" id="progress-bar"></div>
+                </div>
                     <div id="profile-completion-buttons"></div>
                 </div>
             </div>
@@ -122,10 +124,11 @@
 
                 <div id="employee-list">
                     <p class="info_header">Employee At</p>
+                   
+                    <p class="info_value" id="employee-at">...</p>
                     <span id="office_arrow" class="material-icons">
                         keyboard_arrow_right
                     </span>
-                    <p class="info_value" id="employee-at">...</p>
                 </div>
             </a>
 
@@ -134,12 +137,12 @@
             <p class="help_text">INFORMATION</p>
 
 
-            <a class="info_div" href="https://growthfile.com/faq" target="_blank">
+            <a class="info_div" href="https://growthfile.com/onduty/#faq" target="_blank">
                 <div class="icons">
                     <span class="material-icons icon_img">
                         question_answer
                     </span>
-                    <p class="faq_text">FAQs</p>
+                    <p class="faq_text info_header">FAQs</p>
                 </div>
             </a>
 
@@ -148,7 +151,7 @@
                     <span class="material-icons icon_img_policy">
                         policy
                     </span>
-                    <p class="policy_text">Privacy Policy </p>
+                    <p class="policy_text info_header">Privacy Policy </p>
                 </div>
             </a>
 
@@ -159,13 +162,14 @@
                     <span class="material-icons icon_img_agent">
                         support_agent
                     </span>
-                    <p class="policy_text">Contact Us</p>
+                    <p class="policy_text info_header">Contact Us</p>
                 </div>
             </a>
         </section>
         <section class="profile-section">
             <p class="help_text">SETTINGS</p>
-            <!-- <div class="info_div">
+
+             <div class="info_div">
 
                 <div class="icon">
                     <span class="material-icons">
@@ -173,18 +177,27 @@
                     </span>
                 </div>
 
-                <div>
+                <div id="dar_theme">
+                    <div id="dark_theme_text">
                     <p class="info_header">Personalization</p>
+                    
+                    <p id="toggle_theme" class="info_value">Dark Theme</p>
+                    </div>
+
+               
+                   
+
+
                     <div class="toggle">
                         <label class="switch">
-                            <input type="checkbox">
-                            <span class="slider round"></span>
+                            <input id="darkTheme" type="checkbox">
+                            <span  class="slider round"></span>
                         </label>
-                    </div>
-                    <p class="info_value">Dark Theme</p>
+                    </div> 
+
                 </div>
 
-            </div> -->
+            </div> 
             <div class="info_div">
 
                 <div class="icon">
@@ -203,6 +216,7 @@
         </section>
     </div>
 
+    
     <script src="js/core.js"></script>
     <script src="js/profile.js"></script>
     <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>

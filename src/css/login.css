@@ -1,5 +1,6 @@
 html, body {
     height: 100%;
+   
   }
   
   *{
@@ -17,7 +18,14 @@ html, body {
               width: 100%;
               height: 100%;
               font-family: 'Roboto';
+              z-index: 44;
               
+  }
+
+  #upper_logo{
+    position: absolute;
+    right: 10px;
+    top: 10px;
   }
   
   .wrapper{
@@ -37,6 +45,7 @@ html, body {
   letter-spacing: 0em;
   text-align: center;
   margin-bottom: 7.34%;
+  color: var(--mdc-theme-on-secondary);
   }
   
   #login_section{
@@ -48,14 +57,14 @@ html, body {
   
 
   #phoneNumber:focus{
-    outline-color: #25456C;
+    outline-color: var(--mdc-theme-primary);
   }
 
 
   #phoneNumber{
     height: 56px;
-    background: none;
-    border: 1px solid #25456C;
+    background: white;
+    border: 1px solid var(--mdc-theme-primary);
     box-shadow: 0px 1px 1px 0px rgba(0, 0, 0,0.3);
     font-size: 16px;
     font-weight: bold;
@@ -67,9 +76,10 @@ html, body {
  
   .outer-div
   {
-    position: absolute;
+    position: fixed;
     bottom: 10px;
     width: 100%;
+    z-index: -1;
   }
   .inner-div
   {
@@ -83,7 +93,8 @@ font-weight: 500;
 line-height: 15px;
 letter-spacing: 0em;
 text-align: center;
-
+color: var(--mdc-theme-on-secondary);
+z-index: -1;
   
   }
 
@@ -93,7 +104,7 @@ text-align: center;
     background: #ffffff;
    margin-top: 15px;
   font-style: normal;
-  border: 1px solid #25456C;
+  border: 1px solid var(--mdc-theme-primary);
   font-size: 18px;
   color: #25456C;
   
@@ -102,11 +113,11 @@ text-align: center;
 
 
 .otp_number:focus{
-  outline-color: #25456C;
+  outline-color: var(--mdc-theme-primary);
 }
   #sign-in-button:focus {
     outline: -webkit-focus-ring-color auto 1px;
-    outline-color: #25456C;
+    outline-color: var(--mdc-theme-primary);
     outline-style: auto;
     outline-width: 1px;
 }
@@ -114,10 +125,10 @@ text-align: center;
   #sign-in-button{
     height: 56px;
     width: 284px;
-    background: #25456C;
+    background: var(--mdc-theme-primary);
    margin-top: 15px;
   font-style: normal;
-  border: 1px solid #25456C;
+  border: 1px solid var(--mdc-theme-primary);
   font-size: 18px;
   color: white;
   }
@@ -143,7 +154,7 @@ text-align: center;
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0em;
-  color: #767272;
+  color: var(--mdc-theme-on-secondary);
   margin-top: 12px;
   }
   
@@ -158,7 +169,7 @@ text-align: center;
   width: 46.86px;
   height: 46.86px;
   background: #FDFDFD;
-  border: 1px solid #25456C;
+  border: 1px solid var(--mdc-theme-primary);
   box-sizing: border-box;
   border-radius: 2px;
   text-align: center;
@@ -181,7 +192,7 @@ text-align: center;
   
   text-align: center;
   
-  color: #25456C;
+  color: var(--mdc-theme-primary);
   }
 
   .resend{
@@ -190,12 +201,12 @@ text-align: center;
   }
   
   .change_number{
-    color: #25456C;
+    color: var(--mdc-theme-primary);
   }
 
   a{
     text-decoration: none;
-    color:  #25456C;
+    color:  var(--mdc-theme-primary);
   }
 
   .material-icons{
@@ -304,113 +315,53 @@ text-align: center;
   .dot4{
     animation-delay:1.05s;
   }
-  
-  /* html, body {
-    height: 100%;
+
+  #firebaseui-auth-container{
+   margin-top: 40%;
+   z-index: 45;
+
   }
-  
-        *{
-           margin: 0px;
-          padding: 0px;
-  text-align: center;
-        }
-  
-  
-        body{
-          background-image: url(../img/login_background.svg);
-          background-repeat: no-repeat;
-          background-position: center center;
-          background-size: cover;
-          
-        }
-  
-        h1{
-          color: black;
-          height: auto;
-          margin-bottom: 47px;
-        }
-  
-        .container{
-        position: fixed;
-        top: 30.6%;
-        width: 100%;
-        
-        
-        }
-       
-        #phoneNumber{
-          
-          text-align: left;
-          height: 56px;
-          background: none;
-          border: 1px solid #2C8FEB;
-          box-shadow: 0px 1px 1px 0px rgba(0, 0, 0,0.3);
-          font-size: 16px;
-          font-weight: bold;
-          color: black;
-          font-family: Roboto;
-          width: 100%;
-        }
-  
-      
-   
-        #sign-in-button{
-          height: 56px;
-          width: 284px;
-          background: #25456C;
-         margin-top: 15px;
-        font-style: normal;
-        border: 1px solid #2D4B71;
-        font-size: 18px;
-        color: white;
-        }
-  
-        #code{
-          height: 56px;
-          width: 71.3%;
-        }
-  
-        #step2{
-          display: none;
-        }
-        
-  #copyright{
-    position: absolute;
+
+  #loading{
     text-align: center;
-    bottom: 4.3%;
-    
-  font-size: 12px;
-  
-  font-weight: bold;
-  line-height: 15px;
-  letter-spacing: 1px;
-  left:39.1%;
-  
+    margin-top: 50%;
+  }
+
+  .mdl-button--raised{
+    background-color: var(--mdc-theme-primary) !important;
+  }
+
+  .mdl-button--colored{
+    background-color: var(--mdc-theme-primary) !important;
+  }
+
+  .firebaseui-link{
+    color: var(--mdc-theme-primary) !important;
+    text-decoration: underline;
   }
   
-        
+  .mdl-button--primary, .mdl-button--primary{
+    color: var(--mdc-theme-primary) !important;
+  }
+
+ 
+  .firebaseui-tos, .firebaseui-title, .firebaseui-id-phone-number, .mdl-textfield__label, .firebaseui-id-country-selector-code, .firebaseui-text, .firebaseui-id-resend-countdown, .firebaseui-id-phone-confirmation-code{
+    color: var(--mdc-theme-on-secondary);
+  }
   
-   .iti__flag-container{
-    border: 1px solid #2C8FEB;
-    background: #EEEEEE;
-    padding: 10px;
-  
-   }
-  
-   .iti__flag {background-image: url("external/img/flags.png");}
-  
-   @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-     .iti__flag {background-image: url("external/img/flags@2x.png");}
-   }
-  
-   #loader{
-    background-image: url(../img/A.svg);
-    position: fixed;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    */
-  /* } */
+  .mdl-card {
+    background-color: transparent;
+  }
+  .firebaseui-textfield.mdl-textfield .firebaseui-label::after{background-color:var(--mdc-theme-primary)}
+
+  .firebaseui-button {
+    background-color: var(--mdc-theme-on-primary)
+  }
+
+  .firebaseui-tos-link{
+    background-color: var(--mdc-theme-on-primary)
+  }
+
+  .firebaseui-phone-tos, .firebaseui-id-resend-link, .firebaseui-id-resend-countdown {
+    background-color: var(--mdc-theme-on-primary)
+  }

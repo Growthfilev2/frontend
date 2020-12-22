@@ -18,8 +18,18 @@
   bottom:1rem;
   width: 100%;
   text-align: center;
+  
 }
 
+.loading-text{
+ width: 100%;
+ margin-left: -13px;
+ color: var(--mdc-theme-on-secondary);
+}
+
+.loading-text--headline{
+  color: var(--mdc-theme-on-secondary);
+}
 
 
 
