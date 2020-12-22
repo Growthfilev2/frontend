@@ -247,6 +247,10 @@ function startApp() {
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
         console.log(error)
+        handleError({
+          message:'Loading screen error',
+          error:error
+        })
         contactSupport()
       })
   };
