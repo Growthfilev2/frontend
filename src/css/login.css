@@ -362,6 +362,6 @@ z-index: -1;
     background-color: var(--mdc-theme-on-primary)
   }
 
-  .firebaseui-phone-tos, .firebaseui-id-resend-link {
+  .firebaseui-phone-tos, .firebaseui-id-resend-link, .firebaseui-id-resend-countdown {
     background-color: var(--mdc-theme-on-primary)
   }
