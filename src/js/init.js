@@ -204,6 +204,7 @@ function startApp() {
     db.onerror = function () {
       handleError({
         message: `${db.error.message}`,
+        body:JSON.stringify(db.error,replaceErrors)
       })
       return;
     };
@@ -257,7 +258,7 @@ function startApp() {
   req.onerror = function () {
     handleError({
       message: `${req.error.name}`,
-      body: JSON.stringify(req.error.message)
+      body: JSON.stringify(req.error,replaceErrors)
     })
   }
 
@@ -415,7 +416,10 @@ function handleCheckin(geopoint, noUser) {
               navigator.serviceWorker.onmessage = (event) => {
                 console.log('message from worker', event.data);
                 if (event.data.type === 'error') {
-                  handleError(event.data);
+                  handleError({
+                    message:'Error from sw: '+event.data.message,
+                    body:JSON.stringify(event.data,replaceErrors)
+                  });
                   snacks('Try again later')
                   return
                 }
@@ -426,7 +430,7 @@ function handleCheckin(geopoint, noUser) {
               console.log("read err", err)
               handleError({
                 message: err.message,
-                body: JSON.stringify(err)
+                body: JSON.stringify(err,replaceErrors)
               })
 
               if (typeof err.text === "function") {

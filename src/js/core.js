@@ -550,7 +550,11 @@ function fetchCurrentTime(serverTime) {
 
 function appLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
-
+    return resolve({
+      latitude:22.123123,
+      longitude:77.123123,
+      lastLocationTime:Date.now
+    })
     manageLocation(maxRetry).then(function (geopoint) {
       if (!ApplicationState.location) {
         ApplicationState.location = geopoint
@@ -803,7 +807,7 @@ function executeRequest(requestGenerator) {
           if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
-              body: JSON.stringify(event.data.body)
+              body: event.data.body
             })
           }
         }
@@ -821,15 +825,14 @@ function executeRequest(requestGenerator) {
     }
 
     apiHandler.onerror = function (event) {
-
-      // progressBar.open();
+      // progressBar.open();  
       handleError({
         message: event.message,
-        body: JSON.stringify({
+        body: {
           filename: event.filename,
           lineno: event.lineno,
           colno: event.colno
-        })
+        }
       })
     };
 

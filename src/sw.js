@@ -36,7 +36,7 @@ const files = ['/',
     'external/img/flags@2x.png',
     'external/css/intlTelInput.css',
 ]
-const staticCacheName = 'pages-cache-v4000';
+const staticCacheName = 'pages-cache-v4001';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
@@ -129,10 +129,7 @@ self.addEventListener('message', (event) => {
             },
         };
 
-        handleRead(config,event.data.readResponse).then(res => {
-            sendResponseToClient(res);
-        }).catch(err => {
-
+        handleRead(config,event.data.readResponse).then(sendResponseToClient).catch(err => {
             console.error(err)
             sendResponseToClient({
                 type: 'error',

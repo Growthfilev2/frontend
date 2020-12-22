@@ -77,7 +77,12 @@ function mapView(location) {
 
         if (!nearByLocations.length) return createUnkownCheckIn(location)
         if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
-        loadLocationsCard(nearByLocations, location)
+        loadLocationsCard(nearByLocations, location);
+    }).catch(error=>{
+        handleError({
+            message:error.message,
+            body:error
+        })
     })
 }
 
