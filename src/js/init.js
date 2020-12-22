@@ -246,10 +246,9 @@ function startApp() {
     regulator()
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
-        console.log(error)
         handleError({
           message:'Loading screen error',
-          error:error
+          body:JSON.stringify(error,replaceErrors)
         })
         contactSupport()
       })
@@ -263,8 +262,6 @@ function startApp() {
   }
 
 }
-
-
 
 function getDeepLink() {
   // return new URLSearchParams('?office=Puja Capital&utm_campaign=share_link&action=get-subscription');
