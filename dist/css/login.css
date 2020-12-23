@@ -1,6 +1,6 @@
 html, body {
     height: 100%;
-    overflow: hidden;
+   
   }
   
   *{
@@ -359,5 +359,9 @@ z-index: -1;
   }
 
   .firebaseui-tos-link{
+    background-color: var(--mdc-theme-on-primary)
+  }
+
+  .firebaseui-phone-tos, .firebaseui-id-resend-link, .firebaseui-id-resend-countdown {
     background-color: var(--mdc-theme-on-primary)
   }
