@@ -693,7 +693,6 @@ function subDuties(j) {
           </div>
           
           </div>
-
           <div><hr id="h_line"><div id="circle"></div></div> 
               `;
   return collapsed;
@@ -771,7 +770,6 @@ function setFilePath(
          aria-label="Open navigation menu" href="javascript:redirect('/home')">arrow_back</a>
      <span class="mdc-top-app-bar__title">Photo Check-in</span>
  </section>
-
 </div>`;
   document
     .getElementById("app-current-panel")
@@ -850,3 +848,79 @@ function disableBack()
 {
    window.history.forward()
    }
+
+   
+
+document.getElementById("ratings_header").addEventListener('click',() => {
+  document.getElementById("home_tab").style.display="none";
+  document.getElementById("ratings_tab").style.display="block";
+  document.getElementById("underline_home").style.backgroundColor="#F2F2F2";
+  document.getElementById("underline_rating").style.backgroundColor="#184466";
+})   
+
+document.getElementById("home_header").addEventListener('click',() => {
+  document.getElementById("ratings_tab").style.display="none";
+  document.getElementById("home_tab").style.display="block";
+  document.getElementById("underline_rating").style.backgroundColor="#F2F2F2";
+  document.getElementById("underline_home").style.backgroundColor="#184466";
+}) 
+
+
+
+// Swipe Events
+
+
+document.getElementById("home_tab").addEventListener("touchstart", startTouch, false);
+document.getElementById("home_tab").addEventListener("touchmove", moveTouch, false);
+ 
+document.getElementById("ratings_tab").addEventListener("touchstart", startTouch, false);
+document.getElementById("ratings_tab").addEventListener("touchmove", moveTouch, false);
+// Swipe Up / Down / Left / Right
+var initialX = null;
+var initialY = null;
+ 
+function startTouch(e) {
+  initialX = e.touches[0].clientX;
+  initialY = e.touches[0].clientY;
+};
+ 
+function moveTouch(e) {
+  if (initialX === null) {
+    return;
+  }
+ 
+  if (initialY === null) {
+    return;
+  }
+ 
+  var currentX = e.touches[0].clientX;
+  var currentY = e.touches[0].clientY;
+ 
+  var diffX = initialX - currentX;
+  var diffY = initialY - currentY;
+ 
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    // sliding horizontally
+    if (diffX > 0) {
+      // swiped left
+      document.getElementById("ratings_header").click();
+    } else {
+      // swiped right
+      document.getElementById("home_header").click();
+    }  
+  } else {
+    // sliding vertically
+    if (diffY > 0) {
+      // swiped up
+      console.log("swiped up");
+    } else {
+      // swiped down
+      console.log("swiped down");
+    }  
+  }
+ 
+  initialX = null;
+  initialY = null;
+   
+  e.preventDefault();
+};

@@ -45,12 +45,28 @@
               height="24px" /></a>
       </section>
     </div>
-    <div class="app-bar--extra full-width">
+    <div class="app-bar--extra full-width" id="tabs">
       <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Camera"
         id="photo-upload-btn">add_a_photo</button>
-      <div class="mdc-top-app-bar__title text-center" id="home_header">Home</div>
+        
+      <div class="mdc-top-app-bar__title text-center" id="home_header">
+        <span class="material-icons" id="home_icon">
+        home
+        </span>Home <div id="underline_home"></div></div>
+
+        <div class="mdc-top-app-bar__title text-center" id="ratings_header">
+         
+            <span class="material-icons" id="ratings_icon">
+              grade
+              </span>
+         Ratings <div id="underline_rating"></div></div>
+
+      
     </div>
   </header>
+
+  
+  <div id="home_tab" >
   <div id="app-current-panel" class="mdc-top-app-bar--fixed-adjust extra--adjust">
     <div id="current_duty_card">
       <div id="current_text">
@@ -125,6 +141,73 @@
     </div>
     </div>
   </div>
+</div>
+
+
+
+<div id="ratings_tab">
+
+  <div id="start" class="mdc-top-app-bar--fixed-adjust extra--adjust">
+
+     <div id="star_qr">
+      <div id="avg_rating_div">
+        <p class="text_avg_rat">Average <br> Rating</p>
+        <p id="average_rating">- <span class="material-icons" id="avg_rating_icon">
+          grade
+          </span></p>
+      </div>
+
+      <div id="ask_rating_div">
+        <p class="text_avg_rat">Ask for <br> Ratings</p>
+        <p id="qr_rating">QR</p>
+      </div>
+    </div>
+
+    <div id="compliments">
+      <div class="compliments_div" id="ontime">
+        <div class="emoji">&#x231A</div>
+        <p class="compliment_text" id="ontime_text">On Time</p>
+        <p class="compliment_number" id="ontime_number">(-)</p>
+      </div>
+      <div class="compliments_div" id="polite">
+        <div class="emoji">&#x1F607</div>
+        <p class="compliment_text" id="polite_text">Polite</p>
+        <p class="compliment_number" id="polite_number">(-)</p>
+      </div>
+      <div class="compliments_div" id="well_dressed">
+        <div class="emoji">&#x1F455</div>
+        <p class="compliment_text" id="well_dressed_text">Well Dressed</p>
+        <p class="compliment_number" id="well_dressed_number">(-)</p>
+      </div>
+    </div>
+
+
+ 
+    <div id="rating_category">
+      <a><span class="individual_star">All (-)</span>
+      <a><span class="individual_star">5 <img src="img/Star_12.svg" width="11px" height="11px"> </span></a>
+      <a><span class="individual_star">4 <img src="img/Star_12.svg" width="11px" height="11px"></span></a>
+      <a><span class="individual_star">3 <img src="img/Star_12.svg" width="11px" height="11px"></span></a>
+      <a><span class="individual_star">2 <img src="img/Star_12.svg" width="11px" height="11px"></span></a>
+      <a><span class="individual_star">1 <img src="img/Star_12.svg" width="11px" height="11px"></span></a>
+      </div>
+ 
+
+      <div id="reviews">
+        <div id="picture"><img src="img/Ellipse29.svg" alt="" srcset=""></div>
+        <div id="review_content">
+          <div id="reviewer_name">Aditya</div>
+          <div id="review_date">Dec 26 2020</div>
+          <div id="review_text">Contrary to popular belief, Lorem Ipsum is not simply random text</div>
+        </div>
+        <div id="individual_rating">-</div>
+      </div> 
+  </div>
+  
+
+
+</div>
+
   <script src="js/core.js"></script>
   <script src="js/job.js"></script>
   <script src="js/checkin.js"></script>
