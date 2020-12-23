@@ -77,7 +77,12 @@ function mapView(location) {
 
         if (!nearByLocations.length) return createUnkownCheckIn(location)
         if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
-        loadLocationsCard(nearByLocations, location)
+        loadLocationsCard(nearByLocations, location);
+    }).catch(error => {
+        handleError({
+            message: error.message,
+            body: error
+        })
     })
 }
 
@@ -121,33 +126,31 @@ function generateRequestForUnknownCheckin(office, geopoint, retries = {
         const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
         copy.share = [];
         copy.timestamp = timestamp
-
+        console.log('checkin body',copy)
         requestCreator('create', fillVenueInSub(copy, ''), geopoint).then(function () {
-            removeScreen()
-            successDialog('Check-In Created')
+            ApplicationState.lastCheckInCreated = Date.now()
             ApplicationState.venue = ''
             ApplicationState.selectedOffice = office;
             localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+            removeScreen()
+            successDialog('Check-In Created')
             initProfileView();
-
         }).catch(function (error) {
             console.log(error)
             // progressBar.close()
             const queryLink = getDeepLink();
 
-            if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
+            if (error.message === `No subscription found for the template: 'check-in' with the office '${office}'`) {
 
-                if (retries.subscriptionRetry <= 2) {
-                    setTimeout(function () {
-                        retries.subscriptionRetry++
-                        generateRequestForUnknownCheckin(office, geopoint, retries)
-                    }, 5000)
+                if (queryLink && queryLink.get('action') === 'get-subscription') {
+                    handleCheckinRetryUnkown(retries, office, geopoint)
+                    return
                 }
-                return
+                handleSubscriptionError()
+                return;
             }
 
             if (error.message === 'Invalid check-in') {
-
                 handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
                     ApplicationState.location = newGeopoint;
                     retries.invalidRetry++
@@ -159,6 +162,18 @@ function generateRequestForUnknownCheckin(office, geopoint, retries = {
         })
 
     })
+}
+
+
+function handleCheckinRetryUnkown(retries, office, geopoint) {
+    if (retries.subscriptionRetry <= 2) {
+        setTimeout(function () {
+            retries.subscriptionRetry++
+            generateRequestForUnknownCheckin(office, geopoint, retries)
+        }, 5000)
+        return
+    }
+    redirect('/index.html')
 }
 
 
@@ -245,33 +260,27 @@ function createKnownCheckIn(selectedVenue, geopoint, retries = {
     // progressBar.open()
     loadScreen('checkin')
     document.querySelector('#checkin .loading-text--headline').textContent = 'Checking in at ' + selectedVenue.location;
-
+    console.log('checkin body',copy)
     // return
     requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
-        removeScreen()
-        successDialog('Check-In Created')
+        ApplicationState.lastCheckInCreated =  Date.now()
         ApplicationState.venue = selectedVenue;
         ApplicationState.selectedOffice = selectedVenue.office;
         localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+        removeScreen()
+        successDialog('Check-In Created')
         initProfileView()
     }).catch(function (error) {
         console.log(error)
         // progressBar.close()
         const queryLink = getDeepLink();
 
-        if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === `No subscription found for the template: 'check-in' with the office '${queryLink.get('office')}'`) {
-
-            if (retries.subscriptionRetry <= 2) {
-                setTimeout(function () {
-                    retries.subscriptionRetry++
-                    createKnownCheckIn(selectedVenue, geopoint, retries);
-                }, 5000)
-            }
+        if (error.message === `No subscription found for the template: 'check-in' with the office '${office}'`) {
+            if (queryLink && queryLink.get('action') === 'get-subscription') return handleCheckinRetryKnown(retries, geopoint, selectedVenue)
+            handleSubscriptionError();
             return
         };
-
         if (error.message === 'Invalid check-in') {
-
             handleInvalidCheckinLocation(retries.invalidRetry, function (newGeopoint) {
                 ApplicationState.location = newGeopoint;
                 retries.invalidRetry++
@@ -280,6 +289,28 @@ function createKnownCheckIn(selectedVenue, geopoint, retries = {
             return
         };
     })
+}
+function handleSubscriptionError() {
+    navigator.serviceWorker.controller.postMessage({
+        type: 'read'
+    });
+    navigator.serviceWorker.onmessage = (event) => {
+        getCheckInSubs().then(subs => {
+            if (!Object.keys(subs).length) return noOfficeFoundScreen();
+            handleCheckin(geopoint)
+        })
+    }
+}
+
+function handleCheckinRetryKnown(retries, geopoint, selectedVenue) {
+    if (retries.subscriptionRetry <= 2) {
+        setTimeout(function () {
+            retries.subscriptionRetry++
+            createKnownCheckIn(selectedVenue, geopoint, retries);
+        }, 5000)
+        return
+    };
+    redirect('/index.html')
 }
 
 function snapView(selector) {

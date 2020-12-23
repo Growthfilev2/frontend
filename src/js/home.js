@@ -2,9 +2,14 @@ var database;
 navigator.serviceWorker.onmessage = (event) => {
   console.log("message from worker", event.data);
   if (event.data.type === "error") {
-    handleError(event.data);
+    handleError({
+      message:'Error from sw: '+event.data.message,
+      body:JSON.stringify(event.data,replaceErrors)
+    });
     return;
   }
+
+
   const readResponse = event.data;
   // if new checkin subscriptions comes then update the db
   getCheckInSubs().then(function (checkInSubs) {
@@ -81,7 +86,6 @@ window.addEventListener("load", (ev) => {
   firebase.auth().onAuthStateChanged((user) => {
     const dbName = firebase.auth().currentUser.uid;
     const request = window.indexedDB.open(dbName, DB_VERSION);
-
     request.onerror = function (event) {
       console.log("Why didn't you allow my web app to use IndexedDB?!");
     };
@@ -97,10 +101,6 @@ window.addEventListener("load", (ev) => {
         });
       read();
       readduty();
-    };
-
-    request.onupgradeneeded = function (event) {
-      db = event.target.result;
     };
   });
 });
@@ -188,7 +188,6 @@ function read() {
 function readduty() {
   const duties = [];
   const timestamp_array = [];
-
   var transaction = db.transaction("activity");
   var store = transaction.objectStore("activity");
 

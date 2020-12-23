@@ -4,7 +4,10 @@ navigator.serviceWorker.onmessage = function (event) {
   console.log("message from worker", event.data);
 
   if (event.data.type === "error") {
-    handleError(event.data);
+    handleError({
+      message: 'Error from sw: ' + event.data.message,
+      body: JSON.stringify(event.data, replaceErrors)
+    });
     return;
   }
 
@@ -87,10 +90,6 @@ window.addEventListener("load", function (ev) {
       });
       read();
       readduty();
-    };
-
-    request.onupgradeneeded = function (event) {
-      db = event.target.result;
     };
   });
 });
