@@ -765,13 +765,10 @@ function requestCreator(requestType, requestBody, geopoint) {
     }
 
     requestGenerator.body['timestamp'] = time;
-    requestGenerator.body['geopoint'] = geopoint;
+    requestGenerator.body['geopoint'] = geopoint; // if (requestBody.template === 'check-in') {
+    //   ApplicationState.lastCheckInCreated = time
+    // };
 
-    if (requestBody.template === 'check-in') {
-      ApplicationState.lastCheckInCreated = time;
-    }
-
-    ;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     return executeRequest(requestGenerator);
   });
@@ -798,7 +795,7 @@ function executeRequest(requestGenerator) {
           if (!event.data.apiRejection) {
             handleError({
               message: event.data.message,
-              body: JSON.stringify(event.data.body)
+              body: event.data.body
             });
           }
         }
@@ -819,14 +816,15 @@ function executeRequest(requestGenerator) {
     };
 
     apiHandler.onerror = function (event) {
-      // progressBar.open();
+      // progressBar.open();  
+      console.log(event);
       handleError({
         message: event.message,
-        body: JSON.stringify({
+        body: {
           filename: event.filename,
           lineno: event.lineno,
           colno: event.colno
-        })
+        }
       });
     };
 
@@ -835,6 +833,7 @@ function executeRequest(requestGenerator) {
       requestGenerator.id = id;
       workerResolves[id] = resolve;
       workerRejects[id] = reject;
+      console.log(requestGenerator);
       apiHandler.postMessage(requestGenerator);
     });
   });
@@ -1411,4 +1410,130 @@ function handleQRUrl(url) {
       return;
     }
   });
+}
+
+var replaceErrors = function replaceErrors(key, value) {
+  if (value instanceof Error) {
+    var error = {};
+    Object.getOwnPropertyNames(value).forEach(function (key) {
+      error[key] = value[key];
+    });
+    return error;
+  }
+
+  return value;
+};
+
+function handleCheckin(geopoint, noUser) {
+  var queryLink = getDeepLink();
+  getCheckInSubs().then(function (checkInSubs) {
+    if (queryLink && queryLink.get('action') === 'get-subscription') {
+      checkInSubs[queryLink.get('office')] = {
+        attachment: {
+          Comment: {
+            type: 'string',
+            value: ''
+          },
+          Photo: {
+            type: 'base64',
+            value: ''
+          }
+        },
+        template: 'check-in',
+        office: queryLink.get('office'),
+        schedule: [],
+        venue: ['Check-In Location'],
+        status: 'PENDING'
+      };
+      ApplicationState.officeWithCheckInSubs = checkInSubs;
+      mapView(geopoint);
+      return;
+    }
+
+    if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
+
+    if (Object.keys(checkInSubs).length) {
+      ApplicationState.officeWithCheckInSubs = checkInSubs;
+      return mapView(geopoint);
+    }
+
+    var storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment'];
+    Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
+      getRootRecord().then(function (record) {
+        if (record.fromTime == 0) {
+          loadScreen('loading-data');
+          console.log("sending read 0");
+          console.log(navigator.serviceWorker.controller);
+          firebase.auth().currentUser.getIdToken().then(function (token) {
+            fetch("".concat(appKey.getBaseUrl(), "read1?from=0"), {
+              method: 'GET',
+              body: null,
+              headers: {
+                'Content-type': 'application/json',
+                'Authorization': "Bearer ".concat(token)
+              }
+            }).then(function (response) {
+              console.log("read status", response.status);
+
+              if (!response.status || response.status >= 226 || !response.ok) {
+                throw response;
+              }
+
+              return response.json();
+            }).then(function (res) {
+              if (res.hasOwnProperty('success') && !res.success) {
+                snacks('Try again later');
+                handleError({
+                  message: 'read 0 error',
+                  body: JSON.stringify(res)
+                });
+                return;
+              }
+
+              navigator.serviceWorker.controller.postMessage({
+                type: 'read',
+                readResponse: res
+              });
+
+              navigator.serviceWorker.onmessage = function (event) {
+                console.log('message from worker', event.data);
+
+                if (event.data.type === 'error') {
+                  handleError({
+                    message: 'Error from sw: ' + event.data.message,
+                    body: JSON.stringify(event.data, replaceErrors)
+                  });
+                  snacks('Try again later');
+                  return;
+                }
+
+                handleCheckin(geopoint);
+              };
+            })["catch"](function (err) {
+              console.log("read err", err);
+              handleError({
+                message: err.message,
+                body: JSON.stringify(err, replaceErrors)
+              });
+
+              if (typeof err.text === "function") {
+                err.text().then(function (errorMessage) {
+                  console.log(JSON.parse(errorMessage));
+                });
+              }
+            });
+          });
+          return;
+        }
+
+        if (isAdmin(result[0]) || result[1]) return initProfileView();
+        return noOfficeFoundScreen();
+      });
+    });
+  });
+}
+
+function noOfficeFoundScreen() {
+  var content = "\n      <div class='message-screen mdc-layout-grid'>\n      <div class='icon-container'>\n        <div class='mdc-theme--primary icons'>\n          <i class='material-icons'>help_outline</i>\n        </div>\n      </div>\n      <div class='text-container'>\n        <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>\n        <p class='mdc-typography--body1'>\n          No office found in OnDuty. Please contact your administrator\n        </p>\n      </div>\n    </div>\n  ";
+  dom_root.innerHTML = content;
 }

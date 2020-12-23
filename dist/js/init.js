@@ -188,7 +188,8 @@ function startApp() {
 
     db.onerror = function () {
       handleError({
-        message: "".concat(db.error.message)
+        message: "".concat(db.error.message),
+        body: JSON.stringify(db.error, replaceErrors)
       });
       return;
     };
@@ -236,7 +237,10 @@ function startApp() {
     console.log("run app");
     regulator().then(console.log)["catch"](function (error) {
       if (error.type === 'geolocation') return handleLocationError(error);
-      console.log(error);
+      handleError({
+        message: 'Loading screen error',
+        body: JSON.stringify(error, replaceErrors)
+      });
       contactSupport();
     });
   };
@@ -244,7 +248,7 @@ function startApp() {
   req.onerror = function () {
     handleError({
       message: "".concat(req.error.name),
-      body: JSON.stringify(req.error.message)
+      body: JSON.stringify(req.error, replaceErrors)
     });
   };
 }
@@ -313,117 +317,6 @@ function contactSupport() {
   });
   div.innerHTML = "\n  \n  <p class='mdc-typography--headline6 mb-10 mt-0'>Having trouble ? </p>\n  <a class='mdc-typography--subtitle2 mdc-theme--primary' href=\"https://wa.me/918595422858\">Contact support</a>\n  ";
   dom_root.appendChild(div);
-}
-
-function handleCheckin(geopoint, noUser) {
-  var queryLink = getDeepLink();
-  getCheckInSubs().then(function (checkInSubs) {
-    if (queryLink && queryLink.get('action') === 'get-subscription') {
-      checkInSubs[queryLink.get('office')] = {
-        attachment: {
-          Comment: {
-            type: 'string',
-            value: ''
-          },
-          Photo: {
-            type: 'base64',
-            value: ''
-          }
-        },
-        template: 'check-in',
-        office: queryLink.get('office'),
-        schedule: [],
-        venue: ['Check-In Location'],
-        status: 'PENDING'
-      };
-      ApplicationState.officeWithCheckInSubs = checkInSubs;
-      mapView(geopoint);
-      return;
-    }
-
-    if (!shouldCheckin(geopoint, checkInSubs)) return initProfileView();
-
-    if (Object.keys(checkInSubs).length) {
-      ApplicationState.officeWithCheckInSubs = checkInSubs;
-      return mapView(geopoint);
-    }
-
-    var storeNames = ['activity', 'addendum', 'children', 'subscriptions', 'map', 'attendance', 'reimbursement', 'payment'];
-    Promise.all([firebase.auth().currentUser.getIdTokenResult(), checkIDBCount(storeNames)]).then(function (result) {
-      getRootRecord().then(function (record) {
-        if (record.fromTime == 0) {
-          loadScreen('loading-data');
-          console.log("sending read 0");
-          console.log(navigator.serviceWorker.controller);
-          firebase.auth().currentUser.getIdToken().then(function (token) {
-            fetch("".concat(appKey.getBaseUrl(), "read1?from=0"), {
-              method: 'GET',
-              body: null,
-              headers: {
-                'Content-type': 'application/json',
-                'Authorization': "Bearer ".concat(token)
-              }
-            }).then(function (response) {
-              console.log("read status", response.status);
-
-              if (!response.status || response.status >= 226 || !response.ok) {
-                throw response;
-              }
-
-              return response.json();
-            }).then(function (res) {
-              if (res.hasOwnProperty('success') && !res.success) {
-                snacks('Try again later');
-                handleError({
-                  message: 'read 0 error',
-                  body: JSON.stringify(res)
-                });
-                return;
-              }
-
-              navigator.serviceWorker.controller.postMessage({
-                type: 'read',
-                readResponse: res
-              });
-
-              navigator.serviceWorker.onmessage = function (event) {
-                console.log('message from worker', event.data);
-
-                if (event.data.type === 'error') {
-                  handleError(event.data);
-                  snacks('Try again later');
-                  return;
-                }
-
-                handleCheckin(geopoint);
-              };
-            })["catch"](function (err) {
-              console.log("read err", err);
-              handleError({
-                message: err.message,
-                body: JSON.stringify(err)
-              });
-
-              if (typeof err.text === "function") {
-                err.text().then(function (errorMessage) {
-                  console.log(JSON.parse(errorMessage));
-                });
-              }
-            });
-          });
-          return;
-        }
-
-        if (isAdmin(result[0]) || result[1]) return initProfileView();
-        return noOfficeFoundScreen();
-      });
-    });
-  });
-}
-
-function noOfficeFoundScreen() {
-  var content = "\n      <div class='message-screen mdc-layout-grid'>\n      <div class='icon-container'>\n        <div class='mdc-theme--primary icons'>\n          <i class='material-icons'>help_outline</i>\n        </div>\n      </div>\n      <div class='text-container'>\n        <h3 class='mdc-typography--headline5 headline mt-0'>No office found </h3>\n        <p class='mdc-typography--body1'>\n          No office found in OnDuty. Please contact your administrator\n        </p>\n      </div>\n    </div>\n  ";
-  dom_root.innerHTML = content;
 }
 
 function initProfileView() {

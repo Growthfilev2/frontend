@@ -58,6 +58,11 @@ function mapView(location) {
     if (!nearByLocations.length) return createUnkownCheckIn(location);
     if (nearByLocations.length == 1) return createKnownCheckIn(nearByLocations[0], location);
     loadLocationsCard(nearByLocations, location);
+  })["catch"](function (error) {
+    handleError({
+      message: error.message,
+      body: error
+    });
   });
 }
 
@@ -100,26 +105,27 @@ function generateRequestForUnknownCheckin(office, geopoint) {
     var copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
     copy.timestamp = timestamp;
+    console.log('checkin body', copy);
     requestCreator('create', fillVenueInSub(copy, ''), geopoint).then(function () {
-      removeScreen();
-      successDialog('Check-In Created');
+      ApplicationState.lastCheckInCreated = Date.now();
       ApplicationState.venue = '';
       ApplicationState.selectedOffice = office;
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+      removeScreen();
+      successDialog('Check-In Created');
       initProfileView();
     })["catch"](function (error) {
       console.log(error); // progressBar.close()
 
       var queryLink = getDeepLink();
 
-      if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === "No subscription found for the template: 'check-in' with the office '".concat(queryLink.get('office'), "'")) {
-        if (retries.subscriptionRetry <= 2) {
-          setTimeout(function () {
-            retries.subscriptionRetry++;
-            generateRequestForUnknownCheckin(office, geopoint, retries);
-          }, 5000);
+      if (error.message === "No subscription found for the template: 'check-in' with the office '".concat(office, "'")) {
+        if (queryLink && queryLink.get('action') === 'get-subscription') {
+          handleCheckinRetryUnkown(retries, office, geopoint);
+          return;
         }
 
+        handleSubscriptionError();
         return;
       }
 
@@ -135,6 +141,18 @@ function generateRequestForUnknownCheckin(office, geopoint) {
       ;
     });
   });
+}
+
+function handleCheckinRetryUnkown(retries, office, geopoint) {
+  if (retries.subscriptionRetry <= 2) {
+    setTimeout(function () {
+      retries.subscriptionRetry++;
+      generateRequestForUnknownCheckin(office, geopoint, retries);
+    }, 5000);
+    return;
+  }
+
+  redirect('/index.html');
 }
 
 function handleInvalidCheckinLocation(callback) {
@@ -215,28 +233,25 @@ function createKnownCheckIn(selectedVenue, geopoint) {
   copy.share = []; // progressBar.open()
 
   loadScreen('checkin');
-  document.querySelector('#checkin .loading-text--headline').textContent = 'Checking in at ' + selectedVenue.location; // return
+  document.querySelector('#checkin .loading-text--headline').textContent = 'Checking in at ' + selectedVenue.location;
+  console.log('checkin body', copy); // return
 
   requestCreator('create', fillVenueInSub(copy, selectedVenue), geopoint).then(function () {
-    removeScreen();
-    successDialog('Check-In Created');
+    ApplicationState.lastCheckInCreated = Date.now();
     ApplicationState.venue = selectedVenue;
     ApplicationState.selectedOffice = selectedVenue.office;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    removeScreen();
+    successDialog('Check-In Created');
     initProfileView();
   })["catch"](function (error) {
     console.log(error); // progressBar.close()
 
     var queryLink = getDeepLink();
 
-    if (queryLink && queryLink.get('action') === 'get-subscription' && error.message === "No subscription found for the template: 'check-in' with the office '".concat(queryLink.get('office'), "'")) {
-      if (retries.subscriptionRetry <= 2) {
-        setTimeout(function () {
-          retries.subscriptionRetry++;
-          createKnownCheckIn(selectedVenue, geopoint, retries);
-        }, 5000);
-      }
-
+    if (error.message === "No subscription found for the template: 'check-in' with the office '".concat(office, "'")) {
+      if (queryLink && queryLink.get('action') === 'get-subscription') return handleCheckinRetryKnown(retries, geopoint, selectedVenue);
+      handleSubscriptionError();
       return;
     }
 
@@ -253,6 +268,32 @@ function createKnownCheckIn(selectedVenue, geopoint) {
 
     ;
   });
+}
+
+function handleSubscriptionError() {
+  navigator.serviceWorker.controller.postMessage({
+    type: 'read'
+  });
+
+  navigator.serviceWorker.onmessage = function (event) {
+    getCheckInSubs().then(function (subs) {
+      if (!Object.keys(subs).length) return noOfficeFoundScreen();
+      handleCheckin(geopoint);
+    });
+  };
+}
+
+function handleCheckinRetryKnown(retries, geopoint, selectedVenue) {
+  if (retries.subscriptionRetry <= 2) {
+    setTimeout(function () {
+      retries.subscriptionRetry++;
+      createKnownCheckIn(selectedVenue, geopoint, retries);
+    }, 5000);
+    return;
+  }
+
+  ;
+  redirect('/index.html');
 }
 
 function snapView(selector) {

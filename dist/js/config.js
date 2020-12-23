@@ -1,5 +1,5 @@
 function AppKeys() {
-  this.mode = 'production';
+  this.mode = 'dev';
 }
 
 AppKeys.prototype.getMode = function () {
