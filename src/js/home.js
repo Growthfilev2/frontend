@@ -828,6 +828,10 @@ function sendPhotoCheckinRequest(request) {
     })
     .catch(function (error) {
       request.btn.classList.remove("in-progress");
+      if (error.message === `No subscription found for the template: 'check-in' with the office '${sub.office}'`) {
+        handleSubscriptionError()
+        return
+      }
       if (error.message === "Invalid check-in") {
         handleInvalidCheckinLocation(retries.invalidRetry, function (
           newGeopoint
