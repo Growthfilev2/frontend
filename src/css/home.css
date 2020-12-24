@@ -983,6 +983,7 @@ margin-top: 6px;
 width: 80px;
 height: 80px;
 margin-bottom: 18px;
+border-radius: 50%;
 }
 
 #qr_name{
@@ -1013,7 +1014,7 @@ margin-top: 17px;
 
 #share_link{
   text-align: center;
-  margin-top: 20px;
+  margin-top: 5px;
   font-family: Roboto;
 font-size: 16px;
 font-style: normal;
