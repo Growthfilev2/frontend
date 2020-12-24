@@ -943,17 +943,19 @@ document.getElementById("ask_rating_div").addEventListener('click', (e) =>{
         firebase.auth().currentUser.photoURL || "./img/ic_pic_upload.png";
 
         document.getElementById("qr_name").innerHTML = user.displayName;
-  
-    };
-  });
-
-document.getElementById("qr_code_page").style.display="block";
+        var uid= user.uid;
+        document.getElementById("qr_code_page").style.display="block";
 var typeNumber = 20;
 var errorCorrectionLevel = 'L';
 var qr = qrcode(typeNumber, errorCorrectionLevel);
-qr.addData('Hi!');
+qr.addData('https://growthfile.com/wr?uid='+uid);
+console.log("https://growthfile.com/wr?uid="+uid);
 qr.make();
 document.getElementById('qr_image').innerHTML = qr.createImgTag();
+    };
+  });
+
+
 })
 
 document.getElementById("cross_close").addEventListener('click',(e) =>{
