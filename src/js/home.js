@@ -880,11 +880,13 @@ var initialX = null;
 var initialY = null;
  
 function startTouch(e) {
+  e.stopPropagation();
   initialX = e.touches[0].clientX;
   initialY = e.touches[0].clientY;
 };
  
 function moveTouch(e) {
+  e.stopPropagation();
   if (initialX === null) {
     return;
   }
@@ -924,3 +926,36 @@ function moveTouch(e) {
    
   e.preventDefault();
 };
+
+document.getElementById("ask_rating_div").addEventListener('click', (e) =>{
+
+
+  
+  firebase.auth().onAuthStateChanged((user) => {
+    const dbName = firebase.auth().currentUser.uid;
+    const request = window.indexedDB.open(dbName, DB_VERSION);
+    request.onerror = function (event) {
+      console.log("Why didn't you allow my web app to use IndexedDB?!");
+    };
+    request.onsuccess = function (event) {
+      db = event.target.result;
+      document.getElementById("qr_pfp").src =
+        firebase.auth().currentUser.photoURL || "./img/ic_pic_upload.png";
+
+        document.getElementById("qr_name").innerHTML = user.displayName;
+  
+    };
+  });
+
+document.getElementById("qr_code_page").style.display="block";
+var typeNumber = 20;
+var errorCorrectionLevel = 'L';
+var qr = qrcode(typeNumber, errorCorrectionLevel);
+qr.addData('Hi!');
+qr.make();
+document.getElementById('qr_image').innerHTML = qr.createImgTag();
+})
+
+document.getElementById("cross_close").addEventListener('click',(e) =>{
+  document.getElementById("qr_code_page").style.display="none";
+})

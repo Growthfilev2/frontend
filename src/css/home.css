@@ -809,6 +809,11 @@ text-align: center;
   width: 70%;
   padding-left: 5px;
   text-align: center;
+ 
+}
+
+#qr_code_icon{
+  color: white;
 }
 
 #rating_category{
@@ -924,4 +929,101 @@ margin-top: 6px;
   width: 10%;
   margin-top: 10px;
   text-align: center;
+}
+
+#qr_code_page{
+  overflow: hidden;
+  display: none;
+  background-color: var(--mdc-theme-secondary);
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--mdc-theme-secondary);
+  border-radius: 3px;
+  padding: 10px;
+  box-shadow: 0 0 1px #817e7e;
+  z-index: 99;  
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+}
+
+#qr_code_div{
+  display: block;
+  background-color: var(--mdc-theme-on-primary);
+  max-width: 100%;
+  width: 85%;
+  height: 75%;
+  border: 3px solid var(--mdc-theme-secondary);
+  border-radius: 3px;
+  padding: 10px;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  z-index: 100;  
+  margin: 0 auto;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top:70px;
+}
+
+#cross_button{
+  position: relative;
+  left: 90%;
+}
+
+#qr_info{
+  text-align: center;
+}
+
+#qr_pfp{
+  z-index: 100; 
+width: 80px;
+height: 80px;
+margin-bottom: 18px;
+}
+
+#qr_name{
+font-family: Roboto;
+font-size: 18px;
+font-style: normal;
+font-weight: 500;
+line-height: 21px;
+letter-spacing: 0.04em;
+margin-bottom: 9px;
+}
+
+#agency_name{
+  font-family: Roboto;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 16px;
+letter-spacing: 0.04em;
+
+
+}
+
+#qr_image{
+  text-align: center;
+margin-top: 17px;
+}
+
+#share_link{
+  text-align: center;
+  margin-top: 20px;
+  font-family: Roboto;
+font-size: 16px;
+font-style: normal;
+font-weight: 400;
+line-height: 19px;
+letter-spacing: 0em;
+
+
+}
+
+#share_icon{
+  margin-right: 20px;
 }
