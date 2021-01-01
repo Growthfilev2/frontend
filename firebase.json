@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "target":"dev",
+    "target":"v2",
     "public": "dist",
     "ignore": [
       "firebase.json",
@@ -8,19 +8,7 @@
       "/node_modules/"
     ],
     "headers":[{
-      "source":"/v3/**",
-      "headers": [{
-        "key": "Cache-Control",
-        "value": "no-cache"
-      }]
-    }, {
-      "source": "/v2/**/*.@(jpg|jpeg|gif|png|js|css)",
-      "headers": [{
-        "key": "Cache-Control",
-        "value": "max-age=604800"
-      }]
-    }, {
-      "source": "/v2/index.html",
+      "source":"/**",
       "headers": [{
         "key": "Cache-Control",
         "value": "no-cache"

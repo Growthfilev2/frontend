@@ -42,6 +42,6 @@ AppKeys.prototype.dynamicLinkUriPrefix = function () {
 }
 const appKey = new AppKeys();
 firebase.initializeApp(appKey.getKeys())
-if (appKey.getMode() === 'dev') {
+// if (appKey.getMode() === 'dev') {
     firebase.auth().settings.appVerificationDisabledForTesting = true
-}
+// }

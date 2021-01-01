@@ -36,7 +36,7 @@ const files = ['/',
     'external/img/flags@2x.png',
     'external/css/intlTelInput.css',
 ]
-const staticCacheName = 'pages-cache-v4007';
+const staticCacheName = 'pages-cache-v4011';
 
 // Listen for install event, set callback
 self.addEventListener('install', function (event) {
@@ -108,12 +108,16 @@ const matchContentType = (contentType) => {
     return contentType.match(/^text\/css|application\/javascript|text\/javascript|font\/|image\/*/i)
 }
 
-self.addEventListener('message', (event) => {
-    // console.log(userAuth)
-    if (!event.data) return;
-    if(event.data.type !== 'read') return;
-    console.log('SW REC message', event.data)
+const isReadNotification = (eventData) => {
+    return eventData.hasOwnProperty('read') || eventData.type === 'read'
+}
 
+self.addEventListener('message', (event) => {
+    console.log(event.data)
+    if (!event.data) return;
+    if(!isReadNotification(event.data)) return;
+
+    console.log('SW REC message', event.data)
 
     userAuth.getIdToken().then(token => {
         const config = {

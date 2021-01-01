@@ -1451,10 +1451,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
 function handleQRUrl(url) {
   console.log(url);
   firebase.auth().currentUser.getIdToken().then(token => {
+    const latitude = ApplicationState.location.latitude.toString();
+    const longitude = ApplicationState.location.longitude.toString();
+    
     if (_native.getName() === 'Android') {
       AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
       return
     }
+    window.webkit.messageHandlers.openPage.postMessage({
+      token,
+      latitude,
+      longitude,
+      url
+    })
   })
 }
 

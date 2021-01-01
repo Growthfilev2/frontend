@@ -1405,10 +1405,20 @@ document.addEventListener('DOMContentLoaded', function (event) {
 function handleQRUrl(url) {
   console.log(url);
   firebase.auth().currentUser.getIdToken().then(function (token) {
+    var latitude = ApplicationState.location.latitude.toString();
+    var longitude = ApplicationState.location.longitude.toString();
+
     if (_native.getName() === 'Android') {
       AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
       return;
     }
+
+    window.webkit.messageHandlers.openPage.postMessage({
+      token: token,
+      latitude: latitude,
+      longitude: longitude,
+      url: url
+    });
   });
 }
 

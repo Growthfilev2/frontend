@@ -139,6 +139,7 @@ function http(request, authorization = true) {
       xhr.setRequestHeader('Content-Type', 'application/json')
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
       xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
+      
     }
 
     // xhr.timeout = 30000;
