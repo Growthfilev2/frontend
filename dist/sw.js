@@ -114,7 +114,7 @@ const isReadNotification = (eventData) => {
 
 self.addEventListener('message', (event) => {
     console.log(event.data)
-    if (!event.data) return;
+    if(!event.data) return;
     if(!isReadNotification(event.data)) return;
 
     console.log('SW REC message', event.data)

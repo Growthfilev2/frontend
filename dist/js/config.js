@@ -47,6 +47,8 @@ AppKeys.prototype.dynamicLinkUriPrefix = function () {
 };
 
 var appKey = new AppKeys();
-firebase.initializeApp(appKey.getKeys()); // if (appKey.getMode() === 'dev') {
+firebase.initializeApp(appKey.getKeys());
 
-firebase.auth().settings.appVerificationDisabledForTesting = true; // }
+if (appKey.getMode() === 'dev') {
+  firebase.auth().settings.appVerificationDisabledForTesting = true;
+}

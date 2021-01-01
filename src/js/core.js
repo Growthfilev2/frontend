@@ -1455,7 +1455,7 @@ function handleQRUrl(url) {
     const longitude = ApplicationState.location.longitude.toString();
     
     if (_native.getName() === 'Android') {
-      AndroidInterface.loadQRPage(token, ApplicationState.location.latitude.toString(), ApplicationState.location.latitude.toString(), url);
+      AndroidInterface.loadQRPage(token, latitude, longitude, url);
       return
     }
     window.webkit.messageHandlers.openPage.postMessage({
