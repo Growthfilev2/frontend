@@ -54,7 +54,7 @@ html, body {
    
     
   }
-  
+
 
   #phoneNumber:focus{
     outline-color: var(--mdc-theme-primary);
@@ -267,7 +267,7 @@ z-index: -1;
   
   .dots{
     text-align: center;
-    margin-top: 125%;
+    margin-top: 40%;
     
   }
   
@@ -324,7 +324,7 @@ z-index: -1;
 
   #loading{
     text-align: center;
-    margin-top: 50%;
+    margin-top: 0;
   }
 
   .mdl-button--raised{

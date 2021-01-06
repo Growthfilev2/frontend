@@ -11,8 +11,9 @@ window.addEventListener('load', () => {
     document.querySelector('body').style.backgroundPosition="fixed";
     document.getElementById("logo_dark").src= "img/logo_login_dark.svg";
   }
- 
+
 });
+
 
 
 
@@ -38,9 +39,10 @@ ui.start('#firebaseui-auth-container', {
 
 
 var uiConfig = {
+  
   callbacks: {
     signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-    
+      document.getElementById('loading').style.display = 'block';
         setTimeout(() => {
           const queryParams = new URLSearchParams(window.location.search);
           // after login send custom events to fb analytics and firebase analytics
@@ -91,11 +93,15 @@ var uiConfig = {
                   }`
               );
             });
+
+            
         }, 1500);
       return false;
     },
+
+    
     uiShown: function() {
-      // The widget is rendered.
+        // The widget is rendered.
       // Hide the loader.
       document.getElementById('loading').style.display = 'none';
     }
