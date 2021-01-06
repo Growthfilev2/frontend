@@ -308,7 +308,7 @@ function regulator() {
         }
         return requestCreator('fcmToken', {
           token: _native.getFCMToken()
-        }, geopoint);
+        });
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
