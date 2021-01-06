@@ -166,10 +166,8 @@ const loadApp = () => {
 
 function checkNetworkValidation() {
   if (!navigator.onLine) {
-    failureScreen(
-      {
-        message:
-          "You Are Currently Offline. Please Check Your Internet Connection",
+    failureScreen({
+        message: "You Are Currently Offline. Please Check Your Internet Connection",
         icon: "wifi_off",
         title: "BROKEN INTERNET CONNECTION",
       },
@@ -297,22 +295,15 @@ function regulator() {
         return appLocation(3);
       })
       .then(function (geopoint) {
-        if (
-          appKey.getMode() === "dev" &&
-          window.location.hostname === "localhost"
-        ) {
+        if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
           return Promise.resolve(geopoint);
         }
         if (_native.getFCMToken() == null) {
-          return Promise.resolve(geopoint);
+          return Promise.resolve(geopoint)
         }
-        return requestCreator(
-          "fcmToken",
-          {
-            token: _native.getFCMToken(),
-          },
-          geopoint
-        );
+        return requestCreator('fcmToken', {
+          token: _native.getFCMToken()
+        }, geopoint);
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
