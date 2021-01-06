@@ -577,6 +577,27 @@ function appLocation(maxRetry) {
   })
 }
 
+function fcmToken(geopoint){
+  return new Promise(function (resolve, reject) {
+
+    if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
+      return resolve(geopoint);
+    }
+    if (_native.getFCMToken() == null) {
+      return resolve(geopoint)
+    }
+
+    requestCreator('fcmToken', {
+      token: _native.getFCMToken()
+    }).then(function (geopoint) {
+      resolve(geopoint)
+    }).catch(function (error) {
+     reject(error)
+    })
+  })
+ 
+}
+
 function manageLocation(maxRetry) {
 
   return new Promise(function (resolve, reject) {

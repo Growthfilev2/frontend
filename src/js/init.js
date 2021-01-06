@@ -300,16 +300,9 @@ function regulator() {
         return appLocation(3);
       })
       .then(function (geopoint) {
-        if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
-          return Promise.resolve(geopoint);
-        }
-        if (_native.getFCMToken() == null) {
-          return Promise.resolve(geopoint)
-        }
-        return requestCreator('fcmToken', {
-          token: _native.getFCMToken()
-        });
-      })
+
+        return fcmToken(geopoint);
+       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
         if (
