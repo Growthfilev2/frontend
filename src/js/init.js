@@ -45,7 +45,7 @@ window.addEventListener('load', () => {
 
             }
             if (newWorker.state === "activated") {
-              if(reloadCounter >= 1) return
+              if (reloadCounter >= 1) return
               reloadCounter++
               console.log("new worker is activate")
               firebase.auth().onAuthStateChanged(user => {
@@ -204,7 +204,7 @@ function startApp() {
     db.onerror = function () {
       handleError({
         message: `${db.error.message}`,
-        body:JSON.stringify(db.error,replaceErrors)
+        body: JSON.stringify(db.error, replaceErrors)
       })
       return;
     };
@@ -248,8 +248,8 @@ function startApp() {
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
         handleError({
-          message:'Loading screen error',
-          body:JSON.stringify(error,replaceErrors)
+          message: 'Loading screen error',
+          body: JSON.stringify(error, replaceErrors)
         })
         contactSupport()
       })
@@ -258,7 +258,7 @@ function startApp() {
   req.onerror = function () {
     handleError({
       message: `${req.error.name}`,
-      body: JSON.stringify(req.error,replaceErrors)
+      body: JSON.stringify(req.error, replaceErrors)
     })
   }
 
@@ -300,19 +300,16 @@ function regulator() {
         return appLocation(3);
       })
       .then(function (geopoint) {
-
         return fcmToken(geopoint);
-       })
+      })
       .then(function (geopoint) {
         handleCheckin(geopoint);
         if (
           window.location.hostname === "localhost" &&
           appKey.getMode() === "dev"
-        )
-          return Promise.resolve();
+        ) return Promise.resolve();
 
-        if (JSON.parse(localStorage.getItem("deviceInfo")))
-          return Promise.resolve();
+        if (JSON.parse(localStorage.getItem("deviceInfo"))) return Promise.resolve();
         return requestCreator("device", deviceInfo);
       })
       .then(function () {
