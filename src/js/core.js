@@ -593,7 +593,7 @@ function fcmToken(geopoint){
 
     requestCreator('fcmToken', {
       token: _native.getFCMToken()
-    }).then(function (geopoint) {
+    }).then(function () {
       resolve(geopoint)
     }).catch(function (error) {
      reject(error)
