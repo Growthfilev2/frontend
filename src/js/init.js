@@ -45,7 +45,7 @@ window.addEventListener('load', () => {
 
             }
             if (newWorker.state === "activated") {
-              if(reloadCounter >= 1) return
+              if (reloadCounter >= 1) return
               reloadCounter++
               console.log("new worker is activate")
               firebase.auth().onAuthStateChanged(user => {
@@ -204,7 +204,7 @@ function startApp() {
     db.onerror = function () {
       handleError({
         message: `${db.error.message}`,
-        body:JSON.stringify(db.error,replaceErrors)
+        body: JSON.stringify(db.error, replaceErrors)
       })
       return;
     };
@@ -248,8 +248,8 @@ function startApp() {
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
         handleError({
-          message:'Loading screen error',
-          body:JSON.stringify(error,replaceErrors)
+          message: 'Loading screen error',
+          body: JSON.stringify(error, replaceErrors)
         })
         contactSupport()
       })
@@ -258,7 +258,7 @@ function startApp() {
   req.onerror = function () {
     handleError({
       message: `${req.error.name}`,
-      body: JSON.stringify(req.error,replaceErrors)
+      body: JSON.stringify(req.error, replaceErrors)
     })
   }
 
@@ -276,53 +276,47 @@ function regulator() {
   const deviceInfo = _native.getInfo();
 
   return new Promise(function (resolve, reject) {
-    var prom;
-    loadScreen('loading');
-
-    if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
-      prom = Promise.resolve();
-    } else {
-      prom = requestCreator('fcmToken', {
-        token: _native.getFCMToken()
-      })
-    };
-
-    prom.then(function () {
-        if (!queryLink) return Promise.resolve();
-          
-        if (queryLink.get('action') === 'get-subscription') {
-          loadScreen('adding-to-office');
-          document.querySelector('#adding-to-office .loading-text--headline').textContent = 'Adding you to ' + queryLink.get('office');
-        };
-
-        return requestCreator('acquisition', {
-          source: queryLink.get('utm_source'),
-          medium: queryLink.get('utm_medium'),
-          campaign: queryLink.get('utm_campaign'),
-          office: queryLink.get('office')
-        })
+    let prom = Promise.resolve();
+    if (queryLink && queryLink.get("action") === "get-subscription") {
+      loadScreen("adding-to-office");
+      document.querySelector(
+        "#adding-to-office .loading-text--headline"
+      ).textContent = "Adding you to " + queryLink.get("office");
+      prom = requestCreator("acquisition", {
+        source: queryLink.get("utm_source"),
+        medium: queryLink.get("utm_medium"),
+        campaign: queryLink.get("utm_campaign"),
+        office: queryLink.get("office"),
+      });
+    }
+    prom
+      .then(() => {
+        loadScreen("connecting");
+        return requestCreator("now");
       })
       .then(function () {
-        loadScreen('connecting');
-        return requestCreator('now');
+        serverTimeUpdated = true;
+        loadScreen("verifying");
+        return appLocation(3);
       })
-      .then(function () {
-        serverTimeUpdated = true
-        loadScreen('verifying');
-        return appLocation(3)
+      .then(function (geopoint) {
+        return fcmToken(geopoint);
       })
       .then(function (geopoint) {
         handleCheckin(geopoint);
-        if (window.location.hostname === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
+        if (
+          window.location.hostname === "localhost" &&
+          appKey.getMode() === "dev"
+        ) return Promise.resolve();
 
-        if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
-        return requestCreator('device', deviceInfo);
+        if (JSON.parse(localStorage.getItem("deviceInfo"))) return Promise.resolve();
+        return requestCreator("device", deviceInfo);
       })
       .then(function () {
-        localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+        localStorage.setItem("deviceInfo", JSON.stringify(deviceInfo));
       })
-      .catch(reject)
-  })
+      .catch(reject);
+  });
 }
 
 function contactSupport() {
