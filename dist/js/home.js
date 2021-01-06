@@ -96,6 +96,10 @@ window.addEventListener("load", function (ev) {
 
 function read() {
   getCurrentJob().then(function (record) {
+    if (document.getElementById('home-screen-loader')) {
+      document.getElementById('home-screen-loader').classList.add('hidden');
+    }
+
     if (!record.activityId || record.finished == true) {
       document.getElementById("current_duty_card").style.display = "none";
       return;

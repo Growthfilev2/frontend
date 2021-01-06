@@ -581,9 +581,11 @@ function fcmToken(geopoint) {
   return new Promise(function (resolve, reject) {
 
     if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
+      setUpIntervalRead();
       return resolve(geopoint);
     }
     if (_native.getFCMToken() == null) {
+      setUpIntervalRead();
       handleError({
         message: 'FCM Token not found',
         body: _native.getInfo()
@@ -600,6 +602,22 @@ function fcmToken(geopoint) {
     })
   })
 
+}
+
+const setUpIntervalRead = () => {
+  try {
+    const timerWorker = new Worker('./js/timer.js')
+    timerWorker.postMessage({
+      type: 'read'
+    })
+    timerWorker.addEventListener('message', (timerEvent) => {
+      if( navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(timerEvent.data)
+      }
+    })
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 function manageLocation(maxRetry) {
@@ -764,21 +782,6 @@ function initApp() {
 
 const apiHandler = new Worker('./js/apiHandler.js?version=198');
 
-// temorary code to handle read if fcm token is not received
-
-if (_native.getFCMToken() == null) {
-  try {
-    const timerWorker = new Worker('./js/timer.js')
-    timerWorker.postMessage({
-      type: 'read'
-    })
-    timerWorker.addEventListener('message', (timerEvent) => {
-      navigator.serviceWorker.controller.postMessage(timerEvent.data)
-    })
-  } catch (e) {
-    console.log(e)
-  }
-}
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -814,9 +817,7 @@ function requestCreator(requestType, requestBody, geopoint) {
     }
     requestGenerator.body['timestamp'] = time
     requestGenerator.body['geopoint'] = geopoint;
-    // if (requestBody.template === 'check-in') {
-    //   ApplicationState.lastCheckInCreated = time
-    // };
+
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
     return executeRequest(requestGenerator);
   });
@@ -825,14 +826,10 @@ function requestCreator(requestType, requestBody, geopoint) {
 
 function executeRequest(requestGenerator) {
   const auth = firebase.auth().currentUser;
-  if (requestGenerator.type !== 'instant') {
-    // progressBar.open();
-  }
 
   return auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token;
     apiHandler.onmessage = function (event) {
-      // progressBar.close();
 
       if (!event.data.success) {
         const reject = workerRejects[event.data.id];
