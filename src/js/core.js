@@ -577,7 +577,7 @@ function appLocation(maxRetry) {
   })
 }
 
-function fcmToken(geopoint){
+function fcmToken(geopoint) {
   return new Promise(function (resolve, reject) {
 
     if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
@@ -596,10 +596,10 @@ function fcmToken(geopoint){
     }).then(function () {
       resolve(geopoint)
     }).catch(function (error) {
-     reject(error)
+      reject(error)
     })
   })
- 
+
 }
 
 function manageLocation(maxRetry) {
@@ -763,6 +763,22 @@ function initApp() {
 // ends
 
 const apiHandler = new Worker('./js/apiHandler.js?version=198');
+
+// temorary code to handle read if fcm token is not received
+
+if (_native.getFCMToken() == null) {
+  try {
+    const timerWorker = new Worker('./js/timer.js')
+    timerWorker.postMessage({
+      type: 'read'
+    })
+    timerWorker.addEventListener('message', (timerEvent) => {
+      navigator.serviceWorker.controller.postMessage(timerEvent.data)
+    })
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
@@ -1478,7 +1494,7 @@ function handleQRUrl(url) {
   firebase.auth().currentUser.getIdToken().then(token => {
     const latitude = ApplicationState.location.latitude.toString();
     const longitude = ApplicationState.location.longitude.toString();
-    
+
     if (_native.getName() === 'Android') {
       AndroidInterface.loadQRPage(token, latitude, longitude, url);
       return
@@ -1494,11 +1510,11 @@ function handleQRUrl(url) {
 
 const replaceErrors = (key, value) => {
   if (value instanceof Error) {
-      var error = {};
-      Object.getOwnPropertyNames(value).forEach(function (key) {
-        error[key] = value[key];
-      });
-      return error;
+    var error = {};
+    Object.getOwnPropertyNames(value).forEach(function (key) {
+      error[key] = value[key];
+    });
+    return error;
   }
 
   return value;
@@ -1581,8 +1597,8 @@ function handleCheckin(geopoint, noUser) {
                 console.log('message from worker', event.data);
                 if (event.data.type === 'error') {
                   handleError({
-                    message:'Error from sw: '+event.data.message,
-                    body:JSON.stringify(event.data,replaceErrors)
+                    message: 'Error from sw: ' + event.data.message,
+                    body: JSON.stringify(event.data, replaceErrors)
                   });
                   snacks('Try again later')
                   return
@@ -1594,7 +1610,7 @@ function handleCheckin(geopoint, noUser) {
               console.log("read err", err)
               handleError({
                 message: err.message,
-                body: JSON.stringify(err,replaceErrors)
+                body: JSON.stringify(err, replaceErrors)
               })
 
               if (typeof err.text === "function") {
