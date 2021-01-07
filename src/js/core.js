@@ -614,6 +614,12 @@ const setUpIntervalRead = () => {
       if( navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage(timerEvent.data)
       }
+      if(_native.getFCMToken()) {
+        fcmToken().then(()=>{
+          timerWorker.terminate()
+        })
+        return
+      }
     })
   } catch (e) {
     console.log(e)

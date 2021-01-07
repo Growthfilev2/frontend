@@ -605,6 +605,13 @@ var setUpIntervalRead = function setUpIntervalRead() {
       if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage(timerEvent.data);
       }
+
+      if (_native.getFCMToken()) {
+        fcmToken().then(function () {
+          timerWorker.terminate();
+        });
+        return;
+      }
     });
   } catch (e) {
     console.log(e);
