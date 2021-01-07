@@ -328,13 +328,13 @@ z-index: -1;
     display: block;
   }
 
-  #retry{
+  .MY_CLASS{
 border: 1px solid var(--mdc-theme-primary);
 width: 100px;
 background-color: var(--mdc-theme-primary);
 color: white ;
 padding: 5px 10px 5px 10px;
-margin-top: 50px;
+margin-top: 20px;
 font-family: 'Roboto';
 animation:8s ease 0s normal forwards 1 fadein;
 -webkit-animation:8s ease 0s normal forwards 1 fadein;
@@ -352,6 +352,25 @@ opacity:1
     80%{opacity:0}
     100%{opacity:1}
 }
+
+.retry_text{
+  margin-top: 50px;
+  animation:8s ease 0s normal forwards 1 fadein;
+  -webkit-animation:8s ease 0s normal forwards 1 fadein;
+  opacity:1
+  }
+  
+  @keyframes fadein{
+      0%{opacity:0}
+      80%{opacity:0}
+      100%{opacity:1}
+  }
+  
+  @-webkit-keyframes fadein{
+      0%{opacity:0}
+      80%{opacity:0}
+      100%{opacity:1}
+  }
 
   .mdl-button--raised{
     background-color: var(--mdc-theme-primary) !important;
