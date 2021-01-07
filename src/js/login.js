@@ -42,7 +42,6 @@ var uiConfig = {
   
   callbacks: {
     signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-      document.getElementById('loading').style.display = 'block';
         setTimeout(() => {
           const queryParams = new URLSearchParams(window.location.search);
           // after login send custom events to fb analytics and firebase analytics
