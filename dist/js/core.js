@@ -607,9 +607,11 @@ var setUpIntervalRead = function setUpIntervalRead() {
       }
 
       if (_native.getFCMToken()) {
-        fcmToken().then(function () {
+        requestCreator('fcmToken', {
+          token: _native.getFCMToken()
+        }).then(function () {
           timerWorker.terminate();
-        });
+        })["catch"](console.log);
         return;
       }
     });
