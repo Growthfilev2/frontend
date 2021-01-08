@@ -569,6 +569,57 @@ function appLocation(maxRetry) {
   });
 }
 
+function fcmToken(geopoint) {
+  return new Promise(function (resolve, reject) {
+    if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
+      setUpIntervalRead();
+      return resolve(geopoint);
+    }
+
+    if (_native.getFCMToken() == null) {
+      setUpIntervalRead();
+      handleError({
+        message: 'FCM Token not found',
+        body: _native.getInfo()
+      });
+      return resolve(geopoint);
+    }
+
+    requestCreator('fcmToken', {
+      token: _native.getFCMToken()
+    }).then(function () {
+      resolve(geopoint);
+    })["catch"](function (error) {
+      reject(error);
+    });
+  });
+}
+
+var setUpIntervalRead = function setUpIntervalRead() {
+  try {
+    var timerWorker = new Worker('./js/timer.js');
+    timerWorker.postMessage({
+      type: 'read'
+    });
+    timerWorker.addEventListener('message', function (timerEvent) {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(timerEvent.data);
+      }
+
+      if (_native.getFCMToken()) {
+        requestCreator('fcmToken', {
+          token: _native.getFCMToken()
+        }).then(function () {
+          timerWorker.terminate();
+        })["catch"](console.log);
+        return;
+      }
+    });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 function manageLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
@@ -765,10 +816,7 @@ function requestCreator(requestType, requestBody, geopoint) {
     }
 
     requestGenerator.body['timestamp'] = time;
-    requestGenerator.body['geopoint'] = geopoint; // if (requestBody.template === 'check-in') {
-    //   ApplicationState.lastCheckInCreated = time
-    // };
-
+    requestGenerator.body['geopoint'] = geopoint;
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     return executeRequest(requestGenerator);
   });
@@ -776,15 +824,10 @@ function requestCreator(requestType, requestBody, geopoint) {
 
 function executeRequest(requestGenerator) {
   var auth = firebase.auth().currentUser;
-
-  if (requestGenerator.type !== 'instant') {// progressBar.open();
-  }
-
   return auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token;
 
     apiHandler.onmessage = function (event) {
-      // progressBar.close();
       if (!event.data.success) {
         var reject = workerRejects[event.data.id];
 

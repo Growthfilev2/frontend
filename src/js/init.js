@@ -45,7 +45,7 @@ window.addEventListener('load', () => {
 
             }
             if (newWorker.state === "activated") {
-              if(reloadCounter >= 1) return
+              if (reloadCounter >= 1) return
               reloadCounter++
               console.log("new worker is activate")
               firebase.auth().onAuthStateChanged(user => {
@@ -204,12 +204,13 @@ function startApp() {
     db.onerror = function () {
       handleError({
         message: `${db.error.message}`,
-        body:JSON.stringify(db.error,replaceErrors)
+        body: JSON.stringify(db.error, replaceErrors)
       })
       return;
     };
     switch (evt.oldVersion) {
       case 0:
+        console.log("creating new db")
         createObjectStores(db, dbName)
         break;
       case 30:
@@ -242,14 +243,55 @@ function startApp() {
     console.log("request success")
     db = req.result;
 
-    console.log("run app")
+    const storesList = [
+      "activity",
+      "addendum",
+      "attendance",
+      "calendar",
+      "children",
+      "map",
+      "payment",
+      "reimbursement",
+      "subscriptions",
+      "users",
+      "root"
+    ]
 
+    // if object stores don't match then close database and delete it 
+    // and start the process of creating them again
+    if (storesList.filter(item => !db.objectStoreNames.contains(item)).length) {
+      db.close()
+      const dbDeleteRequest = window.indexedDB.deleteDatabase(dbName);
+      dbDeleteRequest.onerror = function (event) {
+        console.log("Error deleting database.");
+        handleError({
+          message: 'Error deleting database',
+        })
+        setTimeout(() => {
+          window.location.reload()
+        }, 4000)
+      };
+
+      dbDeleteRequest.onsuccess = function (event) {
+        console.log("Database deleted successfully");
+        startApp()
+      };
+      dbDeleteRequest.onblocked = function(event) {
+        console.log(event)
+      } 
+      return
+    }
+
+
+
+
+    console.log("run app")
     regulator()
       .then(console.log).catch(function (error) {
         if (error.type === 'geolocation') return handleLocationError(error)
         handleError({
-          message:'Loading screen error',
-          body:JSON.stringify(error,replaceErrors)
+          message: 'Loading screen error',
+          body: JSON.stringify(error, replaceErrors)
         })
         contactSupport()
       })
@@ -258,7 +300,7 @@ function startApp() {
   req.onerror = function () {
     handleError({
       message: `${req.error.name}`,
-      body: JSON.stringify(req.error,replaceErrors)
+      body: JSON.stringify(req.error, replaceErrors)
     })
   }
 
@@ -300,19 +342,16 @@ function regulator() {
         return appLocation(3);
       })
       .then(function (geopoint) {
-
         return fcmToken(geopoint);
-       })
+      })
       .then(function (geopoint) {
         handleCheckin(geopoint);
         if (
           window.location.hostname === "localhost" &&
           appKey.getMode() === "dev"
-        )
-          return Promise.resolve();
+        ) return Promise.resolve();
 
-        if (JSON.parse(localStorage.getItem("deviceInfo")))
-          return Promise.resolve();
+        if (JSON.parse(localStorage.getItem("deviceInfo"))) return Promise.resolve();
         return requestCreator("device", deviceInfo);
       })
       .then(function () {
@@ -454,7 +493,6 @@ function createObjectStores(db, uid) {
   const activity = db.createObjectStore('activity', {
     keyPath: 'activityId'
   })
-
   activity.createIndex('timestamp', 'timestamp')
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
@@ -464,17 +502,16 @@ function createObjectStores(db, uid) {
   const users = db.createObjectStore('users', {
     keyPath: 'mobile'
   })
-
   users.createIndex('displayName', 'displayName')
   users.createIndex('isUpdated', 'isUpdated')
   users.createIndex('count', 'count')
   users.createIndex('mobile', 'mobile')
   users.createIndex('timestamp', 'timestamp')
   users.createIndex('NAME_SEARCH', 'NAME_SEARCH')
+
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })
-
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key');
@@ -501,6 +538,7 @@ function createObjectStores(db, uid) {
 
   createReportObjectStores(db)
   createRootObjectStore(db, uid, 0)
+  // console.log("root store created")
 }
 
 function createCalendarObjectStore(db) {

@@ -645,3 +645,9 @@ letter-spacing: 0.15000000596046448px;
 #right_arrow{
   color: var(--mdc-theme-on-secondary);
 }
+
+#home-screen-loader .dots{
+  width: 100%;
+  text-align: center;
+  display: block;
+}

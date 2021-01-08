@@ -577,13 +577,15 @@ function appLocation(maxRetry) {
   })
 }
 
-function fcmToken(geopoint){
+function fcmToken(geopoint) {
   return new Promise(function (resolve, reject) {
 
     if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
+      setUpIntervalRead();
       return resolve(geopoint);
     }
     if (_native.getFCMToken() == null) {
+      setUpIntervalRead();
       handleError({
         message: 'FCM Token not found',
         body: _native.getInfo()
@@ -596,10 +598,34 @@ function fcmToken(geopoint){
     }).then(function () {
       resolve(geopoint)
     }).catch(function (error) {
-     reject(error)
+      reject(error)
     })
   })
- 
+
+}
+
+const setUpIntervalRead = () => {
+  try {
+    const timerWorker = new Worker('./js/timer.js')
+    timerWorker.postMessage({
+      type: 'read'
+    })
+    timerWorker.addEventListener('message', (timerEvent) => {
+      if( navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(timerEvent.data)
+      }
+      if(_native.getFCMToken()) {
+        requestCreator('fcmToken', {
+          token: _native.getFCMToken()
+        }).then(function () {
+          timerWorker.terminate()
+        }).catch(console.log)
+        return
+      }
+    })
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 function manageLocation(maxRetry) {
@@ -764,6 +790,7 @@ function initApp() {
 
 const apiHandler = new Worker('./js/apiHandler.js?version=198');
 
+
 function requestCreator(requestType, requestBody, geopoint) {
   const extralRequest = {
     'geocode': true,
@@ -798,9 +825,7 @@ function requestCreator(requestType, requestBody, geopoint) {
     }
     requestGenerator.body['timestamp'] = time
     requestGenerator.body['geopoint'] = geopoint;
-    // if (requestBody.template === 'check-in') {
-    //   ApplicationState.lastCheckInCreated = time
-    // };
+
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
     return executeRequest(requestGenerator);
   });
@@ -809,14 +834,10 @@ function requestCreator(requestType, requestBody, geopoint) {
 
 function executeRequest(requestGenerator) {
   const auth = firebase.auth().currentUser;
-  if (requestGenerator.type !== 'instant') {
-    // progressBar.open();
-  }
 
   return auth.getIdToken().then(function (token) {
     requestGenerator.meta.user.token = token;
     apiHandler.onmessage = function (event) {
-      // progressBar.close();
 
       if (!event.data.success) {
         const reject = workerRejects[event.data.id];
@@ -1478,7 +1499,7 @@ function handleQRUrl(url) {
   firebase.auth().currentUser.getIdToken().then(token => {
     const latitude = ApplicationState.location.latitude.toString();
     const longitude = ApplicationState.location.longitude.toString();
-    
+
     if (_native.getName() === 'Android') {
       AndroidInterface.loadQRPage(token, latitude, longitude, url);
       return
@@ -1494,11 +1515,11 @@ function handleQRUrl(url) {
 
 const replaceErrors = (key, value) => {
   if (value instanceof Error) {
-      var error = {};
-      Object.getOwnPropertyNames(value).forEach(function (key) {
-        error[key] = value[key];
-      });
-      return error;
+    var error = {};
+    Object.getOwnPropertyNames(value).forEach(function (key) {
+      error[key] = value[key];
+    });
+    return error;
   }
 
   return value;
@@ -1581,8 +1602,8 @@ function handleCheckin(geopoint, noUser) {
                 console.log('message from worker', event.data);
                 if (event.data.type === 'error') {
                   handleError({
-                    message:'Error from sw: '+event.data.message,
-                    body:JSON.stringify(event.data,replaceErrors)
+                    message: 'Error from sw: ' + event.data.message,
+                    body: JSON.stringify(event.data, replaceErrors)
                   });
                   snacks('Try again later')
                   return
@@ -1594,7 +1615,7 @@ function handleCheckin(geopoint, noUser) {
               console.log("read err", err)
               handleError({
                 message: err.message,
-                body: JSON.stringify(err,replaceErrors)
+                body: JSON.stringify(err, replaceErrors)
               })
 
               if (typeof err.text === "function") {

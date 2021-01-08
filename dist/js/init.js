@@ -196,6 +196,7 @@ function startApp() {
 
     switch (evt.oldVersion) {
       case 0:
+        console.log("creating new db");
         createObjectStores(db, dbName);
         break;
 
@@ -234,6 +235,37 @@ function startApp() {
   req.onsuccess = function () {
     console.log("request success");
     db = req.result;
+    var storesList = ["activity", "addendum", "attendance", "calendar", "children", "map", "payment", "reimbursement", "subscriptions", "users", "root"]; // if object stores don't match then close database and delete it 
+    // and start the process of creating them again
+
+    if (storesList.filter(function (item) {
+      return !db.objectStoreNames.contains(item);
+    }).length) {
+      db.close();
+      var dbDeleteRequest = window.indexedDB.deleteDatabase(dbName);
+
+      dbDeleteRequest.onerror = function (event) {
+        console.log("Error deleting database.");
+        handleError({
+          message: 'Error deleting database'
+        });
+        setTimeout(function () {
+          window.location.reload();
+        }, 4000);
+      };
+
+      dbDeleteRequest.onsuccess = function (event) {
+        console.log("Database deleted successfully");
+        startApp();
+      };
+
+      dbDeleteRequest.onblocked = function (event) {
+        console.log(event);
+      };
+
+      return;
+    }
+
     console.log("run app");
     regulator().then(console.log)["catch"](function (error) {
       if (error.type === 'geolocation') return handleLocationError(error);
@@ -266,47 +298,35 @@ function regulator() {
   var deviceInfo = _native.getInfo();
 
   return new Promise(function (resolve, reject) {
-    var prom;
-    loadScreen('loading');
+    var prom = Promise.resolve();
 
-    if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
-      prom = Promise.resolve();
-    } else {
-      prom = requestCreator('fcmToken', {
-        token: _native.getFCMToken()
+    if (queryLink && queryLink.get("action") === "get-subscription") {
+      loadScreen("adding-to-office");
+      document.querySelector("#adding-to-office .loading-text--headline").textContent = "Adding you to " + queryLink.get("office");
+      prom = requestCreator("acquisition", {
+        source: queryLink.get("utm_source"),
+        medium: queryLink.get("utm_medium"),
+        campaign: queryLink.get("utm_campaign"),
+        office: queryLink.get("office")
       });
     }
 
-    ;
     prom.then(function () {
-      if (!queryLink) return Promise.resolve();
-
-      if (queryLink.get('action') === 'get-subscription') {
-        loadScreen('adding-to-office');
-        document.querySelector('#adding-to-office .loading-text--headline').textContent = 'Adding you to ' + queryLink.get('office');
-      }
-
-      ;
-      return requestCreator('acquisition', {
-        source: queryLink.get('utm_source'),
-        medium: queryLink.get('utm_medium'),
-        campaign: queryLink.get('utm_campaign'),
-        office: queryLink.get('office')
-      });
-    }).then(function () {
-      loadScreen('connecting');
-      return requestCreator('now');
+      loadScreen("connecting");
+      return requestCreator("now");
     }).then(function () {
       serverTimeUpdated = true;
-      loadScreen('verifying');
+      loadScreen("verifying");
       return appLocation(3);
     }).then(function (geopoint) {
+      return fcmToken(geopoint);
+    }).then(function (geopoint) {
       handleCheckin(geopoint);
-      if (window.location.hostname === 'localhost' && appKey.getMode() === 'dev') return Promise.resolve();
-      if (JSON.parse(localStorage.getItem('deviceInfo'))) return Promise.resolve();
-      return requestCreator('device', deviceInfo);
+      if (window.location.hostname === "localhost" && appKey.getMode() === "dev") return Promise.resolve();
+      if (JSON.parse(localStorage.getItem("deviceInfo"))) return Promise.resolve();
+      return requestCreator("device", deviceInfo);
     }).then(function () {
-      localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo));
+      localStorage.setItem("deviceInfo", JSON.stringify(deviceInfo));
     })["catch"](reject);
   });
 }
@@ -465,7 +485,7 @@ function createObjectStores(db, uid) {
   children.createIndex('team', 'team');
   children.createIndex('teamOffice', ['team', 'office']);
   createReportObjectStores(db);
-  createRootObjectStore(db, uid, 0);
+  createRootObjectStore(db, uid, 0); // console.log("root store created")
 }
 
 function createCalendarObjectStore(db) {
