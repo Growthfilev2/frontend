@@ -328,13 +328,14 @@ z-index: -1;
     display: block;
   }
 
-  .MY_CLASS{
+  .retry_section{
 border: 1px solid var(--mdc-theme-primary);
 width: 100px;
 background-color: var(--mdc-theme-primary);
 color: white ;
 padding: 5px 10px 5px 10px;
-margin-top: 20px;
+margin-top: 80px;
+border-radius: 3px;
 font-family: 'Roboto';
 animation:8s ease 0s normal forwards 1 fadein;
 -webkit-animation:8s ease 0s normal forwards 1 fadein;
@@ -355,6 +356,7 @@ opacity:1
 
 .retry_text{
   margin-top: 50px;
+  margin-bottom: 20px;
   animation:8s ease 0s normal forwards 1 fadein;
   -webkit-animation:8s ease 0s normal forwards 1 fadein;
   opacity:1
