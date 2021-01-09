@@ -20,7 +20,12 @@ window.addEventListener('load', () => {
 var ui = new firebaseui.auth.AuthUI(firebase.auth());
 
 
-ui.start('#firebaseui-auth-container', {
+
+
+
+
+
+var uiConfig = {
   signInOptions: [
     {
       provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
@@ -33,13 +38,7 @@ ui.start('#firebaseui-auth-container', {
      
      
     }
-  ]
-});
-
-
-
-var uiConfig = {
-  
+  ],
   callbacks: {
     signInSuccessWithAuthResult: function(authResult, redirectUrl) {
       document.getElementById('loading').style.display = 'block';
