@@ -1528,7 +1528,7 @@ function handleQRUrl(url) {
       })
     }
     try {
-      logFirebaseAnlyticsEvent('qr-request', {
+      logFirebaseAnlyticsEvent('qrurl', {
         url: url
       })
     } catch (e) {
