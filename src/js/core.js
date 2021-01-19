@@ -581,11 +581,11 @@ function fcmToken(geopoint) {
   return new Promise(function (resolve, reject) {
 
     if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
-      setUpIntervalRead();
+      // setUpIntervalRead();
       return resolve(geopoint);
     }
     if (_native.getFCMToken() == null) {
-      setUpIntervalRead();
+      // setUpIntervalRead();
       handleError({
         message: 'FCM Token not found',
         body: _native.getInfo()
@@ -606,15 +606,18 @@ function fcmToken(geopoint) {
 
 const setUpIntervalRead = () => {
   try {
-    const timerWorker = new Worker('./js/timer.js')
+    const timerWorker = new Worker('./js/timer.js');
+
     timerWorker.postMessage({
-      type: 'read'
+      type: 'read',
+      uid: firebase.auth().currentUser.uid,
+      time:10
     })
     timerWorker.addEventListener('message', (timerEvent) => {
-      if( navigator.serviceWorker.controller) {
+      if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage(timerEvent.data)
       }
-      if(_native.getFCMToken()) {
+      if (_native.getFCMToken()) {
         requestCreator('fcmToken', {
           token: _native.getFCMToken()
         }).then(function () {
@@ -623,6 +626,7 @@ const setUpIntervalRead = () => {
         return
       }
     })
+
   } catch (e) {
     console.log(e)
   }
@@ -1496,21 +1500,42 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 function handleQRUrl(url) {
   console.log(url);
+  const load = createElement('div', {
+    className: 'qr-loading mdc-elevation--z8'
+  });
+  load.appendChild(createElement('div', {
+    className: 'qr-loader'
+  }))
+  load.appendChild(createElement('div', {
+    className: 'mdc-typography qr-loader-text',
+    textContent: 'Loading...'
+  }))
+  document.body.appendChild(load);
+
   firebase.auth().currentUser.getIdToken().then(token => {
     const latitude = ApplicationState.location.latitude.toString();
     const longitude = ApplicationState.location.longitude.toString();
 
-    if (_native.getName() === 'Android') {
+
+    if (window.AndroidInterface && window.AndroidInterface.loadQRPage) {
       AndroidInterface.loadQRPage(token, latitude, longitude, url);
-      return
+    } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openPage) {
+      window.webkit.messageHandlers.openPage.postMessage({
+        token,
+        latitude,
+        longitude,
+        url
+      })
     }
-    window.webkit.messageHandlers.openPage.postMessage({
-      token,
-      latitude,
-      longitude,
-      url
-    })
-  })
+    try {
+      logFirebaseAnlyticsEvent('qr-request', {
+        url: url
+      })
+    } catch (e) {
+      console.log(e)
+    }
+
+  }).catch(console.error)
 }
 
 const replaceErrors = (key, value) => {

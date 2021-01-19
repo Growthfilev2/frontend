@@ -572,12 +572,12 @@ function appLocation(maxRetry) {
 function fcmToken(geopoint) {
   return new Promise(function (resolve, reject) {
     if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
-      setUpIntervalRead();
+      // setUpIntervalRead();
       return resolve(geopoint);
     }
 
     if (_native.getFCMToken() == null) {
-      setUpIntervalRead();
+      // setUpIntervalRead();
       handleError({
         message: 'FCM Token not found',
         body: _native.getInfo()
@@ -599,7 +599,9 @@ var setUpIntervalRead = function setUpIntervalRead() {
   try {
     var timerWorker = new Worker('./js/timer.js');
     timerWorker.postMessage({
-      type: 'read'
+      type: 'read',
+      uid: firebase.auth().currentUser.uid,
+      time: 10
     });
     timerWorker.addEventListener('message', function (timerEvent) {
       if (navigator.serviceWorker.controller) {
@@ -1447,22 +1449,40 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 function handleQRUrl(url) {
   console.log(url);
+  var load = createElement('div', {
+    className: 'qr-loading mdc-elevation--z8'
+  });
+  load.appendChild(createElement('div', {
+    className: 'qr-loader'
+  }));
+  load.appendChild(createElement('div', {
+    className: 'mdc-typography qr-loader-text',
+    textContent: 'Loading...'
+  }));
+  document.body.appendChild(load);
   firebase.auth().currentUser.getIdToken().then(function (token) {
     var latitude = ApplicationState.location.latitude.toString();
     var longitude = ApplicationState.location.longitude.toString();
 
-    if (_native.getName() === 'Android') {
+    if (window.AndroidInterface && window.AndroidInterface.loadQRPage) {
       AndroidInterface.loadQRPage(token, latitude, longitude, url);
-      return;
+    } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openPage) {
+      window.webkit.messageHandlers.openPage.postMessage({
+        token: token,
+        latitude: latitude,
+        longitude: longitude,
+        url: url
+      });
     }
 
-    window.webkit.messageHandlers.openPage.postMessage({
-      token: token,
-      latitude: latitude,
-      longitude: longitude,
-      url: url
-    });
-  });
+    try {
+      logFirebaseAnlyticsEvent('qr-request', {
+        url: url
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  })["catch"](console.error);
 }
 
 var replaceErrors = function replaceErrors(key, value) {

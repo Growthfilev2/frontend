@@ -141,6 +141,7 @@ function preloadImages(urls) {
 }
 
 var loadApp = function loadApp() {
+  setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
   if (!window.Worker && !window.indexedDB) {

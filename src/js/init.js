@@ -149,7 +149,7 @@ function preloadImages(urls) {
 
 
 const loadApp = () => {
-
+  setFirebaseAnalyticsUserId(firebase.auth().currentUser.uid);
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
   if (!window.Worker && !window.indexedDB) {
@@ -276,9 +276,9 @@ function startApp() {
         console.log("Database deleted successfully");
         startApp()
       };
-      dbDeleteRequest.onblocked = function(event) {
+      dbDeleteRequest.onblocked = function (event) {
         console.log(event)
-      } 
+      }
       return
     }
 
