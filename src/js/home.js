@@ -102,9 +102,7 @@ window.addEventListener("load", (ev) => {
       read();
       readduty();
     };
-    if (_native.getFCMToken() == null) {
-      setUpIntervalRead();
-    }
+
   });
 });
 

@@ -517,7 +517,7 @@ function handleError(error) {
     errorInStorage = {};
   }
 
-  if (errorInStorage.hasOwnProperty(error.message)) return;
+  if (errorInStorage.hasOwnProperty(error.message)) return Promise.resolve();
   error.device = JSON.parse(localStorage.getItem('deviceInfo'));
   errorInStorage[error.message] = error;
   localStorage.setItem('error', JSON.stringify(errorInStorage));
@@ -532,7 +532,9 @@ function snacks(message, timeout) {
   document.body.appendChild(el);
   var snackBar = new mdc.snackbar.MDCSnackbar(el);
   snackBar.timeoutMs = timeout || 4000;
-  snackBar.open();
+  setTimeout(function () {
+    snackBar.open();
+  }, 200);
 }
 
 function fetchCurrentTime(serverTime) {
@@ -572,12 +574,10 @@ function appLocation(maxRetry) {
 function fcmToken(geopoint) {
   return new Promise(function (resolve, reject) {
     if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
-      // setUpIntervalRead();
       return resolve(geopoint);
     }
 
     if (_native.getFCMToken() == null) {
-      // setUpIntervalRead();
       handleError({
         message: 'FCM Token not found',
         body: _native.getInfo()
@@ -594,33 +594,6 @@ function fcmToken(geopoint) {
     });
   });
 }
-
-var setUpIntervalRead = function setUpIntervalRead() {
-  try {
-    var timerWorker = new Worker('./js/timer.js');
-    timerWorker.postMessage({
-      type: 'read',
-      uid: firebase.auth().currentUser.uid,
-      time: 10
-    });
-    timerWorker.addEventListener('message', function (timerEvent) {
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage(timerEvent.data);
-      }
-
-      if (_native.getFCMToken()) {
-        requestCreator('fcmToken', {
-          token: _native.getFCMToken()
-        }).then(function () {
-          timerWorker.terminate();
-        })["catch"](console.log);
-        return;
-      }
-    });
-  } catch (e) {
-    console.log(e);
-  }
-};
 
 function manageLocation(maxRetry) {
   return new Promise(function (resolve, reject) {
@@ -1449,6 +1422,19 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 function handleQRUrl(url) {
   console.log(url);
+
+  if (!url) {
+    handleError({
+      message: 'Invalid qr url',
+      body: 'qrcode url: ' + url
+    }).then(function () {
+      snacks('Failed to load checklist', 6000);
+    })["catch"](function (err) {
+      snacks('Failed to load checklist', 6000);
+    });
+    return;
+  }
+
   var load = createElement('div', {
     className: 'qr-loading mdc-elevation--z8'
   });
