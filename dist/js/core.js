@@ -577,7 +577,7 @@ function fcmToken(geopoint) {
       return resolve(geopoint);
     }
 
-    if (_native.getFCMToken() == null) {
+    if (!_native.getFCMToken()) {
       handleError({
         message: 'FCM Token not found',
         body: _native.getInfo()

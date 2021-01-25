@@ -586,7 +586,7 @@ function fcmToken(geopoint) {
     if (appKey.getMode() === 'dev' && window.location.hostname === 'localhost') {
       return resolve(geopoint);
     }
-    if (_native.getFCMToken() == null) {
+    if (!_native.getFCMToken()) {
       handleError({
         message: 'FCM Token not found',
         body: _native.getInfo()
